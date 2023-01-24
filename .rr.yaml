@@ -1,0 +1,11 @@
+version: "2.7"
+
+server:
+  command: "php public/index.php"
+  env:
+    APP_RUNTIME: Runtime\RoadRunnerSymfonyNyholm\Runtime
+
+http:
+  address: 0.0.0.0:8080
+  pool:
+    num_workers: 4
