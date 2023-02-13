@@ -160,6 +160,29 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-factory" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-message" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/psr-http-message-bridge" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/spiral/roadrunner-kv" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/spiral/attributes" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/temporal/sdk" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react/promise" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/nesbot/carbon" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/psr/simple-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/google/protobuf" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/google/common-protos" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/grpc/grpc" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-zendframework-bridge" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/ecotone/ecotone" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/ecotone/symfony-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/queue-interop/queue-interop" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/marc-mabe/php-enum" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/enqueue/dbal" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/enqueue/dsn" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/beberlei/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/prooph/common" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/prooph/pdo-event-store" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/prooph/event-store" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/ecotone/dbal" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/ecotone/enqueue" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/ecotone/pdo-event-sourcing" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

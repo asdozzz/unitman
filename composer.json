@@ -12,6 +12,9 @@
         "doctrine/doctrine-bundle": "^2.7",
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.13",
+        "ecotone/pdo-event-sourcing": "*",
+        "ecotone/symfony-bundle": "*",
+        "grpc/grpc": "^1.42",
         "phpdocumentor/reflection-docblock": "^5.3",
         "phpstan/phpdoc-parser": "^1.15",
         "psalm/plugin-symfony": "^5.0",
@@ -43,6 +46,7 @@
         "symfony/validator": "6.2.*",
         "symfony/web-link": "6.2.*",
         "symfony/yaml": "6.2.*",
+        "temporal/sdk": "^2.3",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
         "vimeo/psalm": "^5.2"

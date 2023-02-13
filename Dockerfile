@@ -1,25 +1,34 @@
+FROM ghcr.io/roadrunner-server/roadrunner:2.12.2 AS roadrunner
 FROM php:8.1-alpine
 
-RUN apk add --no-cache bash autoconf openssl-dev g++ make pcre-dev icu-dev zlib-dev libzip-dev && \
-    docker-php-ext-install bcmath intl opcache zip sockets && \
-    apk del --purge autoconf g++ make
+ARG CURRENT_USER_ID=1000
+ARG CURRENT_USER_GROUP=1000
 
-WORKDIR /usr/src/app
+RUN addgroup --g ${CURRENT_USER_GROUP} groupcontainer
+RUN adduser -u ${CURRENT_USER_ID} -G groupcontainer -h /home/containeruser -D containeruser
+RUN adduser containeruser root
 
+COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+COPY --from=temporalio/admin-tools /usr/local/bin/tctl /usr/local/bin/tctl
 
-COPY composer.json composer.lock ./
+RUN install-php-extensions bcmath intl opcache zip sockets
+RUN install-php-extensions grpc
 
-RUN composer install
+RUN apk add --no-cache git docker docker-compose
 
-RUN ./vendor/bin/rr get-binary --location /usr/local/bin
+RUN mkdir www
 
-COPY . .
+COPY wait-for-temporal.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/wait-for-temporal.sh
 
-ENV APP_ENV=prod
+WORKDIR /home/containeruser/www
+
+COPY --chown=containeruser:groupcontainer . .
 
 RUN composer dump-autoload --optimize && \
     composer check-platform-reqs && \
     php bin/console cache:warmup
 
-CMD ["rr", "serve","-c",".rr.yaml"]
+CMD ["/usr/local/bin/wait-for-temporal.sh", "temporal", "rr", "serve","-c",".rr.yaml"]
