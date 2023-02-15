@@ -1,0 +1,5 @@
+ecotone:
+  loadSrcNamespaces: false
+  namespaces:
+    - \App\Account\Infra
+    - \App\Account\Business

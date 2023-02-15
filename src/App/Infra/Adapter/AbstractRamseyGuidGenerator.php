@@ -8,6 +8,6 @@ abstract class AbstractRamseyGuidGenerator
 {
     function makeGuid(): string
     {
-        return Uuid::uuid4()->toString();
+        return Uuid::uuid7()->toString();
     }
 }
