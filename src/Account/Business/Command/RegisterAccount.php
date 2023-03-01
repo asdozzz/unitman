@@ -2,18 +2,16 @@
 
 namespace App\Account\Business\Command;
 
-final class RegisterAccount
-{
-    public function __construct(private string $accountId, private string $email)
-    {
-    }
+use App\Utils\Converter\JsonBodySerializableInterface;
 
-    /**
-     * @return string
-     */
-    public function getAccountId(): string
+final class RegisterAccount implements JsonBodySerializableInterface
+{
+    public function __construct(
+        private string $email,
+        private string $password,
+        private string $roles
+    )
     {
-        return $this->accountId;
     }
 
     /**
@@ -23,6 +21,33 @@ final class RegisterAccount
     {
         return $this->email;
     }
+
+    /**
+     * @return string
+     */
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    /**
+     * @param string $password
+     */
+    public function setPassword(string $password): void
+    {
+        $this->password = $password;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getRoles(): string
+    {
+        return $this->roles;
+    }
+
+
 
 
 }

@@ -13,9 +13,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 COPY --from=temporalio/admin-tools /usr/local/bin/tctl /usr/local/bin/tctl
 
-RUN install-php-extensions bcmath intl opcache zip sockets
-RUN install-php-extensions grpc
-RUN install-php-extensions pdo pdo_pgsql pgsql
+RUN install-php-extensions bcmath intl opcache zip sockets grpc pdo pdo_pgsql pgsql xdebug
 
 RUN apk add --no-cache git docker docker-compose
 

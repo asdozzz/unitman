@@ -2,26 +2,14 @@
 
 namespace App\Account\Business\Model\Event;
 
-final class AccountWasRegistered
+class AccountWasRegistered
 {
-    public function __construct(private string $accountId, private string $email)
+    public function __construct(
+        public readonly string $accountId,
+        public readonly string $email,
+        public readonly string $password,
+        public readonly string $role
+    )
     {
     }
-
-    /**
-     * @return string
-     */
-    public function getAccountId(): string
-    {
-        return $this->accountId;
-    }
-
-    /**
-     * @return string
-     */
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
 }

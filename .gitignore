@@ -20,3 +20,7 @@
 ###< symfony/phpunit-bridge ###
 /.idea/dataSources.xml
 /.bash_history
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###

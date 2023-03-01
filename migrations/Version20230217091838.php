@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use App\Account\Business\Command\RegisterFirstAccount;
+use App\Account\Business\UseCase\RegisterFirstAccountUseCase;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20230217091838 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return '';
+    }
+
+    public function up(Schema $schema): void
+    {
+        $this->addSql("create table account_event_store
+        (
+            id                serial  not null
+                constraint account_event_store_pk
+                    primary key,
+            event_id          varchar not null,
+            aggregate_root_id varchar not null,
+            version           integer not null,
+            payload           text    not null,
+            constraint reconstitution
+                unique (aggregate_root_id, version)
+        );");
+
+        $this->addSql("create table jwt_user
+            (
+                id       varchar(128) not null
+                    constraint jwt_user_pk
+                        primary key,
+                email    varchar      not null
+                    constraint jwt_user_email
+                        unique
+                            deferrable,
+                password varchar      not null,
+                roles    varchar
+            );
+        ");
+    }
+
+    public function down(Schema $schema): void
+    {
+        $this->addSql('DROP TABLE account_event_store');
+        $this->addSql('DROP TABLE jwt_user');
+    }
+}
