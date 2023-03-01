@@ -25,7 +25,12 @@ final class SqlRepoRepository implements \App\Unitman\Business\Port\RepoReposito
     }
     public function getById(string $repoId): Repo
     {
-        return $this->esRepository->retrieve(Repo\RepoId::fromString($repoId));
+        $repo = $this->esRepository->retrieve(Repo\RepoId::fromString($repoId));
+        /** @var Repo $repo*/
+        if ($repo->aggregateRootVersion() === 0) {
+            throw new \DomainException('repo.not_found');
+        }
+        return $repo;
     }
 
     public function save(Repo $repo): void

@@ -23,7 +23,7 @@ final class Repo implements AggregateRoot
     use AggregateRootBehaviour;
 
     private ?RepoId $id;
-    private ?RepoType $type;
+
     private ?RepoName $name;
     private ?RepoCredentials $credentials;
     private bool $isDeleted = false;
@@ -32,7 +32,12 @@ final class Repo implements AggregateRoot
     {
         $repoId = RepoId::fromString($id);
         $repo = new static($repoId);
-        $repo->recordThat(new RepoWasAdded($repoId->toString(), $command->repoType, $command->repoName, $command->repoUrl, $command->repoLogin, $command->repoPassword));
+        if ($command->repoType === RepoType::GITHUB->value) {
+            $url = 'https://github.com';
+        } else {
+            $url = $command->repoUrl;
+        }
+        $repo->recordThat(new RepoWasAdded($repoId->toString(), $command->repoType, $command->repoName, $url, $command->repoLogin, $command->repoPassword));
         return $repo;
     }
 
@@ -40,6 +45,7 @@ final class Repo implements AggregateRoot
     {
         $this->type = RepoType::from($fact->repoType);
         $this->name = new RepoName($fact->repoName);
+
         $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->repoLogin, $fact->repoPassword);
     }
 

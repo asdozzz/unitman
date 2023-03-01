@@ -29,7 +29,7 @@ return function (ContainerConfigurator $configuration) {
 
     $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class);
 
-    $services->set('repo.message_repository', DoctrineUuidV4MessageRepository::class)
+    $services->set('unitman.message_repository', DoctrineUuidV4MessageRepository::class)
         ->args([
             service(Connection::class),
             'unitman_event_store',
@@ -45,7 +45,7 @@ return function (ContainerConfigurator $configuration) {
     $services->set(SqlRepoRepository::class)
         ->args([
             service(Connection::class),
-            service('repo.message_repository'),
+            service('unitman.message_repository'),
             service('repo.message_dispatcher'),
             service('app.message_decorator'),
         ]);

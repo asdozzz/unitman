@@ -14,6 +14,8 @@ use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
+use EventSauce\EventSourcing\AggregateRootId;
+use Generator;
 
 final class Account implements AggregateRoot
 {

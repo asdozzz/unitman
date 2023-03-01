@@ -25,7 +25,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble
             'email' => $user->getEmail(),
             'password' => $user->getPassword(),
             'roles' => join(',', $user->getRoles()),
-            'is_blocked' => $user->isBlocked()
+            'is_blocked' => $user->isBlocked()?1:0
         ]);
     }
 
@@ -36,7 +36,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble
             'email' => $user->getEmail(),
             'password' => $user->getPassword(),
             'roles' => join(',', $user->getRoles()),
-            'is_blocked' => $user->isBlocked()
+            'is_blocked' => $user->isBlocked()?1:0
         ], ['id' => $user->getId()]);
     }
 
@@ -61,7 +61,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble
      */
     private function makeUserByDbRow(array $row): JWTUser
     {
-        $JWTUser = new JWTUser($row['id'], $row['email'], $row['password'], explode(',', $row['roles']), $row['is_blocked']);
+        $JWTUser = new JWTUser($row['id'], $row['email'], $row['password'], explode(',', $row['roles']), (bool)$row['is_blocked']);
         return $JWTUser;
     }
 

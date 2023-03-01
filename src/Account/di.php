@@ -26,7 +26,7 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure();
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
-        ->exclude(['./{di.php, routing.php, Tests}','./Business/Command','./Business/Model'])
+        ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model'])
         ->public();
 
     $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class);

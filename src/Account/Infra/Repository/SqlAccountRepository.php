@@ -30,7 +30,13 @@ final class SqlAccountRepository implements AccountRepository
 
     public function getBy(string $accountId): Account
     {
-        return $this->esRepository->retrieve(Account\AccountId::fromString($accountId));
+        $account = $this->esRepository->retrieve(Account\AccountId::fromString($accountId));
+        /** @var Account $account*/
+        if ($account->aggregateRootVersion() === 0) {
+            throw new \DomainException('account.not_found');
+        }
+
+        return $account;
     }
 
     public function save(Account $account): void

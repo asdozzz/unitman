@@ -50,7 +50,8 @@ final class Version20230217091838 extends AbstractMigration
                         unique
                             deferrable,
                 password varchar      not null,
-                roles    varchar
+                roles    varchar,
+                is_blocked bit
             );
         ");
     }

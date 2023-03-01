@@ -2,7 +2,9 @@
 
 namespace App\Unitman\Business\Command;
 
-final class CheckAccessToRepo
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class CheckAccessToRepo implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $repoId

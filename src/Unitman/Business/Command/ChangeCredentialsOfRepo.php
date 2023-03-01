@@ -2,7 +2,9 @@
 
 namespace App\Unitman\Business\Command;
 
-final class ChangeCredentialsOfRepo
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class ChangeCredentialsOfRepo implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $repoId,

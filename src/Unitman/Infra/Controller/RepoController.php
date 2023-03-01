@@ -17,28 +17,28 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/repo')]
 final class RepoController extends AbstractController
 {
-    #[Route('add', methods: ['POST'])]
+    #[Route('/add', methods: ['POST'])]
     public function add(AddRepo $command, AddRepoUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
-    #[Route('delete', methods: ['POST'])]
+    #[Route('/delete', methods: ['POST'])]
     public function delete(DeleteRepo $command, DeleteRepoUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
-    #[Route('changeCredentials', methods: ['POST'])]
+    #[Route('/changeCredentials', methods: ['POST'])]
     public function changeCredentials(ChangeCredentialsOfRepo $command, ChangeCredentialsOfRepoUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
-    #[Route('checkAccess', methods: ['POST'])]
+    #[Route('/checkAccess', methods: ['POST'])]
     public function checkAccess(CheckAccessToRepo $command, CheckAccessToRepoUseCase $useCase): Response
     {
         $useCase->handle($command);

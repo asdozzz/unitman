@@ -4,7 +4,8 @@ namespace App\Unitman\Business\UseCase;
 
 use App\Unitman\Business\Command\AddRepo;
 use App\Unitman\Business\Model\Repo;
-use App\Unitman\Business\Port\CanFindDouble;
+use App\Unitman\Business\Model\Repo\RepoType;
+use App\Unitman\Business\Port\CanFindRepoDouble;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RepoRepository;
 use App\Unitman\Business\Port\SecurityService;
@@ -15,7 +16,7 @@ final class AddRepoUseCase
         private SecurityService $securityService,
         private RepoRepository $repoRepository,
         private CanGeneateGuid $uuidGenerator,
-        private CanFindDouble $canFindDouble
+        private CanFindRepoDouble $canFindDouble
     )
     {
     }
@@ -28,7 +29,7 @@ final class AddRepoUseCase
 
         $repoId = $this->uuidGenerator->makeGuid();
 
-        if ($this->canFindDouble->isExistDoubleByEmail($command->repoUrl)) {
+        if ($command->repoType !== RepoType::GITHUB->value && $this->canFindDouble->isExistDoubleByUrl($command->repoUrl)) {
             throw new \RuntimeException('repo.url.double');
         }
 

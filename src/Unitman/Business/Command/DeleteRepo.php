@@ -2,7 +2,9 @@
 
 namespace App\Unitman\Business\Command;
 
-final class DeleteRepo
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class DeleteRepo implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $repoId
