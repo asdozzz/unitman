@@ -19,9 +19,9 @@ final class RepoListRepository implements CanFindRepoDouble
             'id' => $repoList->getId(),
             'type' => $repoList->getType(),
             'name' => $repoList->getName(),
-            'repoUrl' => $repoList->getRepoUrl(),
-            'repoLogin' => $repoList->getRepoLogin(),
-            'repoPassword' => $repoList->getRepoPassword(),
+            'repo_url' => $repoList->getRepoUrl(),
+            'repo_login' => $repoList->getRepoLogin(),
+            'repo_password' => $repoList->getRepoPassword(),
             'confirmed' => $repoList->isConfirmed() ? 1 : 0
         ];
         $this->connection->insert(self::TABLE, $data);
@@ -33,9 +33,9 @@ final class RepoListRepository implements CanFindRepoDouble
             'id' => $repoList->getId(),
             'type' => $repoList->getType(),
             'name' => $repoList->getName(),
-            'repoUrl' => $repoList->getRepoUrl(),
-            'repoLogin' => $repoList->getRepoLogin(),
-            'repoPassword' => $repoList->getRepoPassword(),
+            'repo_url' => $repoList->getRepoUrl(),
+            'repo_login' => $repoList->getRepoLogin(),
+            'repo_password' => $repoList->getRepoPassword(),
             'confirmed' => $repoList->isConfirmed()?1:0
         ], ['id' => $repoList->getId()]);
     }
@@ -47,8 +47,7 @@ final class RepoListRepository implements CanFindRepoDouble
 
     function getById(string $id): RepoList
     {
-        $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE id = :id", ['id' => $id]);
+        $row = $this->findRowById($id);
 
         if (empty($row)) {
             throw new \Exception('Repo not found with id='.$id);
@@ -65,9 +64,9 @@ final class RepoListRepository implements CanFindRepoDouble
             $row['id'],
             $row['type'],
             $row['name'],
-            $row['repoUrl'],
-            $row['repoLogin'],
-            $row['repoPassword'],
+            $row['repo_url'],
+            $row['repo_login'],
+            $row['repo_password'],
             $row['confirmed'],
         );
         return $repo;
@@ -76,8 +75,20 @@ final class RepoListRepository implements CanFindRepoDouble
     public function isExistDoubleByUrl(string $url): bool
     {
         $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE url = :url", ['url' => $url]);
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE repo_url = :url", ['url' => $url]);
 
         return !empty($row);
+    }
+
+    /**
+     * @param string $id
+     * @return false|mixed[]
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function findRowById(string $id): array|false
+    {
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE id = :id", ['id' => $id]);
+        return $row;
     }
 }

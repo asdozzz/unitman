@@ -22,18 +22,23 @@ final class Repo implements AggregateRoot
      * */
     use AggregateRootBehaviour;
 
-    private ?RepoId $id;
-
+    const GITHUB_REPO_URL = 'https://github.com';
+    private ?RepoType $type;
     private ?RepoName $name;
     private ?RepoCredentials $credentials;
     private bool $isDeleted = false;
     private bool $accessConfirmed = false;
+
+    public function getId(): string
+    {
+        return $this->aggregateRootId->toString();
+    }
     public static function addRepo(string $id, AddRepo $command): static
     {
         $repoId = RepoId::fromString($id);
         $repo = new static($repoId);
         if ($command->repoType === RepoType::GITHUB->value) {
-            $url = 'https://github.com';
+            $url = self::GITHUB_REPO_URL;
         } else {
             $url = $command->repoUrl;
         }
@@ -55,16 +60,22 @@ final class Repo implements AggregateRoot
             throw new \DomainException('repo.deleted');
         }
 
-        $newCredentials = new RepoCredentials($command->repoUrl, $command->repoLogin, $command->repoPassword);
+        if ($this->type === RepoType::GITHUB) {
+            $url = self::GITHUB_REPO_URL;
+        } else {
+            $url = $command->repoUrl;
+        }
+
+        $newCredentials = new RepoCredentials($url, $command->repoLogin, $command->repoPassword);
 
         if ($newCredentials->getHash() == $this->credentials->getHash()) {
             throw new \DomainException('repo.new_credentials_equals_old');
         }
 
-        $this->recordThat(new CredentialsOfRepoWasChanged($this->id->toString(), $command->repoUrl, $command->repoLogin, $command->repoPassword));
+        $this->recordThat(new CredentialsOfRepoWasChanged($this->getId(), $url, $command->repoLogin, $command->repoPassword));
     }
 
-    private function applyChangeCredentialsOfRepo(ChangeCredentialsOfRepo $fact): void
+    private function applyCredentialsOfRepoWasChanged(CredentialsOfRepoWasChanged $fact): void
     {
         $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->repoLogin, $fact->repoPassword);
         $this->accessConfirmed = false;
@@ -76,7 +87,7 @@ final class Repo implements AggregateRoot
             throw new \DomainException('repo.already_deleted');
         }
 
-        $this->recordThat(new RepoWasDeleted($this->id->toString()));
+        $this->recordThat(new RepoWasDeleted($this->getId()));
     }
 
     private function applyRepoWasDeleted(RepoWasDeleted $fact): void
@@ -90,7 +101,7 @@ final class Repo implements AggregateRoot
             throw new \DomainException('repo.already_deleted');
         }
 
-        $this->recordThat(new AccessToRepoConfirmed($this->id->toString()));
+        $this->recordThat(new AccessToRepoConfirmed($this->getId()));
     }
 
     private function applyAccessToRepoConfirmed(AccessToRepoConfirmed $fact): void

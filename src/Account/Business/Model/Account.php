@@ -79,27 +79,27 @@ final class Account implements AggregateRoot
 
     public function blockByAdmin(?string $reason): void
     {
+        if ($this->isBlocked) {
+            throw new \DomainException('account.already_blocked');
+        }
         $this->recordThat(new AccountWasBlockedByAdmin($this->accountId->toString(), $reason));
     }
 
     private function applyAccountWasBlockedByAdmin(AccountWasBlockedByAdmin $fact): void
     {
-        if ($this->isBlocked) {
-            throw new \DomainException('account.already_blocked');
-        }
         $this->isBlocked = true;
     }
 
     public function unblockByAdmin(?string $reason): void
     {
+        if (!$this->isBlocked) {
+            throw new \DomainException('account.is_not_blocked');
+        }
         $this->recordThat(new AccountWasUnblockedByAdmin($this->accountId->toString(), $reason));
     }
 
     private function applyAccountWasUnblockedByAdmin(AccountWasUnblockedByAdmin $fact): void
     {
-        if (!$this->isBlocked) {
-            throw new \DomainException('account.is_not_blocked');
-        }
         $this->isBlocked = false;
     }
 

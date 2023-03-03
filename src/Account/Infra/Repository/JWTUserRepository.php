@@ -76,7 +76,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble
         $JWTUser = $this->makeUserByDbRow($row);
 
         if ($JWTUser->isBlocked()) {
-            throw new \DomainException('Account was blocked ');
+            throw new \DomainException('#1. Account was blocked ');
         }
 
         return $JWTUser;
@@ -101,21 +101,43 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble
         return $row;
     }
 
-    public function getById(string $id): JWTUser
+    public function getActiveById(string $id): JWTUser
+    {
+        $user = $this->getById($id);
+
+        if ($user->isBlocked()) {
+            throw new \DomainException('#2. Account was blocked ');
+        }
+
+        return $user;
+    }
+
+    /**
+     * @param string $id
+     * @return false|mixed[]
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function findRowById(string $id): array|false
     {
         $table = self::TABLE;
         $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE id = :id", ['id' => $id]);
+        return $row;
+    }
+
+    /**
+     * @param string $id
+     * @return JWTUser
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getById(string $id): JWTUser
+    {
+        $row = $this->findRowById($id);
 
         if (empty($row)) {
-            throw new \Exception('User not found with id='.$id);
+            throw new \Exception('User not found with id=' . $id);
         }
 
         $user = $this->makeUserByDbRow($row);
-
-        if ($user->isBlocked()) {
-            throw new \DomainException('Account was blocked ');
-        }
-
         return $user;
     }
 }
