@@ -2,8 +2,8 @@
 
 namespace App\Unitman\Business\Model;
 
-use App\Unitman\Business\Command\AddRepo;
-use App\Unitman\Business\Command\ChangeCredentialsOfRepo;
+use App\Unitman\Business\Command\Repo\AddRepo;
+use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
 use App\Unitman\Business\Model\Repo\Event\AccessToRepoConfirmed;
 use App\Unitman\Business\Model\Repo\Event\CredentialsOfRepoWasChanged;
 use App\Unitman\Business\Model\Repo\Event\RepoWasAdded;

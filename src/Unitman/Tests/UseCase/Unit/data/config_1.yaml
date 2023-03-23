@@ -1,0 +1,42 @@
+variables:
+  - id: AUTH_TOKEN
+    label: Токен авторизации
+    type: string
+    defaultValue: asdasd
+
+  - id: DICTIONARY_SERVICE
+    label: Сервис справочников
+    type: collection
+    options:
+      - id: http://v1.dict.ru
+        name: Версия 1
+
+      - id: http://v2.dict.ru
+        name: Версия 2
+
+    defaultValue: http://v1.dict.ru
+
+  - id: ORDER_SERVICE
+    label: Сервис заказов
+    type: unit
+    options:
+        projectCode: services/orders
+    defaultValue: master
+
+prepare:
+  - cp -f .env.runner .env
+  - mkdir -p config/jwt
+  - openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:my_password
+  - openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:my_password
+
+reset_prepare:
+  - rm -rf config/jwt
+  - rm -f .env
+
+up:
+  - docker-compose up -d --build
+  - docker-compose run web composer install --optimize-autoloader
+  - docker-compose run web php bin/console doctrine:migrations:migrate
+
+down:
+  - docker-compose down

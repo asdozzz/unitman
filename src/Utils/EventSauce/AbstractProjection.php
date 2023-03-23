@@ -14,10 +14,10 @@ abstract class AbstractProjection implements MessageConsumer
         $reflect = new \ReflectionClass($event);
         $eventClass = $reflect->getShortName();
         $methodName = 'handle'.$eventClass;
-        if (method_exists($this, $methodName)) {
+        if (method_exists($this::class, $methodName)) {
             $this->{$methodName}($event);
         } else {
-            throw new \RuntimeException(sprintf('Handler for event=%s in %s not found', $eventClass, __CLASS__));
+            throw new \RuntimeException(sprintf('Handler %s for event=%s in %s not found', $methodName, $eventClass, $this::class));
         }
     }
 }

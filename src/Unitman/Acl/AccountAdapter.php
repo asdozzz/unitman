@@ -15,4 +15,9 @@ final class AccountAdapter implements SecurityService
     {
         return $this->accountApi->isAdmin();
     }
+
+    public function getCurrentUserId(): string
+    {
+        return $this->accountApi->getCurrentUserId();
+    }
 }

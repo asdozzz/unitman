@@ -1,0 +1,22 @@
+variables:
+  - FIRST_SERVICE_HOST:
+      label: Название сервиса 1
+      type: string
+
+  - SECOND_SERVICE_HOST:
+      label: Название сервиса 2
+      type: string
+
+build:
+  - cp -f .env.runner .env
+  - mkdir -p config/jwt
+  - openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:asd243815
+  - openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:asd243815
+
+up:
+  - docker-compose up -d --build
+  - docker-compose run web composer install --optimize-autoloader
+  - docker-compose run web php bin/console doctrine:migrations:migrate
+
+down:
+  - docker-compose down

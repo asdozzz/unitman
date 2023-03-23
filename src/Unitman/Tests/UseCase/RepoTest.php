@@ -2,20 +2,20 @@
 
 namespace App\Unitman\Tests\UseCase;
 
-use App\Unitman\Business\Command\AddRepo;
-use App\Unitman\Business\Command\ChangeCredentialsOfRepo;
-use App\Unitman\Business\Command\CheckAccessToRepo;
-use App\Unitman\Business\Command\DeleteRepo;
+use App\Unitman\Business\Command\Repo\AddRepo;
+use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
+use App\Unitman\Business\Command\Repo\CheckAccessToRepo;
+use App\Unitman\Business\Command\Repo\DeleteRepo;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
 use App\Unitman\Business\Port\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\SecurityService;
-use App\Unitman\Business\UseCase\AddRepoUseCase;
-use App\Unitman\Business\UseCase\ChangeCredentialsOfRepoUseCase;
-use App\Unitman\Business\UseCase\CheckAccessToRepoUseCase;
-use App\Unitman\Business\UseCase\DeleteRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\AddRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\CheckAccessToRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\DeleteRepoUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\RepoListRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
@@ -36,7 +36,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $deleteCommand = new DeleteRepo($repoId);
 
         $sut = self::$container->get(DeleteRepoUseCase::class);
-        /** @var DeleteRepoUseCase $sut*/
+        /** @var \App\Unitman\Business\UseCase\Repo\DeleteRepoUseCase $sut*/
         $sut->handle($deleteCommand);
 
         $repoListRepository = self::$container->get(RepoListRepository::class);
@@ -58,7 +58,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
 
         $command = new ChangeCredentialsOfRepo($repoId, 'newLogin', 'newPassword','https://org2@gitlab.ru');
         $useCase = self::$container->get(ChangeCredentialsOfRepoUseCase::class);
-        /** @var ChangeCredentialsOfRepoUseCase $useCase*/
+        /** @var \App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase $useCase*/
         $useCase->handle($command);
 
         $repoListRepository = self::$container->get(RepoListRepository::class);
@@ -120,7 +120,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
             $repoUrl
         );
 
-        $addRepoUseCase = self::$container->get(AddRepoUseCase::class);
+        $addRepoUseCase = self::$container->get(\App\Unitman\Business\UseCase\Repo\AddRepoUseCase::class);
         /** @var AddRepoUseCase $addRepoUseCase */
         $addRepoUseCase->handle($addCommand);
 

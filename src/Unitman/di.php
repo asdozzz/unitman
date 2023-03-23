@@ -6,8 +6,12 @@ namespace App\Unitman;
 
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\Projection\ProjectMessageDispatcherFactory;
 use App\Unitman\Infra\Projection\RepoMessageDispatcherFactory;
-use App\Unitman\Infra\Repository\SqlRepoRepository;
+use App\Unitman\Infra\Projection\UnitMessageDispatcherFactory;
+use App\Unitman\Infra\Repository\SqlProjectEventsRepository;
+use App\Unitman\Infra\Repository\SqlRepoEvensRepository;
+use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;
@@ -42,11 +46,33 @@ return function (ContainerConfigurator $configuration) {
     $services->set('repo.message_dispatcher', SynchronousMessageDispatcher::class)
         ->factory([service(RepoMessageDispatcherFactory::class), 'getMessageDispatcher']);
 
-    $services->set(SqlRepoRepository::class)
+    $services->set(SqlRepoEvensRepository::class)
         ->args([
             service(Connection::class),
             service('unitman.message_repository'),
             service('repo.message_dispatcher'),
+            service('app.message_decorator'),
+        ]);
+
+    $services->set('project.message_dispatcher', SynchronousMessageDispatcher::class)
+        ->factory([service(ProjectMessageDispatcherFactory::class), 'getMessageDispatcher']);
+
+    $services->set(SqlProjectEventsRepository::class)
+        ->args([
+            service(Connection::class),
+            service('unitman.message_repository'),
+            service('project.message_dispatcher'),
+            service('app.message_decorator'),
+        ]);
+
+    $services->set('unit.message_dispatcher', SynchronousMessageDispatcher::class)
+        ->factory([service(UnitMessageDispatcherFactory::class), 'getMessageDispatcher']);
+
+    $services->set(SqlUnitEventsRepository::class)
+        ->args([
+            service(Connection::class),
+            service('unitman.message_repository'),
+            service('unit.message_dispatcher'),
             service('app.message_decorator'),
         ]);
 };

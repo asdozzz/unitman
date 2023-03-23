@@ -2,14 +2,14 @@
 
 namespace App\Unitman\Infra\Controller;
 
-use App\Unitman\Business\Command\AddRepo;
-use App\Unitman\Business\Command\ChangeCredentialsOfRepo;
-use App\Unitman\Business\Command\CheckAccessToRepo;
-use App\Unitman\Business\Command\DeleteRepo;
-use App\Unitman\Business\UseCase\AddRepoUseCase;
-use App\Unitman\Business\UseCase\ChangeCredentialsOfRepoUseCase;
-use App\Unitman\Business\UseCase\CheckAccessToRepoUseCase;
-use App\Unitman\Business\UseCase\DeleteRepoUseCase;
+use App\Unitman\Business\Command\Repo\AddRepo;
+use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
+use App\Unitman\Business\Command\Repo\CheckAccessToRepo;
+use App\Unitman\Business\Command\Repo\DeleteRepo;
+use App\Unitman\Business\UseCase\Repo\AddRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\CheckAccessToRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\DeleteRepoUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;

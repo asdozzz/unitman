@@ -18,4 +18,15 @@ final class SymfonySecurityService implements SecurityService
     {
         return $this->security->isGranted(Role::ROLE_ADMIN->value);
     }
+
+    public function getCurrentUserId(): string
+    {
+        $user = $this->security->getUser();
+
+        if (empty($user)) {
+            throw new \DomainException('security.need_auth');
+        }
+
+        return $user->getId();
+    }
 }

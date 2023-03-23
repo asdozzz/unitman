@@ -29,7 +29,7 @@ final class RegisterAccountUseCase
         }
 
         $registerAccount->setPassword($this->passwordHasher->hashPassword($registerAccount->getPassword()));
-        $accountId = $this->uuidGenerator->make();
+        $accountId = $this->uuidGenerator->makeGuid();
 
         if ($this->canFindDouble->isExistDoubleByEmail($registerAccount->getEmail())) {
             throw new \DomainException('account.email.double');

@@ -7,7 +7,6 @@ use App\Account\Business\Command\RegisterFirstAccount;
 use App\Account\Business\Model\Account;
 use App\Account\Business\Port\AccountRepository;
 use App\Account\Business\Port\CanHashPassword;
-use App\Unitman\Business\Port\CanGeneateGuid;
 
 final class RegisterFirstAccountUseCase
 {

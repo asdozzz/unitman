@@ -14,4 +14,9 @@ final class AccountApi
     {
         return $this->securityService->isAdmin();
     }
+
+    public function getCurrentUserId(): string
+    {
+        return $this->securityService->getCurrentUserId();
+    }
 }

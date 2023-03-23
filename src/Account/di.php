@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Account;
 
 use App\Account\Business\Model\Account;
+use App\Account\Business\Port\UuidGenerator;
+use App\Account\Infra\Adapter\RamseyUuidGenerator;
 use App\Account\Infra\Projection\AccountMessageDispatcherFactory;
 use App\Account\Infra\Projection\SyncProjectionForAccount;
 use App\Account\Infra\Repository\SqlAccountRepository;
-use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;
@@ -29,7 +29,7 @@ return function (ContainerConfigurator $configuration) {
         ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model'])
         ->public();
 
-    $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class);
+    $services->set(UuidGenerator::class, RamseyUuidGenerator::class);
 
     $services->set('account.message_repository', DoctrineUuidV4MessageRepository::class)
         ->args([

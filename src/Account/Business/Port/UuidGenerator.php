@@ -6,5 +6,5 @@ use Symfony\Component\Uid\Uuid;
 
 interface UuidGenerator
 {
-    public function make(): string;
+    public function makeGuid(): string;
 }
