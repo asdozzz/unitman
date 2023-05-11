@@ -4,13 +4,13 @@ namespace App\Unitman\Business\UseCase\Repo;
 
 use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
 use App\Unitman\Business\Port\RepoRepository;
-use App\Unitman\Business\Port\SecurityService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class ChangeCredentialsOfRepoUseCase
 {
     public function __construct(
-        private SecurityService $securityService,
-        private RepoRepository $repoRepository
+        private UnitmanSecurityService $securityService,
+        private RepoRepository         $repoRepository
     )
     {
     }

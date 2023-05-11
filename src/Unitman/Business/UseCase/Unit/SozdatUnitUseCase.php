@@ -2,22 +2,22 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Account\Business\Port\UuidGenerator;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanFindUnitDouble;
+use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\ProjectRepository;
-use App\Unitman\Business\Port\SecurityService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\Port\UnitRepository;
 
 final class SozdatUnitUseCase
 {
     public function __construct(
-        private CanFindUnitDouble $canFindUnitDouble,
-        private ProjectRepository $projectRepository,
-        private SecurityService $securityService,
-        private UuidGenerator $uuidGenerator,
-        private UnitRepository $unitRepository
+        private CanFindUnitDouble      $canFindUnitDouble,
+        private ProjectRepository      $projectRepository,
+        private UnitmanSecurityService $securityService,
+        private CanGeneateGuid         $uuidGenerator,
+        private UnitRepository         $unitRepository
     )
     {
     }
@@ -40,7 +40,7 @@ final class SozdatUnitUseCase
             throw new \DomainException('unit.ne_hvataet_prav');
         }
 
-        $unit = Unit::sozdatUnit($this->uuidGenerator->makeGuid(), $command);
+        $unit = Unit::sozdatUnit($this->uuidGenerator->makeGuid(), $userId, $project->getName(), $command);
         $this->unitRepository->save($unit);
     }
 }

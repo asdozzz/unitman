@@ -1,20 +1,20 @@
 variables:
-  - DICTIONARY_SERVICE:
-      label: Сервис справочников
-      type: collection
-      options:
-        - id: http://v1.dict.ru
-          name: Версия 1
+  - id: DICTIONARY_SERVICE
+    label: Сервис справочников
+    type: collection
+    options:
+      - id: http://v1.dict.ru
+        name: Версия 1
 
-        - id: http://v2.dict.ru
-          name: Версия 2
+      - id: http://v2.dict.ru
+        name: Версия 2
 
-      defaultValue: http://v1.dict.ru
+    defaultValue: http://v1.dict.ru
 
-  - DICTIONATY_USER:
-      label: Токен авторизации
-      type: string
-      defaultValue: asdasd
+  - id: DICTIONARY_USER
+    label: Токен авторизации
+    type: string
+    defaultValue: qweqwe
 
 prepare:
   - cp -f .env.runner .env

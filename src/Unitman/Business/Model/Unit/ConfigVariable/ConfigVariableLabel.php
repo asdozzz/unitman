@@ -16,7 +16,7 @@ final class ConfigVariableLabel implements \Stringable
             throw new \DomainException('unit.config.variable.length_label_invalid');
         }
 
-        if (!preg_match('/[a-zA-Z_]+/mu', $label)) {
+        if (!preg_match('/[a-zA-Z_а-яА-ЯЁё ]+/mu', $label)) {
             throw new \DomainException('unit.config.variable.label_invalid');
         }
 

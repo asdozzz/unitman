@@ -2,6 +2,8 @@
 
 namespace App\Unitman\Business\Model\Unit\State;
 
+use App\Unitman\Business\Model\Unit;
+
 final class Udalen extends AbstractState
 {
 
@@ -18,7 +20,7 @@ final class Udalen extends AbstractState
         return [];
     }
 
-    public function getCommands(): array
+    public function getCommands(Unit $unit): array
     {
         return [];
     }

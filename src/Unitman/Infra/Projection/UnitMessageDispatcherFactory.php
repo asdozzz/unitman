@@ -12,7 +12,7 @@ final class UnitMessageDispatcherFactory
      * */
     private iterable $syncProjections;
 
-    public function __construct(#[TaggedIterator('project.sync_unit')] iterable $syncProjections)
+    public function __construct(#[TaggedIterator('unit.sync_projection')] iterable $syncProjections)
     {
         $this->syncProjections = $syncProjections;
     }

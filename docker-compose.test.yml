@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  web:
+    extends:
+      file: common-services.yml
+      service: web
+
+  postgres:
+    extends:
+      file: common-services.yml
+      service: postgres

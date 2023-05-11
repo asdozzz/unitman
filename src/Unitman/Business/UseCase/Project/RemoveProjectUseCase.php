@@ -4,6 +4,7 @@ namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\RemoveProject;
 use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class RemoveProjectUseCase
 {

@@ -8,15 +8,15 @@ use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Port\CanFindRepoDouble;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RepoRepository;
-use App\Unitman\Business\Port\SecurityService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class AddRepoUseCase
 {
     public function __construct(
-        private SecurityService $securityService,
-        private RepoRepository $repoRepository,
-        private CanGeneateGuid $uuidGenerator,
-        private CanFindRepoDouble $canFindDouble
+        private UnitmanSecurityService $securityService,
+        private RepoRepository         $repoRepository,
+        private CanGeneateGuid         $uuidGenerator,
+        private CanFindRepoDouble      $canFindDouble
     )
     {
     }

@@ -2,10 +2,11 @@
 
 namespace App\Unitman\Infra\Repository\Unit;
 
+use App\Unitman\Business\Port\CanFindUnitDouble;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
 
-final class SpisokUnitovRepository
+final class SpisokUnitovRepository implements CanFindUnitDouble
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection)
@@ -38,14 +39,16 @@ final class SpisokUnitovRepository
     {
         $data = [
             'id' => $spisokUnitovReadModel->id,
+            'author_id' => $spisokUnitovReadModel->authorId,
             'name' => $spisokUnitovReadModel->name,
             'project_id' => $spisokUnitovReadModel->projectId,
+            'project_name' => $spisokUnitovReadModel->projectName,
             'branch' => $spisokUnitovReadModel->branch,
             'state' => $spisokUnitovReadModel->state,
             'text_ot_runnera' => $spisokUnitovReadModel->textOtRunnera,
             'wait_result_from_runner' => $spisokUnitovReadModel->waitResultFromRunner?1:0,
             'config' => $spisokUnitovReadModel->config,
-            'configValues' => $spisokUnitovReadModel->configValues,
+            'config_values' => $spisokUnitovReadModel->configValues,
         ];
         $this->connection->insert(self::TABLE, $data);
     }
@@ -55,12 +58,13 @@ final class SpisokUnitovRepository
         $data = [
             'name' => $spisokUnitovReadModel->name,
             'project_id' => $spisokUnitovReadModel->projectId,
+            'project_name' => $spisokUnitovReadModel->projectName,
             'branch' => $spisokUnitovReadModel->branch,
             'state' => $spisokUnitovReadModel->state,
             'text_ot_runnera' => $spisokUnitovReadModel->textOtRunnera,
             'wait_result_from_runner' => $spisokUnitovReadModel->waitResultFromRunner?1:0,
             'config' => $spisokUnitovReadModel->config,
-            'configValues' => $spisokUnitovReadModel->configValues,
+            'config_values' => $spisokUnitovReadModel->configValues,
         ];
         $this->connection->update(self::TABLE, $data, ['id' => $spisokUnitovReadModel->id]);
     }
@@ -74,22 +78,24 @@ final class SpisokUnitovRepository
     {
         return new SpisokUnitovReadModel(
             $row['id'],
+            $row['author_id'],
             $row['name'],
             $row['project_id'],
+            $row['project_name'],
             $row['branch'],
             $row['state'],
             $row['text_ot_runnera'],
             $row['wait_result_from_runner'],
             $row['config'],
-            $row['configValues'],
+            $row['config_values'],
         );
     }
 
-    public function isExistDoubleByName(string $name): bool
+    public function isExistsDoubleByName(string $name): bool
     {
         $table = self::TABLE;
         $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE name = :name", ['name' => $name]);
-
         return !empty($row);
     }
+
 }

@@ -11,7 +11,7 @@ use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
 use App\Unitman\Business\Port\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Business\Port\SecurityService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Repo\AddRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\CheckAccessToRepoUseCase;
@@ -106,9 +106,9 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
      */
     public function addRepo(string $repoId, string $repoName, RepoType $repoType, ?string $repoUrl): void
     {
-        $securityService = $this->getMockBuilder(SecurityService::class)->getMock();
+        $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
-        self::$container->set(SecurityService::class, $securityService);
+        self::$container->set(UnitmanSecurityService::class, $securityService);
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId]));
 
 

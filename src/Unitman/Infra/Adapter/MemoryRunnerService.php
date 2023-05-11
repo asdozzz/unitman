@@ -3,10 +3,12 @@
 namespace App\Unitman\Infra\Adapter;
 
 use App\Unitman\Business\Model\Project;
-use App\Unitman\Business\Model\Runner\ResponseToBuildProject;
+use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\RunnerService;
+use Symfony\Component\DependencyInjection\Attribute\When;
 
+#[When(env: 'test')]
 final class MemoryRunnerService implements RunnerService
 {
 
@@ -24,9 +26,9 @@ final class MemoryRunnerService implements RunnerService
     {
     }
 
-    public function addResponse(string $type, mixed $object): void
+    public function addResponse(string $type, string $jobId): void
     {
-        $this->responses[$type][] = $object;
+        $this->responses[$type][] = new JobId($jobId);
     }
 
     private function getNextResponse(string $type): mixed
@@ -37,47 +39,47 @@ final class MemoryRunnerService implements RunnerService
 
         return array_shift($this->responses[$type]);
     }
-    public function buildProject(Project $project): string
+    public function buildProject(Project $project): JobId
     {
         return $this->getNextResponse(self::BUILD_PROJECT);
     }
 
-    public function removeProject(Project $project): string
+    public function removeProject(Project $project): JobId
     {
         return $this->getNextResponse(self::REMOVE_PROJECT);
     }
 
-    public function nachatSborkuUnita(Unit $unit): string
+    public function nachatSborkuUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::SBORKA_UNITA);
     }
 
-    public function nachatPodgotovkuUnita(Unit $unit): string
+    public function nachatPodgotovkuUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::PODGOTOVKA_UNITA);
     }
 
-    public function nachatObnovlenieUnita(Unit $unit): string
+    public function nachatObnovlenieUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::OBNOVLENIE_UNITA);
     }
 
-    public function nachatSbrosPodgotovkiUnita(Unit $unit): string
+    public function nachatSbrosPodgotovkiUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::SBROS_PODGOTOVKI_UNITA);
     }
 
-    public function nachatZapuskUnita(Unit $unit): string
+    public function nachatZapuskUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::ZAPUSK_UNITA);
     }
 
-    public function nachatOstanovkuUnita(Unit $unit): string
+    public function nachatOstanovkuUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::OSTANOVKA_UNITA);
     }
 
-    public function nachatUdalenieUnita(Unit $unit): string
+    public function nachatUdalenieUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::UDALENIE_UNITA);
     }

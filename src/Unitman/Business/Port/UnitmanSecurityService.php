@@ -2,7 +2,7 @@
 
 namespace App\Unitman\Business\Port;
 
-interface SecurityService
+interface UnitmanSecurityService
 {
     public function isAdmin(): bool;
     public function getCurrentUserId(): string;

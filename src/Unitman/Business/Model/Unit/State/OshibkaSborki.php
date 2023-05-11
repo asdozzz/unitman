@@ -2,6 +2,8 @@
 
 namespace App\Unitman\Business\Model\Unit\State;
 
+use App\Unitman\Business\Model\Unit;
+
 final class OshibkaSborki extends AbstractState
 {
 
@@ -21,7 +23,7 @@ final class OshibkaSborki extends AbstractState
         ];
     }
 
-    public function getCommands(): array
+    public function getCommands(Unit $unit): array
     {
         return [
             StateUserCommand::nachatUdalenie,

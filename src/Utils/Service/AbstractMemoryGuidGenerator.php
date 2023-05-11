@@ -14,6 +14,9 @@ abstract class AbstractMemoryGuidGenerator
 
     function makeGuid(): string
     {
+        if (!isset($this->guids[$this->currentIndex])) {
+            throw new \DomainException('Guid not found for index='.$this->currentIndex);
+        }
         $guid = $this->guids[$this->currentIndex];
         $this->currentIndex++;
         return $guid;

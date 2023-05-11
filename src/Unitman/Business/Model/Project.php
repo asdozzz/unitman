@@ -130,6 +130,10 @@ final class Project implements AggregateRoot
             throw new \DomainException('project.removing');
         }
 
+        if ($this->dataAboutBuilding) {
+            throw new \DomainException('project.already_built');
+        }
+
         if ($command->newProjectName === (string)$this->name) {
             throw new \DomainException('project.old_name_equal_new_name');
         }
@@ -328,6 +332,11 @@ final class Project implements AggregateRoot
     public function getCode(): string
     {
         return $this->code;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function isDisable(): bool

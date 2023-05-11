@@ -19,7 +19,8 @@ final class OshibkaSbrosaPodgotovki extends AbstractState
     {
         return [
             new VOcherediNaUdalenie(),
-            new VOcherediNaSbrosPodgotovki()
+            new VOcherediNaSbrosPodgotovki(),
+            new VOcherediNaObnovlenie(),
         ];
     }
 
@@ -27,7 +28,9 @@ final class OshibkaSbrosaPodgotovki extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::nachatSbrosPodgotovki
+            StateUserCommand::nachatSbrosPodgotovki,
+            StateUserCommand::nachatObnovlenie,
+            StateUserCommand::zapolnitPeremenie
         ];
     }
 }

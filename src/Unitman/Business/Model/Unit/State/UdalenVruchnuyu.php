@@ -2,6 +2,8 @@
 
 namespace App\Unitman\Business\Model\Unit\State;
 
+use App\Unitman\Business\Model\Unit;
+
 final class UdalenVruchnuyu extends AbstractState
 {
 
@@ -14,6 +16,11 @@ final class UdalenVruchnuyu extends AbstractState
      * @inheritDoc
      */
     public function getNextStates(): array
+    {
+        return [];
+    }
+
+    public function getCommands(Unit $unit): array
     {
         return [];
     }

@@ -6,14 +6,15 @@ namespace App\Unitman;
 
 use App\Unitman\Business\Port\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
-use App\Unitman\Business\Port\SecurityService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $configuration) {
     $services = $configuration->services();
 
-    $services->set(SecurityService::class)->public();
+    $services->set(UnitmanSecurityService::class)->public();
     $services->set(CanGeneateGuid::class)->public();
     $services->set(CanCheckAccessToRepo::class)->public();
     $services->set(RunnerService::class)->public();

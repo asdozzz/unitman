@@ -6,7 +6,8 @@ final class OshibkaObnovleniyaUnitaUstanovlena
 {
     public function __construct(
         public readonly string $unitId,
-        public readonly string $textOtRunnera
+        public readonly string $textOtRunnera,
+        public readonly array $stateAsArray
     )
     {
     }

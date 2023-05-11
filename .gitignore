@@ -21,3 +21,4 @@
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
 .composer/
+/.env

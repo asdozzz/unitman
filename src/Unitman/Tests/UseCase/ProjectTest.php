@@ -17,6 +17,7 @@ use App\Unitman\Business\Command\Project\SetErrorWhenRemoveProject;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RunnerService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 use App\Unitman\Business\UseCase\Project\AddProjectUseCase;
 use App\Unitman\Business\UseCase\Project\AddUserToProjectUseCase;
@@ -42,6 +43,10 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
 {
     function addProject(string $repoId,string $projectCode, string $projectName, string $mainBranch): string
     {
+        $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        self::$container->set(UnitmanSecurityService::class, $securityService);
+
         $projectId = Uuid::uuid7()->toString();
 
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$projectId]));

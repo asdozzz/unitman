@@ -17,7 +17,7 @@ final class SqlUnitEventsRepository implements UnitRepository
     public function __construct(Connection $connection, MessageRepository $messageRepository, MessageDispatcher $messageDispatcher, MessageDecorator $messageDecorator)
     {
         $this->esRepository = new EventSourcedAggregateRootRepository(
-            Project::class,
+            Unit::class,
             $messageRepository,
             $messageDispatcher,
             $messageDecorator

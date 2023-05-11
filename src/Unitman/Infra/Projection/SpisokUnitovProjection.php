@@ -30,11 +30,12 @@ use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use App\Utils\EventSauce\AbstractProjection;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-final class SpisokUnitovProjection extends AbstractProjection implements SyncProjectionForUnit
+#[AutoconfigureTag('unit.sync_projection')]
+final class SpisokUnitovProjection extends AbstractProjection
 {
     public function __construct(
-        private SqlUnitEventsRepository $eventsRepository,
         private SpisokUnitovRepository $repository
     )
     {
@@ -42,16 +43,16 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUnitSozdan(UnitSozdan $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->id);
-
         $readModel = new SpisokUnitovReadModel(
             $fact->id,
+            $fact->authorId,
             $fact->name,
             $fact->projectId,
+            $fact->projectName,
             $fact->branch,
-            json_encode($unit->getStateAsArray()),
+            json_encode($fact->stateAsArray),
             '',
-            $unit->isWaitResultFromRunner(),
+            false,
             '',
             ''
         );
@@ -61,22 +62,20 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleSborkaUnitNachalas(SborkaUnitNachalas $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
     }
 
     function handleOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -84,45 +83,41 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
-            'config' => $fact->configUnita,
+            'config' => json_encode($fact->configUnita),
         ]);
         $this->repository->update($readModel);
     }
 
     function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'configValues' => $fact->values
+        $readModel = $readModel->copyAndUpdateData([
+            'configValues' => json_encode($fact->values)
         ]);
         $this->repository->update($readModel);
     }
 
     function handlePodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
     }
 
     function handleOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -130,11 +125,10 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -142,22 +136,21 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleObnovlenieUnitaNachalos(ObnovlenieUnitaNachalos $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
     }
 
     function handleOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
+
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -165,35 +158,32 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
-            'config' => $fact->configUnita,
+            'config' => json_encode($fact->configUnita),
         ]);
         $this->repository->update($readModel);
     }
 
     function handleSbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
     }
 
     function handleOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -201,11 +191,10 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUspehSbrosaPodgotovkiUnitaUstanovlen(UspehSbrosaPodgotovkiUnitaUstanovlen $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -213,22 +202,20 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
     }
 
     function handleOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -236,11 +223,10 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -248,22 +234,20 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleOstanovkaUnitaNachalas(OstanovkaUnitaNachalas $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
     }
 
     function handleOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -271,11 +255,10 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUspehOstanovkiUnitaUstanovlen(UspehOstanovkiUnitaUstanovlen $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
@@ -283,22 +266,20 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handleUdalenieUnitaNachalos(UdalenieUnitaNachalos $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
     }
 
     function handleOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
     {
-        $unit = $this->eventsRepository->getById($fact->unitId);
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel->copyAndUpdateData([
-            'state' => json_encode($unit->getStateAsArray()),
-            'waitResultFromRunner' => $unit->isWaitResultFromRunner(),
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => json_encode($fact->stateAsArray),
+            'waitResultFromRunner' => false,
             'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);

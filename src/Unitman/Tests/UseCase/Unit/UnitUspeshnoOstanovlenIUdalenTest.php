@@ -2,6 +2,8 @@
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
+use App\Unitman\Business\Command\Project\AddProject;
+use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
@@ -11,6 +13,7 @@ use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
 use App\Unitman\Business\Command\Unit\UstanovitOshibkuPriPodgotovkeUnita;
+use App\Unitman\Business\Command\Unit\UstanovitOshibkuSbrosaPodgotovkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitOshibkuUdaleniya;
 use App\Unitman\Business\Command\Unit\UstanovitUspehObnovleniyaUnita;
 use App\Unitman\Business\Command\Unit\UstanovitUspehOstanovkiUnita;
@@ -20,8 +23,12 @@ use App\Unitman\Business\Command\Unit\UstanovitUspehSbrosaPodgotovki;
 use App\Unitman\Business\Command\Unit\UstanovitUspehZapuska;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\Port\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
@@ -32,6 +39,7 @@ use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitOshibkuPriPodgotovkeUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitOshibkuSbrosaPodgotovkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitOshibkuUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitUspehObnovleniyaUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitUspehOstanovkiUnitaUseCase;
@@ -46,53 +54,38 @@ use App\Unitman\Infra\Adapter\MemoryRunnerService;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
 
-final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
+final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 {
     function test()
     {
         $unitId = Uuid::uuid7()->toString();
-        $projectId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId]));
+        $this->sozdatUnit($unitId);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, 'OBNOVLENIE_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, 'OBNOVLENIE_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, 'ZAPUSK_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::OSTANOVKA_UNITA, 'OSTANOVKA_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, 'UDALENIE_UNITA');
         self::$container->set(RunnerService::class, $memoryRunner);
 
-        $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
-        /** @var SpisokUnitovRepository $spisokUnitovRepo*/
-
-        $useCase = self::$container->get(SozdatUnitUseCase::class);
-        $useCase->handle(new SozdatUnit(
-            $projectId,
-            'task-123',
-            'feature/123'
-        ));
-
-        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-
-        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'SOZDAN',
-            'commands' => ['nachatSborku', 'nachatUdalenie']
-        ]));
-        $this->assertEquals($spisokUnitovReadModel->name, 'task-123');
-        $this->assertEquals($spisokUnitovReadModel->branch, 'feature/123');
-        $this->assertEquals($spisokUnitovReadModel->projectId, $projectId);
 
         $useCase = self::$container->get(SobratUnitUseCase::class);
         $useCase->handle(new SobratUnit($unitId));
 
+        $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
+        /** @var SpisokUnitovRepository $spisokUnitovRepo */
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_SBORKI',
+            'code' => 'JDET_RESULTATI_SBORKI',
             'commands' => []
         ]));
 
@@ -107,7 +100,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
 
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'USPESHNO_SOBRAN',
+            'code' => 'USPESHNO_SOBRAN',
             'commands' => [
                 'nachatUdalenie',
                 'nachatObnovlenie',
@@ -118,12 +111,12 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera');
         $cfg = [
             'variables' => [
-                ['id' => 'AUTH_TOKEN', 'name' => 'Токен авторизации', 'type' => 'string', 'defaultValue' => 'asdasd'],
-                ['id' => 'DICTIONARY_SERVICE', 'name' => 'Сервис справочников', 'type' => 'collection', 'defaultValue' => 'http://v1.dict.ru', 'options' => [
+                ['id' => 'AUTH_TOKEN', 'label' => 'Токен авторизации', 'type' => 'string', 'defaultValue' => 'asdasd'],
+                ['id' => 'DICTIONARY_SERVICE', 'label' => 'Сервис справочников', 'type' => 'collection', 'defaultValue' => 'http://v1.dict.ru', 'options' => [
                     ['id' => 'http://v1.dict.ru', 'name' => 'Версия 1'],
                     ['id' => 'http://v2.dict.ru', 'name' => 'Версия 2'],
                 ]],
-                ['id' => 'ORDER_SERVICE', 'name' => 'Сервис заказов', 'type' => 'unit', 'defaultValue' => 'master', 'options' => [
+                ['id' => 'ORDER_SERVICE', 'label' => 'Сервис заказов', 'type' => 'unit', 'defaultValue' => 'master', 'options' => [
                     'projectCode' => 'services/orders'
                 ]]
             ],
@@ -146,7 +139,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
                 'docker-compose down'
             ]
         ];
-        $this->assertEquals($spisokUnitovReadModel->config, json_encode($cfg));
+        $this->assertEquals(json_decode($spisokUnitovReadModel->config, true), $cfg);
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
@@ -168,7 +161,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_PODGOTOVKI',
+            'code' => 'JDET_RESULTATI_PODGOTOVKI',
             'commands' => []
         ]));
 
@@ -179,7 +172,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_oshibka_podgotovka');
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'OSHIBKA_PODGOTOVKI',
+            'code' => 'OSHIBKA_PODGOTOVKI',
             'commands' => [
                 'nachatUdalenie',
                 'nachatObnovlenie',
@@ -194,7 +187,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_OBNOVLENIYA',
+            'code' => 'JDET_RESULTATI_OBNOVLENIYA',
             'commands' => []
         ]));
 
@@ -204,14 +197,23 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
+            'code' => 'USPESHNO_SOBRAN',
+            'commands' => [
+                'nachatUdalenie',
+                'nachatObnovlenie',
+                'zapolnitPeremenie',
+                'nachatPodgotovku',
+            ]
+        ]));
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_obnovlenie');
         $cfg = [
             'variables' => [
-                ['id' => 'DICTIONARY_SERVICE', 'name' => 'Сервис справочников', 'type' => 'collection', 'defaultValue' => 'http://v1.dict.ru', 'options' => [
+                ['id' => 'DICTIONARY_SERVICE', 'label' => 'Сервис справочников', 'type' => 'collection', 'defaultValue' => 'http://v1.dict.ru', 'options' => [
                     ['id' => 'http://v1.dict.ru', 'name' => 'Версия 1'],
                     ['id' => 'http://v2.dict.ru', 'name' => 'Версия 2'],
                 ]],
-                ['id' => 'DICTIONATY_USER', 'name' => 'Логин сервиса авторизации', 'type' => 'string', 'defaultValue' => 'qweqwe'],
+                ['id' => 'DICTIONARY_USER', 'label' => 'Токен авторизации', 'type' => 'string', 'defaultValue' => 'qweqwe'],
             ],
             'prepare' => [
                 'cp -f .env.runner .env',
@@ -232,7 +234,45 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
                 'docker-compose down'
             ]
         ];
-        $this->assertEquals($spisokUnitovReadModel->config, json_encode($cfg));
+        $this->assertEquals(json_decode($spisokUnitovReadModel->config, true), $cfg);
+
+        $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
+        $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
+            'DICTIONARY_SERVICE' => 'http://v3.dict.ru',
+            'DICTIONARY_USER' => 'asdozzz'
+        ]));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->configValues, json_encode([
+            'DICTIONARY_SERVICE' => 'http://v3.dict.ru',
+            'DICTIONARY_USER' => 'asdozzz'
+        ]));
+
+        $useCase = self::$container->get(PodgotovitUnitKZapuskuUseCase::class);
+        $useCase->handle(new PodgotovitUnitKZapusku($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
+        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
+            'code' => 'JDET_RESULTATI_PODGOTOVKI',
+            'commands' => []
+        ]));
+
+        $useCase = self::$container->get(UstanovitUspehPodgotovkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitUspehPodgotovkiUnita($unitId,'text_ot_runnera_uspeh_podgotovki'));
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_podgotovki');
+        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
+            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
+            'commands' => [
+                'nachatUdalenie',
+                'nachatObnovlenie',
+                'zapolnitPeremenie',
+                'nachatSbrosPodgotovki',
+                'nachatZapusk',
+            ]
+        ]));
 
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
         $useCase->handle(new SbrositPodgotovkuUnita($unitId));
@@ -240,7 +280,61 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_SBROSA_PODGOTOVKI',
+            'code' => 'JDET_RESULTATI_SBROSA_PODGOTOVKI',
+            'commands' => []
+        ]));
+
+        $useCase = self::$container->get(UstanovitOshibkuSbrosaPodgotovkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitOshibkuSbrosaPodgotovkiUnita($unitId, 'text_ot_runnera_oshibka_sbrosa'));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
+            'code' => 'OSHIBKA_SBROSA_PODGOTOVKI',
+            'commands' => [
+                'nachatUdalenie',
+                'nachatSbrosPodgotovki',
+                'nachatObnovlenie',
+                'zapolnitPeremenie',
+            ]
+        ]));
+
+        $useCase = self::$container->get(ObnovitKodUnitaUseCase::class);
+        $useCase->handle(new ObnovitKodUnita($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
+        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
+            'code' => 'JDET_RESULTATI_OBNOVLENIYA',
+            'commands' => []
+        ]));
+
+        $configText = file_get_contents(__DIR__.'/data/config_2.yaml');
+        $useCase = self::$container->get(UstanovitUspehObnovleniyaUnitaUseCase::class);
+        $useCase->handle(new UstanovitUspehObnovleniyaUnita($unitId, 'text_ot_runnera_obnovlenie',$configText));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
+            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
+            'commands' => [
+                'nachatUdalenie',
+                'nachatObnovlenie',
+                'zapolnitPeremenie',
+                'nachatSbrosPodgotovki',
+                'nachatZapusk',
+            ]
+        ]));
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_obnovlenie');
+
+
+        $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
+        $useCase->handle(new SbrositPodgotovkuUnita($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
+        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
+            'code' => 'JDET_RESULTATI_SBROSA_PODGOTOVKI',
             'commands' => []
         ]));
 
@@ -251,7 +345,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_sbros_podgotovki');
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'USPESHNO_SOBRAN',
+            'code' => 'USPESHNO_SOBRAN',
             'commands' => [
                 'nachatUdalenie',
                 'nachatObnovlenie',
@@ -278,7 +372,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_PODGOTOVKI',
+            'code' => 'JDET_RESULTATI_PODGOTOVKI',
             'commands' => []
         ]));
 
@@ -289,7 +383,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_podgotovka');
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
+            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
             'commands' => [
                 'nachatUdalenie',
                 'nachatObnovlenie',
@@ -305,7 +399,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_ZAPUSKA',
+            'code' => 'JDET_RESULTATI_ZAPUSKA',
             'commands' => []
         ]));
 
@@ -316,7 +410,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_zapusk');
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'USPESHNO_ZAPUSHEN',
+            'code' => 'USPESHNO_ZAPUSHEN',
             'commands' => ['nachatOstanovku']
         ]));
 
@@ -326,7 +420,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_OSTANOVKI',
+            'code' => 'JDET_RESULTATI_OSTANOVKI',
             'commands' => []
         ]));
 
@@ -336,7 +430,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
+            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
             'commands' => [
                 'nachatUdalenie',
                 'nachatObnovlenie',
@@ -353,7 +447,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'JDET_RESULTATI_UDALENIYA',
+            'code' => 'JDET_RESULTAT_UDALENIYA',
             'commands' => []
         ]));
 
@@ -363,7 +457,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'state' => 'SLOMAN',
+            'code' => 'SLOMAN',
             'commands' => ['udalitVruchnuyu']
         ]));
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_oshibka_udaleniya');
@@ -373,7 +467,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCaseTest
 
         $spisokUnitovReadModel = $spisokUnitovRepo->findById($unitId);
         $this->assertTrue(empty($spisokUnitovReadModel));
-
-
     }
+
+
+
 }

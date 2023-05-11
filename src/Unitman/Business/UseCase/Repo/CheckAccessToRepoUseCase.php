@@ -5,14 +5,14 @@ namespace App\Unitman\Business\UseCase\Repo;
 use App\Unitman\Business\Command\Repo\CheckAccessToRepo;
 use App\Unitman\Business\Port\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\RepoRepository;
-use App\Unitman\Business\Port\SecurityService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class CheckAccessToRepoUseCase
 {
     public function __construct(
-        private SecurityService $securityService,
-        private RepoRepository $repoRepository,
-        private CanCheckAccessToRepo $canCheckAccessToRepo
+        private UnitmanSecurityService $securityService,
+        private RepoRepository         $repoRepository,
+        private CanCheckAccessToRepo   $canCheckAccessToRepo
     )
     {
     }

@@ -3,9 +3,9 @@
 namespace App\Unitman\Acl;
 
 use App\Account\Api\AccountApi;
-use App\Unitman\Business\Port\SecurityService;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 
-final class AccountAdapter implements SecurityService
+final class AccountAdapter implements UnitmanSecurityService
 {
     public function __construct(private AccountApi $accountApi)
     {
