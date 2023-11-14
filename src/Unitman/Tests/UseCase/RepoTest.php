@@ -56,7 +56,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
 
         $this->addRepo($repoId, $repoName, RepoType::GITLAB, 'https://org@gitlab.ru');
 
-        $command = new ChangeCredentialsOfRepo($repoId, 'newLogin', 'newPassword','https://org2@gitlab.ru');
+        $command = new ChangeCredentialsOfRepo($repoId, 'newToken', 'https://org2@gitlab.ru');
         $useCase = self::$container->get(ChangeCredentialsOfRepoUseCase::class);
         /** @var \App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase $useCase*/
         $useCase->handle($command);
@@ -66,8 +66,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $repoList = $repoListRepository->getById($repoId);
 
         $this->assertEquals(false, $repoList->isConfirmed());
-        $this->assertEquals('newLogin', $repoList->getRepoLogin());
-        $this->assertEquals('newPassword', $repoList->getRepoPassword());
+        $this->assertEquals('newToken', $repoList->token);
         $this->assertEquals('https://org2@gitlab.ru', $repoList->getRepoUrl());
     }
 
@@ -115,8 +114,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $addCommand = new AddRepo(
             $repoType->value,
             $repoName,
-            'login',
-            'password',
+            'token',
             $repoUrl
         );
 
@@ -131,8 +129,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals($repoId, $repoList->getId());
         $this->assertEquals($repoType->value, $repoList->getType());
         $this->assertEquals($repoName, $repoList->getName());
-        $this->assertEquals('login', $repoList->getRepoLogin());
-        $this->assertEquals('password', $repoList->getRepoPassword());
+        $this->assertEquals('token', $repoList->token);
         $this->assertEquals($repoUrl, $repoList->getRepoUrl());
         $this->assertFalse($repoList->isConfirmed());
     }

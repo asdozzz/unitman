@@ -40,8 +40,7 @@ final class Version20230301155516 extends AbstractMigration
                 type varchar      not null,
                 name varchar      not null,
                 repo_url varchar      not null,
-                repo_login varchar      not null,
-                repo_password varchar      not null,
+                token varchar      not null,
                 confirmed    bit
             );
         ");

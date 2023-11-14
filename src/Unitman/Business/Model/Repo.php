@@ -18,7 +18,7 @@ use EventSauce\EventSourcing\AggregateRootBehaviour;
 final class Repo implements AggregateRoot
 {
     /**
-     * @template-use AggregateRootBehaviour<AccountId>
+     * @template-use AggregateRootBehaviour<RepoId>
      * */
     use AggregateRootBehaviour;
 
@@ -42,7 +42,7 @@ final class Repo implements AggregateRoot
         } else {
             $url = $command->repoUrl;
         }
-        $repo->recordThat(new RepoWasAdded($repoId->toString(), $command->repoType, $command->repoName, $url, $command->repoLogin, $command->repoPassword));
+        $repo->recordThat(new RepoWasAdded($repoId->toString(), $command->repoType, $command->repoName, $url, $command->token));
         return $repo;
     }
 
@@ -51,7 +51,7 @@ final class Repo implements AggregateRoot
         $this->type = RepoType::from($fact->repoType);
         $this->name = new RepoName($fact->repoName);
 
-        $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->repoLogin, $fact->repoPassword);
+        $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->token);
     }
 
     public function changeCredentials(ChangeCredentialsOfRepo $command): void
@@ -66,18 +66,18 @@ final class Repo implements AggregateRoot
             $url = $command->repoUrl;
         }
 
-        $newCredentials = new RepoCredentials($url, $command->repoLogin, $command->repoPassword);
+        $newCredentials = new RepoCredentials($url, $command->token);
 
         if ($newCredentials->getHash() == $this->credentials->getHash()) {
             throw new \DomainException('repo.new_credentials_equals_old');
         }
 
-        $this->recordThat(new CredentialsOfRepoWasChanged($this->getId(), $url, $command->repoLogin, $command->repoPassword));
+        $this->recordThat(new CredentialsOfRepoWasChanged($this->getId(), $url, $command->token));
     }
 
     private function applyCredentialsOfRepoWasChanged(CredentialsOfRepoWasChanged $fact): void
     {
-        $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->repoLogin, $fact->repoPassword);
+        $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->token);
         $this->accessConfirmed = false;
     }
 
@@ -120,5 +120,14 @@ final class Repo implements AggregateRoot
     public function getCredentials(): RepoCredentials
     {
         return $this->credentials;
+    }
+
+    public function getRepoUrlWithCredentials(): string
+    {
+        $url = $this->credentials->url;
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
+        $newUrl = $scheme.'://'.$this->credentials->token.'@'.$urlWithoutScheme;
+        return $newUrl;
     }
 }

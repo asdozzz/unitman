@@ -12,7 +12,8 @@ final class GithubClientFactory
     public function makeClient(Repo $repo): Client
     {
         $client = Client::createWithHttpClient(new HttplugClient());
-        $client->authenticate($repo->getCredentials()->login, $repo->getCredentials()->password, AuthMethod::ACCESS_TOKEN);
+
+        $client->authenticate($repo->getCredentials()->token, null, AuthMethod::ACCESS_TOKEN);
         return $client;
     }
 }

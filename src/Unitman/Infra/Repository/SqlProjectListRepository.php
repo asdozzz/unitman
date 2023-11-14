@@ -2,13 +2,15 @@
 
 namespace App\Unitman\Infra\Repository;
 
+use App\Unitman\Business\Command\Project\GetProjectList;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Port\CanFindProjectDouble;
+use App\Unitman\Business\Port\CanGetProjectList;
 use App\Unitman\Business\ReadModel\ProjectList;
 use Doctrine\DBAL\Connection;
 
-final class SqlProjectListRepository implements CanFindProjectDouble
+final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProjectList
 {
     const TABLE = 'project_list';
     public function __construct(private Connection $connection)
@@ -19,6 +21,7 @@ final class SqlProjectListRepository implements CanFindProjectDouble
     {
         $data = [
             'id' => $projectList->id,
+            'repo_id' => $projectList->repoId,
             'code' => $projectList->code,
             'name' => $projectList->name,
             'main_branch' => $projectList->mainBranch,
@@ -109,5 +112,36 @@ final class SqlProjectListRepository implements CanFindProjectDouble
         }
 
         return $row;
+    }
+
+    function makeRepoByDbRow(array $row): ProjectList
+    {
+        $state = ProjectList\ProjectListStateType::from($row['state']);;
+        $project = new ProjectList(
+            $row['id'],
+            $row['repo_id'],
+            $row['code'],
+            $row['name'],
+            $row['main_branch'],
+            $row['is_active'],
+            $state,
+            $row['build_text'],
+            $row['remove_text'],
+        );
+        return $project;
+    }
+
+    function getList(GetProjectList $query): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table LIMIT :limit OFFSET :offset",
+            ['limit' => $query->limit, 'offset' => $query->offset]);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeRepoByDbRow($row);
+        }
+
+        return $result;
     }
 }

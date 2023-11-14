@@ -2,8 +2,8 @@
 
 namespace App\Unitman\Infra\Controller;
 
-use App\App\Infra\Workflow\ActivityCollection;
-use App\App\Infra\Workflow\GreetingWorkflow;
+use App\Runner\Api\RunnerApi;
+use App\Runner\Business\Command\InitProjectCommand;
 use Carbon\CarbonInterval;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,26 +14,17 @@ use Temporal\Client\WorkflowOptions;
 
 final class TestController extends AbstractController
 {
-    #[Route('/test/{unitId}')]
-    function test(string $unitId)
+    public function __construct(private RunnerApi $runnerApi)
+    {
+    }
+
+    #[Route('/test')]
+    function test()
     {
         try {
-            if (empty($unitId)) {
-                throw new \Exception('unitId not found');
-            }
-            $workflowClient = WorkflowClient::create(
-                ServiceClient::create(
-                    'temporal:7233'
-                ),
-            );
-            $workflow = $workflowClient->newWorkflowStub(
-                GreetingWorkflow::class,
-                WorkflowOptions::new()->withWorkflowExecutionTimeout(CarbonInterval::minute())
-            );
-
-            $result = $workflow->greet($unitId);
+            $result = $this->runnerApi->initProject(new InitProjectCommand('TestProjectId', 'master', 'https://github.com/asdozzz/americor'));
             return new Response("<pre>" . print_r($result, true) . "</pre>");
-        } catch (\Exception $e) {
+        } catch (\Exception | \Error $e) {
             return new Response("<pre>" . print_r($e->getMessage(), true) . "</pre>");
         }
 

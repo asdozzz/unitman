@@ -2,33 +2,31 @@
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
-use App\Unitman\Business\Command\Project\AddProject;
-use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Command\Unit\SbrositPodgotovkuUnita;
 use App\Unitman\Business\Command\Unit\SobratUnit;
-use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuPriPodgotovkeUnita;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuSbrosaPodgotovkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuUdaleniya;
-use App\Unitman\Business\Command\Unit\UstanovitUspehObnovleniyaUnita;
-use App\Unitman\Business\Command\Unit\UstanovitUspehOstanovkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitUspehPodgotovkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitUspehSborkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitUspehSbrosaPodgotovki;
-use App\Unitman\Business\Command\Unit\UstanovitUspehZapuska;
+use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
+use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
+use App\Unitman\Business\Command\Unit\UstanovitResultatPodgotovkiUnita;
+use App\Unitman\Business\Command\Unit\UstanovitResultatSborkiUnita;
+use App\Unitman\Business\Command\Unit\UstanovitResultatSbrosaPodgotovki;
+use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
+use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
-use App\Unitman\Business\Model\Project;
-use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Model\Runner\JobId;
+use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
+use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatSborkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
+use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
 use App\Unitman\Business\Port\RunnerService;
-use App\Unitman\Business\Port\UnitmanSecurityService;
-use App\Unitman\Business\Port\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
@@ -38,15 +36,13 @@ use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitOshibkuPriPodgotovkeUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitOshibkuSbrosaPodgotovkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitOshibkuUdaleniyaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitUspehObnovleniyaUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitUspehOstanovkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitUspehPodgotovkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitUspehSborkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitUspehSbrosaPodgotovkiUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitUspehZapuskaUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatOstanovkiUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatPodgotovkiUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatSborkiUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatSbrosaPodgotovkiUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
@@ -62,17 +58,30 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->sozdatUnit($unitId);
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, 'OBNOVLENIE_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, 'OBNOVLENIE_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, 'ZAPUSK_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::OSTANOVKA_UNITA, 'OSTANOVKA_UNITA');
-        $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, 'UDALENIE_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, new JobId('SBORKA_UNITA'));
+        $configText = file_get_contents(__DIR__.'/data/config_1.yaml');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSborkiUnita(true, 'text_ot_runnera' ,$configText));
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(false, 'text_ot_runnera_oshibka_podgotovka'));
+        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, new JobId('OBNOVLENIE_UNITA'));
+        $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(true, 'text_ot_runnera_uspeh_obnovlenie', $configText2));
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true,'text_ot_runnera_uspeh_podgotovki'));
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, new JobId('SBROS_PODGOTOVKI_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(false,'text_ot_runnera_oshibka_sbrosa'));
+        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, new JobId('OBNOVLENIE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(true, 'text_ot_runnera_uspeh_obnovlenie', $configText2));
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, new JobId('SBROS_PODGOTOVKI_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(true,'text_ot_runnera_uspeh_sbrosa'));
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true,'text_ot_runnera_uspeh_podgotovki'));
+        $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, new JobId('ZAPUSK_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_ZAPUSKA, new ResultatZapuskaUnita(true,'text_ot_runnera_uspeh_zapuska'));
+        $memoryRunner->addResponse(MemoryRunnerService::OSTANOVKA_UNITA, new JobId('OSTANOVKA_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OSTANOVKI, new ResultatOstanovkiUnita(true,'text_ot_runnera_uspeh_ostanovki'));
+        $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, new JobId('UDALENIE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(false,'text_ot_runnera_oshibka_udaleniya'));
         self::$container->set(RunnerService::class, $memoryRunner);
 
 
@@ -82,7 +91,6 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
             'code' => 'JDET_RESULTATI_SBORKI',
@@ -90,10 +98,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         ]));
 
 
-        $useCase = self::$container->get(UstanovitUspehSborkiUnitaUseCase::class);
-        $configText = file_get_contents(__DIR__.'/data/config_1.yaml');
-        $ustanovitUspehSborkiUnita = new UstanovitUspehSborkiUnita($unitId, 'text_ot_runnera' ,$configText);
-        $useCase->handle($ustanovitUspehSborkiUnita);
+        $useCase = self::$container->get(UstanovitResultatSborkiUnitaUseCase::class);
+        $ustanovitResultatSborkiUnita = new UstanovitResultatSborkiUnita($unitId);
+        $useCase->handle($ustanovitResultatSborkiUnita);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
@@ -165,8 +172,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitOshibkuPriPodgotovkeUnitaUseCase::class);
-        $useCase->handle(new UstanovitOshibkuPriPodgotovkeUnita($unitId, 'text_ot_runnera_oshibka_podgotovka'));
+        $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
@@ -191,9 +198,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $configText = file_get_contents(__DIR__.'/data/config_2.yaml');
-        $useCase = self::$container->get(UstanovitUspehObnovleniyaUnitaUseCase::class);
-        $useCase->handle(new UstanovitUspehObnovleniyaUnita($unitId, 'text_ot_runnera_obnovlenie',$configText));
+
+        $useCase = self::$container->get(UstanovitResultatObnovleniyaUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatObnovleniyaUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
@@ -206,7 +213,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
                 'nachatPodgotovku',
             ]
         ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_obnovlenie');
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_obnovlenie');
         $cfg = [
             'variables' => [
                 ['id' => 'DICTIONARY_SERVICE', 'label' => 'Сервис справочников', 'type' => 'collection', 'defaultValue' => 'http://v1.dict.ru', 'options' => [
@@ -258,8 +265,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitUspehPodgotovkiUnitaUseCase::class);
-        $useCase->handle(new UstanovitUspehPodgotovkiUnita($unitId,'text_ot_runnera_uspeh_podgotovki'));
+        $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_podgotovki');
@@ -284,8 +291,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitOshibkuSbrosaPodgotovkiUnitaUseCase::class);
-        $useCase->handle(new UstanovitOshibkuSbrosaPodgotovkiUnita($unitId, 'text_ot_runnera_oshibka_sbrosa'));
+        $useCase = self::$container->get(UstanovitResultatSbrosaPodgotovkiUseCase::class);
+        $useCase->handle(new UstanovitResultatSbrosaPodgotovki($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
@@ -309,9 +316,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $configText = file_get_contents(__DIR__.'/data/config_2.yaml');
-        $useCase = self::$container->get(UstanovitUspehObnovleniyaUnitaUseCase::class);
-        $useCase->handle(new UstanovitUspehObnovleniyaUnita($unitId, 'text_ot_runnera_obnovlenie',$configText));
+        $useCase = self::$container->get(UstanovitResultatObnovleniyaUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatObnovleniyaUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
@@ -325,7 +331,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
                 'nachatZapusk',
             ]
         ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_obnovlenie');
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_obnovlenie');
 
 
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
@@ -338,12 +344,12 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitUspehSbrosaPodgotovkiUseCase::class);
-        $useCase->handle(new UstanovitUspehSbrosaPodgotovki($unitId, 'text_ot_runnera_sbros_podgotovki'));
+        $useCase = self::$container->get(UstanovitResultatSbrosaPodgotovkiUseCase::class);
+        $useCase->handle(new UstanovitResultatSbrosaPodgotovki($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_sbros_podgotovki');
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_sbrosa');
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
             'code' => 'USPESHNO_SOBRAN',
             'commands' => [
@@ -376,12 +382,12 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitUspehPodgotovkiUnitaUseCase::class);
-        $useCase->handle(new UstanovitUspehPodgotovkiUnita($unitId, 'text_ot_runnera_podgotovka'));
+        $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_podgotovka');
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_podgotovki');
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
             'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
             'commands' => [
@@ -403,12 +409,12 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitUspehZapuskaUseCase::class);
-        $useCase->handle(new UstanovitUspehZapuska($unitId, 'text_ot_runnera_zapusk'));
+        $useCase = self::$container->get(UstanovitResultatZapuskaUseCase::class);
+        $useCase->handle(new UstanovitResultatZapuska($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_zapusk');
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_zapuska');
         $this->assertEquals($spisokUnitovReadModel->state, json_encode([
             'code' => 'USPESHNO_ZAPUSHEN',
             'commands' => ['nachatOstanovku']
@@ -424,8 +430,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitUspehOstanovkiUnitaUseCase::class);
-        $useCase->handle(new UstanovitUspehOstanovkiUnita($unitId, 'text_ot_runnera_ostanovka'));
+        $useCase = self::$container->get(UstanovitResultatOstanovkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatOstanovkiUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
@@ -439,7 +445,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
                 'nachatZapusk',
             ]
         ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_ostanovka');
+        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_ostanovki');
 
         $useCase = self::$container->get(UdalitUnitUseCase::class);
         $useCase->handle(new UdalitUnit($unitId));
@@ -451,8 +457,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'commands' => []
         ]));
 
-        $useCase = self::$container->get(UstanovitOshibkuUdaleniyaUseCase::class);
-        $useCase->handle(new UstanovitOshibkuUdaleniya($unitId, 'text_ot_runnera_oshibka_udaleniya'));
+        $useCase = self::$container->get(UstanovitResultatUdaleniyaUseCase::class);
+        $useCase->handle(new UstanovitResultatUdaleniya($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);

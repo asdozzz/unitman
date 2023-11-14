@@ -2,10 +2,12 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-final class UpdateProjectData
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class UpdateProjectData implements JsonBodySerializableInterface
 {
     public function __construct(
-        public readonly string $projectId,
+        public readonly string $id,
         public readonly string $newProjectName
     )
     {

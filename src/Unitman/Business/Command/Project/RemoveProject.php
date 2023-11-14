@@ -2,7 +2,9 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-final class RemoveProject
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class RemoveProject implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $id,

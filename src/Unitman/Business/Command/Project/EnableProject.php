@@ -2,7 +2,9 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-final class EnableProject
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class EnableProject implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $id,

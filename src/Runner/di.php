@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Runner;
+
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+
+return function (ContainerConfigurator $configuration) {
+    $services = $configuration->services()
+        ->defaults()
+        ->autowire()
+        ->autoconfigure();
+
+    $services->load('App\\Runner\\', './{Business,Infra,Acl,Api}')
+        ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
+        ->public();
+};

@@ -2,10 +2,12 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-final class DisableProject
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class DisableProject implements JsonBodySerializableInterface
 {
     public function __construct(
-        public readonly string $projectId
+        public readonly string $id
     )
     {
     }

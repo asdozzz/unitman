@@ -22,6 +22,7 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
     public function checkAccess(Repo $repo): CheckAccessResponse
     {
         $client = $this->githubClientFactory->makeClient($repo);
+
         $repositories = $client->currentUser()->repositories();
 
         if (empty($repositories)) {

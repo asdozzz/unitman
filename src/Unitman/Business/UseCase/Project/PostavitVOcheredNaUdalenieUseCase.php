@@ -24,8 +24,13 @@ final class PostavitVOcheredNaUdalenieUseCase
         }
 
         $project = $this->projectRepository->getById($command->id);
-        $jobId = $this->runnerService->removeProject($project);
-        $project->postavitVOcheredNaUdanlenie($jobId);
+        $result = $this->runnerService->removeProject($project);
+        $project->postavitVOcheredNaUdanlenie($result->jobId);
+        if ($result->success) {
+            $project->successfullyRemoving($result->info);
+        } else {
+            $project->errorWhenRemoving($result->info);
+        }
         $this->projectRepository->save($project);
     }
 }

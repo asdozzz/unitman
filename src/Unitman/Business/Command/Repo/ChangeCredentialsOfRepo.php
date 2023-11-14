@@ -8,8 +8,7 @@ final class ChangeCredentialsOfRepo implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $repoId,
-        public readonly string $repoLogin,
-        public readonly string $repoPassword,
+        public readonly string $token,
         public readonly ?string $repoUrl = null
     )
     {

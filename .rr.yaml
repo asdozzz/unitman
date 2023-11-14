@@ -12,7 +12,6 @@ http:
   address: 0.0.0.0:8080
   pool:
     num_workers: 4
-    debug: true
 
 temporal:
   address: "host.docker.internal:7233"

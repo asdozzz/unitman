@@ -15,6 +15,8 @@ use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\SetErrorWhenBuildProject;
 use App\Unitman\Business\Command\Project\SetErrorWhenRemoveProject;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
+use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
+use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -58,6 +60,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
         $row = $projectListRepo->findRowById($projectId);
 
+        $this->assertEquals($row['repo_id'], $repoId);
         $this->assertEquals($row['id'], $projectId);
         $this->assertEquals($row['code'], $projectCode);
         $this->assertEquals($row['name'], $projectName);
@@ -66,6 +69,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals($row['state'], ProjectListStateType::NEW->name);
         $this->assertEquals($row['build_text'], null);
         $this->assertEquals($row['remove_text'], null);
+
         return $projectId;
     }
     /**
@@ -128,7 +132,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main');
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, 'success_build'));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь на сборку
@@ -137,16 +141,6 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $queueUseCase->handle($queueCommand);
 
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
-        $row = $projectListRepo->findRowById($projectId);
-
-        $this->assertEquals($row['is_active'], 0);
-        $this->assertEquals($row['state'], ProjectListStateType::BUILD_PENDING->name);
-
-        //Раннер вернул успех сборки
-        $buildCommand = new BuildProject($projectId,'success_build');
-        $buildUseCase = self::$container->get(BuildProjectUseCase::class);
-        $buildUseCase->handle($buildCommand);
-
         $row = $projectListRepo->findRowById($projectId);
 
         $this->assertEquals($row['is_active'], 0);
@@ -182,7 +176,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main');
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, false, 'error_when_build'));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь на сборку
@@ -194,19 +188,10 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $row = $projectListRepo->findRowById($projectId);
 
         $this->assertEquals($row['is_active'], 0);
-        $this->assertEquals($row['state'], ProjectListStateType::BUILD_PENDING->name);
-
-        //Ошибка от раннера
-        $errorCommand = new SetErrorWhenBuildProject($projectId,'error_when_build');
-        $errorUseCase = self::$container->get(SetErrorWhenBuildProjectUseCase::class);
-        $errorUseCase->handle($errorCommand);
-
-        $projectListRepo = self::$container->get(SqlProjectListRepository::class);
-        $row = $projectListRepo->findRowById($projectId);
-
-        $this->assertEquals($row['is_active'], 0);
         $this->assertEquals($row['state'], ProjectListStateType::BUILD_ERROR->name);
         $this->assertEquals($row['build_text'], 'error_when_build');
+
+
     }
 
     /**
@@ -218,7 +203,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main');
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, true, 'success_remove'));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь
@@ -227,14 +212,6 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $queueUseCase->handle($queueCommand);
 
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
-        $row = $projectListRepo->findRowById($projectId);
-        $this->assertEquals($row['state'], ProjectListStateType::REMOVE_PENDING->name);
-
-        //Раннер вернул успех удаления
-        $command = new RemoveProject($projectId, 'info');
-        $useCase = self::$container->get(RemoveProjectUseCase::class);
-        $useCase->handle($command);
-
         $row = $projectListRepo->findRowById($projectId);
         $this->assertTrue(empty($row), 'Запись в рид модели "список проектов" не удалена');
     }
@@ -245,7 +222,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main');
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, false, 'error when remove'));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь
@@ -254,14 +231,6 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $queueUseCase->handle($queueCommand);
 
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
-        $row = $projectListRepo->findRowById($projectId);
-        $this->assertEquals($row['state'], ProjectListStateType::REMOVE_PENDING->name);
-
-        //Кинули в очередь
-        $command = new SetErrorWhenRemoveProject($projectId,'error when remove');
-        $useCase = self::$container->get(SetErrorWhenRemoveProjectUseCase::class);
-        $useCase->handle($command);
-
         $row = $projectListRepo->findRowById($projectId);
         $this->assertEquals($row['state'], ProjectListStateType::REMOVE_ERROR->name);
         $this->assertEquals($row['remove_text'], 'error when remove');

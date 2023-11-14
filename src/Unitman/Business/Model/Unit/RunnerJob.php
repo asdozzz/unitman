@@ -9,7 +9,7 @@ final class RunnerJob
     private bool $success;
     private string $textOtRunnera;
 
-    private function __construct(string $jobId, bool $isFinish = false, bool $success = false, string $textOtRunnera = '')
+    public function __construct(string $jobId, bool $isFinish = false, bool $success = false, string $textOtRunnera = '')
     {
         if (empty($jobId)) {
             throw new \DomainException('unit.sborka.jobId_is_empty');

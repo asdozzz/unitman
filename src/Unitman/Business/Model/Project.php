@@ -28,6 +28,7 @@ use App\Unitman\Business\Model\Project\ProjectId;
 use App\Unitman\Business\Model\Project\ProjectName;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
+use App\Unitman\Business\Model\Repo\RepoId;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 
@@ -37,7 +38,7 @@ final class Project implements AggregateRoot
      * @template-use AggregateRootBehaviour<ProjectId>
      * */
     use AggregateRootBehaviour;
-
+    private ?string $repoId;
     private ?ProjectCode $code;
     private ?ProjectName $name;
     private bool $isActive = false;
@@ -54,11 +55,16 @@ final class Project implements AggregateRoot
         return $this->aggregateRootId->toString();
     }
 
+    public function getRepoId(): string
+    {
+        return $this->repoId;
+    }
+
     public static function addProject(string $id, AddProject $command): static
     {
         $projectId = ProjectId::fromString($id);
         $project = new static($projectId);
-        $project->recordThat(new ProjectWasAdded($id, $command->projectCode, $command->projectName, $command->mainBranch));
+        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch));
 
         return $project;
     }
@@ -67,6 +73,7 @@ final class Project implements AggregateRoot
     {
         $this->code = new ProjectCode($fact->projectCode);
         $this->name = new ProjectName($fact->projectName);
+        $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
     }
 
@@ -349,5 +356,10 @@ final class Project implements AggregateRoot
         $index = $this->findIndexUserById($userId);
 
         return isset($index);
+    }
+
+    public function getMainBranchName(): string
+    {
+        return $this->mainBranch;
     }
 }

@@ -8,8 +8,7 @@
 
 namespace App\Utils\Converter;
 
-use App\Entity\Api\Error;
-use App\Service\Log\LogService;
+use App\App\Exception\Dump;
 use Doctrine\ORM\EntityNotFoundException;
 use \Exception;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -21,7 +20,6 @@ use Throwable;
 /**
  * Class BaseExceptionListener
  *
- * @package App\EventListener
  */
 #[AsEventListener(event: ExceptionEvent::class, method: 'onKernelException')]
 class BaseExceptionListener
@@ -39,6 +37,7 @@ class BaseExceptionListener
         $exception = $event->getThrowable();
 
         $response = match ($exception::class) {
+            Dump::class => $this->dump($event),
             \DomainException::class => $this->makeFail($exception),
             default => $this->makeError($exception)
         };
@@ -49,6 +48,12 @@ class BaseExceptionListener
         return true;
 
     }//end onKernelException()
+
+    function dump(ExceptionEvent $event)
+    {
+        return new Response($event->getThrowable(), 200);
+    }
+
 
     function makeFail(\Throwable $exception)
     {

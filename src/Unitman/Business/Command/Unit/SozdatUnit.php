@@ -2,7 +2,9 @@
 
 namespace App\Unitman\Business\Command\Unit;
 
-final class SozdatUnit
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class SozdatUnit implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $projectId,

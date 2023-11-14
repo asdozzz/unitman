@@ -9,8 +9,7 @@ final class RepoWasAdded
         public readonly string $repoType,
         public readonly string $repoName,
         public readonly string $repoUrl,
-        public readonly string $repoLogin,
-        public readonly string $repoPassword
+        public readonly string $token
     )
     {
     }

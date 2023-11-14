@@ -27,7 +27,7 @@ final class UpdateProjectDataUseCase
         if ($this->canFindDouble->isExistDoubleByName($command->newProjectName)) {
             throw new \DomainException('project.double');
         }
-        $project = $this->projectRepository->getById($command->projectId);
+        $project = $this->projectRepository->getById($command->id);
         $project->changeData($command);
         $this->projectRepository->save($project);
     }

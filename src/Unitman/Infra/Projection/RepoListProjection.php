@@ -26,8 +26,7 @@ final class RepoListProjection extends AbstractProjection implements SyncProject
             $event->repoType,
             $event->repoName,
             $event->repoUrl,
-            $event->repoLogin,
-            $event->repoPassword,
+            $event->token,
             false
         ));
     }
@@ -40,7 +39,7 @@ final class RepoListProjection extends AbstractProjection implements SyncProject
     public function handleCredentialsOfRepoWasChanged(CredentialsOfRepoWasChanged $event)
     {
         $repo = $this->repoListRepository->getById($event->repoId);
-        $repo->changeCredentials($event->repoUrl, $event->repoLogin, $event->repoPassword);
+        $repo->changeCredentials($event->repoUrl, $event->token);
         $this->repoListRepository->update($repo);
     }
 

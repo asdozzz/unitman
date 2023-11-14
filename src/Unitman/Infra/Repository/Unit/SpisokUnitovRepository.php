@@ -2,11 +2,13 @@
 
 namespace App\Unitman\Infra\Repository\Unit;
 
+use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Port\CanFindUnitDouble;
+use App\Unitman\Business\Port\CanGetUnitList;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
 
-final class SpisokUnitovRepository implements CanFindUnitDouble
+final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection)
@@ -98,4 +100,17 @@ final class SpisokUnitovRepository implements CanFindUnitDouble
         return !empty($row);
     }
 
+    function getList(GetUnitList $query): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table LIMIT :limit OFFSET :offset",
+            ['limit' => $query->limit, 'offset' => $query->offset]);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeUnitByRow($row);
+        }
+
+        return $result;
+    }
 }

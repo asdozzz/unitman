@@ -1,4 +1,4 @@
-FROM ghcr.io/roadrunner-server/roadrunner:2.12.2 AS roadrunner
+FROM ghcr.io/roadrunner-server/roadrunner:2023.3 AS roadrunner
 FROM php:8.1-alpine
 
 ARG CURRENT_USER_ID=1000

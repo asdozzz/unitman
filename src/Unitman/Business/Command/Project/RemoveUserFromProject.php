@@ -2,10 +2,12 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-final class RemoveUserFromProject
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class RemoveUserFromProject implements JsonBodySerializableInterface
 {
     public function __construct(
-        public readonly string $projectId,
+        public readonly string $id,
         public readonly string $userId
     )
     {

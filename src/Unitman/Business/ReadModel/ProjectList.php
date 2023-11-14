@@ -8,6 +8,7 @@ final class ProjectList
 {
     public function __construct(
         public readonly string $id,
+        public readonly string $repoId,
         public readonly string $code,
         public readonly string $name,
         public readonly string $mainBranch,

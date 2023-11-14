@@ -3,13 +3,6 @@
 namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuObnovleniyaUnita;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuOstanovkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuPriPodgotovkeUnita;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuSborkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuSbrosaPodgotovkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuUdaleniya;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuZapuska;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
@@ -174,7 +167,7 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.udalen');
         }
 
-        if (!empty($this->sborka)) {
+        if (!empty($this->sborka) && $this->sborka->isSuccess()) {
             throw new \DomainException('unit.uge_sobran');
         }
         $state = $this->state->newState(new VOcherediNaSborku());
@@ -187,7 +180,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuSborki(UstanovitOshibkuSborkiUnita $command): void
+    public function ustanovitOshibkuSborki(string $textOtRunnera): void
     {
         if (empty($this->sborka)) {
             throw new \DomainException('unit.sborka_ne_nachalas');
@@ -197,7 +190,7 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_sborki_uge_ustanovlen');
         }
         $state = $this->state->newState(new OshibkaSborki());
-        $this->recordThat(new OshibkaSborkiUnitaUstanovlena($command->unitId, $command->textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new OshibkaSborkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
     private function applyOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
@@ -302,7 +295,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuPodgotovki(UstanovitOshibkuPriPodgotovkeUnita $command): void
+    public function ustanovitOshibkuPodgotovki(string $textOtRunnera): void
     {
         if (empty($this->podgotovka)) {
             throw new \DomainException('unit.podgotovka_ne_nachalas');
@@ -313,7 +306,7 @@ final class Unit implements AggregateRoot
         }
 
         $state = $this->state->newState(new OshibkaPodgotovki());
-        $this->recordThat(new OshibkaPodgotovkiUnitaUstanovlena($command->unitId, $command->textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new OshibkaPodgotovkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
     private function applyOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
@@ -368,7 +361,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuObnovleniya(UstanovitOshibkuObnovleniyaUnita $command): void
+    public function ustanovitOshibkuObnovleniya(string $textOtRunnera): void
     {
         if (empty($this->obnovlenie)) {
             throw new \DomainException('unit.obnovlenie_ne_nachalas');
@@ -379,7 +372,7 @@ final class Unit implements AggregateRoot
         }
 
         $state = $this->state->newState(new OshibkaObnovleniya());
-        $this->recordThat(new OshibkaObnovleniyaUnitaUstanovlena($command->unitId, $command->textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new OshibkaObnovleniyaUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
     private function applyOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
@@ -454,7 +447,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuSbrosaPodgotovki(UstanovitOshibkuSbrosaPodgotovkiUnita $command): void
+    public function ustanovitOshibkuSbrosaPodgotovki(string $textOtRunnera): void
     {
         if (empty($this->sbrosPodgotovki)) {
             throw new \DomainException('unit.sbrosPodgotovki_ne_nachalas');
@@ -465,7 +458,7 @@ final class Unit implements AggregateRoot
         }
 
         $state = $this->state->newState(new OshibkaSbrosaPodgotovki());
-        $this->recordThat(new OshibkaSbrosaPodgotovkiUnitaUstanovlena($command->unitId, $command->textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new OshibkaSbrosaPodgotovkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
     private function applyOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
@@ -529,7 +522,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuZapuska(UstanovitOshibkuZapuska $command): void
+    public function ustanovitOshibkuZapuska(string $textOtRunnera): void
     {
         if (empty($this->zapusk)) {
             throw new \DomainException('unit.zapusk_ne_nachalas');
@@ -540,7 +533,7 @@ final class Unit implements AggregateRoot
         }
 
         $state = $this->state->newState(new OshibkaZapuska());
-        $this->recordThat(new OshibkaZapuskaUnitaUstanovlena($command->unitId, $command->textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new OshibkaZapuskaUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
     private function applyOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
@@ -600,7 +593,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuOstanovki(UstanovitOshibkuOstanovkiUnita $command): void
+    public function ustanovitOshibkuOstanovki(string $textOtRunnera): void
     {
         if (empty($this->ostanovka)) {
             throw new \DomainException('unit.ostanovka_ne_nachalas');
@@ -611,7 +604,7 @@ final class Unit implements AggregateRoot
         }
 
         $state = $this->state->newState(new OshibkaOstanovki());
-        $this->recordThat(new OshibkaOstanovkiUnitaUstanovlena($command->unitId, $command->textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new OshibkaOstanovkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
     private function applyOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
@@ -667,7 +660,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuUdaleniya(UstanovitOshibkuUdaleniya $command): void
+    public function ustanovitOshibkuUdaleniya(string $textOtRunnera): void
     {
         if (empty($this->udalenie)) {
             throw new \DomainException('unit.$this->udalenie_ne_nachalas');
@@ -678,7 +671,7 @@ final class Unit implements AggregateRoot
         }
 
         $state = $this->state->newState(new Sloman());
-        $this->recordThat(new OshibkaUdaleniyaUnitaUstanovlena($command->unitId, $command->textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new OshibkaUdaleniyaUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
     private function applyOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
@@ -726,5 +719,25 @@ final class Unit implements AggregateRoot
     {
         $this->isDeleted = true;
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getBranch(): string
+    {
+        return $this->branch;
+    }
+
+    public function getProjectId(): string
+    {
+        return $this->project->id;
+    }
+
+    public function getBuildWorkflowId(): string
+    {
+        return $this->sborka->getJobId();
     }
 }

@@ -7,8 +7,9 @@ use Symfony\Component\Yaml\Yaml;
 
 final class YamlParser implements CanParseYaml
 {
-    function parse(string $content): array
+    function parse(?string $content): array
     {
+        if (empty($content)) return array();
         return Yaml::parse($content, Yaml::PARSE_EXCEPTION_ON_INVALID_TYPE);
     }
 }

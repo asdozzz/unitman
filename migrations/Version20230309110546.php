@@ -24,6 +24,7 @@ final class Version20230309110546 extends AbstractMigration
                 id       varchar(128) not null
                     constraint project_list_pk
                         primary key,
+                repo_id varchar not null,
                 code varchar      not null,
                 name varchar      not null,
                 main_branch varchar      not null,

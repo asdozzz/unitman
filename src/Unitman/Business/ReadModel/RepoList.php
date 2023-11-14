@@ -5,13 +5,12 @@ namespace App\Unitman\Business\ReadModel;
 final class RepoList
 {
     public function __construct(
-        private string $id,
-        private string $type,
-        private string $name,
-        private string $repoUrl,
-        private string $repoLogin,
-        private string $repoPassword,
-        private bool $confirmed
+        public string $id,
+        public string $type,
+        public string $name,
+        public string $repoUrl,
+        public string $token,
+        public bool $confirmed
     )
     {
     }
@@ -48,21 +47,6 @@ final class RepoList
         return $this->repoUrl;
     }
 
-    /**
-     * @return string
-     */
-    public function getRepoLogin(): string
-    {
-        return $this->repoLogin;
-    }
-
-    /**
-     * @return string
-     */
-    public function getRepoPassword(): string
-    {
-        return $this->repoPassword;
-    }
 
     /**
      * @return bool
@@ -72,11 +56,10 @@ final class RepoList
         return $this->confirmed;
     }
 
-    public function changeCredentials(string $url, string $login, string $password): void
+    public function changeCredentials(string $url, string $token): void
     {
         $this->repoUrl = $url;
-        $this->repoLogin = $login;
-        $this->repoPassword = $password;
+        $this->token = $token;
         $this->confirmed = false;
     }
 

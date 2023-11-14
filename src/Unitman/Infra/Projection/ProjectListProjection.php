@@ -34,6 +34,7 @@ final class ProjectListProjection extends AbstractProjection implements SyncProj
     {
         $projectList = new ProjectList(
             $fact->id,
+            $fact->repoId,
             $fact->projectCode,
             $fact->projectName,
             $fact->mainBranch,
