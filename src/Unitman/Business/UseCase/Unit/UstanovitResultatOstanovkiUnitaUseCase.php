@@ -19,7 +19,7 @@ final class UstanovitResultatOstanovkiUnitaUseCase
 
     function handle(UstanovitResultatOstanovkiUnita $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         $resultatOstanovki = $this->runnerService->poluchitResultatOstanovkiUnita($unit);
         if ($resultatOstanovki->success) {
             $unit->ustanovitUspehOstanovki($resultatOstanovki->message);

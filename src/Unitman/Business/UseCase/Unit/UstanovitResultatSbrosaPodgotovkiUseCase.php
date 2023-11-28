@@ -18,7 +18,7 @@ final class UstanovitResultatSbrosaPodgotovkiUseCase
 
     function handle(UstanovitResultatSbrosaPodgotovki $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         $resultatSbrosaPodgotovki = $this->runnerService->poluchitResultatSbrosaPodgotovkiUnita($unit);
         if ($resultatSbrosaPodgotovki->success) {
             $unit->ustanovitUspehSbrosaPodgotovki($resultatSbrosaPodgotovki->message);

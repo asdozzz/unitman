@@ -2,11 +2,13 @@
 
 namespace App\Unitman\Business\Command\Unit;
 
-final class ZapolnitPeremenieUnita
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class ZapolnitPeremenieUnita implements JsonBodySerializableInterface
 {
     public function __construct(
-        public readonly string $unitId,
-        public readonly array $values
+        public readonly string $id,
+        public readonly array  $values
     )
     {
     }

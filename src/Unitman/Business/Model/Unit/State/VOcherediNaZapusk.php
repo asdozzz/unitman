@@ -19,7 +19,8 @@ final class VOcherediNaZapusk extends AbstractState
     {
         return [
             new OshibkaZapuska(),
-            new Zapushen()
+            new Zapushen(),
+            new UdalenVruchnuyu()
         ];
     }
 

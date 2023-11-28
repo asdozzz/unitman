@@ -20,7 +20,7 @@ final class UstanovitResultatObnovleniyaUnitaUseCase
 
     function handle(UstanovitResultatObnovleniyaUnita $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         $resultatObnovleniya = $this->runnerService->poluchitResultatObnovleniyaUnita($unit);
 
         if ($resultatObnovleniya->success) {

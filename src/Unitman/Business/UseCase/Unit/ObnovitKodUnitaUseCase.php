@@ -18,7 +18,7 @@ final class ObnovitKodUnitaUseCase
 
     function handle(ObnovitKodUnita $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         $jobId = $this->runnerService->nachatObnovlenieUnita($unit);
         $unit->nachatObnovlenieUnita($jobId);
         $this->unitRepository->save($unit);

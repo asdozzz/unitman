@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Runner\Business\Command;
+
+final class NachatPodgotovkuUnita
+{
+    public function __construct(
+        public readonly string $ProjectId,
+        public readonly string $Name,
+        public readonly array $Commands,
+        public readonly array $Variables,
+    )
+    {
+    }
+}

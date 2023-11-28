@@ -18,7 +18,7 @@ final class OstanovitUnitUseCase
 
     function handle(OstanovitUnit $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         $jobId = $this->runnerService->nachatOstanovkuUnita($unit);
         $unit->nachatOstanovkuUnita($jobId);
         $this->unitRepository->save($unit);

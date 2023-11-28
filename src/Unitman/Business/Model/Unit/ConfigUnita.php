@@ -53,11 +53,11 @@ final class ConfigUnita
     static function fromArray(array $cfg): static
     {
         return new static(
-            is_array($cfg['variables'])?$cfg['variables']:[],
-            is_array($cfg['prepare'])?$cfg['prepare']:[],
-            is_array($cfg['reset_prepare'])?$cfg['reset_prepare']:[],
-            is_array($cfg['up'])?$cfg['up']:[],
-            is_array($cfg['down'])?$cfg['down']:[],
+            isset($cfg['variables']) && is_array($cfg['variables'])?$cfg['variables']:[],
+            isset($cfg['prepare']) && is_array($cfg['prepare'])?$cfg['prepare']:[],
+            isset($cfg['reset_prepare']) && is_array($cfg['reset_prepare'])?$cfg['reset_prepare']:[],
+            isset($cfg['up']) && is_array($cfg['up'])?$cfg['up']:[],
+            isset($cfg['down']) && is_array($cfg['down'])?$cfg['down']:[],
         );
     }
 
@@ -86,4 +86,46 @@ final class ConfigUnita
 
         return $errs;
     }
+
+    /**
+     * @return array
+     */
+    public function getVariables(): array
+    {
+        return $this->variables;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPrepare(): array
+    {
+        return $this->prepare;
+    }
+
+    /**
+     * @return array
+     */
+    public function getResetPrepare(): array
+    {
+        return $this->resetPrepare;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUp(): array
+    {
+        return $this->up;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDown(): array
+    {
+        return $this->down;
+    }
+
+
 }

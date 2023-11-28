@@ -19,7 +19,8 @@ final class VOcherediNaSbrosPodgotovki extends AbstractState
     {
         return [
             new OshibkaSbrosaPodgotovki(),
-            new Sobran()
+            new Sobran(),
+            new UdalenVruchnuyu()
         ];
     }
 

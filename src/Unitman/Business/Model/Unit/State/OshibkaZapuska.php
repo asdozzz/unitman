@@ -19,7 +19,8 @@ final class OshibkaZapuska extends AbstractState
     {
         return [
             new VOcherediNaUdalenie(),
-            new VOcherediNaZapusk()
+            new VOcherediNaZapusk(),
+            new VOcherediNaObnovlenie()
         ];
     }
 
@@ -27,7 +28,8 @@ final class OshibkaZapuska extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::nachatZapusk
+            StateUserCommand::nachatZapusk,
+            StateUserCommand::nachatObnovlenie
         ];
     }
 }

@@ -18,6 +18,7 @@ final class VOcherediNaObnovlenie extends AbstractState
             new OshibkaObnovleniya(),
             new Sobran(),
             new Podgotovlen(),
+            new UdalenVruchnuyu()
         ];
     }
 

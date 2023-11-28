@@ -18,7 +18,7 @@ final class UstanovitResultatUdaleniyaUseCase
 
     function handle(UstanovitResultatUdaleniya $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         $resultatUdaleniya = $this->runnerService->poluchitResultatUdaleniyaUnita($unit);
         if ($resultatUdaleniya->success) {
             $unit->ustanovitUspehUdaleniya($resultatUdaleniya->message);

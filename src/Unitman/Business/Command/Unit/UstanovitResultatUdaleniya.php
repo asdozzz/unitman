@@ -2,10 +2,12 @@
 
 namespace App\Unitman\Business\Command\Unit;
 
-final class UstanovitResultatUdaleniya
+use App\Utils\Converter\JsonBodySerializableInterface;
+
+final class UstanovitResultatUdaleniya implements JsonBodySerializableInterface
 {
     public function __construct(
-        public readonly string $unitId
+        public readonly string $id
     )
     {
     }

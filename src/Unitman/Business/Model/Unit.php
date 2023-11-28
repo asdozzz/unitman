@@ -69,6 +69,9 @@ final class Unit implements AggregateRoot
 
     private ?ConfigUnita $configUnita = null;
 
+    /**
+     * @var array<VariableValue>
+     * */
     private array $variableValues = [];
     private ?RunnerJob $sborka = null;
     private ?RunnerJob $podgotovka = null;
@@ -208,8 +211,28 @@ final class Unit implements AggregateRoot
         if ($this->sborka->isFinish()) {
             throw new \DomainException('unit.resultat_sborki_uge_ustanovlen');
         }
+
+        $errs = $this->validateConfig($configUnita);
+
+        if (!empty($errs)) {
+            $configUnita = null;
+        }
+
         $state = $this->state->newState(new Sobran());
         $this->recordThat(new UspehSborkiUnitaUstanovlen($this->getId(), $textOtRunnera, $configUnita, $state->toArray($this)));
+    }
+
+    public function validateConfig(array $configUnita): array
+    {
+        if (empty($configUnita)) return [];
+        $errors = [];
+        try {
+            ConfigUnita::fromArray($configUnita);
+        } catch (\Exception $e) {
+            $errors[] = $e->getMessage();
+        }
+
+        return $errors;
     }
 
     private function applyUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
@@ -392,13 +415,22 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_obnovleniya_uge_ustanovlen');
         }
 
-        if ($this->esliZapushen()) {
-            $state = $this->state->newState(new Zapushen());
-        } elseif ($this->esliPodgotovlen()) {
-            $state = $this->state->newState(new Podgotovlen());
+        $errs = $this->validateConfig($configUnita);
+
+        if (!empty($errs)) {
+            $configUnita = null;
+            $textOtRunnera = 'Invalid config';
+            $state = $this->state->newState(new OshibkaObnovleniya());
         } else {
-            $state = $this->state->newState(new Sobran());
+            if ($this->esliZapushen()) {
+                $state = $this->state->newState(new Zapushen());
+            } elseif ($this->esliPodgotovlen()) {
+                $state = $this->state->newState(new Podgotovlen());
+            } else {
+                $state = $this->state->newState(new Sobran());
+            }
         }
+
         $this->recordThat(new UspehObnovleniyaUnitaUstanovlen($this->getId(), $textOtRunnera, $configUnita, $state->toArray($this)));
     }
 
@@ -663,7 +695,7 @@ final class Unit implements AggregateRoot
     public function ustanovitOshibkuUdaleniya(string $textOtRunnera): void
     {
         if (empty($this->udalenie)) {
-            throw new \DomainException('unit.$this->udalenie_ne_nachalas');
+            throw new \DomainException('unit.udalenie_ne_nachalas');
         }
 
         if ($this->udalenie->isFinish()) {
@@ -703,9 +735,9 @@ final class Unit implements AggregateRoot
 
     public function udalitSlomaniyUnit(): void
     {
-        if ($this->isWaitResultFromRunner()) {
+        /*if ($this->isWaitResultFromRunner()) {
             throw new \DomainException('unit.wait_runner');
-        }
+        }*/
 
         if ($this->isDeleted) {
             throw new \DomainException('unit.uge_udalen');
@@ -736,8 +768,71 @@ final class Unit implements AggregateRoot
         return $this->project->id;
     }
 
-    public function getBuildWorkflowId(): string
+    public function getProjectName(): string
+    {
+        return $this->project->name;
+    }
+
+    public function poluchitWorkflowIdDlySborki(): string
     {
         return $this->sborka->getJobId();
+    }
+
+    public function poluchitWorkflowIdDlyObnovleniya(): string
+    {
+        return $this->obnovlenie->getJobId();
+    }
+
+    public function poluchitWorkflowIdDlyPodgotovki(): string
+    {
+        return $this->podgotovka->getJobId();
+    }
+
+    public function poluchitWorkflowIdDlySbrosaPodgotovki(): string
+    {
+        return $this->sbrosPodgotovki->getJobId();
+    }
+
+    public function poluchitWorkflowIdDlyZapuska(): string
+    {
+        return $this->zapusk->getJobId();
+    }
+
+    public function poluchitWorkflowIdDlyOstanovki(): string
+    {
+        return $this->ostanovka->getJobId();
+    }
+
+    public function poluchitWorkflowIdDlyUdaleniya(): string
+    {
+        return $this->udalenie->getJobId();
+    }
+
+    public function poluchitKomandiPodgotovki(): array
+    {
+        return $this->configUnita->getPrepare();
+    }
+
+    public function poluchitKomandiSbrosaPodgotovki(): array
+    {
+        return $this->configUnita->getResetPrepare();
+    }
+
+    public function poluchitKomandiZapuska(): array
+    {
+        return $this->configUnita->getUp();
+    }
+
+    public function poluchitKomandiOstanovki(): array
+    {
+        return $this->configUnita->getDown();
+    }
+
+    /**
+     * @return array<VariableValue>
+     * */
+    public function poluchitZnacheniyaPeremenih(): array
+    {
+        return $this->variableValues;
     }
 }

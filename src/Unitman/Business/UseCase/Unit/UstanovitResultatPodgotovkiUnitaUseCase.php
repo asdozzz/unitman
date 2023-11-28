@@ -18,7 +18,7 @@ final class UstanovitResultatPodgotovkiUnitaUseCase
 
     function handle(UstanovitResultatPodgotovkiUnita $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         $resultatPodgotovki = $this->runnerService->poluchitResultatPodgotovki($unit);
         if ($resultatPodgotovki->success) {
             $unit->ustanovitUspehPodgotovki($resultatPodgotovki->message);

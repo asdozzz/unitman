@@ -3,7 +3,13 @@
 namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApi;
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\NachatObnovlenieUnita;
+use App\Runner\Business\Command\NachatOstanovkuUnita;
+use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Command\NachatSborkuUnita;
+use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
+use App\Runner\Business\Command\NachatUdalenieUnita;
+use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
@@ -48,77 +54,137 @@ final class RunnerAdapter implements RunnerService
         $workflowId = $this->runnerApi->nachatSborkuUnita($command);
         return new JobId($workflowId);
     }
+    public function nachatPodgotovkuUnita(Unit $unit): JobId
+    {
+        $variables = $this->makeVariablesListFromUnit($unit);
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $unit->getName(), $unit->poluchitKomandiPodgotovki(), $variables);
+        $workflowId = $this->runnerApi->nachatPodgotovkuUnita($command);
+        return new JobId($workflowId);
+    }
+
+    public function nachatObnovlenieUnita(Unit $unit): JobId
+    {
+        $command = new NachatObnovlenieUnita($unit->getProjectId(), $unit->getName());
+        $workflowId = $this->runnerApi->nachatObnovlenieUnita($command);
+        return new JobId($workflowId);
+    }
+
+    public function nachatSbrosPodgotovkiUnita(Unit $unit): JobId
+    {
+        $variables = $this->makeVariablesListFromUnit($unit);
+        $command = new NachatSbrosPodgotovkiUnita($unit->getProjectId(), $unit->getName(), $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
+        $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($command);
+        return new JobId($workflowId);
+    }
+
+    public function nachatZapuskUnita(Unit $unit): JobId
+    {
+        $variables = $this->makeVariablesListFromUnit($unit);
+        $command = new NachatZapuskUnita($unit->getProjectId(), $unit->getProjectName(),$unit->getName(), $unit->poluchitKomandiZapuska(), $variables);
+        $workflowId = $this->runnerApi->nachatZapuskUnita($command);
+        return new JobId($workflowId);
+    }
+
+    public function nachatOstanovkuUnita(Unit $unit): JobId
+    {
+        $variables = $this->makeVariablesListFromUnit($unit);
+        $command = new NachatOstanovkuUnita($unit->getProjectId(), $unit->getProjectName(),$unit->getName(), $unit->poluchitKomandiOstanovki(), $variables);
+        $workflowId = $this->runnerApi->nachatOstanovkuUnita($command);
+        return new JobId($workflowId);
+    }
+
+    public function nachatUdalenieUnita(Unit $unit): JobId
+    {
+        $command = new NachatUdalenieUnita($unit->getProjectId(), $unit->getName());
+        $workflowId = $this->runnerApi->nachatUdalenieUnita($command);
+        return new JobId($workflowId);
+    }
 
     public function poluchitResultatSborki(Unit $unit): ResultatSborkiUnita
     {
-        $result = $this->runnerApi->poluchitResultatSborki($unit->getBuildWorkflowId());
+        $result = $this->runnerApi->poluchitResultatSborki($unit->poluchitWorkflowIdDlySborki());
 
         if (empty($result)) {
             throw new \Exception('runner.sborka_eshe_ne_zakonchena');
         }
 
-        return new ResultatSborkiUnita($result->Success, $result->Message, $result->Config);
-    }
-
-    public function nachatPodgotovkuUnita(Unit $unit): JobId
-    {
-
-    }
-
-    public function nachatObnovlenieUnita(Unit $unit): JobId
-    {
-        // TODO: Implement nachatObnovlenieUnita() method.
-    }
-
-    public function nachatSbrosPodgotovkiUnita(Unit $unit): JobId
-    {
-        // TODO: Implement nachatSbrosPodgotovkiUnita() method.
-    }
-
-    public function nachatZapuskUnita(Unit $unit): JobId
-    {
-        // TODO: Implement nachatZapuskUnita() method.
-    }
-
-    public function nachatOstanovkuUnita(Unit $unit): JobId
-    {
-        // TODO: Implement nachatOstanovkuUnita() method.
-    }
-
-    public function nachatUdalenieUnita(Unit $unit): JobId
-    {
-        // TODO: Implement nachatUdalenieUnita() method.
-    }
-
-
-
-    public function poluchitResultatPodgotovki(Unit $unit): ResultatPodgotovkiUnita
-    {
-        // TODO: Implement poluchitResultatPodgotovki() method.
+        return new ResultatSborkiUnita((bool)$result->Success, $result->Message, $result->Config);
     }
 
     public function poluchitResultatObnovleniyaUnita(Unit $unit): ResultatObnovleniyaUnita
     {
-        // TODO: Implement poluchitResultatObnovleniyaUnita() method.
+        $result = $this->runnerApi->poluchitResultatObnovleniyaUnita($unit->poluchitWorkflowIdDlyObnovleniya());
+
+        if (empty($result)) {
+            throw new \Exception('runner.obnovlenie_eshe_ne_zakoncheno');
+        }
+
+        return new ResultatObnovleniyaUnita($result->Success, $result->Message, $result->Config);
     }
+
+    public function poluchitResultatPodgotovki(Unit $unit): ResultatPodgotovkiUnita
+    {
+        $result = $this->runnerApi->poluchitResultatPodgotovki($unit->poluchitWorkflowIdDlyPodgotovki());
+
+        if (empty($result)) {
+            throw new \Exception('runner.podgotovka_eshe_ne_zakonchena');
+        }
+
+        return new ResultatPodgotovkiUnita($result->Success, $result->Message);
+    }
+
 
     public function poluchitResultatSbrosaPodgotovkiUnita(Unit $unit): ResultatSbrosaPodgotovkiUnita
     {
-        // TODO: Implement poluchitResultatSbrosaPodgotovkiUnita() method.
+        $result = $this->runnerApi->poluchitResultatSbrosaPodgotovkiUnita($unit->poluchitWorkflowIdDlySbrosaPodgotovki());
+
+        if (empty($result)) {
+            throw new \Exception('runner.sbros_podgotovki_eshe_ne_zakonchen');
+        }
+
+        return new ResultatSbrosaPodgotovkiUnita($result->Success, $result->Message);
     }
 
     public function poluchitResultatZapuskaUnita(Unit $unit): ResultatZapuskaUnita
     {
-        // TODO: Implement poluchitResultatZapuskaUnita() method.
+        $result = $this->runnerApi->poluchitResultatZapuskaUnita($unit->poluchitWorkflowIdDlyZapuska());
+
+        if (empty($result)) {
+            throw new \Exception('runner.zapusk_eshe_ne_zakonchen');
+        }
+
+        return new ResultatZapuskaUnita($result->Success, $result->Message);
     }
 
     public function poluchitResultatOstanovkiUnita(Unit $unit): ResultatOstanovkiUnita
     {
-        // TODO: Implement poluchitResultatOstanovkiUnita() method.
+        $result = $this->runnerApi->poluchitResultatOstanovkiUnita($unit->poluchitWorkflowIdDlyOstanovki());
+
+        if (empty($result)) {
+            throw new \Exception('runner.ostanovka_eshe_ne_zakonchena');
+        }
+
+        return new ResultatOstanovkiUnita($result->Success, $result->Message);
     }
 
     public function poluchitResultatUdaleniyaUnita(Unit $unit): ResultatUdaleniyaUnita
     {
-        // TODO: Implement poluchitResultatUdaleniyaUnita() method.
+        $result = $this->runnerApi->poluchitResultatUdaleniyaUnita($unit->poluchitWorkflowIdDlyUdaleniya());
+
+        if (empty($result)) {
+            throw new \Exception('runner.udalenie_eshe_ne_zakoncheno');
+        }
+
+        return new ResultatUdaleniyaUnita($result->Success, $result->Message);
+    }
+
+    /**
+     * @param Unit $unit
+     * @return array|array[]
+     */
+    private function makeVariablesListFromUnit(Unit $unit): array
+    {
+        $variables = array_map(fn(Unit\VariableValue $variableValue) => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue()), $unit->poluchitZnacheniyaPeremenih());
+        return $variables;
     }
 }

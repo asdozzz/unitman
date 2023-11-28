@@ -19,7 +19,7 @@ final class SbrositPodgotovkuUnitaUseCase
 
     function handle(SbrositPodgotovkuUnita $command): void
     {
-        $unit = $this->unitRepository->getById($command->unitId);
+        $unit = $this->unitRepository->getById($command->id);
         if (!$unit->esliRazreshenoUpravlyatUnitom($this->securityService->getCurrentUserId())) {
             throw new \DomainException('unit.ne_hvataet_prav');
         }

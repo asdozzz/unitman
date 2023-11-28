@@ -13,6 +13,7 @@ force-internal:
 require:
   - "@utils"
   - "\\App\\Account\\Api\\AccountApi"
+  - "\\App\\Runner\\Api\\RunnerApi"
 
 # Granting partial access to internal symbols, "as an exception".
 allow-internal-access:

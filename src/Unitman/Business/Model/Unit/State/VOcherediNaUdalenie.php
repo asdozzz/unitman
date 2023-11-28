@@ -17,7 +17,7 @@ final class VOcherediNaUdalenie extends AbstractState
      */
     public function getNextStates(): array
     {
-        return [new Sloman(), new Udalen()];
+        return [new Sloman(), new Udalen(), new UdalenVruchnuyu()];
     }
 
     public function getCommands(Unit $unit): array

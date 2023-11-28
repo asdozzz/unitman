@@ -16,7 +16,8 @@ final class VOcherediNaOstanovku extends AbstractState
     {
         return [
             new OshibkaOstanovki(),
-            new Podgotovlen()
+            new Podgotovlen(),
+            new UdalenVruchnuyu()
         ];
     }
 
