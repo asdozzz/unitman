@@ -17,6 +17,7 @@
         "grpc/grpc": "^1.42",
         "knplabs/github-api": "^3.0",
         "lexik/jwt-authentication-bundle": "^2.18",
+        "nelmio/cors-bundle": "^2.4",
         "nyholm/psr7": "^1.8",
         "phpdocumentor/reflection-docblock": "^5.3",
         "phpstan/phpdoc-parser": "^1.15",

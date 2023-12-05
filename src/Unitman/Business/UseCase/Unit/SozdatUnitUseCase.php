@@ -24,7 +24,7 @@ final class SozdatUnitUseCase
 
     function handle(SozdatUnit $command): void
     {
-        if ($this->canFindUnitDouble->isExistsDoubleByName($command->unitName)) {
+        if ($this->canFindUnitDouble->isExistsDoubleByName($command->projectId, $command->unitName)) {
             throw new \DomainException('unit.double');
         }
 

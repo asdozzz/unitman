@@ -29,3 +29,12 @@ services:
       start_period: 10s
     volumes:
       - ./var/volume/pgdata:/var/lib/postgresql/data
+
+  unitman-proxy:
+    image: nginx
+    restart: always
+    volumes:
+      - ./.docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./.docker/nginx/html/index.html:/usr/share/nginx/html/index.html
+    ports:
+      - '8087:80'

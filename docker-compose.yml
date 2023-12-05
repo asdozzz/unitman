@@ -56,3 +56,10 @@ services:
     extends:
       file: common-services.yml
       service: postgres
+
+  unitman-proxy:
+    extends:
+      file: common-services.yml
+      service: unitman-proxy
+
+

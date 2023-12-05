@@ -4,5 +4,5 @@ namespace App\Unitman\Business\Port;
 
 interface CanFindUnitDouble
 {
-    function isExistsDoubleByName(string $unitName): bool;
+    function isExistsDoubleByName(string $projectId, string $unitName): bool;
 }
