@@ -12,6 +12,7 @@ use EventSauce\EventSourcing\MessageRepository;
 final class SqlRepoEvensRepository implements \App\Unitman\Business\Port\RepoRepository
 {
     private Connection $connection;
+    private EventSourcedAggregateRootRepository $esRepository;
 
     public function __construct(Connection $connection, MessageRepository $messageRepository, MessageDispatcher $messageDispatcher, MessageDecorator $messageDecorator)
     {

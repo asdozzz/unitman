@@ -193,6 +193,7 @@
       <excludeFolder url="file://$MODULE_DIR$/var/cache" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/eventsauce/id-encoding" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/nelmio/cors-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/qossmic/deptrac-shim" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

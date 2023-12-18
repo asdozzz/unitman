@@ -22,7 +22,6 @@ final class Repo implements AggregateRoot
      * */
     use AggregateRootBehaviour;
 
-    const GITHUB_REPO_URL = 'https://github.com';
     private ?RepoType $type;
     private ?RepoName $name;
     private ?RepoCredentials $credentials;
@@ -33,15 +32,10 @@ final class Repo implements AggregateRoot
     {
         return $this->aggregateRootId->toString();
     }
-    public static function addRepo(string $id, AddRepo $command): static
+    public static function addRepo(string $id, AddRepo $command, string $url): static
     {
         $repoId = RepoId::fromString($id);
         $repo = new static($repoId);
-        if ($command->repoType === RepoType::GITHUB->value) {
-            $url = self::GITHUB_REPO_URL;
-        } else {
-            $url = $command->repoUrl;
-        }
         $repo->recordThat(new RepoWasAdded($repoId->toString(), $command->repoType, $command->repoName, $url, $command->token));
         return $repo;
     }
@@ -54,16 +48,10 @@ final class Repo implements AggregateRoot
         $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->token);
     }
 
-    public function changeCredentials(ChangeCredentialsOfRepo $command): void
+    public function changeCredentials(ChangeCredentialsOfRepo $command, string $url): void
     {
         if ($this->isDeleted) {
             throw new \DomainException('repo.deleted');
-        }
-
-        if ($this->type === RepoType::GITHUB) {
-            $url = self::GITHUB_REPO_URL;
-        } else {
-            $url = $command->repoUrl;
         }
 
         $newCredentials = new RepoCredentials($url, $command->token);

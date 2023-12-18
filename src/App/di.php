@@ -10,6 +10,7 @@ use EventSauce\EventSourcing\DefaultHeadersDecorator;
 use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ObjectMapperPayloadSerializer;
+use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
 use EventSauce\UuidEncoding\StringUuidEncoder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -38,7 +39,7 @@ return function (ContainerConfigurator $configuration) {
         ->args([service(DefaultHeadersDecorator::class), service(AuthorMessageDecorator::class)]);
 
     $services->set(DefaultTableSchema::class, DefaultTableSchema::class);
-    $services->set(StringUuidEncoder::class, StringUuidEncoder::class);
+    $services->set(StringIdEncoder::class, StringIdEncoder::class);
 
     $services->set(WorkflowClient::class)
         ->factory(service(WorkflowClientFactory::class))

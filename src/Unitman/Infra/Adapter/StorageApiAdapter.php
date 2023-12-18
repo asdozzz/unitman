@@ -11,4 +11,6 @@ interface StorageApiAdapter
 {
     public function isSupport(Repo\RepoType $repoType): bool;
     public function checkAccess(Repo $repo): CheckAccessResponse;
+
+    public function poluchitUrlHranilisha(?string $repoUrl): string;
 }

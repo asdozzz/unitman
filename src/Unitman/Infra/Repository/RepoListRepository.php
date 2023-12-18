@@ -4,6 +4,8 @@ namespace App\Unitman\Infra\Repository;
 
 use App\Unitman\Business\Command\Repo\GetRepoList;
 use App\Unitman\Business\Port\CanFindRepoDouble;
+use App\Unitman\Business\Port\CanGetActiveProjectList;
+use App\Unitman\Business\Port\CanGetProjectList;
 use App\Unitman\Business\Port\CanGetRepoList;
 use App\Unitman\Business\ReadModel\RepoList;
 use Doctrine\DBAL\Connection;
@@ -71,10 +73,10 @@ final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList
         return $repo;
     }
 
-    public function isExistDoubleByUrl(string $repoUrl): bool
+    public function isExistDoubleByName(string $repoName): bool
     {
         $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE repo_url = :url", ['url' => $repoUrl]);
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE name = :name", ['name' => $repoName]);
 
         return !empty($row);
     }

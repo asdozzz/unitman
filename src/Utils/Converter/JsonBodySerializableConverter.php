@@ -14,7 +14,7 @@ final class JsonBodySerializableConverter implements ParamConverterInterface
     {
     }
 
-    public function apply(Request $request, ParamConverter $configuration)
+    public function apply(Request $request, ParamConverter $configuration): bool
     {
         $body = $request->getContent();
 
@@ -23,7 +23,7 @@ final class JsonBodySerializableConverter implements ParamConverterInterface
             $body = '';
         }
 
-        $obj = $this->serializer->deserialize($body, $configuration->getClass(), 'json',[
+        $obj = $this->serializer->deserialize($body, $configuration->getClass() ?? '', 'json',[
             AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false
         ]);
 

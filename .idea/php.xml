@@ -198,6 +198,7 @@
       <path value="$PROJECT_DIR$/vendor/spiral/roadrunner-http" />
       <path value="$PROJECT_DIR$/vendor/eventsauce/id-encoding" />
       <path value="$PROJECT_DIR$/vendor/nelmio/cors-bundle" />
+      <path value="$PROJECT_DIR$/vendor/qossmic/deptrac-shim" />
     </include_path>
   </component>
   <component name="PhpInterpreters">

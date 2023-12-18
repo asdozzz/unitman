@@ -32,8 +32,7 @@ use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-#[AutoconfigureTag('unit.sync_projection')]
-final class SpisokUnitovProjection extends AbstractProjection
+final class SpisokUnitovProjection extends AbstractProjection implements SyncProjectionForUnit
 {
     public function __construct(
         private SpisokUnitovRepository $repository

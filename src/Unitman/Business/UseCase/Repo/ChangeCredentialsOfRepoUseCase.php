@@ -4,13 +4,15 @@ namespace App\Unitman\Business\UseCase\Repo;
 
 use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
 use App\Unitman\Business\Port\RepoRepository;
+use App\Unitman\Business\Port\UmeetPoluchatUrlHranilisha;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class ChangeCredentialsOfRepoUseCase
 {
     public function __construct(
         private UnitmanSecurityService $securityService,
-        private RepoRepository         $repoRepository
+        private RepoRepository         $repoRepository,
+        private UmeetPoluchatUrlHranilisha $umeetPoluchatUrlHranilisha
     )
     {
     }
@@ -22,7 +24,10 @@ final class ChangeCredentialsOfRepoUseCase
         }
 
         $repo = $this->repoRepository->getById($command->repoId);
-        $repo->changeCredentials($command);
+
+        $url = $this->umeetPoluchatUrlHranilisha->poluchitUrlHranilisha($repo->getType(), $command->repoUrl);
+
+        $repo->changeCredentials($command, $url);
         $this->repoRepository->save($repo);
     }
 }

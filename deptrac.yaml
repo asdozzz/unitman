@@ -1,0 +1,29 @@
+deptrac:
+  paths:
+    - ./src
+  exclude_files:
+    - '#.*test.*#'
+    - '#Acl\.*#'
+  layers:
+    - name: Account
+      collectors:
+        - type: directory
+          regex: ./src/Account/.*
+    - name: BackgroundJob
+      collectors:
+        - type: directory
+          regex: ./src/BackgroundJob/.*
+    - name: Runner
+      collectors:
+        - type: directory
+          regex: ./src/Runner/.*
+    - name: Unitman
+      collectors:
+        - type: directory
+          regex: ./src/Unitman/.*
+
+  ruleset:
+    Account:
+    BackgroundJob:
+    Runner:
+    Unitman:

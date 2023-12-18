@@ -8,6 +8,7 @@ use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Port\CanFindRepoDouble;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RepoRepository;
+use App\Unitman\Business\Port\UmeetPoluchatUrlHranilisha;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class AddRepoUseCase
@@ -16,7 +17,8 @@ final class AddRepoUseCase
         private UnitmanSecurityService $securityService,
         private RepoRepository         $repoRepository,
         private CanGeneateGuid         $uuidGenerator,
-        private CanFindRepoDouble      $canFindDouble
+        private CanFindRepoDouble      $canFindDouble,
+        private UmeetPoluchatUrlHranilisha $umeetPoluchatUrlHranilisha
     )
     {
     }
@@ -29,11 +31,13 @@ final class AddRepoUseCase
 
         $repoId = $this->uuidGenerator->makeGuid();
 
-        if ($command->repoType !== RepoType::GITHUB->value && $this->canFindDouble->isExistDoubleByUrl($command->repoUrl)) {
-            throw new \RuntimeException('repo.url.double');
+        $url = $this->umeetPoluchatUrlHranilisha->poluchitUrlHranilisha(RepoType::from($command->repoType), $command->repoUrl);
+
+        if ($this->canFindDouble->isExistDoubleByName($command->repoName)) {
+            throw new \RuntimeException('repo.name.double');
         }
 
-        $repo = Repo::addRepo($repoId, $command);
+        $repo = Repo::addRepo($repoId, $command, $url);
         $this->repoRepository->save($repo);
     }
 }

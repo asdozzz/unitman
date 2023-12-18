@@ -6,6 +6,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+
 >
     <projectFiles>
         <directory name="src" />
@@ -13,10 +14,30 @@
             <directory name="vendor" />
             <directory name="tests" />
             <directory name="src/*/Tests" />
-            <file name="src/Kernel.php" />
         </ignoreFiles>
     </projectFiles>
+    <extraFiles>
+        <directory name="var/cache/dev/Symfony/Config" /> <!-- https://github.com/psalm/psalm-plugin-symfony/issues/201 -->
+    </extraFiles>
     <plugins>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
     </plugins>
+    <issueHandlers>
+         <UndefinedClass>
+             <errorLevel type="suppress">
+                 <!-- These classes have been added in PHP 8.1 -->
+                 <referencedClass name="BackedEnum"/>
+                 <referencedClass name="ReflectionIntersectionType"/>
+                 <referencedClass name="UnitEnum"/>
+             </errorLevel>
+         </UndefinedClass>
+         <UndefinedDocblockClass>
+             <errorLevel type="suppress">
+                 <!-- These classes have been added in PHP 8.1 -->
+                 <referencedClass name="BackedEnum"/>
+                 <referencedClass name="ReflectionIntersectionType"/>
+                 <referencedClass name="UnitEnum"/>
+             </errorLevel>
+         </UndefinedDocblockClass>
+     </issueHandlers>
 </psalm>

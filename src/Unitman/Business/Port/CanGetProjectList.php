@@ -3,12 +3,17 @@
 namespace App\Unitman\Business\Port;
 
 use App\Unitman\Business\Command\Project\GetProjectList;
-use App\Unitman\Business\ReadModel\RepoList;
+use App\Unitman\Business\ReadModel\ProjectList;
 
 interface CanGetProjectList
 {
     /**
-     * @return RepoList[]
+     * @return ProjectList[]
      * */
     function getList(GetProjectList $query): array;
+
+    /**
+     * @return ProjectList[]
+     * */
+    function getListByRepoId(string $repoId): array;
 }

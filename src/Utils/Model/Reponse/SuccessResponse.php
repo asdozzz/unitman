@@ -9,8 +9,8 @@ final class SuccessResponse
 
     public function __construct(mixed $data)
     {
-        $this->status = ResponseStatus::SUCCESS->value;
         $this->data = $data;
+        $this->status = ResponseStatus::SUCCESS->value;
     }
 
 

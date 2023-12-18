@@ -13,6 +13,7 @@ use EventSauce\EventSourcing\MessageRepository;
 final class SqlUnitEventsRepository implements UnitRepository
 {
     private Connection $connection;
+    private EventSourcedAggregateRootRepository $esRepository;
 
     public function __construct(Connection $connection, MessageRepository $messageRepository, MessageDispatcher $messageDispatcher, MessageDecorator $messageDecorator)
     {

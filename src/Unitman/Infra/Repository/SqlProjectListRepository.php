@@ -134,8 +134,22 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     function getList(GetProjectList $query): array
     {
         $table = self::TABLE;
+        
         $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table LIMIT :limit OFFSET :offset",
             ['limit' => $query->limit, 'offset' => $query->offset]);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeRepoByDbRow($row);
+        }
+
+        return $result;
+    }
+
+    function getListByRepoId(string $repoId): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where repo_id = :repoId", ['repoId' => $repoId]);
 
         $result = [];
         foreach ($rows as $row) {

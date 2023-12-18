@@ -31,7 +31,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $repoId = Uuid::uuid7()->toString();
         $repoName = 'testRepo';
 
-        $this->addRepo($repoId, $repoName, RepoType::GITHUB, Repo::GITHUB_REPO_URL);
+        $this->addRepo($repoId, $repoName, RepoType::GITHUB, 'https://github.com');
 
         $deleteCommand = new DeleteRepo($repoId);
 

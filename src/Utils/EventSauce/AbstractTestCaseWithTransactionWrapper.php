@@ -20,7 +20,7 @@ abstract class AbstractTestCaseWithTransactionWrapper extends KernelTestCase
 
     function tearDown(): void
     {
-        self::$db->rollBack();
+        if (self::$db) self::$db->rollBack();
         parent::tearDown();
     }
 }

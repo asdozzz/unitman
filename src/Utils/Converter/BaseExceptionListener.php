@@ -49,18 +49,18 @@ class BaseExceptionListener
 
     }//end onKernelException()
 
-    function dump(ExceptionEvent $event)
+    function dump(ExceptionEvent $event): Response
     {
-        return new Response($event->getThrowable(), 200);
+        return new Response((string) $event->getThrowable(), 200);
     }
 
 
-    function makeFail(\Throwable $exception)
+    function makeFail(\Throwable $exception): JsonResponse
     {
         return new JsonResponse(\App\Utils\Model\Reponse\Response::fail(['message' => $exception->getMessage()]));
     }
 
-    function makeError(\Throwable $exception)
+    function makeError(\Throwable $exception): JsonResponse
     {
         return new JsonResponse(\App\Utils\Model\Reponse\Response::error($exception->getMessage()));
     }

@@ -8,6 +8,7 @@ use App\Unitman\Infra\Adapter\StorageApiAdapter\GithubAdapter\GithubClientFactor
 
 final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapter
 {
+    const GITHUB_REPO_URL = 'https://github.com';
     public function __construct(
         private GithubClientFactory $githubClientFactory
     )
@@ -30,5 +31,10 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         }
 
         return CheckAccessResponse::success();
+    }
+
+    public function poluchitUrlHranilisha(?string $repoUrl): string
+    {
+        return self::GITHUB_REPO_URL;
     }
 }
