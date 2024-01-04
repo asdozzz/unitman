@@ -15,6 +15,9 @@ use App\Unitman\Business\Model\Repo\RepoType;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 
+/**
+ * @template-implements AggregateRoot<RepoId>
+ * */
 final class Repo implements AggregateRoot
 {
     /**
@@ -22,9 +25,12 @@ final class Repo implements AggregateRoot
      * */
     use AggregateRootBehaviour;
 
-    private ?RepoType $type;
-    private ?RepoName $name;
-    private ?RepoCredentials $credentials;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private RepoType $type;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private RepoName $name;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private RepoCredentials $credentials;
     private bool $isDeleted = false;
     private bool $accessConfirmed = false;
 
@@ -83,7 +89,7 @@ final class Repo implements AggregateRoot
         $this->isDeleted = true;
     }
 
-    public function accessConfirm()
+    public function accessConfirm(): void
     {
         if ($this->isDeleted) {
             throw new \DomainException('repo.already_deleted');

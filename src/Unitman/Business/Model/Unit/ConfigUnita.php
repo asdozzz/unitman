@@ -39,10 +39,10 @@ final class ConfigUnita
         $this->down = $down;
     }
 
-    function toArray()
+    function toArray(): array
     {
         return [
-            'variables' => array_map(fn(ConfigVariable $variable) => $variable->toArray(), $this->variables),
+            'variables' => array_map(fn(ConfigVariable $variable): array => $variable->toArray(), $this->variables),
             'prepare' => $this->prepare,
             'reset_prepare' => $this->resetPrepare,
             'up' => $this->up,
@@ -64,7 +64,7 @@ final class ConfigUnita
     /**
      * @param VariableValue[] $values
      * */
-    function validateValues(array $values)
+    function validateValues(array $values): array
     {
         $formatValues = [];
 
@@ -126,6 +126,4 @@ final class ConfigUnita
     {
         return $this->down;
     }
-
-
 }

@@ -12,7 +12,7 @@ final class ProjectList
         public readonly string $code,
         public readonly string $name,
         public readonly string $mainBranch,
-        public readonly string $isActive,
+        public readonly bool $isActive,
         public readonly ProjectListStateType $state,
         public readonly ?string $buildInfo,
         public readonly ?string $removeInfo

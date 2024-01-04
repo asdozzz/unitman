@@ -56,7 +56,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble
     }
 
     /**
-     * @param array|bool $row
+     * @param array $row
      * @return JWTUser
      */
     private function makeUserByDbRow(array $row): JWTUser

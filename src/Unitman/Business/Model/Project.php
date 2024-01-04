@@ -32,21 +32,29 @@ use App\Unitman\Business\Model\Repo\RepoId;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 
+/**
+ * @template-implements AggregateRoot<ProjectId>
+ * */
 final class Project implements AggregateRoot
 {
     /**
      * @template-use AggregateRootBehaviour<ProjectId>
      * */
     use AggregateRootBehaviour;
-    private ?string $repoId;
-    private ?ProjectCode $code;
-    private ?ProjectName $name;
+
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private string $repoId;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ProjectCode $code;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ProjectName $name;
     private bool $isActive = false;
     /**
      * @var ProjectUser[]
      * */
     private array $users = [];
-    private ?string $mainBranch;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private string $mainBranch;
 
     private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
@@ -128,7 +136,9 @@ final class Project implements AggregateRoot
     private function applyUserRemovedFromProject(UserRemovedFromProject $fact): void
     {
         $userIndex = $this->findIndexUserById($fact->userId);
-        unset($this->users[$userIndex]);
+        if (isset($this->users[$userIndex])) {
+            unset($this->users[$userIndex]);
+        }
     }
 
     public function changeData(UpdateProjectData $command): void
@@ -165,7 +175,9 @@ final class Project implements AggregateRoot
 
         $this->recordThat(new PostavlenVOcheredNaUdalenie($this->getId(), $jobId));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyPostavlenVOcheredNaUdalenie(PostavlenVOcheredNaUdalenie $fact): void
     {
         $this->dataAboutRemoving = new ProjectDataAboutRemoving($fact->jobId);
@@ -183,7 +195,9 @@ final class Project implements AggregateRoot
 
         $this->recordThat(new ProjectWasDeleted($this->getId(), $info));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyProjectWasDeleted(ProjectWasDeleted $fact): void
     {
         $this->dataAboutRemoving = $this->dataAboutRemoving->success($fact->info);
@@ -201,7 +215,9 @@ final class Project implements AggregateRoot
 
         $this->recordThat(new ProjectWasNotDeleted($this->getId(), $info, false));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyProjectWasNotDeleted(ProjectWasNotDeleted $fact): void
     {
         $this->dataAboutRemoving = $this->dataAboutRemoving->fail($fact->errorText);
@@ -224,7 +240,9 @@ final class Project implements AggregateRoot
 
         $this->recordThat(new ProjectWasDeletedManually($this->getId()));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyProjectWasDeletedManually(ProjectWasDeletedManually $fact): void
     {
         $this->dataAboutRemoving = $this->dataAboutRemoving->removeManually();
@@ -242,7 +260,9 @@ final class Project implements AggregateRoot
 
         $this->recordThat(new ProektPostavlenVOcheredNaSborku($this->getId(), $jobId));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyProektPostavlenVOcheredNaSborku(ProektPostavlenVOcheredNaSborku $fact): void
     {
         $this->dataAboutBuilding = new ProjectDataAboutBuilding($fact->jobId);
@@ -260,7 +280,9 @@ final class Project implements AggregateRoot
 
         $this->recordThat(new ProjectWasBuilt($this->getId(), $info));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyProjectWasBuilt(ProjectWasBuilt $fact): void
     {
         $this->dataAboutBuilding = $this->dataAboutBuilding->success($fact->buildInfo);
@@ -279,6 +301,9 @@ final class Project implements AggregateRoot
         $this->recordThat(new ProjectWasNotBuilt($this->getId(), $info));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
     {
         $this->dataAboutBuilding = $this->dataAboutBuilding->fail($fact->buildInfo);
@@ -338,12 +363,12 @@ final class Project implements AggregateRoot
 
     public function getCode(): string
     {
-        return $this->code;
+        return (string) $this->code;
     }
 
     public function getName(): string
     {
-        return $this->name;
+        return (string) $this->name;
     }
 
     public function isDisable(): bool

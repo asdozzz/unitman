@@ -96,6 +96,14 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "check-psalm": "php vendor/bin/psalm",
+        "check-deptrac": "php vendor/bin/deptrac",
+        "check-phpunit": "php vendor/bin/phpunit",
+        "all-checks": [
+            "@check-psalm",
+            "@check-phpunit",
+            "@check-deptrac"
         ]
     },
     "conflict": {

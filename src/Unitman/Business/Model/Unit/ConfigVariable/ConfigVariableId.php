@@ -14,7 +14,7 @@ final class ConfigVariableId implements \Stringable
         $this->id = $id;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->id;
     }

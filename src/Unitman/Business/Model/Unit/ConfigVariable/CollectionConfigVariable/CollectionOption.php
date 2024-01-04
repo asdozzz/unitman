@@ -24,7 +24,7 @@ final class CollectionOption
         $this->name = $name;
     }
 
-    function toArray()
+    function toArray(): array
     {
         return array(
             'id' => $this->id,

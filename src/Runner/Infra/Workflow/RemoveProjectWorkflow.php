@@ -12,6 +12,9 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 final class RemoveProjectWorkflow
 {
+    /**
+     * @psalm-suppress MissingReturnType
+     * */
     #[WorkflowMethod(name: "RemoveProject")]
     #[Workflow\ReturnType(RemoveProjectResult::class)]
     public function removeProject(RemoveProjectCommand $command)

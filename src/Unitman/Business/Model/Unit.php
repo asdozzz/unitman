@@ -60,12 +60,19 @@ use App\Unitman\Business\Model\Unit\VariableValue;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 
+/**
+ * @template-implements AggregateRoot<UnitId>
+ * */
 final class Unit implements AggregateRoot
 {
+    /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?UnitName $name;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?UnitBranch $branch;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?UnitProject $project;
-    private string $authorId;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ?string $authorId;
 
     private ?ConfigUnita $configUnita = null;
 
@@ -155,6 +162,9 @@ final class Unit implements AggregateRoot
         return $tmpVariables;
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUnitSozdan(UnitSozdan $fact): void
     {
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
@@ -162,6 +172,14 @@ final class Unit implements AggregateRoot
         $this->name = new UnitName($fact->name);
         $this->branch = new UnitBranch($fact->branch);
         $this->authorId = $fact->authorId;
+    }
+
+    private function newState(AbstractState $state): AbstractState
+    {
+        if (empty($this->state)) {
+            throw new \DomainException('unit.state_not_found');
+        }
+        return $this->state->newState($state);
     }
 
     public function nachatSborkuUnita(JobId $jobId): void
@@ -173,10 +191,13 @@ final class Unit implements AggregateRoot
         if (!empty($this->sborka) && $this->sborka->isSuccess()) {
             throw new \DomainException('unit.uge_sobran');
         }
-        $state = $this->state->newState(new VOcherediNaSborku());
-        $this->recordThat(new SborkaUnitNachalas($this->getId(), $jobId, $state->toArray($this)));
+        $state = $this->newState(new VOcherediNaSborku());
+        $this->recordThat(new SborkaUnitNachalas($this->getId(), (string) $jobId, $state->toArray($this)));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applySborkaUnitNachalas(SborkaUnitNachalas $fact): void
     {
         $this->sborka = RunnerJob::start($fact->jobId);
@@ -192,10 +213,13 @@ final class Unit implements AggregateRoot
         if ($this->sborka->isFinish()) {
             throw new \DomainException('unit.resultat_sborki_uge_ustanovlen');
         }
-        $state = $this->state->newState(new OshibkaSborki());
+        $state = $this->newState(new OshibkaSborki());
         $this->recordThat(new OshibkaSborkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
     {
         $this->sborka = $this->sborka->ustanovitOshibku($fact->textOtRunnera);
@@ -218,7 +242,7 @@ final class Unit implements AggregateRoot
             $configUnita = null;
         }
 
-        $state = $this->state->newState(new Sobran());
+        $state = $this->newState(new Sobran());
         $this->recordThat(new UspehSborkiUnitaUstanovlen($this->getId(), $textOtRunnera, $configUnita, $state->toArray($this)));
     }
 
@@ -235,6 +259,9 @@ final class Unit implements AggregateRoot
         return $errors;
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
     {
         $this->sborka = $this->sborka->ustanovitUspeh($fact->textOtRunnera);
@@ -244,7 +271,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function zapolnitPeremenie(array $values)
+    public function zapolnitPeremenie(array $values): void
     {
         if ($this->isDeleted) {
             throw new \DomainException('unit.udalen');
@@ -266,16 +293,19 @@ final class Unit implements AggregateRoot
         }
 
         if ($this->esliZapushen()) {
-            $state = $this->state->newState(new Zapushen());
+            $state = $this->newState(new Zapushen());
         } elseif ($this->esliPodgotovlen()) {
-            $state = $this->state->newState(new Podgotovlen());
+            $state = $this->newState(new Podgotovlen());
         } else {
-            $state = $this->state->newState(new Sobran());
+            $state = $this->newState(new Sobran());
         }
 
         $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $values, $state->toArray($this)));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyPeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
     {
         $this->variableValues = $this->makeVariableCollectionByArray($fact->values);
@@ -300,18 +330,14 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.sborka_ne_nachalas');
         }
 
-        if (empty($this->configUnita)) {
-            throw new \DomainException('unit.config_unita_ne_opredelen');
-        }
-
-        $errs = $this->configUnita->validateValues($this->variableValues);
-        if (!empty($errs)) {
-            throw new \DomainException(join(', ', $errs));
-        }
-        $state = $this->state->newState(new VOcherediNaPodgotovku());
-        $this->recordThat(new PodgotovkaUnitaNachalas($this->getId(), $jobId, $state->toArray($this)));
+        $this->validateConfigValues();
+        $state = $this->newState(new VOcherediNaPodgotovku());
+        $this->recordThat(new PodgotovkaUnitaNachalas($this->getId(), (string) $jobId, $state->toArray($this)));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyPodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
     {
         $this->podgotovka = RunnerJob::start($fact->jobId);
@@ -328,10 +354,13 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_podgotovki_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new OshibkaPodgotovki());
+        $state = $this->newState(new OshibkaPodgotovki());
         $this->recordThat(new OshibkaPodgotovkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
     {
         $this->podgotovka = $this->podgotovka->ustanovitOshibku($fact->textOtRunnera);
@@ -348,10 +377,13 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_podgotovki_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new Podgotovlen());
+        $state = $this->newState(new Podgotovlen());
         $this->recordThat(new UspehPodgotovkiUnitaUstanovlen($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
     {
         $this->podgotovka = $this->podgotovka->ustanovitUspeh($fact->textOtRunnera);
@@ -373,14 +405,16 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.sborka_ne_nachalas');
         }
 
-        $state = $this->state->newState(new VOcherediNaObnovlenie());
-        $this->recordThat(new ObnovlenieUnitaNachalos($this->getId(), $jobId, $state->toArray($this)));
+        $state = $this->newState(new VOcherediNaObnovlenie());
+        $this->recordThat(new ObnovlenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this)));
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyObnovlenieUnitaNachalos(ObnovlenieUnitaNachalos $fact): void
     {
         $this->obnovlenie = RunnerJob::start($fact->jobId);
-
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -394,14 +428,15 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_obnovleniya_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new OshibkaObnovleniya());
+        $state = $this->newState(new OshibkaObnovleniya());
         $this->recordThat(new OshibkaObnovleniyaUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
     {
         $this->obnovlenie = $this->obnovlenie->ustanovitOshibku($fact->textOtRunnera);
-
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -420,20 +455,22 @@ final class Unit implements AggregateRoot
         if (!empty($errs)) {
             $configUnita = null;
             $textOtRunnera = 'Invalid config';
-            $state = $this->state->newState(new OshibkaObnovleniya());
+            $state = $this->newState(new OshibkaObnovleniya());
         } else {
             if ($this->esliZapushen()) {
-                $state = $this->state->newState(new Zapushen());
+                $state = $this->newState(new Zapushen());
             } elseif ($this->esliPodgotovlen()) {
-                $state = $this->state->newState(new Podgotovlen());
+                $state = $this->newState(new Podgotovlen());
             } else {
-                $state = $this->state->newState(new Sobran());
+                $state = $this->newState(new Sobran());
             }
         }
 
         $this->recordThat(new UspehObnovleniyaUnitaUstanovlen($this->getId(), $textOtRunnera, $configUnita, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
         $this->obnovlenie = $this->obnovlenie->ustanovitUspeh($fact->textOtRunnera);
@@ -464,18 +501,18 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.podgotovka_ne_nachalas');
         }
 
-        $errs = $this->configUnita->validateValues($this->variableValues);
-        if (!empty($errs)) {
-            throw new \DomainException(join(', ', $errs));
-        }
+        $this->validateConfigValues();
 
-        $state = $this->state->newState(new VOcherediNaSbrosPodgotovki());
-        $this->recordThat(new SbrosPodgotovkiNachalsya($this->getId(), $jobId, $state->toArray($this)));
+        $state = $this->newState(new VOcherediNaSbrosPodgotovki());
+        $this->recordThat(new SbrosPodgotovkiNachalsya($this->getId(), (string) $jobId, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applySbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
     {
         $this->sbrosPodgotovki = RunnerJob::start($fact->jobId);
+
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -489,10 +526,12 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_sbrosPodgotovki_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new OshibkaSbrosaPodgotovki());
+        $state = $this->newState(new OshibkaSbrosaPodgotovki());
         $this->recordThat(new OshibkaSbrosaPodgotovkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
         $this->sbrosPodgotovki = $this->sbrosPodgotovki->ustanovitOshibku($fact->textOtRunnera);
@@ -509,10 +548,12 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_sbrosPodgotovki_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new Sobran());
+        $state = $this->newState(new Sobran());
         $this->recordThat(new UspehSbrosaPodgotovkiUnitaUstanovlen($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUspehSbrosaPodgotovkiUnitaUstanovlen(UspehSbrosaPodgotovkiUnitaUstanovlen $fact): void
     {
         $this->sbrosPodgotovki = $this->sbrosPodgotovki->ustanovitUspeh($fact->textOtRunnera);
@@ -539,18 +580,18 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.podgotovka_ne_nachalas');
         }
 
-        $errs = $this->configUnita->validateValues($this->variableValues);
-        if (!empty($errs)) {
-            throw new \DomainException(join(', ', $errs));
-        }
+        $this->validateConfigValues();
 
-        $state = $this->state->newState(new VOcherediNaZapusk());
-        $this->recordThat(new ZapuskUnitNachalsya($this->getId(), $jobId, $state->toArray($this)));
+        $state = $this->newState(new VOcherediNaZapusk());
+        $this->recordThat(new ZapuskUnitNachalsya($this->getId(), (string) $jobId, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
     {
         $this->zapusk = RunnerJob::start($fact->jobId);
+
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -564,10 +605,12 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_zapusk_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new OshibkaZapuska());
+        $state = $this->newState(new OshibkaZapuska());
         $this->recordThat(new OshibkaZapuskaUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
     {
         $this->zapusk = $this->zapusk->ustanovitOshibku($fact->textOtRunnera);
@@ -584,10 +627,12 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_zapusk_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new Zapushen());
+        $state = $this->newState(new Zapushen());
         $this->recordThat(new UspehZapuskaUnitaUstanovlen($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
         $this->zapusk = $this->zapusk->ustanovitUspeh($fact->textOtRunnera);
@@ -609,19 +654,18 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.ne_zapushen');
         }
 
-        $errs = $this->configUnita->validateValues($this->variableValues);
-        if (!empty($errs)) {
-            throw new \DomainException(join(', ', $errs));
-        }
 
-        $state = $this->state->newState(new VOcherediNaOstanovku());
-        $this->recordThat(new OstanovkaUnitaNachalas($this->getId(), $jobId, $state->toArray($this)));
+        $this->validateConfigValues();
+
+        $state = $this->newState(new VOcherediNaOstanovku());
+        $this->recordThat(new OstanovkaUnitaNachalas($this->getId(),(string) $jobId, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOstanovkaUnitaNachalas(OstanovkaUnitaNachalas $fact): void
     {
         $this->ostanovka = RunnerJob::start($fact->jobId);
-
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -635,10 +679,13 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_ostanovka_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new OshibkaOstanovki());
+        $state = $this->newState(new OshibkaOstanovki());
+
         $this->recordThat(new OshibkaOstanovkiUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
         $this->ostanovka = $this->ostanovka->ustanovitOshibku($fact->textOtRunnera);
@@ -656,10 +703,12 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_ostanovka_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new Podgotovlen());
+        $state = $this->newState(new Podgotovlen());
         $this->recordThat(new UspehOstanovkiUnitaUstanovlen($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUspehOstanovkiUnitaUstanovlen(UspehOstanovkiUnitaUstanovlen $fact): void
     {
         $this->ostanovka = $this->ostanovka->ustanovitUspeh($fact->textOtRunnera);
@@ -682,10 +731,12 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.zapushen');
         }
 
-        $state = $this->state->newState(new VOcherediNaUdalenie());
-        $this->recordThat(new UdalenieUnitaNachalos($this->getId(), $jobId, $state->toArray($this)));
+        $state = $this->newState(new VOcherediNaUdalenie());
+        $this->recordThat(new UdalenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUdalenieUnitaNachalos(UdalenieUnitaNachalos $fact): void
     {
         $this->udalenie = RunnerJob::start($fact->jobId);
@@ -702,10 +753,12 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_udaleniya_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new Sloman());
+        $state = $this->newState(new Sloman());
         $this->recordThat(new OshibkaUdaleniyaUnitaUstanovlena($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
     {
         $this->udalenie = $this->udalenie->ustanovitOshibku($fact->textOtRunnera);
@@ -715,17 +768,19 @@ final class Unit implements AggregateRoot
     public function ustanovitUspehUdaleniya(string $textOtRunnera): void
     {
         if (empty($this->udalenie)) {
-            throw new \DomainException('unit.$this->udalenie_ne_nachalas');
+            throw new \DomainException('unit.udalenie_ne_nachalas');
         }
 
         if ($this->udalenie->isFinish()) {
             throw new \DomainException('unit.resultat_udaleniya_uge_ustanovlen');
         }
 
-        $state = $this->state->newState(new Udalen());
+        $state = $this->newState(new Udalen());
         $this->recordThat(new UspehUdaleniyaUnitaUstanovlen($this->getId(), $textOtRunnera, $state->toArray($this)));
     }
-
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function applyUspehUdaleniyaUnitaUstanovlen(UspehUdaleniyaUnitaUstanovlen $fact): void
     {
         $this->udalenie = $this->udalenie->ustanovitUspeh($fact->textOtRunnera);
@@ -743,7 +798,7 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.uge_udalen');
         }
 
-        $state = $this->state->newState(new UdalenVruchnuyu());
+        $state = $this->newState(new UdalenVruchnuyu());
         $this->recordThat(new SlomaniyUnitUdalen($this->getId(), $state->toArray($this)));
     }
 
@@ -755,77 +810,114 @@ final class Unit implements AggregateRoot
 
     public function getName(): string
     {
-        return $this->name;
+        if (empty($this->name)) {
+            throw new \DomainException('unit.name_not_found');
+        }
+
+        return (string) $this->name;
     }
 
     public function getBranch(): string
     {
-        return $this->branch;
+        if (empty($this->branch)) {
+            throw new \DomainException('unit.branch_not_found');
+        }
+
+        return (string) $this->branch;
     }
 
     public function getProjectId(): string
     {
+        if (empty($this->project)) {
+            throw new \DomainException('unit.project_not_found');
+        }
+
         return $this->project->id;
     }
 
     public function getProjectName(): string
     {
+        if (empty($this->project)) {
+            throw new \DomainException('unit.project_not_found');
+        }
+
         return $this->project->name;
     }
 
     public function poluchitWorkflowIdDlySborki(): string
     {
+        if (empty($this->sborka)) {
+            throw new \DomainException('unit.sborka_not_found');
+        }
         return $this->sborka->getJobId();
     }
 
     public function poluchitWorkflowIdDlyObnovleniya(): string
     {
+        if (empty($this->obnovlenie)) {
+            throw new \DomainException('unit.obnovlenie_not_found');
+        }
         return $this->obnovlenie->getJobId();
     }
 
     public function poluchitWorkflowIdDlyPodgotovki(): string
     {
+        if (empty($this->podgotovka)) {
+            throw new \DomainException('unit.podgotovka_not_found');
+        }
         return $this->podgotovka->getJobId();
     }
 
     public function poluchitWorkflowIdDlySbrosaPodgotovki(): string
     {
+        if (empty($this->sbrosPodgotovki)) {
+            throw new \DomainException('unit.sbrosPodgotovki_not_found');
+        }
         return $this->sbrosPodgotovki->getJobId();
     }
 
     public function poluchitWorkflowIdDlyZapuska(): string
     {
+        if (empty($this->zapusk)) {
+            throw new \DomainException('unit.zapusk_not_found');
+        }
         return $this->zapusk->getJobId();
     }
 
     public function poluchitWorkflowIdDlyOstanovki(): string
     {
+        if (empty($this->ostanovka)) {
+            throw new \DomainException('unit.ostanovka_not_found');
+        }
         return $this->ostanovka->getJobId();
     }
 
     public function poluchitWorkflowIdDlyUdaleniya(): string
     {
+        if (empty($this->udalenie)) {
+            throw new \DomainException('unit.udalenie_not_found');
+        }
         return $this->udalenie->getJobId();
     }
 
     public function poluchitKomandiPodgotovki(): array
     {
-        return $this->configUnita->getPrepare();
+        return $this->configUnita?->getPrepare() ?? [];
     }
 
     public function poluchitKomandiSbrosaPodgotovki(): array
     {
-        return $this->configUnita->getResetPrepare();
+        return $this->configUnita?->getResetPrepare() ?? [];
     }
 
     public function poluchitKomandiZapuska(): array
     {
-        return $this->configUnita->getUp();
+        return $this->configUnita?->getUp() ?? [];
     }
 
     public function poluchitKomandiOstanovki(): array
     {
-        return $this->configUnita->getDown();
+        return $this->configUnita?->getDown() ?? [];
     }
 
     /**
@@ -834,5 +926,21 @@ final class Unit implements AggregateRoot
     public function poluchitZnacheniyaPeremenih(): array
     {
         return $this->variableValues;
+    }
+
+    /**
+     * @return void
+     */
+    private function validateConfigValues(): void
+    {
+        if (empty($this->configUnita)) {
+            throw new \DomainException('unit.config_unita_ne_opredelen');
+        }
+
+        $errs = $this->configUnita->validateValues($this->variableValues);
+
+        if (!empty($errs)) {
+            throw new \DomainException(join(', ', $errs));
+        }
     }
 }

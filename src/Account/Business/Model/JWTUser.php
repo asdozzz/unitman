@@ -45,12 +45,12 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
         $this->email = $newEmail;
     }
 
-    public function block()
+    public function block(): void
     {
         $this->isBlocked = true;
     }
 
-    public function unblock()
+    public function unblock(): void
     {
         $this->isBlocked = false;
     }
@@ -68,7 +68,7 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
        return $this->roles;
     }
 
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // TODO: Implement eraseCredentials() method.
     }

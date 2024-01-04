@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 final class AccountMessageDispatcherFactory
 {
     /**
-     * @var iterable<SyncProjectionForAccount>
+     * @var iterable<int, SyncProjectionForAccount>
      * */
     private iterable $syncProjections;
 

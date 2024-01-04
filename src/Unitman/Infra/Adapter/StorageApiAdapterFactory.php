@@ -43,7 +43,7 @@ final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluc
         return $adapter->checkAccess($repo);
     }
 
-    function poluchitUrlHranilisha(RepoType $repoType, ?string $repoUrl)
+    function poluchitUrlHranilisha(RepoType $repoType, ?string $repoUrl): string
     {
         $adapter = $this->getAdapterByRepo($repoType);
         return $adapter->poluchitUrlHranilisha($repoUrl);

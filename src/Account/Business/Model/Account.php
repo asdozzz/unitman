@@ -17,22 +17,25 @@ use EventSauce\EventSourcing\AggregateRootBehaviour;
 use EventSauce\EventSourcing\AggregateRootId;
 use Generator;
 
+/**
+ * @template-implements AggregateRoot<AccountId>
+ * */
 final class Account implements AggregateRoot
 {
     /**
      * @template-use AggregateRootBehaviour<AccountId>
      * */
     use AggregateRootBehaviour;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private AccountId $accountId;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private Email $email;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private Password $password;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private Role $role;
 
-    private ?AccountId $accountId = null;
-
-    private ?Email $email = null;
-
-    private ?Password $password = null;
-
-    private ?Role $role = null;
-
-    private $isBlocked = false;
+    private bool $isBlocked = false;
 
     public static function registerAccount(string $accountId, RegisterAccount $command): static
     {
@@ -105,6 +108,6 @@ final class Account implements AggregateRoot
 
     public function getEmail(): string
     {
-        return $this->email;
+        return (string) $this->email;
     }
 }

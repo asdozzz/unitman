@@ -6,5 +6,5 @@ use App\Unitman\Business\Model\Repo\RepoType;
 
 interface UmeetPoluchatUrlHranilisha
 {
-    function poluchitUrlHranilisha(RepoType $repoType, ?string $repoUrl);
+    function poluchitUrlHranilisha(RepoType $repoType, ?string $repoUrl): string;
 }

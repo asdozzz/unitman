@@ -7,6 +7,7 @@ use App\BackgroundJob\Infra\Workflow\ChildWorkflow;
 use App\BackgroundJob\Infra\Workflow\ChildWorkflowInterface;
 use App\BackgroundJob\Infra\Workflow\StartJobWorkflow;
 use App\BackgroundJob\Infra\Workflow\StartJobWorkflowInterface;
+use App\Utils\Model\Reponse\Response;
 use Carbon\CarbonInterval;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,7 +21,7 @@ final class JobController extends AbstractController
 {
 
     #[Route('/start', methods: ['POST'])]
-    public function start(WorkflowClient $workflowClient, JobRepository $jobRepository)
+    public function start(WorkflowClient $workflowClient, JobRepository $jobRepository): JsonResponse
     {
         $workflow = $workflowClient->newWorkflowStub(
             StartJobWorkflow::class
@@ -38,9 +39,10 @@ final class JobController extends AbstractController
     }
 
     #[Route('/pause', methods: ['POST'])]
-    public function pause(WorkflowClient $workflowClient, JobRepository $jobRepository)
+    public function pause(WorkflowClient $workflowClient, JobRepository $jobRepository): JsonResponse
     {
         $runId = $jobRepository->getRunIdByName('test');
+        /** @psalm-suppress NoValue*/
         $workflow = $workflowClient->newRunningWorkflowStub(
             StartJobWorkflow::class,
             $runId
@@ -54,9 +56,10 @@ final class JobController extends AbstractController
     }
 
     #[Route('/unpause', methods: ['POST'])]
-    public function unpause(WorkflowClient $workflowClient, JobRepository $jobRepository)
+    public function unpause(WorkflowClient $workflowClient, JobRepository $jobRepository): JsonResponse
     {
         $runId = $jobRepository->getRunIdByName('test');
+        /** @psalm-suppress NoValue*/
         $workflow = $workflowClient->newRunningWorkflowStub(
             StartJobWorkflow::class,
             $runId
@@ -70,10 +73,10 @@ final class JobController extends AbstractController
     }
 
     #[Route('/stop', methods: ['POST'])]
-    public function stop(WorkflowClient $workflowClient, JobRepository $jobRepository)
+    public function stop(WorkflowClient $workflowClient, JobRepository $jobRepository): JsonResponse
     {
         $runId = $jobRepository->getRunIdByName('test');
-
+        /** @psalm-suppress NoValue*/
         $workflow = $workflowClient->newRunningWorkflowStub(
             StartJobWorkflow::class,
             $runId
@@ -87,15 +90,15 @@ final class JobController extends AbstractController
     }
 
     #[Route('/result', methods: ['GET'])]
-    public function result(WorkflowClient $workflowClient, JobRepository $jobRepository)
+    public function result(WorkflowClient $workflowClient, JobRepository $jobRepository): JsonResponse
     {
         $runId = $jobRepository->getRunIdByName('test');
-
+        /** @psalm-suppress NoValue*/
         $workflow = $workflowClient->newRunningWorkflowStub(
             StartJobWorkflow::class,
             $runId
         );
-
+        /** @var $workflow StartJobWorkflow */
         return new JsonResponse(['counter' => $workflow->getCounter()]);
     }
 }

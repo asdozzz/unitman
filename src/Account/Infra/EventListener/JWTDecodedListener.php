@@ -2,6 +2,7 @@
 
 namespace App\Account\Infra\EventListener;
 
+use App\Account\Business\Model\JWTUser;
 use App\Account\Infra\Repository\JWTUserRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\JWTDecodedEvent;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -17,7 +18,7 @@ final class JWTDecodedListener
     {
         $payload = $event->getPayload();
         $user = $this->userRepository->loadUserByIdentifier($payload['username']);
-
+        /** @var JWTUser $user*/
         $payload['id'] = $user->getId();
         $payload['roles'] = $user->getRoles();
         $payload['password'] = $user->getPassword();

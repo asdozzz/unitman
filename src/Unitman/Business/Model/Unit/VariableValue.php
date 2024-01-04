@@ -23,7 +23,7 @@ final class VariableValue
         $this->value = $value;
     }
 
-    function toArray()
+    function toArray(): array
     {
         return [
             'id' => $this->id,

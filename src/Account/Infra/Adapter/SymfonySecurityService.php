@@ -3,6 +3,7 @@
 namespace App\Account\Infra\Adapter;
 
 use App\Account\Business\Model\Account\Role;
+use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Port\SecurityService;
 use Symfony\Bundle\SecurityBundle\Security;
 
@@ -22,7 +23,7 @@ final class SymfonySecurityService implements SecurityService
     public function getCurrentUserId(): string
     {
         $user = $this->security->getUser();
-
+        /** @var JWTUser|null $user*/
         if (empty($user)) {
             throw new \DomainException('security.need_auth');
         }

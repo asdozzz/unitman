@@ -20,13 +20,13 @@ abstract class AbstractState
     {
         $nextCodes = array_map(fn(AbstractState $state) => $state->getCode(), $this->getNextStates());
         if (!in_array($state->getCode(), $nextCodes)) {
-            throw new \DomainException(sprintf('Invalid new state, allowed: '. join(',', $nextCodes)));
+            throw new \DomainException(sprintf('Invalid new state, allowed: %s', join(',', $nextCodes)));
         }
 
         return $state;
     }
 
-    function toArray(Unit $unit)
+    function toArray(Unit $unit): array
     {
         return [
             'code' => $this->getCode(),

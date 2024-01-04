@@ -23,7 +23,7 @@ final class ConfigVariableLabel implements \Stringable
         $this->label = $label;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->label;
     }

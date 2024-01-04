@@ -12,6 +12,9 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 final class InitProjectWorkflow
 {
+    /**
+     * @psalm-suppress MissingReturnType
+     * */
     #[WorkflowMethod(name: "InitProject")]
     #[Workflow\ReturnType(InitProjectResult::class)]
     public function initProject(InitProjectCommand $command)

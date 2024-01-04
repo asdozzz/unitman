@@ -11,18 +11,21 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 interface StartJobWorkflowInterface
 {
+    /**
+     * @psalm-suppress MissingReturnType
+     * */
     #[WorkflowMethod(name: "startJob")]
     #[ReturnType("int")]
     function startJob();
 
     #[SignalMethod]
-    function pause();
+    function pause(): void;
 
     #[SignalMethod]
-    function unpause();
+    function unpause(): void;
 
     #[SignalMethod]
-    function stop();
+    function stop(): void;
 
     #[QueryMethod]
     function getCounter(): array;

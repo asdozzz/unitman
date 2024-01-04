@@ -4,13 +4,14 @@ namespace App\App\Exception;
 
 class Dump extends \Exception {
 
-    private $dump = [];
+    private array $dump = [];
 
-    public function addDump($dump){
+    public function addDump(string $dump): void
+    {
         $this->dump[] = $dump;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return implode(\PHP_EOL, $this->dump);
     }

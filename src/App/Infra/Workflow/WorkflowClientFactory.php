@@ -8,7 +8,7 @@ use Temporal\Client\GRPC\ServiceClient;
 final class WorkflowClientFactory
 {
     const runnerQueueName = 'unitman-runner-queue';
-    public function __invoke($temporalCliAddress): WorkflowClient
+    public function __invoke(string $temporalCliAddress): WorkflowClient
     {
         return WorkflowClient::create(
             ServiceClient::create(

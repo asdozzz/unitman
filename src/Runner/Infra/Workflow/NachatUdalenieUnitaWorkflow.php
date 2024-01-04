@@ -14,6 +14,9 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 final class NachatUdalenieUnitaWorkflow
 {
+    /**
+     * @psalm-suppress MissingReturnType
+     * */
     #[WorkflowMethod]
     #[ReturnType(ResultatUdaleniyaUnita::class)]
     public function execute(NachatUdalenieUnita $command)

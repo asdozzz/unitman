@@ -19,7 +19,7 @@ final class RepoListProjection extends AbstractProjection implements SyncProject
     {
     }
 
-    public function handleRepoWasAdded(RepoWasAdded $event)
+    public function handleRepoWasAdded(RepoWasAdded $event): void
     {
         $this->repoListRepository->insert(new RepoList(
             $event->repoId,
@@ -31,19 +31,19 @@ final class RepoListProjection extends AbstractProjection implements SyncProject
         ));
     }
 
-    public function handleRepoWasDeleted(RepoWasDeleted $event)
+    public function handleRepoWasDeleted(RepoWasDeleted $event): void
     {
         $this->repoListRepository->delete($event->repoId);
     }
 
-    public function handleCredentialsOfRepoWasChanged(CredentialsOfRepoWasChanged $event)
+    public function handleCredentialsOfRepoWasChanged(CredentialsOfRepoWasChanged $event): void
     {
         $repo = $this->repoListRepository->getById($event->repoId);
         $repo->changeCredentials($event->repoUrl, $event->token);
         $this->repoListRepository->update($repo);
     }
 
-    public function handleAccessToRepoConfirmed(AccessToRepoConfirmed $event)
+    public function handleAccessToRepoConfirmed(AccessToRepoConfirmed $event): void
     {
         $repo = $this->repoListRepository->getById($event->repoId);
         $repo->confirmAccess();

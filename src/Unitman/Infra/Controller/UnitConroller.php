@@ -40,13 +40,14 @@ use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/unit')]
 final class UnitConroller extends AbstractController
 {
     #[Route('/sozdat', methods: ['POST'])]
-    public function sozdat(SozdatUnit $command, SozdatUnitUseCase $useCase)
+    public function sozdat(SozdatUnit $command, SozdatUnitUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -57,14 +58,14 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/list', methods: ['POST'])]
-    public function list(GetUnitList $command, GetUnitListQuery $query)
+    public function list(GetUnitList $command, GetUnitListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
     #[Route('/sobrat', methods: ['POST'])]
-    public function sobrat(SobratUnit $command, SobratUnitUseCase $useCase)
+    public function sobrat(SobratUnit $command, SobratUnitUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -75,7 +76,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatSborki', methods: ['POST'])]
-    public function ustanovitResultatSborki(UstanovitResultatSborkiUnita $command, UstanovitResultatSborkiUnitaUseCase $useCase)
+    public function ustanovitResultatSborki(UstanovitResultatSborkiUnita $command, UstanovitResultatSborkiUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -86,7 +87,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/obnovit', methods: ['POST'])]
-    public function obnovit(ObnovitKodUnita $command, ObnovitKodUnitaUseCase $useCase)
+    public function obnovit(ObnovitKodUnita $command, ObnovitKodUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -97,7 +98,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/zapolnitPeremenie', methods: ['POST'])]
-    public function zapolnitPeremenie(ZapolnitPeremenieUnita $command, ZapolnitPeremenieUnitaUseCase $useCase)
+    public function zapolnitPeremenie(ZapolnitPeremenieUnita $command, ZapolnitPeremenieUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -108,7 +109,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatObnovleniya', methods: ['POST'])]
-    public function ustanovitResultatObnovleniya(UstanovitResultatObnovleniyaUnita $command, UstanovitResultatObnovleniyaUnitaUseCase $useCase)
+    public function ustanovitResultatObnovleniya(UstanovitResultatObnovleniyaUnita $command, UstanovitResultatObnovleniyaUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -119,7 +120,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/podgotovit', methods: ['POST'])]
-    public function podgotovit(PodgotovitUnitKZapusku $command, PodgotovitUnitKZapuskuUseCase $useCase)
+    public function podgotovit(PodgotovitUnitKZapusku $command, PodgotovitUnitKZapuskuUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -130,7 +131,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatPodgotovki', methods: ['POST'])]
-    public function ustanovitResultatPodgotovki(UstanovitResultatPodgotovkiUnita $command, UstanovitResultatPodgotovkiUnitaUseCase $useCase)
+    public function ustanovitResultatPodgotovki(UstanovitResultatPodgotovkiUnita $command, UstanovitResultatPodgotovkiUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -141,7 +142,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/sbrositPodgotovku', methods: ['POST'])]
-    public function sbrositPodgotovku(SbrositPodgotovkuUnita $command, SbrositPodgotovkuUnitaUseCase $useCase)
+    public function sbrositPodgotovku(SbrositPodgotovkuUnita $command, SbrositPodgotovkuUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -152,7 +153,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatSbrosaPodgotovki', methods: ['POST'])]
-    public function ustanovitResultatSbrosaPodgotovki(UstanovitResultatSbrosaPodgotovki $command, UstanovitResultatSbrosaPodgotovkiUseCase $useCase)
+    public function ustanovitResultatSbrosaPodgotovki(UstanovitResultatSbrosaPodgotovki $command, UstanovitResultatSbrosaPodgotovkiUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -163,7 +164,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/zapustit', methods: ['POST'])]
-    public function zapustit(ZapustitUnit $command, ZapustitUnitUseCase $useCase)
+    public function zapustit(ZapustitUnit $command, ZapustitUnitUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -174,7 +175,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatZapuska', methods: ['POST'])]
-    public function ustanovitResultatZapuska(UstanovitResultatZapuska $command, UstanovitResultatZapuskaUseCase $useCase)
+    public function ustanovitResultatZapuska(UstanovitResultatZapuska $command, UstanovitResultatZapuskaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -185,7 +186,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ostanovit', methods: ['POST'])]
-    public function ostanovit(OstanovitUnit $command, OstanovitUnitUseCase $useCase)
+    public function ostanovit(OstanovitUnit $command, OstanovitUnitUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -196,7 +197,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatOstanovki', methods: ['POST'])]
-    public function ustanovitResultatOstanovki(UstanovitResultatOstanovkiUnita $command, UstanovitResultatOstanovkiUnitaUseCase $useCase)
+    public function ustanovitResultatOstanovki(UstanovitResultatOstanovkiUnita $command, UstanovitResultatOstanovkiUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -207,7 +208,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/udalit', methods: ['POST'])]
-    public function udalit(UdalitUnit $command, UdalitUnitUseCase $useCase)
+    public function udalit(UdalitUnit $command, UdalitUnitUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -218,7 +219,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatUdaleniya', methods: ['POST'])]
-    public function ustanovitResultatUdaleniya(UstanovitResultatUdaleniya $command, UstanovitResultatUdaleniyaUseCase $useCase)
+    public function ustanovitResultatUdaleniya(UstanovitResultatUdaleniya $command, UstanovitResultatUdaleniyaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -229,7 +230,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/udalitSlomaniyUnit', methods: ['POST'])]
-    public function udalitSlomaniyUnit(UdalitSlomaniyUnit $command, UdalitSlomaniyUnitUseCase $useCase)
+    public function udalitSlomaniyUnit(UdalitSlomaniyUnit $command, UdalitSlomaniyUnitUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);

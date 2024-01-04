@@ -14,6 +14,7 @@ final class AuthorMessageDecorator implements MessageDecorator
 
     public function decorate(Message $message): Message
     {
+        /** @psalm-suppress UndefinedInterfaceMethod*/
         $userId = $this->security->getUser()?->getId();
         return $message->withHeader('executed_by', $userId);
     }

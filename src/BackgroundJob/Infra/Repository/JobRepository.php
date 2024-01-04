@@ -14,10 +14,16 @@ final class JobRepository
     public function getByName(string $name): array
     {
         $table = self::TABLE;
-        return $this->connection->fetchAssociative('select * from '.$table.' where name=:name', ['name' => $name]);
+        $res = $this->connection->fetchAssociative('select * from '.$table.' where name=:name', ['name' => $name]);
+
+        if (empty($res)) {
+            return [];
+        }
+
+        return $res;
     }
 
-    public function getRunIdByName(string $name)
+    public function getRunIdByName(string $name): string
     {
         $job = $this->getByName($name);
 
@@ -28,22 +34,22 @@ final class JobRepository
         return $job['run_id'];
     }
 
-    public function start(string $name, string $runId)
+    public function start(string $name, string $runId): void
     {
         $this->connection->update(self::TABLE, ['status' => 1, 'run_id' => $runId], ['name' => $name]);
     }
 
-    public function pause(string $name)
+    public function pause(string $name): void
     {
         $this->connection->update(self::TABLE, ['status' => 50], ['name' => $name]);
     }
 
-    public function unpause(string $name)
+    public function unpause(string $name): void
     {
         $this->connection->update(self::TABLE, ['status' => 1], ['name' => $name]);
     }
 
-    public function stop(string $name)
+    public function stop(string $name): void
     {
         $this->connection->update(self::TABLE, ['status' => 100, 'run_id' => null], ['name' => $name]);
     }

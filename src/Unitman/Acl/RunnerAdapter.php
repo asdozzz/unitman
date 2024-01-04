@@ -119,7 +119,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.obnovlenie_eshe_ne_zakoncheno');
         }
 
-        return new ResultatObnovleniyaUnita($result->Success, $result->Message, $result->Config);
+        return new ResultatObnovleniyaUnita((bool) $result->Success, $result->Message, $result->Config);
     }
 
     public function poluchitResultatPodgotovki(Unit $unit): ResultatPodgotovkiUnita
@@ -130,7 +130,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.podgotovka_eshe_ne_zakonchena');
         }
 
-        return new ResultatPodgotovkiUnita($result->Success, $result->Message);
+        return new ResultatPodgotovkiUnita((bool) $result->Success, $result->Message);
     }
 
 
@@ -142,7 +142,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.sbros_podgotovki_eshe_ne_zakonchen');
         }
 
-        return new ResultatSbrosaPodgotovkiUnita($result->Success, $result->Message);
+        return new ResultatSbrosaPodgotovkiUnita((bool) $result->Success, $result->Message);
     }
 
     public function poluchitResultatZapuskaUnita(Unit $unit): ResultatZapuskaUnita
@@ -153,7 +153,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.zapusk_eshe_ne_zakonchen');
         }
 
-        return new ResultatZapuskaUnita($result->Success, $result->Message);
+        return new ResultatZapuskaUnita((bool) $result->Success, $result->Message);
     }
 
     public function poluchitResultatOstanovkiUnita(Unit $unit): ResultatOstanovkiUnita
@@ -164,7 +164,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.ostanovka_eshe_ne_zakonchena');
         }
 
-        return new ResultatOstanovkiUnita($result->Success, $result->Message);
+        return new ResultatOstanovkiUnita((bool) $result->Success, $result->Message);
     }
 
     public function poluchitResultatUdaleniyaUnita(Unit $unit): ResultatUdaleniyaUnita
@@ -175,7 +175,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.udalenie_eshe_ne_zakoncheno');
         }
 
-        return new ResultatUdaleniyaUnita($result->Success, $result->Message);
+        return new ResultatUdaleniyaUnita((bool) $result->Success, $result->Message);
     }
 
     /**

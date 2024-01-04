@@ -16,6 +16,10 @@ final class StartJobWorkflow
     private bool $stop = false;
     private int $counter = 0;
 
+    /**
+     * @psalm-suppress MissingReturnType
+     * @psalm-param class-string $className
+     * */
     #[WorkflowMethod(name: "startJob")]
     #[ReturnType("int")]
     function startJob(string $className, string $method, array $args)
@@ -48,19 +52,19 @@ final class StartJobWorkflow
     }
 
     #[SignalMethod]
-    function pause()
+    function pause(): void
     {
         $this->pause = true;
     }
 
     #[SignalMethod]
-    function unpause()
+    function unpause(): void
     {
         $this->pause = false;
     }
 
     #[SignalMethod]
-    function stop()
+    function stop(): void
     {
         $this->stop = true;
     }

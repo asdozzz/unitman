@@ -212,17 +212,17 @@ final class RunnerApi
     /**
      * @template T
      * @param \Temporal\Client\WorkflowStubInterface $workflow
-     * @param T $type
-     * @return T
+     * @param class-string<T> $type
+     * @return T|null
      * @throws \Throwable
      */
-    private function makeResult(\Temporal\Client\WorkflowStubInterface $workflow, string $type): object
+    private function makeResult(\Temporal\Client\WorkflowStubInterface $workflow, string $type): ?object
     {
         try {
             $result = $workflow->getResult($type, 5);
             return $result;
         } catch (WorkflowServiceException $e) {
-            return new $type(false, $e->getPrevious()->getMessage());
+            return new $type(false, $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result');
         } catch (WorkflowExecutionFailedException|WorkflowFailedException $exp) {
             return new $type(false, $exp->getMessage());
         } catch (\Throwable $throwable) {
@@ -233,19 +233,19 @@ final class RunnerApi
     /**
      * @template T
      * @param \Temporal\Client\WorkflowStubInterface $workflow
-     * @param T $type
-     * @return T
+     * @param class-string<T> $type
+     * @return T|null
      * @throws \Throwable
      */
-    private function makeResultWithConfig(\Temporal\Client\WorkflowStubInterface $workflow, string $type): object
+    private function makeResultWithConfig(\Temporal\Client\WorkflowStubInterface $workflow, string $type): ?object
     {
         try {
             $result = $workflow->getResult($type, 5);
             return $result;
         } catch (WorkflowServiceException $e) {
-            return new $type(false, $e->getPrevious()->getMessage(), '');
+            return new $type(false, $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result_with_config', '');
         } catch (WorkflowExecutionFailedException|WorkflowFailedException $exp) {
-            return new $type(false, $exp->getMessage(), '');
+            return new $type(false, $exp->getMessage() ?? 'runner.unknown_error_when_make_result_with_config', '');
         } catch (\Throwable $throwable) {
             throw $throwable;
         }

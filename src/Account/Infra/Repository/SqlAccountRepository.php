@@ -10,12 +10,10 @@ use EventSauce\EventSourcing\MessageDecorator;
 use EventSauce\EventSourcing\MessageDispatcher;
 use EventSauce\EventSourcing\MessageRepository;
 
-/**
- * @extends EventSourcedAggregateRootRepository<Account>
- * */
 final class SqlAccountRepository implements AccountRepository
 {
     private Connection $connection;
+    private EventSourcedAggregateRootRepository $esRepository;
 
     public function __construct(Connection $connection, MessageRepository $messageRepository, MessageDispatcher $messageDispatcher, MessageDecorator $messageDecorator)
     {
