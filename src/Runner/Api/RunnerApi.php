@@ -49,6 +49,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             InitProjectWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute())
         );
         $result = $workflow->initProject($command);
@@ -61,6 +62,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             RemoveProjectWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::seconds(10))
         );
         $result = $workflow->removeProject($command);
@@ -73,6 +75,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatSborkuUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
@@ -91,6 +94,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatUdalenieUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
@@ -109,6 +113,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatPodgotovkuUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
@@ -121,6 +126,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatObnovlenieUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
@@ -130,9 +136,10 @@ final class RunnerApi
 
     public function nachatSbrosPodgotovkiUnita(NachatSbrosPodgotovkiUnita $command): string
     {
-        $workflow = $this->workflowClient->newWorkflowStub(
-            NachatSbrosPodgotovkiUnitaWorkflow::class,
+        $workflow = $this->workflowClient->newUntypedWorkflowStub(
+            'NachatSbrosPodgotovkiUnitaWorkflow',
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::runnerQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
@@ -145,6 +152,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatZapuskUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
@@ -157,6 +165,7 @@ final class RunnerApi
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatOstanvkuUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 

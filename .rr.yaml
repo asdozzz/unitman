@@ -16,5 +16,5 @@ http:
 temporal:
   address: "host.docker.internal:7233"
   activities:
-    command: "php public/temporal.php"
+    command: "php bin/console temporal:workflow:runtime"
     num_workers: 10

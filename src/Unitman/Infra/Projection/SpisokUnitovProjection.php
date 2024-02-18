@@ -49,11 +49,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
             $fact->projectId,
             $fact->projectName,
             $fact->branch,
-            json_encode($fact->stateAsArray),
-            '',
+            $fact->stateAsArray['code'],
             false,
-            '',
-            ''
+            $fact->stateAsArray['commands'],
         );
 
         $this->repository->insert($readModel);
@@ -63,7 +61,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
@@ -73,9 +72,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -84,28 +83,24 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
-            'config' => json_encode($fact->configUnita),
         ]);
         $this->repository->update($readModel);
     }
 
     function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
     {
-        $readModel =$this->repository->getById($fact->unitId);
-        $readModel = $readModel->copyAndUpdateData([
-            'configValues' => json_encode($fact->values)
-        ]);
-        $this->repository->update($readModel);
+
     }
 
     function handlePodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
@@ -115,9 +110,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -126,9 +121,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -137,7 +132,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
@@ -148,9 +144,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -159,10 +155,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
-            'config' => json_encode($fact->configUnita),
         ]);
         $this->repository->update($readModel);
     }
@@ -171,7 +166,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
@@ -181,9 +177,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -192,9 +188,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -203,7 +199,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
@@ -213,9 +210,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -224,9 +221,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -235,7 +232,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
@@ -245,9 +243,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -256,9 +254,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }
@@ -267,7 +265,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
         ]);
         $this->repository->update($readModel);
@@ -277,9 +276,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
-            'state' => json_encode($fact->stateAsArray),
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'textOtRunnera' => $fact->textOtRunnera,
         ]);
         $this->repository->update($readModel);
     }

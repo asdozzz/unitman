@@ -21,7 +21,7 @@ use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
 use App\Unitman\Business\Model\Unit;
-use App\Unitman\Business\Port\RepoRepository;
+use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\RunnerService;
 
 final class RunnerAdapter implements RunnerService
@@ -72,7 +72,7 @@ final class RunnerAdapter implements RunnerService
     public function nachatSbrosPodgotovkiUnita(Unit $unit): JobId
     {
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatSbrosPodgotovkiUnita($unit->getProjectId(), $unit->getName(), $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
+        $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $unit->getName(), $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
         $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($command);
         return new JobId($workflowId);
     }

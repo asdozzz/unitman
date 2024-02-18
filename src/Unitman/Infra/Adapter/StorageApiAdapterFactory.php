@@ -2,14 +2,18 @@
 
 namespace App\Unitman\Infra\Adapter;
 
+use App\Unitman\Business\Command\Repo\GetRepoTypeList;
+use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
-use App\Unitman\Business\Port\CanCheckAccessToRepo;
-use App\Unitman\Business\Port\UmeetPoluchatUrlHranilisha;
+use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokVetokProekta;
+use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
+use App\Unitman\Business\Port\Repo\CanGetRepoTypeList;
+use App\Unitman\Business\Port\Repo\UmeetPoluchatUrlHranilisha;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 
-final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluchatUrlHranilisha
+final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluchatUrlHranilisha, CanGetRepoTypeList, UmeetPoluchatSpisokVetokProekta
 {
     /**
      * @var iterable<StorageApiAdapter>
@@ -47,5 +51,21 @@ final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluc
     {
         $adapter = $this->getAdapterByRepo($repoType);
         return $adapter->poluchitUrlHranilisha($repoUrl);
+    }
+
+
+    function getRepoTypeList(GetRepoTypeList $query): array
+    {
+        $res = [];
+        foreach ($this->adapters as $adapter) {
+            $res[] = $adapter->getRepoTypeModel();
+        }
+        return $res;
+    }
+
+    function poluchitVetkiProekta(Repo $repo, string $projectCode): array
+    {
+        $adapter = $this->getAdapterByRepo($repo->getType());
+        return $adapter->poluchitVetkiProekta($repo, $projectCode);
     }
 }

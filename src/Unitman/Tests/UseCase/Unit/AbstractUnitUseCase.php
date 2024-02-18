@@ -7,9 +7,9 @@ use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
-use App\Unitman\Business\Port\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
@@ -80,12 +80,10 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel2 */
 
         $this->assertEquals($spisokUnitovReadModel2->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel2->state, json_encode([
-            'code' => 'SOZDAN',
-            'commands' => ['nachatSborku', 'nachatUdalenie']
-        ]));
+        $this->assertEquals($spisokUnitovReadModel2->state, 'SOZDAN');
         $this->assertEquals($spisokUnitovReadModel2->name, 'task-123');
         $this->assertEquals($spisokUnitovReadModel2->branch, 'feature/123');
         $this->assertEquals($spisokUnitovReadModel2->projectId, $projectId);
+        $this->assertEquals($spisokUnitovReadModel2->commands, json_encode(['nachatSborku','nachatUdalenie']));
     }
 }

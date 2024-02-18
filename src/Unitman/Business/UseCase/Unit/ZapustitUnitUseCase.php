@@ -2,12 +2,10 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
 use App\Unitman\Business\Port\RunnerService;
+use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
-use App\Unitman\Business\Port\UnitRepository;
-use Symfony\Bundle\SecurityBundle\Security;
 
 final class ZapustitUnitUseCase
 {

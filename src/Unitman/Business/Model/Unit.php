@@ -483,22 +483,12 @@ final class Unit implements AggregateRoot
     }
 
     //----------Сброс подготовки
-    public function nachatSbrosPodgotovkiUnita(JobId $jobId): void
+    public function nachatSbrosPodgotovkiUnita(JobId $jobId, string $userId): void
     {
-        if ($this->isDeleted) {
-            throw new \DomainException('unit.udalen');
-        }
+        $errors = $this->esliMognoSbrositPodgotvku($userId);
 
-        if ($this->isWaitResultFromRunner()) {
-            throw new \DomainException('unit.wait_runner');
-        }
-
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
-            throw new \DomainException('unit.zapushen');
-        }
-
-        if (empty($this->podgotovka)) {
-            throw new \DomainException('unit.podgotovka_ne_nachalas');
+        if (!empty($errors)) {
+            throw new \Exception($errors[0]);
         }
 
         $this->validateConfigValues();
@@ -942,5 +932,33 @@ final class Unit implements AggregateRoot
         if (!empty($errs)) {
             throw new \DomainException(join(', ', $errs));
         }
+    }
+
+    /**
+     * @return array
+     */
+    function esliMognoSbrositPodgotvku(string $userId): array
+    {
+        $errors = [];
+        if (!$this->esliRazreshenoUpravlyatUnitom($userId)) {
+            $errors[] = 'unit.ne_hvataet_prav';
+        }
+
+        if ($this->isDeleted) {
+            $errors[] = 'unit.udalen';
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            $errors[] = 'unit.wait_runner';
+        }
+
+        if ($this->zapusk && $this->zapusk->isSuccess()) {
+            $errors[] = 'unit.zapushen';
+        }
+
+        if (empty($this->podgotovka)) {
+            $errors[] = 'unit.podgotovka_ne_nachalas';
+        }
+        return $errors;
     }
 }

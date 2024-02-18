@@ -3,9 +3,8 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\UpdateProjectData;
-use App\Unitman\Business\Model\Project;
-use App\Unitman\Business\Port\CanFindProjectDouble;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Project\CanFindProjectDouble;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class UpdateProjectDataUseCase

@@ -3,7 +3,7 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\ForceRemoveProject;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class ForceRemoveProjectUseCase

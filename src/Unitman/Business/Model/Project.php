@@ -250,12 +250,10 @@ final class Project implements AggregateRoot
 
     public function postavitVOcheredNaSborku(string $jobId): void
     {
-        if ($this->dataAboutBuilding) {
-            throw new \DomainException('project.already_in_queue');
-        }
+        $errors = $this->proverkaProektaDlyNachlaSborki();
 
-        if ($this->dataAboutRemoving) {
-            throw new \DomainException('project.removed');
+        if (!empty($errors)) {
+            throw new \DomainException($errors[0]);
         }
 
         $this->recordThat(new ProektPostavlenVOcheredNaSborku($this->getId(), $jobId));
@@ -386,5 +384,26 @@ final class Project implements AggregateRoot
     public function getMainBranchName(): string
     {
         return $this->mainBranch;
+    }
+
+    public function esliProektBilSobran(): bool
+    {
+        return isset($this->dataAboutBuilding);
+    }
+
+    /**
+     * @return array|string
+     */
+    public function proverkaProektaDlyNachlaSborki(): string|array
+    {
+        $errors = [];
+        if ($this->dataAboutBuilding) {
+            $errors = 'project.already_in_queue';
+        }
+
+        if ($this->dataAboutRemoving) {
+            $errors = 'project.removed';
+        }
+        return $errors;
     }
 }

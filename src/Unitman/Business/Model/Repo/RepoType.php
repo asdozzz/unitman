@@ -6,4 +6,5 @@ enum RepoType: string
 {
     case GITLAB = 'GITLAB';
     case GITHUB = 'GITHUB';
+    case BITBUCKET = 'BITBUCKET';
 }

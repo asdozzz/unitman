@@ -30,10 +30,8 @@ final class Version20230329063310 extends AbstractMigration
                 project_name varchar      not null,
                 branch varchar      not null,
                 state text  not null,
-                text_ot_runnera text default null,
                 wait_result_from_runner bit,
-                config text default null,
-                config_values text default null
+                commands text default null
             );
         ");
     }

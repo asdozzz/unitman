@@ -4,6 +4,9 @@ namespace App\Account\Infra\Repository;
 
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Port\CanFindDouble;
+use App\Account\Business\Port\UmeetPoluchatSpisokVsehPolzovatelei;
+use App\Account\Business\ReadModel\AccountForManaging;
+use App\Account\Business\ReadModel\UserList;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Doctrine\Security\User\UserLoaderInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -11,7 +14,7 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-final class JWTUserRepository implements UserProviderInterface, CanFindDouble
+final class JWTUserRepository implements UserProviderInterface, CanFindDouble, UmeetPoluchatSpisokVsehPolzovatelei
 {
     const TABLE = 'jwt_user';
     public function __construct(private Connection $connection)
@@ -139,5 +142,41 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble
 
         $user = $this->makeUserByDbRow($row);
         return $user;
+    }
+
+    private function makeUserListModel(array $row): UserList
+    {
+        return new UserList($row['id'], $row['email'], $row['is_blocked']);
+    }
+
+    private function makeAccountForManaging(array $row): AccountForManaging
+    {
+        return new AccountForManaging($row['id'], $row['email'], $row['is_blocked'], $row['roles'], $row['password']);
+    }
+
+    function poluchitSpisokVsehPolzovatelei(): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table");
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeUserListModel($row);
+        }
+
+        return $result;
+    }
+
+    function poluchitSpisokVsehPolzovateleiDlyAdministrirovaniya(): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table");
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeAccountForManaging($row);
+        }
+
+        return $result;
     }
 }

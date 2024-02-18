@@ -9,7 +9,6 @@
 namespace App\Utils\Converter;
 
 use App\App\Exception\Dump;
-use Doctrine\ORM\EntityNotFoundException;
 use \Exception;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,7 +27,7 @@ class BaseExceptionListener
     /**
      * @param ExceptionEvent $event
      *
-     * @throws EntityNotFoundException|Exception
+     * @throws Exception
      *
      * @return true
      */

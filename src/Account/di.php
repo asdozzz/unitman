@@ -27,7 +27,7 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure();
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
-        ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model'])
+        ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
         ->public();
 
     $services->set(UuidGenerator::class, RamseyUuidGenerator::class);

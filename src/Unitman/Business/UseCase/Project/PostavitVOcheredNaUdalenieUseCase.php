@@ -3,7 +3,7 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
@@ -24,13 +24,21 @@ final class PostavitVOcheredNaUdalenieUseCase
         }
 
         $project = $this->projectRepository->getById($command->id);
-        $result = $this->runnerService->removeProject($project);
-        $project->postavitVOcheredNaUdanlenie($result->jobId);
-        if ($result->success) {
-            $project->successfullyRemoving($result->info);
+
+        if ($project->esliProektBilSobran()) {
+            $result = $this->runnerService->removeProject($project);
+            $project->postavitVOcheredNaUdanlenie($result->jobId);
+            if ($result->success) {
+                $project->successfullyRemoving($result->info);
+            } else {
+                $project->errorWhenRemoving($result->info);
+            }
         } else {
-            $project->errorWhenRemoving($result->info);
+            $project->postavitVOcheredNaUdanlenie('STUB_FOR_NEW_PROJECT');
+            $project->successfullyRemoving('');
         }
+
+
         $this->projectRepository->save($project);
     }
 }

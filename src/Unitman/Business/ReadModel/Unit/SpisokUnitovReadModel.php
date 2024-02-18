@@ -12,10 +12,8 @@ final class SpisokUnitovReadModel
         public readonly string $projectName,
         public readonly string $branch,
         public readonly string $state,
-        public readonly string $textOtRunnera,
         public readonly bool $waitResultFromRunner,
-        public readonly string $config,
-        public readonly string $configValues,
+        public readonly ?string $commands,
     )
     {
     }
@@ -30,10 +28,8 @@ final class SpisokUnitovReadModel
         $branch = $this->branch;
 
         $state = $props['state']??$this->state;
-        $textOtRunnera = $props['textOtRunnera']??$this->textOtRunnera;
         $waitResultFromRunner = $props['waitResultFromRunner']??$this->waitResultFromRunner;
-        $config = $props['config']??$this->config;
-        $configValues = $props['configValues']??$this->configValues;
+        $commands = $props['commands']??$this->commands;
 
         return new static(
             $id,
@@ -43,10 +39,8 @@ final class SpisokUnitovReadModel
             $projectName,
             $branch,
             $state,
-            $textOtRunnera,
             $waitResultFromRunner,
-            $config,
-            $configValues,
+            $commands
         );
     }
 }

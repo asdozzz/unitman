@@ -7,9 +7,8 @@ use App\Unitman\Business\Model\Repo\Event\CredentialsOfRepoWasChanged;
 use App\Unitman\Business\Model\Repo\Event\RepoWasAdded;
 use App\Unitman\Business\Model\Repo\Event\RepoWasDeleted;
 use App\Unitman\Business\ReadModel\RepoList;
-use App\Unitman\Infra\Repository\RepoListRepository;
+use App\Unitman\Infra\Repository\Repo\RepoListRepository;
 use App\Utils\EventSauce\AbstractProjection;
-use EventSauce\EventSourcing\Message;
 
 final class RepoListProjection extends AbstractProjection implements SyncProjectionForRepo
 {

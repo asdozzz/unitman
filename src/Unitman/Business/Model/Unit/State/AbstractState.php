@@ -28,9 +28,11 @@ abstract class AbstractState
 
     function toArray(Unit $unit): array
     {
+        $arr = array_map(fn(StateUserCommand $command) => $command->value, $this->getCommands($unit));
+
         return [
             'code' => $this->getCode(),
-            'commands' => array_map(fn(StateUserCommand $command) => $command->value, $this->getCommands($unit))
+            'commands' => json_encode($arr)
         ];
     }
 }

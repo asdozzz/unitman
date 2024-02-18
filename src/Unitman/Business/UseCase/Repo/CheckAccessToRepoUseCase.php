@@ -3,8 +3,8 @@
 namespace App\Unitman\Business\UseCase\Repo;
 
 use App\Unitman\Business\Command\Repo\CheckAccessToRepo;
-use App\Unitman\Business\Port\CanCheckAccessToRepo;
-use App\Unitman\Business\Port\RepoRepository;
+use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
+use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class CheckAccessToRepoUseCase

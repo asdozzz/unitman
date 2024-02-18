@@ -16,4 +16,7 @@ return function (ContainerConfigurator $configuration) {
     $services->load('App\\Runner\\', './{Business,Infra,Acl,Api}')
         ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
         ->public();
+
+    $services->set(\App\Runner\Infra\Activity\UstanovitResultatSbrosaPodgotovkiUnitaActivity::class)
+        ->tag('temporal.activity.registry');
 };

@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Unitman;
 
-use App\Unitman\Business\Port\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;

@@ -85,7 +85,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
 
         $id = $row['id'];
 
-        $command = new ChangeEmailByAdmin($id, 'www@www.ru');
+        $command = new ChangeEmailByAdmin($id, 'www123@www.ru');
 
         $sut = self::$container->get(ChangeEmailByAdminUseCase::class);
         /** @var ChangeEmailByAdminUseCase $sut */
@@ -95,7 +95,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         /** @var JWTUserRepository $jwtRepository */
         $jwtUser = $jwtRepository->getActiveById($id);
 
-        $this->assertEquals('www@www.ru', $jwtUser->getEmail());
+        $this->assertEquals('www123@www.ru', $jwtUser->getEmail());
     }
     /**
      * @test

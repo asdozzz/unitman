@@ -26,12 +26,13 @@ use Temporal\WorkerFactory;
 $factory = WorkerFactory::create();
 
 // Worker that listens on a task queue and hosts both workflow and activity implementations.
-$worker = $factory->newWorker();
+$worker = $factory->newWorker(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName);
+
+$worker->registerWorkflowTypes(\App\BackgroundJob\Infra\Workflow\StartJobWorkflow::class);
+$worker->registerWorkflowTypes(\App\BackgroundJob\Infra\Workflow\ChildWorkflow::class);
 
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\InitProjectWorkflow::class);
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\RemoveProjectWorkflow::class);
-$worker->registerWorkflowTypes(\App\BackgroundJob\Infra\Workflow\StartJobWorkflow::class);
-$worker->registerWorkflowTypes(\App\BackgroundJob\Infra\Workflow\ChildWorkflow::class);
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\NachatSborkuUnitaWorkflow::class);
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\NachatUdalenieUnitaWorkflow::class);
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow::class);
@@ -39,6 +40,8 @@ $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\NachatPodgotovkuUnitaW
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\NachatSbrosPodgotovkiUnitaWorkflow::class);
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow::class);
 $worker->registerWorkflowTypes(\App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow::class);
+
+$worker->registerActivity(\App\Runner\Infra\Activity\UstanovitResultatSbrosaPodgotovkiUnitaActivity::class);
 
 // start primary loop
 $factory->run();

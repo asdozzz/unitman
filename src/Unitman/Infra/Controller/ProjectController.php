@@ -9,7 +9,11 @@ use App\Unitman\Business\Command\Project\BuildProject;
 use App\Unitman\Business\Command\Project\DisableProject;
 use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\ForceRemoveProject;
+use App\Unitman\Business\Command\Project\GetActiveProjectList;
 use App\Unitman\Business\Command\Project\GetProjectList;
+use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
+use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
+use App\Unitman\Business\Command\Project\PoluchitSpisokVetokProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Command\Project\RemoveProject;
@@ -21,7 +25,11 @@ use App\Unitman\Business\UseCase\Project\BuildProjectUseCase;
 use App\Unitman\Business\UseCase\Project\DisableProjectUseCase;
 use App\Unitman\Business\UseCase\Project\EnableProjectUseCase;
 use App\Unitman\Business\UseCase\Project\ForceRemoveProjectUseCase;
+use App\Unitman\Business\UseCase\Project\GetActiveProjectListQuery;
 use App\Unitman\Business\UseCase\Project\GetProjectListQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitSpisokVetokProektaQuery;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
 use App\Unitman\Business\UseCase\Project\RemoveProjectUseCase;
@@ -35,18 +43,32 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/project')]
 final class ProjectController extends AbstractController
 {
-    #[Route('/add', methods: ['POST'])]
-    public function add(AddProject $command, AddProjectUseCase $useCase): Response
-    {
-        $useCase->handle($command);
-        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-    }
-
     #[Route('/list', methods: ['POST'])]
     public function list(GetProjectList $command, GetProjectListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/activeList', methods: ['POST'])]
+    public function activeList(GetActiveProjectList $command, GetActiveProjectListQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/my', methods: ['POST'])]
+    public function my(PoluchitMoiProekti $command, PoluchitMoiProektiQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/add', methods: ['POST'])]
+    public function add(AddProject $command, AddProjectUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/updateData', methods: ['POST'])]
@@ -89,6 +111,13 @@ final class ProjectController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
+    #[Route('/usersList', methods: ['POST'])]
+    public function usersList(PoluchitSpisokPolzovateleiProekta $command, PoluchitSpisokPolzovateleiProektaQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
     #[Route('/addUser', methods: ['POST'])]
     public function addUser(AddUserToProject $command, AddUserToProjectUseCase $useCase): Response
     {
@@ -108,5 +137,12 @@ final class ProjectController extends AbstractController
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/branchesList', methods: ['POST'])]
+    public function branchesList(PoluchitSpisokVetokProekta $command, PoluchitSpisokVetokProektaQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 }

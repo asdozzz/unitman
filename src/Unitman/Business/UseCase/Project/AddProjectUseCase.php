@@ -4,9 +4,9 @@ namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Model\Project;
-use App\Unitman\Business\Port\CanFindProjectDouble;
 use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Project\CanFindProjectDouble;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class AddProjectUseCase

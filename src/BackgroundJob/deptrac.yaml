@@ -1,0 +1,32 @@
+deptrac:
+  paths:
+    - ./
+  exclude_files:
+    - '#.*test.*#'
+  layers:
+    - name: Api
+      collectors:
+        - type: directory
+          regex: ./Api
+    - name: Acl
+      collectors:
+        - type: directory
+          regex: ./Acl
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          regex: ./Infrastructure
+    - name: Domain
+      collectors:
+        - type: directory
+          regex: ./Domain
+  ruleset:
+    Acl:
+      - Domain
+      - Infrastructure
+    Api:
+      - Domain
+      - Infrastructure
+    Infrastructure:
+      - Domain
+    Domain:

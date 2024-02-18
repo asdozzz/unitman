@@ -17,8 +17,8 @@ use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
 use App\Unitman\Business\ReadModel\ProjectList;
 use App\Unitman\Business\ReadModel\ProjectUsersList;
-use App\Unitman\Infra\Repository\SqlProjectListRepository;
-use App\Unitman\Infra\Repository\SqlProjectUsersRepository;
+use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use App\Unitman\Infra\Repository\Project\SqlProjectUsersRepository;
 use App\Utils\EventSauce\AbstractProjection;
 
 final class ProjectListProjection extends AbstractProjection implements SyncProjectionForProject

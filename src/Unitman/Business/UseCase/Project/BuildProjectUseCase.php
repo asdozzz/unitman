@@ -3,8 +3,7 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\BuildProject;
-use App\Unitman\Business\Port\ProjectRepository;
-use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 
 final class BuildProjectUseCase
 {

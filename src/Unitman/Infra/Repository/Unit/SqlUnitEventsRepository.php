@@ -3,7 +3,7 @@
 namespace App\Unitman\Infra\Repository\Unit;
 
 use App\Unitman\Business\Model\Unit;
-use App\Unitman\Business\Port\UnitRepository;
+use App\Unitman\Business\Port\Unit\UnitRepository;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\MessageDecorator;

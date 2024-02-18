@@ -3,9 +3,8 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
-use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Port\RunnerService;
-use App\Unitman\Business\Port\UnitRepository;
+use App\Unitman\Business\Port\Unit\UnitRepository;
 
 final class ObnovitKodUnitaUseCase
 {

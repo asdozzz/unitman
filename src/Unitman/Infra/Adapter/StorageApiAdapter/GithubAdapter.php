@@ -2,8 +2,11 @@
 
 namespace App\Unitman\Infra\Adapter\StorageApiAdapter;
 
+use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
+use App\Unitman\Business\ReadModel\RepoTypeList;
+use App\Unitman\Business\ReadModel\VetkaProekta;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\GithubAdapter\GithubClientFactory;
 
 final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapter
@@ -36,5 +39,18 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
     public function poluchitUrlHranilisha(?string $repoUrl): string
     {
         return self::GITHUB_REPO_URL;
+    }
+
+    public function getRepoTypeModel(): RepoTypeList
+    {
+        return new RepoTypeList(Repo\RepoType::GITHUB->value, Repo\RepoType::GITHUB->name);
+    }
+
+    public function poluchitVetkiProekta(Repo $repo, string $projectCode): array
+    {
+        $client = $this->githubClientFactory->makeClient($repo);
+        list($login, $code) = explode('/', $projectCode);
+        $branches = $client->repositories()->branches($login, $code);
+        return array_map(fn(array $branch) => new VetkaProekta($branch['name']), $branches);
     }
 }

@@ -92,11 +92,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_SBORKI',
-            'commands' => []
-        ]));
-
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_SBORKI');
 
         $useCase = self::$container->get(UstanovitResultatSborkiUnitaUseCase::class);
         $ustanovitResultatSborkiUnita = new UstanovitResultatSborkiUnita($unitId);
@@ -106,57 +102,10 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
 
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_SOBRAN',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-                'nachatPodgotovku',
-            ]
-        ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera');
-        $cfg = [
-            'variables' => [
-                ['id' => 'AUTH_TOKEN', 'label' => 'Токен авторизации', 'type' => 'string', 'defaultValue' => 'asdasd'],
-                ['id' => 'DICTIONARY_SERVICE', 'label' => 'Сервис справочников', 'type' => 'collection', 'defaultValue' => 'http://v1.dict.ru', 'options' => [
-                    ['id' => 'http://v1.dict.ru', 'name' => 'Версия 1'],
-                    ['id' => 'http://v2.dict.ru', 'name' => 'Версия 2'],
-                ]],
-                ['id' => 'ORDER_SERVICE', 'label' => 'Сервис заказов', 'type' => 'unit', 'defaultValue' => 'master', 'options' => [
-                    'projectCode' => 'services/orders'
-                ]]
-            ],
-            'prepare' => [
-                'cp -f .env.runner .env',
-                'mkdir -p config/jwt',
-                'openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:my_password',
-                'openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:my_password',
-            ],
-            'reset_prepare' => [
-                'rm -rf config/jwt',
-                'rm -f .env',
-            ],
-            'up' => [
-                'docker-compose up -d --build',
-                'docker-compose run web composer install --optimize-autoloader',
-                'docker-compose run web php bin/console doctrine:migrations:migrate',
-            ],
-            'down' => [
-                'docker-compose down'
-            ]
-        ];
-        $this->assertEquals(json_decode($spisokUnitovReadModel->config, true), $cfg);
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
-            'AUTH_TOKEN' => 'token_access',
-            'DICTIONARY_SERVICE' => 'http://v2.dict.ru',
-            'ORDER_SERVICE' => 'master'
-        ]));
-
-        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals($spisokUnitovReadModel->configValues, json_encode([
             'AUTH_TOKEN' => 'token_access',
             'DICTIONARY_SERVICE' => 'http://v2.dict.ru',
             'ORDER_SERVICE' => 'master'
@@ -167,36 +116,21 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_PODGOTOVKI',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_PODGOTOVKI');
 
         $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_oshibka_podgotovka');
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'OSHIBKA_PODGOTOVKI',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'nachatPodgotovku',
-                'zapolnitPeremenie',
-            ]
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'OSHIBKA_PODGOTOVKI');
 
         $useCase = self::$container->get(ObnovitKodUnitaUseCase::class);
         $useCase->handle(new ObnovitKodUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_OBNOVLENIYA',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_OBNOVLENIYA');
 
 
         $useCase = self::$container->get(UstanovitResultatObnovleniyaUnitaUseCase::class);
@@ -204,53 +138,10 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_SOBRAN',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-                'nachatPodgotovku',
-            ]
-        ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_obnovlenie');
-        $cfg = [
-            'variables' => [
-                ['id' => 'DICTIONARY_SERVICE', 'label' => 'Сервис справочников', 'type' => 'collection', 'defaultValue' => 'http://v1.dict.ru', 'options' => [
-                    ['id' => 'http://v1.dict.ru', 'name' => 'Версия 1'],
-                    ['id' => 'http://v2.dict.ru', 'name' => 'Версия 2'],
-                ]],
-                ['id' => 'DICTIONARY_USER', 'label' => 'Токен авторизации', 'type' => 'string', 'defaultValue' => 'qweqwe'],
-            ],
-            'prepare' => [
-                'cp -f .env.runner .env',
-                'mkdir -p config/jwt',
-                'openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:my_password',
-                'openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:my_password',
-            ],
-            'reset_prepare' => [
-                'rm -rf config/jwt',
-                'rm -f .env',
-            ],
-            'up' => [
-                'docker-compose up -d --build',
-                'docker-compose run web composer install --optimize-autoloader',
-                'docker-compose run web php bin/console doctrine:migrations:migrate',
-            ],
-            'down' => [
-                'docker-compose down'
-            ]
-        ];
-        $this->assertEquals(json_decode($spisokUnitovReadModel->config, true), $cfg);
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
-            'DICTIONARY_SERVICE' => 'http://v3.dict.ru',
-            'DICTIONARY_USER' => 'asdozzz'
-        ]));
-
-        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals($spisokUnitovReadModel->configValues, json_encode([
             'DICTIONARY_SERVICE' => 'http://v3.dict.ru',
             'DICTIONARY_USER' => 'asdozzz'
         ]));
@@ -260,78 +151,41 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_PODGOTOVKI',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_PODGOTOVKI');
 
         $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_podgotovki');
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-                'nachatSbrosPodgotovki',
-                'nachatZapusk',
-            ]
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
 
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
         $useCase->handle(new SbrositPodgotovkuUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_SBROSA_PODGOTOVKI',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_SBROSA_PODGOTOVKI');
 
         $useCase = self::$container->get(UstanovitResultatSbrosaPodgotovkiUseCase::class);
         $useCase->handle(new UstanovitResultatSbrosaPodgotovki($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'OSHIBKA_SBROSA_PODGOTOVKI',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatSbrosPodgotovki',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-            ]
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'OSHIBKA_SBROSA_PODGOTOVKI');
 
         $useCase = self::$container->get(ObnovitKodUnitaUseCase::class);
         $useCase->handle(new ObnovitKodUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_OBNOVLENIYA',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_OBNOVLENIYA');
 
         $useCase = self::$container->get(UstanovitResultatObnovleniyaUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatObnovleniyaUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-                'nachatSbrosPodgotovki',
-                'nachatZapusk',
-            ]
-        ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_obnovlenie');
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
 
 
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
@@ -339,35 +193,17 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_SBROSA_PODGOTOVKI',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_SBROSA_PODGOTOVKI');
 
         $useCase = self::$container->get(UstanovitResultatSbrosaPodgotovkiUseCase::class);
         $useCase->handle(new UstanovitResultatSbrosaPodgotovki($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_sbrosa');
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_SOBRAN',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-                'nachatPodgotovku',
-            ]
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
-            'DICTIONARY_SERVICE' => 'http://v2.dict.ru',
-            'DICTIONARY_USER' => 'asd'
-        ]));
-
-        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals($spisokUnitovReadModel->configValues, json_encode([
             'DICTIONARY_SERVICE' => 'http://v2.dict.ru',
             'DICTIONARY_USER' => 'asd'
         ]));
@@ -377,96 +213,56 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_PODGOTOVKI',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_PODGOTOVKI');
 
         $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_podgotovki');
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-                'nachatSbrosPodgotovki',
-                'nachatZapusk',
-            ]
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
 
         $useCase = self::$container->get(ZapustitUnitUseCase::class);
         $useCase->handle(new ZapustitUnit($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_ZAPUSKA',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_ZAPUSKA');
 
         $useCase = self::$container->get(UstanovitResultatZapuskaUseCase::class);
         $useCase->handle(new UstanovitResultatZapuska($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_zapuska');
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_ZAPUSHEN',
-            'commands' => ['nachatOstanovku']
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_ZAPUSHEN');
 
         $useCase = self::$container->get(OstanovitUnitUseCase::class);
         $useCase->handle(new OstanovitUnit($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTATI_OSTANOVKI',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_OSTANOVKI');
 
         $useCase = self::$container->get(UstanovitResultatOstanovkiUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatOstanovkiUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatObnovlenie',
-                'zapolnitPeremenie',
-                'nachatSbrosPodgotovki',
-                'nachatZapusk',
-            ]
-        ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_uspeh_ostanovki');
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
 
         $useCase = self::$container->get(UdalitUnitUseCase::class);
         $useCase->handle(new UdalitUnit($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'JDET_RESULTAT_UDALENIYA',
-            'commands' => []
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTAT_UDALENIYA');
 
         $useCase = self::$container->get(UstanovitResultatUdaleniyaUseCase::class);
         $useCase->handle(new UstanovitResultatUdaleniya($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'SLOMAN',
-            'commands' => ['udalitVruchnuyu']
-        ]));
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_oshibka_udaleniya');
+        $this->assertEquals($spisokUnitovReadModel->state, 'SLOMAN');
 
         $useCase = self::$container->get(UdalitSlomaniyUnitUseCase::class);
         $useCase->handle(new UdalitSlomaniyUnit($unitId));
@@ -474,7 +270,4 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->findById($unitId);
         $this->assertTrue(empty($spisokUnitovReadModel));
     }
-
-
-
 }

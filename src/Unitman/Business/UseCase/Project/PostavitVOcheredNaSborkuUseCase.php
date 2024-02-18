@@ -3,7 +3,7 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
@@ -24,6 +24,13 @@ final class PostavitVOcheredNaSborkuUseCase
         }
 
         $project = $this->projectRepository->getById($command->id);
+
+        $errs = $project->proverkaProektaDlyNachlaSborki();
+
+        if (!empty($errs)) {
+            throw new \DomainException($errs[0]);
+        }
+
         $result = $this->runnerService->buildProject($project);
         $project->postavitVOcheredNaSborku($result->jobId);
         if ($result->success) {

@@ -3,8 +3,8 @@
 namespace App\Unitman\Business\UseCase\Repo;
 
 use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
-use App\Unitman\Business\Port\RepoRepository;
-use App\Unitman\Business\Port\UmeetPoluchatUrlHranilisha;
+use App\Unitman\Business\Port\Repo\RepoRepository;
+use App\Unitman\Business\Port\Repo\UmeetPoluchatUrlHranilisha;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class ChangeCredentialsOfRepoUseCase

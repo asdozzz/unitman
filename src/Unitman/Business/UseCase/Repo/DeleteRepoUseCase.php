@@ -2,10 +2,9 @@
 
 namespace App\Unitman\Business\UseCase\Repo;
 
-use App\Unitman\Business\Command\Project\GetProjectList;
 use App\Unitman\Business\Command\Repo\DeleteRepo;
-use App\Unitman\Business\Port\CanGetProjectList;
-use App\Unitman\Business\Port\RepoRepository;
+use App\Unitman\Business\Port\Project\CanGetProjectList;
+use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class DeleteRepoUseCase

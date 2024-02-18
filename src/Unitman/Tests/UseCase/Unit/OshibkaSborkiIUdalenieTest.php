@@ -43,14 +43,7 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->textOtRunnera, 'text_ot_runnera_oshibka_sborki');
-        $this->assertEquals($spisokUnitovReadModel->state, json_encode([
-            'code' => 'OSHIBKA_SBORKI',
-            'commands' => [
-                'nachatUdalenie',
-                'nachatSborku'
-            ]
-        ]));
+        $this->assertEquals($spisokUnitovReadModel->state, 'OSHIBKA_SBORKI');
 
         $useCase = self::$container->get(UdalitUnitUseCase::class);
         $useCase->handle(new UdalitUnit($unitId));

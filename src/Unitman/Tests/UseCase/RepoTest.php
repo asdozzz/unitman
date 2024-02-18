@@ -6,18 +6,17 @@ use App\Unitman\Business\Command\Repo\AddRepo;
 use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
 use App\Unitman\Business\Command\Repo\CheckAccessToRepo;
 use App\Unitman\Business\Command\Repo\DeleteRepo;
-use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
-use App\Unitman\Business\Port\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Repo\AddRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\CheckAccessToRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\DeleteRepoUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
-use App\Unitman\Infra\Repository\RepoListRepository;
+use App\Unitman\Infra\Repository\Repo\RepoListRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
 use Ramsey\Uuid\Nonstandard\Uuid;
 
@@ -40,7 +39,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $sut->handle($deleteCommand);
 
         $repoListRepository = self::$container->get(RepoListRepository::class);
-        /** @var RepoListRepository $repoListRepository*/
+        /** @var \App\Unitman\Infra\Repository\Repo\RepoListRepository $repoListRepository*/
         $row = $repoListRepository->findRowById($repoId);
 
         $this->assertTrue(empty($row));
@@ -100,7 +99,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
     /**
      * @param string $repoId
      * @param string $repoName
-     * @return RepoListRepository|object|null
+     * @return \App\Unitman\Infra\Repository\Repo\RepoListRepository|object|null
      * @throws \Exception
      */
     public function addRepo(string $repoId, string $repoName, RepoType $repoType, ?string $repoUrl): void
@@ -123,7 +122,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $addRepoUseCase->handle($addCommand);
 
         $repoListRepository = self::$container->get(RepoListRepository::class);
-        /** @var RepoListRepository $repoListRepository */
+        /** @var \App\Unitman\Infra\Repository\Repo\RepoListRepository $repoListRepository */
         $repoList = $repoListRepository->getById($repoId);
 
         $this->assertEquals($repoId, $repoList->getId());

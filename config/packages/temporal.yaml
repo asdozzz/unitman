@@ -1,0 +1,14 @@
+temporal:
+  address: 'localhost:7233'
+  worker:
+    factory: Highcore\TemporalBundle\WorkerFactory
+    queue: '%env(TEMPORAL_WORKER_QUEUE)%'
+    data-converter:
+      class: Temporal\DataConverter\DataConverter
+      converters:
+        - Temporal\DataConverter\NullConverter
+        - Temporal\DataConverter\BinaryConverter
+        - Temporal\DataConverter\ProtoJsonConverter
+        - Temporal\DataConverter\JsonConverter
+  workflow-client:
+    factory: Highcore\TemporalBundle\WorkflowClientFactory

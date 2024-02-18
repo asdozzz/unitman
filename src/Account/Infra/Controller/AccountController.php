@@ -9,6 +9,8 @@ use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
 use App\Account\Business\UseCase\ChangeEmailByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
+use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery;
+use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiQuery;
 use App\Account\Business\UseCase\RegisterAccountUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -52,5 +54,19 @@ final class AccountController extends AbstractController
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/poluchitVsehPolzovatelei')]
+    function poluchitVsehPolzovatelei(PoluchitSpisokVsehPolzovateleiQuery $useCase): Response
+    {
+        $result = $useCase->handle();
+        return $this->json(\App\Utils\Model\Reponse\Response::success($result));
+    }
+
+    #[Route('/poluchitVsehPolzovateleiDlyAdministrorovaniya')]
+    function poluchitVsehPolzovateleiDlyAdministrorovaniya(PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery $useCase): Response
+    {
+        $result = $useCase->handle();
+        return $this->json(\App\Utils\Model\Reponse\Response::success($result));
     }
 }

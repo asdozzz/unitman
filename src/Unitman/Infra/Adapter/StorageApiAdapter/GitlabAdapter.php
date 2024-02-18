@@ -2,8 +2,10 @@
 
 namespace App\Unitman\Infra\Adapter\StorageApiAdapter;
 
+use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
+use App\Unitman\Business\ReadModel\RepoTypeList;
 
 final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapter
 {
@@ -25,5 +27,15 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         }
 
         return $repoUrl;
+    }
+
+    public function getRepoTypeModel(): RepoTypeList
+    {
+        return new RepoTypeList(Repo\RepoType::GITLAB->value, Repo\RepoType::GITLAB->name);
+    }
+
+    public function poluchitVetkiProekta(Repo $repo, string $projectCode): array
+    {
+        throw new \Exception('NEED REALIZATION');
     }
 }

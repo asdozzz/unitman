@@ -9,12 +9,11 @@
         "ext-iconv": "*",
         "ext-json": "*",
         "ext-pdo": "*",
-        "doctrine/doctrine-bundle": "*",
         "doctrine/doctrine-migrations-bundle": "^3.2",
-        "doctrine/orm": "^2.14",
         "eventsauce/eventsauce": "*",
         "eventsauce/message-repository-for-doctrine": "*",
         "grpc/grpc": "^1.42",
+        "highcore/temporal-bundle": "*",
         "knplabs/github-api": "^3.0",
         "lexik/jwt-authentication-bundle": "^2.18",
         "nelmio/cors-bundle": "^2.4",
@@ -98,12 +97,20 @@
             "@auto-scripts"
         ],
         "check-psalm": "php vendor/bin/psalm",
-        "check-deptrac": "php vendor/bin/deptrac",
         "check-phpunit": "php vendor/bin/phpunit",
+        "check-deptrac": "php vendor/bin/deptrac",
+        "check-account-deptrac": "vendor/bin/deptrac analyze --config-file=./src/Account/deptrac.yaml",
+        "check-background-deptrac": "vendor/bin/deptrac analyze --config-file=./src/BackgroundJob/deptrac.yaml",
+        "check-runner-deptrac": "vendor/bin/deptrac analyze --config-file=./src/Runner/deptrac.yaml",
+        "check-unitman-deptrac": "vendor/bin/deptrac analyze --config-file=./src/Unitman/deptrac.yaml",
         "all-checks": [
             "@check-psalm",
             "@check-phpunit",
-            "@check-deptrac"
+            "@check-deptrac",
+            "@check-account-deptrac",
+            "@check-background-deptrac",
+            "@check-runner-deptrac",
+            "@check-unitman-deptrac"
         ]
     },
     "conflict": {

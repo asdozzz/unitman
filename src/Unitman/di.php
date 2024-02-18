@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace App\Unitman;
 
-use App\Unitman\Acl\AccountAdapter;
-use App\Unitman\Business\Port\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Business\Port\RunnerService;
-use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Projection\ProjectMessageDispatcherFactory;
 use App\Unitman\Infra\Projection\RepoMessageDispatcherFactory;
 use App\Unitman\Infra\Projection\UnitMessageDispatcherFactory;
-use App\Unitman\Infra\Repository\SqlProjectEventsRepository;
-use App\Unitman\Infra\Repository\SqlRepoEvensRepository;
+use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
+use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
@@ -22,7 +18,6 @@ use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineMessageRepository;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
-use EventSauce\UuidEncoding\StringUuidEncoder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 

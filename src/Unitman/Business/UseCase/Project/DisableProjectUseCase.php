@@ -3,8 +3,7 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\DisableProject;
-use App\Unitman\Business\Command\Project\EnableProject;
-use App\Unitman\Business\Port\ProjectRepository;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class DisableProjectUseCase

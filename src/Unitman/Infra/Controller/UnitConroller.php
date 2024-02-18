@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\Controller;
 
+use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
@@ -20,6 +21,7 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
 use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
+use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
@@ -59,6 +61,13 @@ final class UnitConroller extends AbstractController
 
     #[Route('/list', methods: ['POST'])]
     public function list(GetUnitList $command, GetUnitListQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/moi', methods: ['POST'])]
+    public function moi(GetMyUnits $command, GetMyUnitsQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));

@@ -2,13 +2,15 @@
 
 namespace App\Unitman\Infra\Repository\Unit;
 
+use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
-use App\Unitman\Business\Port\CanFindUnitDouble;
-use App\Unitman\Business\Port\CanGetUnitList;
+use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
+use App\Unitman\Business\Port\Unit\CanGetMyUnits;
+use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
 
-final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList
+final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection)
@@ -47,11 +49,10 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList
             'project_name' => $spisokUnitovReadModel->projectName,
             'branch' => $spisokUnitovReadModel->branch,
             'state' => $spisokUnitovReadModel->state,
-            'text_ot_runnera' => $spisokUnitovReadModel->textOtRunnera,
             'wait_result_from_runner' => $spisokUnitovReadModel->waitResultFromRunner?1:0,
-            'config' => $spisokUnitovReadModel->config,
-            'config_values' => $spisokUnitovReadModel->configValues,
+            'commands' => $spisokUnitovReadModel->commands
         ];
+
         $this->connection->insert(self::TABLE, $data);
     }
 
@@ -63,10 +64,8 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList
             'project_name' => $spisokUnitovReadModel->projectName,
             'branch' => $spisokUnitovReadModel->branch,
             'state' => $spisokUnitovReadModel->state,
-            'text_ot_runnera' => $spisokUnitovReadModel->textOtRunnera,
             'wait_result_from_runner' => $spisokUnitovReadModel->waitResultFromRunner?1:0,
-            'config' => $spisokUnitovReadModel->config,
-            'config_values' => $spisokUnitovReadModel->configValues,
+            'commands' => $spisokUnitovReadModel->commands
         ];
         $this->connection->update(self::TABLE, $data, ['id' => $spisokUnitovReadModel->id]);
     }
@@ -86,10 +85,8 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList
             $row['project_name'],
             $row['branch'],
             $row['state'],
-            $row['text_ot_runnera'],
             $row['wait_result_from_runner'],
-            $row['config'],
-            $row['config_values'],
+            $row['commands'],
         );
     }
 
@@ -105,6 +102,20 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList
         $table = self::TABLE;
         $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table LIMIT :limit OFFSET :offset",
             ['limit' => $query->limit, 'offset' => $query->offset]);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeUnitByRow($row);
+        }
+
+        return $result;
+    }
+
+    function getMyUnits(GetMyUnits $command, string $authorId): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where author_id = :authorId LIMIT :limit OFFSET :offset",
+            ['limit' => $command->limit, 'offset' => $command->offset, 'authorId' => $authorId]);
 
         $result = [];
         foreach ($rows as $row) {
