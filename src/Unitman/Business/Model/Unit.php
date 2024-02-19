@@ -228,6 +228,7 @@ final class Unit implements AggregateRoot
 
     public function ustanovitUspehSborki(string $textOtRunnera, array $configUnita): void
     {
+        //TODO вынести создание объекта конфига наружу
         if (empty($this->sborka)) {
             throw new \DomainException('unit.sborka_ne_nachalas');
         }
@@ -442,6 +443,7 @@ final class Unit implements AggregateRoot
 
     public function ustanovitUspehObnovleniya(string $textOtRunnera, array $configUnita): void
     {
+        //TODO вынести создание объекта конфига наружу
         if (empty($this->obnovlenie)) {
             throw new \DomainException('unit.obnovlenie_ne_nachalas');
         }
@@ -452,6 +454,7 @@ final class Unit implements AggregateRoot
 
         $errs = $this->validateConfig($configUnita);
 
+        //TODO придумать как убрать эту какаху
         if (!empty($errs)) {
             $configUnita = null;
             $textOtRunnera = 'Invalid config';
@@ -960,5 +963,10 @@ final class Unit implements AggregateRoot
             $errors[] = 'unit.podgotovka_ne_nachalas';
         }
         return $errors;
+    }
+
+    function getConfig(): ConfigUnita|null
+    {
+        return $this->configUnita;
     }
 }

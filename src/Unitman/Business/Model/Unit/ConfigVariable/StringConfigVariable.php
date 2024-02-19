@@ -2,9 +2,10 @@
 
 namespace App\Unitman\Business\Model\Unit\ConfigVariable;
 
+use App\Unitman\Business\Model\Unit\AbstractConfigVariable;
 use App\Unitman\Business\Model\Unit\ConfigVariable;
 
-final class StringConfigVariable implements ConfigVariable
+final class StringConfigVariable extends AbstractConfigVariable implements ConfigVariable
 {
     const TYPE_CODE = 'string';
 
@@ -13,16 +14,6 @@ final class StringConfigVariable implements ConfigVariable
         public readonly ConfigVariableLabel $label,
         public readonly ConfigDefaultValue $defaultValue)
     {
-    }
-
-    function toArray(): array
-    {
-        return array(
-            'id' => (string)$this->id,
-            'label' => (string)$this->label,
-            'type' => self::TYPE_CODE,
-            'defaultValue' => (string)$this->defaultValue
-        );
     }
 
     function getId(): string
@@ -37,5 +28,20 @@ final class StringConfigVariable implements ConfigVariable
         }
 
         return null;
+    }
+
+    function getType(): string
+    {
+        return self::TYPE_CODE;
+    }
+
+    function getLabel(): string
+    {
+        return (string)$this->label;
+    }
+
+    function getDefaultValue(): string
+    {
+        return (string)$this->defaultValue;
     }
 }

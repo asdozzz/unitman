@@ -100,7 +100,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     function getList(GetUnitList $query): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table LIMIT :limit OFFSET :offset",
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table ORDER BY id desc LIMIT :limit OFFSET :offset",
             ['limit' => $query->limit, 'offset' => $query->offset]);
 
         $result = [];
@@ -114,7 +114,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     function getMyUnits(GetMyUnits $command, string $authorId): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where author_id = :authorId LIMIT :limit OFFSET :offset",
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where author_id = :authorId  ORDER BY id desc LIMIT :limit OFFSET :offset",
             ['limit' => $command->limit, 'offset' => $command->offset, 'authorId' => $authorId]);
 
         $result = [];

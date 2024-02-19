@@ -137,9 +137,9 @@ final class RunnerApi
     public function nachatSbrosPodgotovkiUnita(NachatSbrosPodgotovkiUnita $command): string
     {
         $workflow = $this->workflowClient->newUntypedWorkflowStub(
-            'NachatSbrosPodgotovkiUnitaWorkflow',
+            NachatSbrosPodgotovkiUnitaWorkflow::class,
             WorkflowOptions::new()
-                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 

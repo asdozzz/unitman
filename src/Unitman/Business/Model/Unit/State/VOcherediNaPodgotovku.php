@@ -23,6 +23,8 @@ final class VOcherediNaPodgotovku extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [];
+        return [
+            StateUserCommand::ustanovitResultatPodgotovki
+        ];
     }
 }

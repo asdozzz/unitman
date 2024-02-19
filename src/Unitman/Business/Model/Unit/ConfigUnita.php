@@ -20,6 +20,7 @@ final class ConfigUnita
         array $down
     )
     {
+        //TODO вынести вызов фабрики в тест кейс и использовать DI
         $this->variables = array_map(fn(array $item) => ConfigVariableFactory::fromArray($item), $variables);
         if (empty($prepare)) {
             throw new \DomainException('unit.config.prepare_is_empty');

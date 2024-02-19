@@ -26,6 +26,8 @@ final class VOcherediNaSbrosPodgotovki extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [];
+        return [
+            StateUserCommand::ustanovitResultatSbrosaPodgotovki
+        ];
     }
 }

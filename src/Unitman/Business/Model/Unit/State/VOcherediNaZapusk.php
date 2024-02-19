@@ -26,6 +26,8 @@ final class VOcherediNaZapusk extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [];
+        return [
+            StateUserCommand::ustanovitResultatZapuska
+        ];
     }
 }

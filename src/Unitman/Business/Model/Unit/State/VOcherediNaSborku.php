@@ -26,6 +26,8 @@ final class VOcherediNaSborku extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [];
+        return [
+            StateUserCommand::ustanovitResultatSborki
+        ];
     }
 }

@@ -24,6 +24,8 @@ final class VOcherediNaObnovlenie extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [];
+        return [
+            StateUserCommand::ustanovitResultatObnovleniya
+        ];
     }
 }

@@ -2,9 +2,10 @@
 
 namespace App\Unitman\Business\Model\Unit\ConfigVariable;
 
+use App\Unitman\Business\Model\Unit\AbstractConfigVariable;
 use App\Unitman\Business\Model\Unit\ConfigVariable;
 
-final class CollectionConfigVariable implements ConfigVariable
+final class CollectionConfigVariable extends AbstractConfigVariable
 {
     const TYPE_CODE = 'collection';
 
@@ -17,15 +18,9 @@ final class CollectionConfigVariable implements ConfigVariable
     {
     }
 
-    function toArray(): array
+    function getOptions(): array
     {
-        return array(
-            'id' => (string)$this->id,
-            'label' => (string)$this->label,
-            'type' => self::TYPE_CODE,
-            'defaultValue' => (string)$this->defaultValue,
-            'options' => $this->options->toArray()
-        );
+        return $this->options->toArray();
     }
 
     function getId(): string
@@ -40,5 +35,20 @@ final class CollectionConfigVariable implements ConfigVariable
         }
 
         return null;
+    }
+
+    function getType(): string
+    {
+        return self::TYPE_CODE;
+    }
+
+    function getLabel(): string
+    {
+        return (string)$this->label;
+    }
+
+    function getDefaultValue(): string
+    {
+        return (string)$this->defaultValue;
     }
 }

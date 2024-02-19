@@ -16,6 +16,6 @@ final class CollectionOptions
 
     function toArray(): array
     {
-        return array_map(fn(CollectionOption $option): array => $option->toArray(), $this->options);
+        return ['options' => array_map(fn(CollectionOption $option): array => $option->toArray(), $this->options)];
     }
 }
