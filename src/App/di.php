@@ -6,17 +6,18 @@ namespace App\App;
 
 use App\App\Infra\EventStore\AuthorMessageDecorator;
 use App\App\Infra\Workflow\WorkflowClientFactory;
+use App\Utils\EventSauce\Repository\CheckpointStore;
 use EventSauce\EventSourcing\DefaultHeadersDecorator;
+use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
 use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ObjectMapperPayloadSerializer;
+use EventSauce\EventSourcing\Serialization\PayloadSerializerSupportingObjectMapperAndSerializablePayload;
 use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
-use EventSauce\UuidEncoding\StringUuidEncoder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Temporal\Client\WorkflowClient;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return function (ContainerConfigurator $configuration) {
     $services = $configuration->services()
@@ -28,18 +29,14 @@ return function (ContainerConfigurator $configuration) {
         ->exclude(['./{di.php, Tests}','./Business/Command','./Business/Model'])
         ->public();
 
-    $services->set(ObjectMapperPayloadSerializer::class, ObjectMapperPayloadSerializer::class);
-
-    $services->set(ConstructingMessageSerializer::class, ConstructingMessageSerializer::class)
-        ->arg('$payloadSerializer', service(ObjectMapperPayloadSerializer::class));
-
-    $services->set(DefaultHeadersDecorator::class, DefaultHeadersDecorator::class);
-
-    $services->set('app.message_decorator', MessageDecoratorChain::class)
-        ->args([service(DefaultHeadersDecorator::class), service(AuthorMessageDecorator::class)]);
+    $services->set(PayloadSerializerSupportingObjectMapperAndSerializablePayload::class, PayloadSerializerSupportingObjectMapperAndSerializablePayload::class);
 
     $services->set(DefaultTableSchema::class, DefaultTableSchema::class);
     $services->set(StringIdEncoder::class, StringIdEncoder::class);
+
+    $services->set('app.checkpoint_store', CheckpointStore::class)
+        ->arg('$tableName', 'checkpoint_store');
+
 
     $services->set(WorkflowClient::class)
         ->factory(service(WorkflowClientFactory::class))

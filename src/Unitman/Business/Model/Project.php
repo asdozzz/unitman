@@ -8,7 +8,7 @@ use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
-use App\Unitman\Business\Model\Project\Event\PostavlenVOcheredNaUdalenie;
+use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasAdded;
@@ -28,6 +28,7 @@ use App\Unitman\Business\Model\Project\ProjectId;
 use App\Unitman\Business\Model\Project\ProjectName;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
+use App\Unitman\Business\Model\Project\ProxyHost;
 use App\Unitman\Business\Model\Repo\RepoId;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
@@ -55,6 +56,8 @@ final class Project implements AggregateRoot
     private array $users = [];
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private string $mainBranch;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ProxyHost $proxyHost;
 
     private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
@@ -72,7 +75,7 @@ final class Project implements AggregateRoot
     {
         $projectId = ProjectId::fromString($id);
         $project = new static($projectId);
-        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch));
+        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost));
 
         return $project;
     }
@@ -81,6 +84,8 @@ final class Project implements AggregateRoot
     {
         $this->code = new ProjectCode($fact->projectCode);
         $this->name = new ProjectName($fact->projectName);
+        $this->proxyHost = new ProxyHost($fact->proxyHost);
+
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
     }
@@ -151,16 +156,17 @@ final class Project implements AggregateRoot
             throw new \DomainException('project.already_built');
         }*/
 
-        if ($command->newProjectName === (string)$this->name) {
+        /*if ($command->newProjectName === (string)$this->name) {
             throw new \DomainException('project.old_name_equal_new_name');
-        }
+        }*/
 
-        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName));
+        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->newProxyHost));
     }
 
     private function applyProjectDataWasChanged(ProjectDataWasChanged $fact): void
     {
         $this->name = new ProjectName($fact->newName);
+        $this->proxyHost = new ProxyHost($fact->newProxyHost);
     }
 
     public function postavitVOcheredNaUdanlenie(string $jobId): void
@@ -173,12 +179,12 @@ final class Project implements AggregateRoot
             throw new \DomainException('project.in_pending_for_build');
         }
 
-        $this->recordThat(new PostavlenVOcheredNaUdalenie($this->getId(), $jobId));
+        $this->recordThat(new ProektPostavlenVOcheredNaUdalenie($this->getId(), $jobId));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
-    private function applyPostavlenVOcheredNaUdalenie(PostavlenVOcheredNaUdalenie $fact): void
+    private function applyProektPostavlenVOcheredNaUdalenie(ProektPostavlenVOcheredNaUdalenie $fact): void
     {
         $this->dataAboutRemoving = new ProjectDataAboutRemoving($fact->jobId);
     }
@@ -405,5 +411,10 @@ final class Project implements AggregateRoot
             $errors = 'project.removed';
         }
         return $errors;
+    }
+
+    public function getProxyHost(): ProxyHost
+    {
+        return $this->proxyHost;
     }
 }

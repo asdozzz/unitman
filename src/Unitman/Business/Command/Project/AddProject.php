@@ -11,6 +11,7 @@ final class AddProject implements JsonBodySerializableInterface
         public readonly string $projectCode,
         public readonly string $projectName,
         public readonly string $mainBranch = 'master',
+        public readonly string $proxyHost = '',
     )
     {
     }

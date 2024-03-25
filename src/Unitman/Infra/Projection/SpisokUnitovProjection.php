@@ -26,28 +26,49 @@ use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
+use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use App\Utils\EventSauce\AbstractProjection;
+use App\Utils\EventSauce\Model\StreamName;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 final class SpisokUnitovProjection extends AbstractProjection implements SyncProjectionForUnit
 {
     public function __construct(
-        private SpisokUnitovRepository $repository
+        private SpisokUnitovRepository $repository,
+        private ProjectRepository $projectRepository
     )
     {
     }
 
+
+    function getProjectionName(): string
+    {
+        return 'spisok_unitov';
+    }
+
+    function reset(): void
+    {
+        $this->repository->truncate();
+    }
+
+    function getStreamName(): StreamName
+    {
+        return new StreamName(UnitmanClassNameMapEnum::Unit->value);
+    }
+
     function handleUnitSozdan(UnitSozdan $fact): void
     {
+        $project = $this->projectRepository->getById($fact->projectId);
         $readModel = new SpisokUnitovReadModel(
             $fact->id,
             $fact->authorId,
             $fact->name,
             $fact->projectId,
-            $fact->projectName,
+            $project->getName(),
             $fact->branch,
             $fact->stateAsArray['code'],
             false,
@@ -223,6 +244,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
         $readModel = $readModel->copyAndUpdateData([
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
+            'url' => $fact->url,
             'waitResultFromRunner' => false,
         ]);
         $this->repository->update($readModel);
@@ -257,6 +279,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'url' => null,
         ]);
         $this->repository->update($readModel);
     }
@@ -291,4 +314,5 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
     {
         $this->repository->delete($fact->unitId);
     }
+
 }

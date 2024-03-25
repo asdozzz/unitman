@@ -9,28 +9,30 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Port\Project\CanFindProjectDouble;
 use App\Unitman\Business\Port\Project\CanGetActiveProjectList;
 use App\Unitman\Business\Port\Project\CanGetProjectList;
+use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokPolzovateleiProekta;
+use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\ReadModel\ProjectList;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Serializer\Serializer;
 
-final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProjectList, CanGetActiveProjectList
+final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProjectList, CanGetActiveProjectList, UmeetPoluchatSpisokProektovDlyPolzovatelya, UmeetPoluchatSpisokPolzovateleiProekta
 {
     const TABLE = 'project_list';
-    public function __construct(private Connection $connection)
+    public function __construct(private Connection $connection, private Serializer $serializer)
     {
+    }
+
+    function truncate()
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("TRUNCATE $table");
     }
 
     function insert(ProjectList $projectList): void
     {
         $data = [
             'id' => $projectList->id,
-            'repo_id' => $projectList->repoId,
-            'code' => $projectList->code,
-            'name' => $projectList->name,
-            'main_branch' => $projectList->mainBranch,
-            'is_active' => $projectList->isActive?1:0,
-            'state' => $projectList->state->value,
-            'build_text' => $projectList->buildInfo,
-            'remove_text' => $projectList->removeInfo,
+            'payload' => $this->serializer->serialize($projectList, 'json'),
         ];
         $this->connection->insert(self::TABLE, $data);
     }
@@ -38,56 +40,64 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     function update(ProjectList $projectList): void
     {
         $this->connection->update(self::TABLE, [
-            'code' => $projectList->code,
-            'name' => $projectList->name,
-            'main_branch' => $projectList->mainBranch,
-            'is_active' => $projectList->isActive?1:0,
-            'state' => $projectList->state->value,
-            'build_text' => $projectList->buildInfo,
-            'remove_text' => $projectList->removeInfo,
+            'payload' => $this->serializer->serialize($projectList, 'json'),
         ], ['id' => $projectList->id]);
+    }
+
+    function getById(string $id): ProjectList
+    {
+        $row = $this->findRowById($id);
+
+        if (empty($row)) {
+            throw new \DomainException('project.not_found');
+        }
+
+        return $this->makeProjectByDbRow($row);
     }
 
     function updateState(string $projectId,ProjectList\ProjectListStateType $state, ?string $buildInfo = null): void
     {
-        $arr = [
-            'state' => $state->value,
-        ];
+        $project = $this->getById($projectId);
+        $project->state = $state;
 
         if ($buildInfo) {
-            $arr['build_text'] = $buildInfo;
+            $project->buildInfo = $buildInfo;
         }
 
-        $this->connection->update(self::TABLE, $arr, ['id' => $projectId]);
+        $this->update($project);
     }
 
     function handleProjectWasNotDeleted(ProjectWasNotDeleted $fact): void
     {
-        $this->connection->update(self::TABLE, [
-            'state' => ProjectList\ProjectListStateType::REMOVE_ERROR->value,
-            'remove_text' => $fact->errorText,
-            'is_active' => $fact->isActive?1:0,
-        ], ['id' => $fact->id]);
+        $project = $this->getById($fact->id);
+        $project->state = ProjectList\ProjectListStateType::REMOVE_ERROR;
+        $project->removeInfo = $fact->errorText;
+        $project->isActive = $fact->isActive;
+
+        $this->update($project);
     }
 
     function handleProjectDataWasChanged(ProjectDataWasChanged $fact): void
     {
-        $this->connection->update(self::TABLE, [
-            'name' => $fact->newName,
-        ], ['id' => $fact->id]);
+        $project = $this->getById($fact->id);
+        $project->name = $fact->newName;
+        $project->proxyHost = $fact->newProxyHost;
+
+        $this->update($project);
     }
 
-    function updateActive(string $projectId, bool $is_active): void
+    function updateActive(string $projectId, bool $isActive): void
     {
-        $this->connection->update(self::TABLE, [
-            'is_active' => $is_active?1:0,
-        ], ['id' => $projectId]);
+        $project = $this->getById($projectId);
+        $project->isActive = $isActive;
+
+        $this->update($project);
     }
 
     public function isExistDouble(string $projectCode, string $projectName): bool
     {
         $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE code = :code OR name = :name", ['code' => $projectCode, 'name' => $projectName]);
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE payload->>'code' = :code OR payload->>'name' = :name", ['code' => $projectCode, 'name' => $projectName]);
 
         return !empty($row);
     }
@@ -97,10 +107,10 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $this->connection->delete(self::TABLE, ['id' => $projectId]);
     }
 
-    public function isExistDoubleByName(string $projectName): bool
+    public function isExistDoubleByName(string $projectId, string $projectName): bool
     {
         $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE name = :name", ['name' => $projectName]);
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE payload->>'name' = :name and id != :id", ['name' => $projectName, 'id' => $projectId]);
 
         return !empty($row);
     }
@@ -118,18 +128,8 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
 
     function makeProjectByDbRow(array $row): ProjectList
     {
-        $state = ProjectList\ProjectListStateType::from($row['state']);;
-        $project = new ProjectList(
-            $row['id'],
-            $row['repo_id'],
-            $row['code'],
-            $row['name'],
-            $row['main_branch'],
-            $row['is_active'],
-            $state,
-            $row['build_text'],
-            $row['remove_text'],
-        );
+        $project = $this->serializer->deserialize($row['payload'], ProjectList::class, 'json');
+
         return $project;
     }
 
@@ -151,7 +151,7 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     function getListByRepoId(string $repoId): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where repo_id = :repoId", ['repoId' => $repoId]);
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where payload->>'repoId' = :repoId", ['repoId' => $repoId]);
 
         $result = [];
         foreach ($rows as $row) {
@@ -165,7 +165,7 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     {
         $table = self::TABLE;
 
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE is_active='1' LIMIT :limit OFFSET :offset",
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE payload->>'isActive'= 'true' LIMIT :limit OFFSET :offset ORDER BY id desc",
             ['limit' => $query->limit, 'offset' => $query->offset]);
 
         $result = [];
@@ -179,9 +179,9 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     function getActiveListByIds(array $projectIds): array
     {
         $table = self::TABLE;
-
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE is_active='1' and id in (:ids)",
-            ['ids' => join(',', $projectIds)]);
+        $ids = "'" . join("','", $projectIds) . "'";
+        $sql = "SELECT * FROM $table WHERE payload->>'isActive'= 'true' and id in ($ids) ORDER BY id desc";
+        $rows = $this->connection->fetchAllAssociative($sql);
 
         $result = [];
         foreach ($rows as $row) {
@@ -189,5 +189,25 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         }
 
         return $result;
+    }
+
+    function poluchitSpisokProektovDlyPolzovatelya(string $userId): array
+    {
+        $table = self::TABLE;
+
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE payload->>'isActive'= 'true' and payload->'users' @> '[{\"userId\":\"$userId\"}]'");
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeProjectByDbRow($row);
+        }
+
+        return $result;
+    }
+
+    function poluchitSpisokPolzovateleiProekta(string $projectId): array
+    {
+        $project = $this->getById($projectId);
+        return $project->users;
     }
 }

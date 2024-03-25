@@ -8,7 +8,6 @@ final class UnitSozdan
         public readonly string $id,
         public readonly string $authorId,
         public readonly string $projectId,
-        public readonly string $projectName,
         public readonly string $name,
         public readonly string $branch,
         public readonly array $stateAsArray

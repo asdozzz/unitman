@@ -10,6 +10,7 @@ final class ProjectWasAdded
         public readonly string $projectCode,
         public readonly string $projectName,
         public readonly string $mainBranch,
+        public readonly string $proxyHost = "",
     )
     {
     }

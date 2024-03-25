@@ -38,10 +38,10 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
      * @param string $userId
      * @return Project
      */
-    public function stubProekta(string $projectId, string $userId): Project
+    public function stubProekta(string $projectId, string $userId, string $projectName = 'uwin'): Project
     {
         $repoId = Uuid::uuid7()->toString();
-        $project = Project::addProject($projectId, new AddProject($repoId, 'projectCode', 'uwin', 'master'));
+        $project = Project::addProject($projectId, new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru'));
         $project->postavitVOcheredNaSborku('stub');
         $project->successfullyBuild('success');
         $project->addUser(new AddUserToProject($projectId, $userId));
@@ -55,15 +55,16 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
      * @return void
      * @throws \Exception
      */
-    public function sozdatUnit(string $unitId): void
+    public function sozdatUnit(string $unitId, string $unitName = 'task-123', $projectName = 'uwin'): void
     {
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId]));
         $userId = Uuid::uuid7()->toString();
         $securityService = $this->mokaemUspehSecurity($userId);
         $projectId = Uuid::uuid7()->toString();
-        $project = $this->stubProekta($projectId, $userId);
-        $projectRepository = $this->getMockBuilder(ProjectRepository::class)->getMock();
-        $projectRepository->expects($this->any())->method('getById')->willReturn($project);
+        $project = $this->stubProekta($projectId, $userId, $projectName);
+        $projectRepository = self::$container->get(ProjectRepository::class);
+        /** @var $projectRepository ProjectRepository*/
+        $projectRepository->save($project);
 
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
@@ -72,7 +73,7 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
         $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId]), $unitRepo);
         $useCase2->handle(new SozdatUnit(
             $projectId,
-            'task-123',
+            $unitName,
             'feature/123'
         ));
 

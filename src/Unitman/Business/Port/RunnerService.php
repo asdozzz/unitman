@@ -35,11 +35,11 @@ interface RunnerService
 
     public function poluchitResultatSbrosaPodgotovkiUnita(Unit $unit): ResultatSbrosaPodgotovkiUnita;
 
-    public function nachatZapuskUnita(Unit $unit): JobId;
+    public function nachatZapuskUnita(Unit $unit, Project $project): JobId;
 
     public function poluchitResultatZapuskaUnita(Unit $unit): ResultatZapuskaUnita;
 
-    public function nachatOstanovkuUnita(Unit $unit): JobId;
+    public function nachatOstanovkuUnita(Unit $unit, Project $project): JobId;
 
     public function poluchitResultatOstanovkiUnita(Unit $unit): ResultatOstanovkiUnita;
 

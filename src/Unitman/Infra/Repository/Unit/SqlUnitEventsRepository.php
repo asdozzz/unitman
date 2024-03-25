@@ -4,27 +4,20 @@ namespace App\Unitman\Infra\Repository\Unit;
 
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
+use App\Utils\EventSauce\Model\StreamName;
+use App\Utils\EventSauce\ProjectionsManager;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
-use EventSauce\EventSourcing\MessageDecorator;
-use EventSauce\EventSourcing\MessageDispatcher;
-use EventSauce\EventSourcing\MessageRepository;
 
 final class SqlUnitEventsRepository implements UnitRepository
 {
-    private Connection $connection;
-    private EventSourcedAggregateRootRepository $esRepository;
-
-    public function __construct(Connection $connection, MessageRepository $messageRepository, MessageDispatcher $messageDispatcher, MessageDecorator $messageDecorator)
-    {
-        $this->esRepository = new EventSourcedAggregateRootRepository(
-            Unit::class,
-            $messageRepository,
-            $messageDispatcher,
-            $messageDecorator
-        );
-        $this->connection = $connection;
-    }
+    public function __construct(
+        private Connection $connection,
+        private EventSourcedAggregateRootRepository $esRepository,
+        private ProjectionsManager $projectionsManager
+    )
+    {}
     public function getById(string $id): Unit
     {
         $repo = $this->esRepository->retrieve(Unit\UnitId::fromString($id));
@@ -37,6 +30,9 @@ final class SqlUnitEventsRepository implements UnitRepository
 
     public function save(Unit $unit): void
     {
-        $this->connection->transactional(fn() => $this->esRepository->persist($unit));
+        $this->connection->transactional(function () use ($unit){
+            $this->esRepository->persist($unit);
+            $this->projectionsManager->pullAllProjectionsByStreamName(new StreamName(UnitmanClassNameMapEnum::Unit->value));
+        });
     }
 }

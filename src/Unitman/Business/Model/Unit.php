@@ -76,6 +76,8 @@ final class Unit implements AggregateRoot
 
     private ?ConfigUnita $configUnita = null;
 
+    private ?string $url = null;
+
     /**
      * @var array<VariableValue>
      * */
@@ -135,7 +137,7 @@ final class Unit implements AggregateRoot
     {
         return $this->authorId === $userId;
     }
-    public static function sozdatUnit(string $id, string $authorId, string $projectName, SozdatUnit $command): static
+    public static function sozdatUnit(string $id, string $authorId, SozdatUnit $command): static
     {
         if (empty($command->projectId)) {
             throw new \DomainException('unit.projectId_is_empty');
@@ -145,7 +147,7 @@ final class Unit implements AggregateRoot
         }
         $unit = new static(UnitId::fromString($id));
         $state = new Sozdan();
-        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $projectName, $command->unitName, $command->branch, $state->toArray($unit)));
+        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit)));
         return $unit;
     }
 
@@ -168,7 +170,7 @@ final class Unit implements AggregateRoot
     private function applyUnitSozdan(UnitSozdan $fact): void
     {
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->project = new UnitProject($fact->projectId, $fact->projectName);
+        $this->project = new UnitProject($fact->projectId);
         $this->name = new UnitName($fact->name);
         $this->branch = new UnitBranch($fact->branch);
         $this->authorId = $fact->authorId;
@@ -610,7 +612,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitUspehZapuska(string $textOtRunnera): void
+    public function ustanovitUspehZapuska(string $textOtRunnera, string $projectProxyHost, string $projectName): void
     {
         if (empty($this->zapusk)) {
             throw new \DomainException('unit.zapusk_ne_nachalas');
@@ -620,14 +622,26 @@ final class Unit implements AggregateRoot
             throw new \DomainException('unit.resultat_zapusk_uge_ustanovlen');
         }
 
+        $pathinfo = parse_url($projectProxyHost);
+        /** @var array|false $pathinfo*/
+
+        if ($pathinfo === false) {
+            throw new \DomainException('unit.invalid_proxy_host');
+        }
+
+        $unitUrl = $pathinfo['scheme'].'://'.$this->name.'.'.$projectName.'.'.$pathinfo['host'];
+        if (!empty($pathinfo['port'])) {
+            $unitUrl .= ':'.$pathinfo['port'];
+        }
         $state = $this->newState(new Zapushen());
-        $this->recordThat(new UspehZapuskaUnitaUstanovlen($this->getId(), $textOtRunnera, $state->toArray($this)));
+        $this->recordThat(new UspehZapuskaUnitaUstanovlen($this->getId(), $textOtRunnera, $unitUrl, $state->toArray($this)));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
+        $this->url = $fact->url;
         $this->zapusk = $this->zapusk->ustanovitUspeh($fact->textOtRunnera);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
@@ -826,15 +840,6 @@ final class Unit implements AggregateRoot
         }
 
         return $this->project->id;
-    }
-
-    public function getProjectName(): string
-    {
-        if (empty($this->project)) {
-            throw new \DomainException('unit.project_not_found');
-        }
-
-        return $this->project->name;
     }
 
     public function poluchitWorkflowIdDlySborki(): string

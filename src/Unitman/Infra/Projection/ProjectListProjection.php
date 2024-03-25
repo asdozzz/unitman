@@ -2,7 +2,7 @@
 
 namespace App\Unitman\Infra\Projection;
 
-use App\Unitman\Business\Model\Project\Event\PostavlenVOcheredNaUdalenie;
+use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasAdded;
@@ -17,17 +17,32 @@ use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
 use App\Unitman\Business\ReadModel\ProjectList;
 use App\Unitman\Business\ReadModel\ProjectUsersList;
+use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
-use App\Unitman\Infra\Repository\Project\SqlProjectUsersRepository;
 use App\Utils\EventSauce\AbstractProjection;
+use App\Utils\EventSauce\Model\StreamName;
 
 final class ProjectListProjection extends AbstractProjection implements SyncProjectionForProject
 {
     public function __construct(
         private SqlProjectListRepository $projectListRepository,
-        private SqlProjectUsersRepository $projectUsersRepository
     )
     {
+    }
+
+    function getProjectionName(): string
+    {
+        return 'project_list';
+    }
+
+    function reset(): void
+    {
+        $this->projectListRepository->truncate();
+    }
+
+    function getStreamName(): StreamName
+    {
+        return new StreamName(UnitmanClassNameMapEnum::Project->value);
     }
 
     function handleProjectWasAdded(ProjectWasAdded $fact): void
@@ -41,7 +56,8 @@ final class ProjectListProjection extends AbstractProjection implements SyncProj
             false,
             ProjectList\ProjectListStateType::NEW,
             null,
-            null
+            null,
+            $fact->proxyHost
         );
         $this->projectListRepository->insert($projectList);
     }
@@ -71,7 +87,7 @@ final class ProjectListProjection extends AbstractProjection implements SyncProj
         $this->projectListRepository->updateActive($fact->id, false);
     }
 
-    function handlePostavlenVOcheredNaUdalenie(PostavlenVOcheredNaUdalenie $fact): void
+    function handleProektPostavlenVOcheredNaUdalenie(ProektPostavlenVOcheredNaUdalenie $fact): void
     {
         $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::REMOVE_PENDING);
     }
@@ -98,11 +114,22 @@ final class ProjectListProjection extends AbstractProjection implements SyncProj
 
     function handleUserAddedToProject(UserAddedToProject $fact): void
     {
-        $this->projectUsersRepository->insert(new ProjectUsersList($fact->projectId, $fact->userId, $fact->role));
+        $project = $this->projectListRepository->getById($fact->projectId);
+        $project->users[] = new ProjectUsersList($fact->userId, $fact->role);
+        $this->projectListRepository->update($project);
     }
 
     function handleUserRemovedFromProject(UserRemovedFromProject $fact): void
     {
-        $this->projectUsersRepository->delete($fact->id, $fact->userId);
+        $project = $this->projectListRepository->getById($fact->id);
+
+        $users = $project->users;
+        $project->users = [];
+        foreach ($users as $user) {
+            if ($user->userId == $fact->userId) continue;
+            $project->users[] = $user;
+        }
+        $this->projectListRepository->update($project);
     }
+
 }

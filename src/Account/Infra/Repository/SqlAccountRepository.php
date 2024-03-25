@@ -4,27 +4,23 @@ namespace App\Account\Infra\Repository;
 
 use App\Account\Business\Model\Account;
 use App\Account\Business\Port\AccountRepository;
+use App\Utils\EventSauce\ProjectionsManager;
 use Doctrine\DBAL\Connection;
+use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\MessageDecorator;
 use EventSauce\EventSourcing\MessageDispatcher;
 use EventSauce\EventSourcing\MessageRepository;
+use EventSauce\EventSourcing\Serialization\MessageSerializer;
 
 final class SqlAccountRepository implements AccountRepository
 {
-    private Connection $connection;
-    private EventSourcedAggregateRootRepository $esRepository;
-
-    public function __construct(Connection $connection, MessageRepository $messageRepository, MessageDispatcher $messageDispatcher, MessageDecorator $messageDecorator)
-    {
-        $this->esRepository = new EventSourcedAggregateRootRepository(
-            Account::class,
-            $messageRepository,
-            $messageDispatcher,
-            $messageDecorator
-        );
-        $this->connection = $connection;
-    }
+    public function __construct(
+        private Connection $connection,
+        private EventSourcedAggregateRootRepository $esRepository,
+        private ProjectionsManager $projectionsManager
+    )
+    {}
 
     public function getBy(string $accountId): Account
     {
@@ -39,6 +35,9 @@ final class SqlAccountRepository implements AccountRepository
 
     public function save(Account $account): void
     {
-        $this->connection->transactional(fn() => $this->esRepository->persist($account));
+        $this->connection->transactional(function () use ($account){
+            $this->esRepository->persist($account);
+            $this->projectionsManager->pullAllProjections();
+        });
     }
 }

@@ -2,13 +2,12 @@
 
 namespace App\Unitman\Business\Port\Project;
 
-use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
-use App\Unitman\Business\ReadModel\ProjectUsersList;
+use App\Unitman\Business\ReadModel\ProjectList;
 
 interface UmeetPoluchatSpisokProektovDlyPolzovatelya
 {
     /**
-     * @return ProjectUsersList[]
+     * @return ProjectList[]
      * */
     function poluchitSpisokProektovDlyPolzovatelya(string $userId): array;
 }

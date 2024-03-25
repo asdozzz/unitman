@@ -21,17 +21,8 @@ final class Version20230329063310 extends AbstractMigration
     {
         $this->addSql("create table spisok_unitov
             (
-                id       varchar(128) not null
-                    constraint spisok_unitov_pk
-                        primary key,
-                author_id varchar      not null,
-                name varchar      not null,
-                project_id varchar      not null,
-                project_name varchar      not null,
-                branch varchar      not null,
-                state text  not null,
-                wait_result_from_runner bit,
-                commands text default null
+                id varchar(128) not null constraint spisok_unitov_pk primary key,
+                payload jsonb
             );
         ");
     }

@@ -21,6 +21,11 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
     {
     }
 
+    function truncate()
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("TRUNCATE $table");
+    }
     function save(JWTUser $user): void
     {
         $this->connection->insert(self::TABLE, [

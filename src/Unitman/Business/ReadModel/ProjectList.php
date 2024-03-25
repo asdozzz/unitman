@@ -6,18 +6,29 @@ use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 
 final class ProjectList
 {
+    /**
+     * @var ProjectUsersList[]
+     * */
+    public array $users;
+
+    /**
+     * @param ProjectUsersList[] $users
+     * */
     public function __construct(
         public readonly string $id,
-        public readonly string $repoId,
-        public readonly string $code,
-        public readonly string $name,
-        public readonly string $mainBranch,
-        public readonly bool $isActive,
-        public readonly ProjectListStateType $state,
-        public readonly ?string $buildInfo,
-        public readonly ?string $removeInfo
+        public string $repoId,
+        public string $code,
+        public string $name,
+        public string $mainBranch,
+        public bool $isActive,
+        public ProjectListStateType $state,
+        public ?string $buildInfo,
+        public ?string $removeInfo,
+        public ?string $proxyHost,
+        array $users = []
     )
     {
+        $this->users = $users;
     }
 
 }

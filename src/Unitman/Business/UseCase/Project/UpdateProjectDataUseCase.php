@@ -23,7 +23,7 @@ final class UpdateProjectDataUseCase
             throw new \Exception('security.access_denied');
         }
 
-        if ($this->canFindDouble->isExistDoubleByName($command->newProjectName)) {
+        if ($this->canFindDouble->isExistDoubleByName($command->id, $command->newProjectName)) {
             throw new \DomainException('project.double');
         }
         $project = $this->projectRepository->getById($command->id);

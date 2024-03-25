@@ -8,60 +8,65 @@ use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\JWTUser;
+use App\Account\Business\Utils\AccountEventTypeEnum;
 use App\Account\Infra\Repository\JWTUserRepository;
+use App\Utils\EventSauce\AbstractProjection;
+use App\Utils\EventSauce\Model\StreamName;
 use EventSauce\EventSourcing\Message;
 
-final class JWTUserProjectionForAccount implements SyncProjectionForAccount
+final class JWTUserProjectionForAccount extends AbstractProjection implements SyncProjectionForAccount
 {
     public function __construct(private JWTUserRepository $JWTUserRepository)
     {
     }
 
-    public function accountWasRegistered(AccountWasRegistered $event): void
+    function getProjectionName(): string
+    {
+        return 'spisok_polzovatelei';
+    }
+
+    function reset(): void
+    {
+        $this->JWTUserRepository->truncate();
+    }
+
+    function getStreamName(): StreamName
+    {
+        return new StreamName(AccountEventTypeEnum::Account->value);
+    }
+
+    public function handleAccountWasRegistered(AccountWasRegistered $event): void
     {
         $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role]);
         $this->JWTUserRepository->save($user);
     }
 
-    public function passwordWasChanged(PasswordWasChangedByAdmin $event): void
+    public function handlePasswordWasChangedByAdmin(PasswordWasChangedByAdmin $event): void
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->updatePassword($event->newPassword);
         $this->JWTUserRepository->update($user);
     }
 
-    public function emailWasChanged(EmailWasChangedByAdmin $event): void
+    public function handleEmailWasChangedByAdmin(EmailWasChangedByAdmin $event): void
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->updateEmail($event->newEmail);
         $this->JWTUserRepository->update($user);
     }
 
-    public function accountWasBlocked(AccountWasBlockedByAdmin $event): void
+    public function handleAccountWasBlockedByAdmin(AccountWasBlockedByAdmin $event): void
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->block();
         $this->JWTUserRepository->update($user);
     }
 
-    public function accountWasUnblocked(AccountWasUnblockedByAdmin $event): void
+    public function handleAccountWasUnblockedByAdmin(AccountWasUnblockedByAdmin $event): void
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->unblock();
         $this->JWTUserRepository->update($user);
     }
 
-    public function handle(Message $message): void
-    {
-        $event = $message->payload();
-
-        match ($event::class) {
-            AccountWasRegistered::class => $this->accountWasRegistered($event),
-            PasswordWasChangedByAdmin::class => $this->passwordWasChanged($event),
-            EmailWasChangedByAdmin::class => $this->emailWasChanged($event),
-            AccountWasBlockedByAdmin::class => $this->accountWasBlocked($event),
-            AccountWasUnblockedByAdmin::class => $this->accountWasUnblocked($event),
-            default => throw new \RuntimeException(sprintf('Handler for event=%s in %s not found', $event::class, __CLASS__))
-        };
-    }
 }

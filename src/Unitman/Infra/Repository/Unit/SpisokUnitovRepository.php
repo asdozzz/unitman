@@ -9,12 +9,19 @@ use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Serializer\Serializer;
 
 final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits
 {
     const TABLE = 'spisok_unitov';
-    public function __construct(private Connection $connection)
+    public function __construct(private Connection $connection, private Serializer $serializer)
     {
+    }
+
+    function truncate()
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("TRUNCATE $table");
     }
 
     public function findById(string $id): ?SpisokUnitovReadModel
@@ -43,14 +50,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     {
         $data = [
             'id' => $spisokUnitovReadModel->id,
-            'author_id' => $spisokUnitovReadModel->authorId,
-            'name' => $spisokUnitovReadModel->name,
-            'project_id' => $spisokUnitovReadModel->projectId,
-            'project_name' => $spisokUnitovReadModel->projectName,
-            'branch' => $spisokUnitovReadModel->branch,
-            'state' => $spisokUnitovReadModel->state,
-            'wait_result_from_runner' => $spisokUnitovReadModel->waitResultFromRunner?1:0,
-            'commands' => $spisokUnitovReadModel->commands
+            'payload' => $this->serializer->serialize($spisokUnitovReadModel, 'json')
         ];
 
         $this->connection->insert(self::TABLE, $data);
@@ -59,13 +59,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     function update(SpisokUnitovReadModel $spisokUnitovReadModel): void
     {
         $data = [
-            'name' => $spisokUnitovReadModel->name,
-            'project_id' => $spisokUnitovReadModel->projectId,
-            'project_name' => $spisokUnitovReadModel->projectName,
-            'branch' => $spisokUnitovReadModel->branch,
-            'state' => $spisokUnitovReadModel->state,
-            'wait_result_from_runner' => $spisokUnitovReadModel->waitResultFromRunner?1:0,
-            'commands' => $spisokUnitovReadModel->commands
+            'payload' => $this->serializer->serialize($spisokUnitovReadModel, 'json')
         ];
         $this->connection->update(self::TABLE, $data, ['id' => $spisokUnitovReadModel->id]);
     }
@@ -77,23 +71,14 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
 
     function makeUnitByRow(array $row): SpisokUnitovReadModel
     {
-        return new SpisokUnitovReadModel(
-            $row['id'],
-            $row['author_id'],
-            $row['name'],
-            $row['project_id'],
-            $row['project_name'],
-            $row['branch'],
-            $row['state'],
-            $row['wait_result_from_runner'],
-            $row['commands'],
-        );
+        $unit = $this->serializer->deserialize($row['payload'], SpisokUnitovReadModel::class, 'json');
+        return $unit;
     }
 
-    public function isExistsDoubleByName(string $projectId, string $name): bool
+    public function isExistsDoubleByName(string $projectId, string $unitName): bool
     {
         $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE project_id = :projectId and name = :name", ['name' => $name, 'projectId' => $projectId]);
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE payload->>'project_id' = :projectId and payload->>'name' = :name", ['name' => $unitName, 'projectId' => $projectId]);
         return !empty($row);
     }
 
@@ -114,7 +99,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     function getMyUnits(GetMyUnits $command, string $authorId): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where author_id = :authorId  ORDER BY id desc LIMIT :limit OFFSET :offset",
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where payload->>'author_id' = :authorId ORDER BY id desc LIMIT :limit OFFSET :offset",
             ['limit' => $command->limit, 'offset' => $command->offset, 'authorId' => $authorId]);
 
         $result = [];

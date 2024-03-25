@@ -77,18 +77,18 @@ final class RunnerAdapter implements RunnerService
         return new JobId($workflowId);
     }
 
-    public function nachatZapuskUnita(Unit $unit): JobId
+    public function nachatZapuskUnita(Unit $unit, Project $project): JobId
     {
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatZapuskUnita($unit->getProjectId(), $unit->getProjectName(),$unit->getName(), $unit->poluchitKomandiZapuska(), $variables);
+        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getName(), $unit->poluchitKomandiZapuska(), $variables);
         $workflowId = $this->runnerApi->nachatZapuskUnita($command);
         return new JobId($workflowId);
     }
 
-    public function nachatOstanovkuUnita(Unit $unit): JobId
+    public function nachatOstanovkuUnita(Unit $unit, Project $project): JobId
     {
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatOstanovkuUnita($unit->getProjectId(), $unit->getProjectName(),$unit->getName(), $unit->poluchitKomandiOstanovki(), $variables);
+        $command = new NachatOstanovkuUnita($unit->getProjectId(), $project->getName(),$unit->getName(), $unit->poluchitKomandiOstanovki(), $variables);
         $workflowId = $this->runnerApi->nachatOstanovkuUnita($command);
         return new JobId($workflowId);
     }

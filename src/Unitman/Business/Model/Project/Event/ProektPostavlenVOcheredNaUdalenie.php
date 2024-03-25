@@ -2,7 +2,7 @@
 
 namespace App\Unitman\Business\Model\Project\Event;
 
-final class PostavlenVOcheredNaUdalenie
+final class ProektPostavlenVOcheredNaUdalenie
 {
     public function __construct(
         public readonly string $id,

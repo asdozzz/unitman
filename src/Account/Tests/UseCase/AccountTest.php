@@ -47,6 +47,8 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         /** @var JWTUserRepository $jwtRepository */
         $row = $jwtRepository->findUserByEmail($email);
 
+        $this->assertTrue(!empty($row), 'Пользователь не найден');
+
         $this->assertEquals($email, $row['email']);
         $this->assertNotEquals('asd', $row['password']);
         $this->assertEquals(Role::ROLE_USER->value, $row['roles']);

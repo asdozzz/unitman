@@ -10,7 +10,7 @@ final class PeremenyaUnita
     {
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'konfig' => $this->konfig->toArray(),

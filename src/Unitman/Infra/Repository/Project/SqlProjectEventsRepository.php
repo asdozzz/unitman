@@ -4,7 +4,11 @@ namespace App\Unitman\Infra\Repository\Project;
 
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
+use App\Utils\EventSauce\Model\StreamName;
+use App\Utils\EventSauce\ProjectionsManager;
 use Doctrine\DBAL\Connection;
+use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\MessageDecorator;
 use EventSauce\EventSourcing\MessageDispatcher;
@@ -12,19 +16,12 @@ use EventSauce\EventSourcing\MessageRepository;
 
 final class SqlProjectEventsRepository implements ProjectRepository
 {
-    private Connection $connection;
-    private EventSourcedAggregateRootRepository $esRepository;
-
-    public function __construct(Connection $connection, MessageRepository $messageRepository, MessageDispatcher $messageDispatcher, MessageDecorator $messageDecorator)
-    {
-        $this->esRepository = new EventSourcedAggregateRootRepository(
-            Project::class,
-            $messageRepository,
-            $messageDispatcher,
-            $messageDecorator
-        );
-        $this->connection = $connection;
-    }
+    public function __construct(
+        private Connection $connection,
+        private EventSourcedAggregateRootRepository $esRepository,
+        private ProjectionsManager $projectionsManager
+    )
+    {}
     public function getById(string $id): Project
     {
         $repo = $this->esRepository->retrieve(Project\ProjectId::fromString($id));
@@ -37,6 +34,9 @@ final class SqlProjectEventsRepository implements ProjectRepository
 
     public function save(Project $project): void
     {
-        $this->connection->transactional(fn() => $this->esRepository->persist($project));
+        $this->connection->transactional(function () use ($project){
+            $this->esRepository->persist($project);
+            $this->projectionsManager->pullAllProjectionsByStreamName(new StreamName(UnitmanClassNameMapEnum::Project->value));
+        });
     }
 }

@@ -7,8 +7,10 @@ use App\Unitman\Business\Model\Repo\Event\CredentialsOfRepoWasChanged;
 use App\Unitman\Business\Model\Repo\Event\RepoWasAdded;
 use App\Unitman\Business\Model\Repo\Event\RepoWasDeleted;
 use App\Unitman\Business\ReadModel\RepoList;
+use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Repo\RepoListRepository;
 use App\Utils\EventSauce\AbstractProjection;
+use App\Utils\EventSauce\Model\StreamName;
 
 final class RepoListProjection extends AbstractProjection implements SyncProjectionForRepo
 {
@@ -16,6 +18,22 @@ final class RepoListProjection extends AbstractProjection implements SyncProject
         private RepoListRepository $repoListRepository
     )
     {
+    }
+
+
+    function getProjectionName(): string
+    {
+        return 'repo_list';
+    }
+
+    function reset(): void
+    {
+        $this->repoListRepository->truncate();
+    }
+
+    function getStreamName(): StreamName
+    {
+        return new StreamName(UnitmanClassNameMapEnum::Repo->value);
     }
 
     public function handleRepoWasAdded(RepoWasAdded $event): void

@@ -87,12 +87,12 @@ final class MemoryRunnerService implements RunnerService
         return $this->getNextResponse(self::SBROS_PODGOTOVKI_UNITA);
     }
 
-    public function nachatZapuskUnita(Unit $unit): JobId
+    public function nachatZapuskUnita(Unit $unit, Project $project): JobId
     {
         return $this->getNextResponse(self::ZAPUSK_UNITA);
     }
 
-    public function nachatOstanovkuUnita(Unit $unit): JobId
+    public function nachatOstanovkuUnita(Unit $unit, Project $project): JobId
     {
         return $this->getNextResponse(self::OSTANOVKA_UNITA);
     }

@@ -6,15 +6,18 @@ use App\Unitman\Business\Command\Repo\AddRepo;
 use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
 use App\Unitman\Business\Command\Repo\CheckAccessToRepo;
 use App\Unitman\Business\Command\Repo\DeleteRepo;
+use App\Unitman\Business\Command\Repo\GetActiveRepoList;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\ReadModel\RepoList;
 use App\Unitman\Business\UseCase\Repo\AddRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\CheckAccessToRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\DeleteRepoUseCase;
+use App\Unitman\Business\UseCase\Repo\GetActiveRepoListQuery;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Repo\RepoListRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
@@ -76,12 +79,21 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
     {
         $repoId = Uuid::uuid7()->toString();
         $repoName = 'testRepo';
+        $repoId2 = Uuid::uuid7()->toString();
+        $repoName2 = 'testRepo2';
 
-        $this->addRepo($repoId, $repoName, RepoType::GITLAB, 'https://org@gitlab.ru');
+        $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        self::$container->set(UnitmanSecurityService::class, $securityService);
+        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId, $repoId2]));
 
+        //GIVE
+        $this->addRepoRaw(RepoType::GITLAB, $repoName, 'https://org@gitlab.ru');
+        $this->addRepoRaw(RepoType::GITLAB, $repoName2, 'https://org@gitlab22.ru');
+
+        //WHEN
         $gitlabApi = $this->getMockBuilder(CanCheckAccessToRepo::class)->getMock();
         $gitlabApi->expects($this->any())->method('checkAccess')->willReturn(CheckAccessResponse::success());
-
         self::$container->set(CanCheckAccessToRepo::class, $gitlabApi);
 
         $command = new CheckAccessToRepo($repoId);
@@ -89,11 +101,16 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         /** @var CheckAccessToRepoUseCase $useCase*/
         $useCase->handle($command);
 
-        $repoListRepository = self::$container->get(RepoListRepository::class);
-        /** @var RepoListRepository $repoListRepository*/
-        $repoList = $repoListRepository->getById($repoId);
+        //THEN
+        $command = new GetActiveRepoList();
+        $query = self::$container->get(GetActiveRepoListQuery::class);
+        /** @var $query GetActiveRepoListQuery*/
+        $actualResultRaw = $query->handle($command);
+        $actualResult = array_filter($actualResultRaw, fn(RepoList $repo) => in_array($repo->getId(), [$repoId, $repoId2]));
+        $actualResult = array_values($actualResult);
 
-        $this->assertEquals(true, $repoList->isConfirmed());
+        $expectedResult = [new RepoList($repoId, RepoType::GITLAB->value, $repoName, 'https://org@gitlab.ru', 'token', true)];
+        $this->assertEquals($expectedResult, $actualResult);
     }
 
     /**
@@ -109,17 +126,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         self::$container->set(UnitmanSecurityService::class, $securityService);
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId]));
 
-
-        $addCommand = new AddRepo(
-            $repoType->value,
-            $repoName,
-            'token',
-            $repoUrl
-        );
-
-        $addRepoUseCase = self::$container->get(\App\Unitman\Business\UseCase\Repo\AddRepoUseCase::class);
-        /** @var AddRepoUseCase $addRepoUseCase */
-        $addRepoUseCase->handle($addCommand);
+        $this->addRepoRaw($repoType, $repoName, $repoUrl);
 
         $repoListRepository = self::$container->get(RepoListRepository::class);
         /** @var \App\Unitman\Infra\Repository\Repo\RepoListRepository $repoListRepository */
@@ -131,5 +138,26 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals('token', $repoList->token);
         $this->assertEquals($repoUrl, $repoList->getRepoUrl());
         $this->assertFalse($repoList->isConfirmed());
+    }
+
+    /**
+     * @param RepoType $repoType
+     * @param string $repoName
+     * @param string|null $repoUrl
+     * @return void
+     * @throws \Exception
+     */
+    private function addRepoRaw(RepoType $repoType, string $repoName, ?string $repoUrl): void
+    {
+        $addCommand = new AddRepo(
+            $repoType->value,
+            $repoName,
+            'token',
+            $repoUrl
+        );
+
+        $addRepoUseCase = self::$container->get(\App\Unitman\Business\UseCase\Repo\AddRepoUseCase::class);
+        /** @var AddRepoUseCase $addRepoUseCase */
+        $addRepoUseCase->handle($addCommand);
     }
 }

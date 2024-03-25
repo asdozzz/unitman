@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Port\Project\CanGetActiveProjectList;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\ReadModel\ProjectList;
 use App\Unitman\Business\ReadModel\ProjectUsersList;
 
 final class PoluchitMoiProektiQuery
@@ -20,8 +21,9 @@ final class PoluchitMoiProektiQuery
 
     function handle(PoluchitMoiProekti $command): array
     {
-        $moiProekti = $this->umeetPoluchatSpisokMoihProektov->poluchitSpisokProektovDlyPolzovatelya($this->securityService->getCurrentUserId());
-        $projectIds = array_map(fn(ProjectUsersList $projectUser) => $projectUser->projectId, $moiProekti);
+        $userId = $this->securityService->getCurrentUserId();
+        $moiProekti = $this->umeetPoluchatSpisokMoihProektov->poluchitSpisokProektovDlyPolzovatelya($userId);
+        $projectIds = array_map(fn(ProjectList $project) => $project->id, $moiProekti);
         return $this->canGetProjectList->getActiveListByIds($projectIds);
     }
 }

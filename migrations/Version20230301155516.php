@@ -27,21 +27,15 @@ final class Version20230301155516 extends AbstractMigration
             event_id          varchar not null,
             aggregate_root_id varchar not null,
             version           integer not null,
-            payload           text    not null,
+            payload           jsonb    not null,
             constraint unitman_reconstitution
                 unique (aggregate_root_id, version)
         );");
 
         $this->addSql("create table repo_list
             (
-                id       varchar(128) not null
-                    constraint repo_list_pk
-                        primary key,
-                type varchar      not null,
-                name varchar      not null,
-                repo_url varchar      not null,
-                token varchar      not null,
-                confirmed    bit
+                id varchar(128) not null constraint repo_list_pk primary key,
+                payload jsonb
             );
         ");
 

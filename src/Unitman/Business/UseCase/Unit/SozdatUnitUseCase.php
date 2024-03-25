@@ -40,7 +40,7 @@ final class SozdatUnitUseCase
             throw new \DomainException('unit.ne_hvataet_prav');
         }
 
-        $unit = Unit::sozdatUnit($this->uuidGenerator->makeGuid(), $userId, $project->getName(), $command);
+        $unit = Unit::sozdatUnit($this->uuidGenerator->makeGuid(), $userId, $command);
         $this->unitRepository->save($unit);
     }
 }

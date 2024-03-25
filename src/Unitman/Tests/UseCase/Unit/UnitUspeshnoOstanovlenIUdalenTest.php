@@ -235,6 +235,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_ZAPUSHEN');
+        $this->assertEquals($spisokUnitovReadModel->url, 'https://task-123.uwin.testcase.ru');
 
         $useCase = self::$container->get(OstanovitUnitUseCase::class);
         $useCase->handle(new OstanovitUnit($unitId));
@@ -248,6 +249,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->url, null);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
 
         $useCase = self::$container->get(UdalitUnitUseCase::class);

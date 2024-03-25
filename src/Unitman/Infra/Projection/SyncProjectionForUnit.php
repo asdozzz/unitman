@@ -5,7 +5,7 @@ namespace App\Unitman\Infra\Projection;
 use EventSauce\EventSourcing\MessageConsumer;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-#[AutoconfigureTag('unit.sync_projection')]
+#[AutoconfigureTag('unitman.projection')]
 interface SyncProjectionForUnit extends MessageConsumer
 {
 

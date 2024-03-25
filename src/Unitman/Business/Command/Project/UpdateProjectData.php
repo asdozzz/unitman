@@ -8,7 +8,8 @@ final class UpdateProjectData implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $id,
-        public readonly string $newProjectName
+        public readonly string $newProjectName,
+        public readonly string $newProxyHost,
     )
     {
     }

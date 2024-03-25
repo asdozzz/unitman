@@ -2,6 +2,8 @@
 
 namespace App\Utils\Model\Reponse;
 
+use App\Utils\Model\Reponse\ErrorResponse\ErrorCodeEnum;
+
 final class Response
 {
     public static function success(mixed $data): SuccessResponse
@@ -19,8 +21,8 @@ final class Response
         return new FailResponse($data);
     }
 
-    public static function error(string $message): ErrorResponse
+    public static function error(string $message, ErrorCodeEnum $code = ErrorCodeEnum::DEFAULT): ErrorResponse
     {
-        return new ErrorResponse($message);
+        return new ErrorResponse($message, $code);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -12,7 +13,8 @@ final class ZapustitUnitUseCase
     public function __construct(
         private UnitRepository $unitRepository,
         private RunnerService $runnerService,
-        private UnitmanSecurityService $securityService
+        private UnitmanSecurityService $securityService,
+        private ProjectRepository $projectRepository
     )
     {
     }
@@ -25,7 +27,9 @@ final class ZapustitUnitUseCase
             throw new \DomainException('unit.ne_hvataet_prav');
         }
 
-        $jobId = $this->runnerService->nachatZapuskUnita($unit);
+        $project = $this->projectRepository->getById($unit->getProjectId());
+
+        $jobId = $this->runnerService->nachatZapuskUnita($unit, $project);
         $unit->nachatZapuskUnita($jobId);
         $this->unitRepository->save($unit);
     }
