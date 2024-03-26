@@ -33,7 +33,7 @@ final class Version20230222104500 extends AbstractMigration implements Container
 
     public function down(Schema $schema): void
     {
-        $this->addSql('TRUNCATE jwt_user');
+        $this->addSql('DROP TABLE IF EXISTS jwt_user');
         $this->addSql('TRUNCATE account_event_store');
 
     }

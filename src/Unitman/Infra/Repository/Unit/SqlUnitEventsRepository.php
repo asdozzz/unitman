@@ -13,14 +13,12 @@ use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 final class SqlUnitEventsRepository implements UnitRepository
 {
     public function __construct(
-        private Connection $connection,
-        private EventSourcedAggregateRootRepository $esRepository,
         private ProjectionsManager $projectionsManager
     )
     {}
     public function getById(string $id): Unit
     {
-        $repo = $this->esRepository->retrieve(Unit\UnitId::fromString($id));
+        $repo = $this->projectionsManager->retrieve(Unit::class, Unit\UnitId::fromString($id));
         /** @var Unit $repo*/
         if ($repo->aggregateRootVersion() === 0) {
             throw new \DomainException('unit.not_found');
@@ -30,9 +28,6 @@ final class SqlUnitEventsRepository implements UnitRepository
 
     public function save(Unit $unit): void
     {
-        $this->connection->transactional(function () use ($unit){
-            $this->esRepository->persist($unit);
-            $this->projectionsManager->pullAllProjectionsByStreamName(new StreamName(UnitmanClassNameMapEnum::Unit->value));
-        });
+        $this->projectionsManager->persistAndPullProjections($unit);
     }
 }

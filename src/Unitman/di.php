@@ -12,9 +12,6 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
-use App\Unitman\Infra\Projection\ProjectMessageDispatcherFactory;
-use App\Unitman\Infra\Projection\RepoMessageDispatcherFactory;
-use App\Unitman\Infra\Projection\UnitMessageDispatcherFactory;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
@@ -22,12 +19,10 @@ use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\DefaultHeadersDecorator;
-use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
 use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\PayloadSerializerSupportingObjectMapperAndSerializablePayload;
-use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineMessageRepository;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
@@ -71,6 +66,9 @@ return function (ContainerConfigurator $configuration) {
             service(Connection::class),
             'unitman_event_store',
             service('unitman.event_serializer'),
+            service('unitman.event_type_mapper'),
+            service('unitman.message_decorator'),
+            service('unitman.message_repository'),
         ]);
 
     $services->set('unitman.default_decorator', DefaultHeadersDecorator::class)
@@ -84,51 +82,19 @@ return function (ContainerConfigurator $configuration) {
         ->arg('$checkpointStore', service('app.checkpoint_store'))
         ->arg('$eventsRepository', service('unitman.stream_repository'));
 
-    $services->set('repo.event_store', EventSourcedAggregateRootRepository::class)
-        ->args([
-            Repo::class,
-            service('unitman.message_repository'),
-            null,
-            service('unitman.message_decorator'),
-            service('unitman.event_type_mapper'),
-        ]);
 
     $services->set(SqlRepoEvensRepository::class)
         ->args([
-            service(Connection::class),
-            service('repo.event_store'),
             service('unitman.projections_manager')
-        ]);
-
-    $services->set('project.event_store', EventSourcedAggregateRootRepository::class)
-        ->args([
-            Project::class,
-            service('unitman.message_repository'),
-            null,
-            service('unitman.message_decorator'),
-            service('unitman.event_type_mapper'),
         ]);
 
     $services->set(SqlProjectEventsRepository::class)
         ->args([
-            service(Connection::class),
-            service('project.event_store'),
             service('unitman.projections_manager'),
-        ]);
-
-    $services->set('unit.event_store', EventSourcedAggregateRootRepository::class)
-        ->args([
-            Unit::class,
-            service('unitman.message_repository'),
-            null,
-            service('unitman.message_decorator'),
-            service('unitman.event_type_mapper'),
         ]);
 
     $services->set(SqlUnitEventsRepository::class)
         ->args([
-            service(Connection::class),
-            service('unit.event_store'),
             service('unitman.projections_manager'),
         ]);
 };

@@ -15,7 +15,7 @@ final class UstanovitResultatPodgotovkiUnitaUseCase
     {
     }
 
-    function handle(UstanovitResultatPodgotovkiUnita $command): void
+    function handle(UstanovitResultatPodgotovkiUnita $command): bool
     {
         $unit = $this->unitRepository->getById($command->id);
         $resultatPodgotovki = $this->runnerService->poluchitResultatPodgotovki($unit);
@@ -25,5 +25,7 @@ final class UstanovitResultatPodgotovkiUnitaUseCase
             $unit->ustanovitOshibkuPodgotovki($resultatPodgotovki->message);
         }
         $this->unitRepository->save($unit);
+
+        return $resultatPodgotovki->success;
     }
 }

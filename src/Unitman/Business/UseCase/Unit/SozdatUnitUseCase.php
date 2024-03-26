@@ -22,7 +22,7 @@ final class SozdatUnitUseCase
     {
     }
 
-    function handle(SozdatUnit $command): void
+    function handle(SozdatUnit $command): string
     {
         if ($this->canFindUnitDouble->isExistsDoubleByName($command->projectId, $command->unitName)) {
             throw new \DomainException('unit.double');
@@ -42,5 +42,7 @@ final class SozdatUnitUseCase
 
         $unit = Unit::sozdatUnit($this->uuidGenerator->makeGuid(), $userId, $command);
         $this->unitRepository->save($unit);
+
+        return $unit->getId();
     }
 }

@@ -16,15 +16,13 @@ use EventSauce\EventSourcing\Serialization\MessageSerializer;
 final class SqlAccountRepository implements AccountRepository
 {
     public function __construct(
-        private Connection $connection,
-        private EventSourcedAggregateRootRepository $esRepository,
         private ProjectionsManager $projectionsManager
     )
     {}
 
     public function getBy(string $accountId): Account
     {
-        $account = $this->esRepository->retrieve(Account\AccountId::fromString($accountId));
+        $account = $this->projectionsManager->retrieve(Account::class, Account\AccountId::fromString($accountId));
         /** @var Account $account*/
         if ($account->aggregateRootVersion() === 0) {
             throw new \DomainException('account.not_found');
@@ -35,9 +33,6 @@ final class SqlAccountRepository implements AccountRepository
 
     public function save(Account $account): void
     {
-        $this->connection->transactional(function () use ($account){
-            $this->esRepository->persist($account);
-            $this->projectionsManager->pullAllProjections();
-        });
+        $this->projectionsManager->persistAndPullProjections($account);
     }
 }

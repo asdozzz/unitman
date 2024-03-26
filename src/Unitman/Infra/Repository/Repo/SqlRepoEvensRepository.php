@@ -16,14 +16,12 @@ use EventSauce\EventSourcing\MessageRepository;
 final class SqlRepoEvensRepository implements \App\Unitman\Business\Port\Repo\RepoRepository
 {
     public function __construct(
-        private Connection $connection,
-        private EventSourcedAggregateRootRepository $esRepository,
         private ProjectionsManager $projectionsManager
     )
     {}
     public function getById(string $repoId): Repo
     {
-        $repo = $this->esRepository->retrieve(Repo\RepoId::fromString($repoId));
+        $repo = $this->projectionsManager->retrieve(Repo::class, Repo\RepoId::fromString($repoId));
         /** @var Repo $repo*/
         if ($repo->aggregateRootVersion() === 0) {
             throw new \DomainException('repo.not_found');
@@ -33,9 +31,6 @@ final class SqlRepoEvensRepository implements \App\Unitman\Business\Port\Repo\Re
 
     public function save(Repo $repo): void
     {
-        $this->connection->transactional(function () use ($repo){
-            $this->esRepository->persist($repo);
-            $this->projectionsManager->pullAllProjectionsByStreamName(new StreamName(UnitmanClassNameMapEnum::Repo->value));
-        });
+        $this->projectionsManager->persistAndPullProjections($repo);
     }
 }

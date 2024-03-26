@@ -30,6 +30,16 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
         $this->JWTUserRepository->truncate();
     }
 
+    function init(): void
+    {
+        $this->JWTUserRepository->init();
+    }
+
+    function destroy(): void
+    {
+        $this->JWTUserRepository->destroy();
+    }
+
     function getStreamName(): StreamName
     {
         return new StreamName(AccountEventTypeEnum::Account->value);

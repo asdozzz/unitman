@@ -17,14 +17,12 @@ use EventSauce\EventSourcing\MessageRepository;
 final class SqlProjectEventsRepository implements ProjectRepository
 {
     public function __construct(
-        private Connection $connection,
-        private EventSourcedAggregateRootRepository $esRepository,
         private ProjectionsManager $projectionsManager
     )
     {}
     public function getById(string $id): Project
     {
-        $repo = $this->esRepository->retrieve(Project\ProjectId::fromString($id));
+        $repo = $this->projectionsManager->retrieve(Project::class, Project\ProjectId::fromString($id));
         /** @var Project $repo*/
         if ($repo->aggregateRootVersion() === 0) {
             throw new \DomainException('project.not_found');
@@ -34,9 +32,6 @@ final class SqlProjectEventsRepository implements ProjectRepository
 
     public function save(Project $project): void
     {
-        $this->connection->transactional(function () use ($project){
-            $this->esRepository->persist($project);
-            $this->projectionsManager->pullAllProjectionsByStreamName(new StreamName(UnitmanClassNameMapEnum::Project->value));
-        });
+        $this->projectionsManager->persistAndPullProjections($project);
     }
 }

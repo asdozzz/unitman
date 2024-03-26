@@ -5,9 +5,15 @@ namespace App\Utils\EventSauce\Repository;
 use App\Account\Business\Utils\AccountEventTypeEnum;
 use App\Utils\EventSauce\Model\StreamName;
 use Doctrine\DBAL\Connection;
+use EventSauce\EventSourcing\AggregateRoot;
+use EventSauce\EventSourcing\AggregateRootId;
+use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\Header;
 use EventSauce\EventSourcing\Message;
+use EventSauce\EventSourcing\MessageDecorator;
+use EventSauce\EventSourcing\MessageRepository;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
+use EventSauce\EventSourcing\UnableToReconstituteAggregateRoot;
 use EventSauce\EventSourcing\UnableToRetrieveMessages;
 
 use Generator;
@@ -17,10 +23,79 @@ final class DoctrineStreamRepository
     public function __construct(
         private Connection $connection,
         private string $tableName,
-        private MessageSerializer $serializer
+        private MessageSerializer $serializer,
+        private ClassNameInflector $classNameInflector,
+        private MessageDecorator $decorator,
+        private MessageRepository $messageRepository
     )
     {
 
+    }
+
+    /**
+     * @param class-string<AggregateRoot>
+     * */
+    public function getEventStreamByAggregateName(string $aggregateClass)
+    {
+        $typeName = $this->classNameInflector->classNameToType($aggregateClass);
+        return new StreamName($typeName);
+    }
+
+    /**
+     * @template T of AggregateRoot
+     * @param class-string<T> $aggregateClass
+     *
+     * @return T
+     * */
+    public function retrieve(string $aggregateClass, AggregateRootId $aggregateRootId)
+    {
+        try {
+            $events = $this->retrieveAllEvents($aggregateRootId);
+            return $aggregateClass::reconstituteFromEvents($aggregateRootId, $events);
+        } catch (\Throwable $throwable) {
+            throw UnableToReconstituteAggregateRoot::becauseOf($throwable->getMessage(), $throwable);
+        }
+    }
+
+    private function retrieveAllEvents(AggregateRootId $aggregateRootId): Generator
+    {
+        /** @var Generator<Message> $messages */
+        $messages = $this->messageRepository->retrieveAll($aggregateRootId);
+
+        foreach ($messages as $message) {
+            yield $message->event();
+        }
+
+        return $messages->getReturn();
+    }
+
+    public function persist(AggregateRoot $aggregateRoot): void
+    {
+        $events = $aggregateRoot->releaseEvents();
+
+        if (count($events) === 0) {
+            return;
+        }
+
+        $aggregateRootVersion = $aggregateRoot->aggregateRootVersion();
+        $aggregateRootId = $aggregateRoot->aggregateRootId();
+
+        // decrease the aggregate root version by the number of raised events
+        // so the version of each message represents the version at the time
+        // of recording.
+        $aggregateRootVersion = $aggregateRootVersion - count($events);
+        $metadata = [
+            Header::AGGREGATE_ROOT_ID => $aggregateRootId,
+            Header::AGGREGATE_ROOT_TYPE => $this->classNameInflector->classNameToType($aggregateRoot::class),
+        ];
+        $messages = array_map(function (object $event) use ($metadata, &$aggregateRootVersion) {
+            return $this->decorator->decorate(new Message(
+                $event,
+                $metadata + [Header::AGGREGATE_ROOT_VERSION => ++$aggregateRootVersion]
+            ));
+        }, $events);
+
+        $this->messageRepository->persist(...$messages);
     }
 
     /**

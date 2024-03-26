@@ -13,7 +13,7 @@ final class CheckpointStore
         $this->tableName = $tableName;
     }
 
-    function resetCheckpoint(string $projectionName): string
+    function resetCheckpoint(string $projectionName): void
     {
         $this->saveCheckpoint($projectionName, 0);
     }

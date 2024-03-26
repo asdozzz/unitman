@@ -4,6 +4,7 @@ namespace App\Unitman\Infra\Controller;
 
 use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
+use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
@@ -24,6 +25,7 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
 use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
+use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
@@ -53,10 +55,12 @@ use Symfony\Component\Routing\Annotation\Route;
 final class UnitConroller extends AbstractController
 {
     #[Route('/sozdat', methods: ['POST'])]
-    public function sozdat(SozdatUnit $command, SozdatUnitUseCase $useCase): Response
+    public function sozdat(SozdatUnit $command, SozdatUnitUseCase $useCase, SobratUnitUseCase $sobratUnitUseCase): Response
     {
         try {
-            $useCase->handle($command);
+            $unitId = $useCase->handle($command);
+            //TODO плохо, переделать на proccess manager
+            $sobratUnitUseCase->handle(new SobratUnit($unitId));
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -65,6 +69,13 @@ final class UnitConroller extends AbstractController
 
     #[Route('/list', methods: ['POST'])]
     public function list(GetUnitList $command, GetUnitListQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/read', methods: ['POST'])]
+    public function read(GetUnitReadModelById $command, GetUnitByIdQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
@@ -144,10 +155,14 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ustanovitResultatPodgotovki', methods: ['POST'])]
-    public function ustanovitResultatPodgotovki(UstanovitResultatPodgotovkiUnita $command, UstanovitResultatPodgotovkiUnitaUseCase $useCase): Response
+    public function ustanovitResultatPodgotovki(UstanovitResultatPodgotovkiUnita $command, UstanovitResultatPodgotovkiUnitaUseCase $useCase, ZapustitUnitUseCase $zapustitUnitUseCase): Response
     {
         try {
-            $useCase->handle($command);
+            $isSuccess = $useCase->handle($command);
+            //TODO плохо, переделать на proccess manager
+            if ($isSuccess) {
+                $zapustitUnitUseCase->handle(new ZapustitUnit($command->id));
+            }
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));

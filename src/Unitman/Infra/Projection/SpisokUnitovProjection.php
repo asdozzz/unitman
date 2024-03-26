@@ -315,4 +315,13 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
         $this->repository->delete($fact->unitId);
     }
 
+    function init(): void
+    {
+        $this->repository->init();
+    }
+
+    function destroy(): void
+    {
+        $this->repository->destroy();
+    }
 }

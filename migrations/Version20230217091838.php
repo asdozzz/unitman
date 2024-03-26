@@ -47,26 +47,24 @@ final class Version20230217091838 extends AbstractMigration
                 unique (aggregate_root_id, version)
         );");
 
-        $this->addSql("create table jwt_user
-            (
-                id       varchar(128) not null
-                    constraint jwt_user_pk
-                        primary key,
-                email    varchar      not null
-                    constraint jwt_user_email
-                        unique
-                            deferrable,
-                password varchar      not null,
-                roles    varchar,
-                is_blocked bit
-            );
-        ");
+        $this->addSql("create table unitman_event_store
+        (
+            id                serial  not null
+                constraint unitman_event_store_pk
+                    primary key,
+            event_id          varchar not null,
+            aggregate_root_id varchar not null,
+            version           integer not null,
+            payload           jsonb    not null,
+            constraint unitman_reconstitution
+                unique (aggregate_root_id, version)
+        );");
     }
 
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE checkpoint_store');
         $this->addSql('DROP TABLE account_event_store');
-        $this->addSql('DROP TABLE jwt_user');
+        $this->addSql('DROP TABLE unitman_event_store');
     }
 }

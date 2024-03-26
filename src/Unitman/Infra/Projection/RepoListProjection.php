@@ -20,6 +20,15 @@ final class RepoListProjection extends AbstractProjection implements SyncProject
     {
     }
 
+    function init(): void
+    {
+       $this->repoListRepository->init();
+    }
+
+    function destroy(): void
+    {
+        $this->repoListRepository->destroy();
+    }
 
     function getProjectionName(): string
     {

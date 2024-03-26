@@ -7,17 +7,32 @@ use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
 use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetUnitList;
+use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
 
-final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits
+final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection, private Serializer $serializer)
     {
     }
 
+    function init(): void
+    {
+        $this->connection->executeQuery("create table spisok_unitov
+            (
+                id varchar(128) not null constraint spisok_unitov_pk primary key,
+                payload jsonb
+            );
+        ");
+    }
+
+    function destroy(): void
+    {
+        $this->connection->executeQuery('DROP TABLE IF EXISTS spisok_unitov');
+    }
     function truncate()
     {
         $table = self::TABLE;

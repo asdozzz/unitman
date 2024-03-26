@@ -19,6 +19,21 @@ final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList, Can
     {
     }
 
+    function init(): void
+    {
+        $this->connection->executeQuery("create table IF NOT EXISTS repo_list
+            (
+                id varchar(128) not null constraint repo_list_pk primary key,
+                payload jsonb
+            );
+        ");
+    }
+
+    function destroy(): void
+    {
+        $this->connection->executeQuery('DROP TABLE repo_list');
+    }
+
     function truncate()
     {
         $table = self::TABLE;

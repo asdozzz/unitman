@@ -132,4 +132,13 @@ final class ProjectListProjection extends AbstractProjection implements SyncProj
         $this->projectListRepository->update($project);
     }
 
+    function init(): void
+    {
+        $this->projectListRepository->init();
+    }
+
+    function destroy(): void
+    {
+        $this->projectListRepository->destroy();
+    }
 }

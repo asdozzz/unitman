@@ -62,9 +62,6 @@ return function (ContainerConfigurator $configuration) {
             service(StringIdEncoder::class)
         ]);
 
-    $services->set('account.message_dispatcher', SynchronousMessageDispatcher::class)
-        ->factory([service(AccountMessageDispatcherFactory::class), 'getMessageDispatcher']);
-
     $services->set('account.default_decorator', DefaultHeadersDecorator::class)
         ->args([service('account.event_type_mapper')]);
 
@@ -76,6 +73,9 @@ return function (ContainerConfigurator $configuration) {
             service(Connection::class),
             'account_event_store',
             service('account.event_serializer'),
+            service('account.event_type_mapper'),
+            service('account.message_decorator'),
+            service('account.message_repository'),
         ]);
 
     $services->set('account.projections_manager', ProjectionsManager::class)
@@ -87,15 +87,13 @@ return function (ContainerConfigurator $configuration) {
         ->args([
             Account::class,
             service('account.message_repository'),
-            service('account.message_dispatcher'),
+            null,
             service('account.message_decorator'),
             service('account.event_type_mapper'),
         ]);
 
     $services->set(SqlAccountRepository::class)
         ->args([
-            service(Connection::class),
-            service('account.event_store'),
             service('account.projections_manager')
         ]);
 };

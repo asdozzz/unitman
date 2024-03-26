@@ -22,6 +22,23 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     {
     }
 
+    function init(): void
+    {
+        $this->connection->executeQuery("create table IF NOT EXISTS project_list
+            (
+                id       varchar(128) not null
+                    constraint project_list_pk
+                        primary key,
+                payload jsonb
+            );
+        ");
+    }
+
+    function destroy(): void
+    {
+        $this->connection->executeQuery('DROP TABLE IF EXISTS project_list');
+    }
+
     function truncate()
     {
         $table = self::TABLE;

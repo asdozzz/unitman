@@ -26,6 +26,32 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         $table = self::TABLE;
         $this->connection->executeQuery("TRUNCATE $table");
     }
+
+    function init(): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("create table IF NOT EXISTS $table
+            (
+                id       varchar(128) not null
+                    constraint jwt_user_pk
+                        primary key,
+                email    varchar      not null
+                    constraint jwt_user_email
+                        unique
+                            deferrable,
+                password varchar      not null,
+                roles    varchar,
+                is_blocked bit
+            );
+        ");
+    }
+
+    function destroy(): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("DROP TABLE IF EXISTS $table");
+    }
+
     function save(JWTUser $user): void
     {
         $this->connection->insert(self::TABLE, [

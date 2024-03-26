@@ -13,5 +13,9 @@ interface CanProjectEvents extends MessageConsumer
 
     function reset(): void;
 
+    function init(): void;
+
+    function destroy(): void;
+
     function getStreamName(): StreamName;
 }

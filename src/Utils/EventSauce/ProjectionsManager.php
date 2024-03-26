@@ -2,12 +2,17 @@
 
 namespace App\Utils\EventSauce;
 
+use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Utils\EventSauce\Model\StreamName;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use App\Utils\EventSauce\Repository\CheckpointStore;
 use Doctrine\DBAL\Connection;
+use EventSauce\EventSourcing\AggregateRoot;
+use EventSauce\EventSourcing\AggregateRootId;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 
+#[AutoconfigureTag('utils.event_store.projections_manager')]
 final class ProjectionsManager
 {
     /**
@@ -33,13 +38,7 @@ final class ProjectionsManager
 
     private function getProjectionByName(string $projectName): CanProjectEvents
     {
-        $result = null;
-
-        foreach ($this->projections as $projection) {
-            if ($projection->getProjectionName() === $projectName) {
-                $result = $projection;
-            }
-        }
+        $result = $this->findProjectionByName($projectName);
 
         if (empty($result)) {
             throw new \DomainException('utils.projection_not_found_by_name');
@@ -48,16 +47,25 @@ final class ProjectionsManager
         return $result;
     }
 
-    public function pullAllProjectionsByStreamName(StreamName $streamName)
+    /**
+     * @template T of AggregateRoot
+     * @param class-string<T> $aggregateClass
+     *
+     * @return T
+     * */
+    public function retrieve(string $aggregateClass, AggregateRootId $aggregateRootId)
+    {
+        return $this->eventsRepository->retrieve($aggregateClass, $aggregateRootId);
+    }
+
+    public function persistAndPullProjections(AggregateRoot $aggregateRoot): void
     {
         $this->connection->beginTransaction();
-        try {
-            foreach ($this->projections as $projection) {
-                if ($streamName->aggregateType !== $projection->getStreamName()->aggregateType) continue;
 
-                $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
-                $this->handleEventsByCheckpoint($projection, $checkpoint);
-            }
+        try {
+
+            $this->eventsRepository->persist($aggregateRoot);
+            $this->pullAllProjectionsByAggregateRoot($aggregateRoot);
 
             $this->connection->commit();
         } catch (\Exception $e) {
@@ -66,13 +74,40 @@ final class ProjectionsManager
         }
     }
 
-    public function pullAllProjections()
+    public function pullAllProjectionsByAggregateRoot(AggregateRoot $aggregateRoot)
+    {
+        $this->connection->beginTransaction();
+
+        try {
+            $streamName = $this->eventsRepository->getEventStreamByAggregateName($aggregateRoot::class);
+
+            foreach ($this->projections as $projection) {
+                if ($streamName->aggregateType !== $projection->getStreamName()->aggregateType) continue;
+                $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
+                if ($checkpoint === 0) {
+                    $projection->init();
+                }
+
+                $this->handleEventsByCheckpoint($projection, $checkpoint);
+            }
+
+            $this->connection->commit();
+        } catch (\Exception $exception) {
+            $this->connection->rollBack();
+            throw $exception;
+        }
+
+    }
+
+    public function rebuildAll()
     {
         $this->connection->beginTransaction();
         try {
             foreach ($this->projections as $projection) {
-                $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
-                $this->handleEventsByCheckpoint($projection, $checkpoint);
+                $this->checkpointStore->resetCheckpoint($projection->getProjectionName());
+                $projection->init();
+                $projection->reset();
+                $this->handleEventsByCheckpoint($projection, 0);
             }
 
             $this->connection->commit();
@@ -84,11 +119,11 @@ final class ProjectionsManager
 
     public function rebuild(string $projectionName): void
     {
-
         $this->connection->beginTransaction();
         try {
             $projection = $this->getProjectionByName($projectionName);
             $this->checkpointStore->resetCheckpoint($projectionName);
+            $projection->init();
             $projection->reset();
 
             $this->handleEventsByCheckpoint($projection, 0);
@@ -115,5 +150,28 @@ final class ProjectionsManager
         }
 
         $this->checkpointStore->saveCheckpoint($projection->getProjectionName(), $checkpoint);
+    }
+
+    /**
+     * @param string $projectName
+     * @return CanProjectEvents|null
+     */
+    private function findProjectionByName(string $projectName): ?CanProjectEvents
+    {
+        $result = null;
+
+        foreach ($this->projections as $projection) {
+            if ($projection->getProjectionName() === $projectName) {
+                $result = $projection;
+            }
+        }
+        return $result;
+    }
+
+    function isExistProjection(string $projectName): bool
+    {
+        $result = $this->findProjectionByName($projectName);
+
+        return !empty($result);
     }
 }
