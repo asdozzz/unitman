@@ -35,7 +35,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $table = self::TABLE;
         $this->connection->executeQuery("DROP TABLE IF EXISTS $table");
     }
-    function truncate()
+    function truncate(): void
     {
         $table = self::TABLE;
         $this->connection->executeQuery("TRUNCATE $table");

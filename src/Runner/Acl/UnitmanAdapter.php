@@ -15,7 +15,7 @@ final class UnitmanAdapter
 
     function ustanovitResultatSbrosaPodgotovki(ResultatSbrosaPodgotovkiUnita $resultatSbrosaPodgotovkiUnita): void
     {
-        $command = new UstanovitResultatSbrosaPodgotovkiOtRunnera($resultatSbrosaPodgotovkiUnita->UnitId, $resultatSbrosaPodgotovkiUnita->Success, $resultatSbrosaPodgotovkiUnita->Message);
+        $command = new UstanovitResultatSbrosaPodgotovkiOtRunnera($resultatSbrosaPodgotovkiUnita->UnitId, $resultatSbrosaPodgotovkiUnita->Success, $resultatSbrosaPodgotovkiUnita->Steps);
         $this->unitmanApi->ustanovitResultatSbrosaPodgotovki($command);
     }
 }

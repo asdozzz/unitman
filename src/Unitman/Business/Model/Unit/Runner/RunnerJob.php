@@ -41,33 +41,21 @@ final class RunnerJob
         return new static($this->jobId, true, false, $steps);
     }
 
-    /**
-     * @return string
-     */
     public function getJobId(): string
     {
         return $this->jobId;
     }
 
-    /**
-     * @return bool
-     */
     public function isFinish(): bool
     {
         return $this->isFinish;
     }
 
-    /**
-     * @return bool
-     */
     public function isSuccess(): bool
     {
         return $this->success;
     }
 
-    /**
-     * @return string
-     */
     public function getSteps(): array
     {
         return $this->steps;

@@ -478,7 +478,7 @@ final class Unit implements AggregateRoot
         //TODO придумать как убрать эту какаху
         if (!empty($errs)) {
             $configUnita = null;
-            $steps = 'Invalid config';
+            $steps = [];
             $state = $this->newState(new OshibkaObnovleniya());
         } else {
             if ($this->esliZapushen()) {

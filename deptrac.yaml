@@ -27,3 +27,4 @@ deptrac:
     BackgroundJob:
     Runner:
     Unitman:
+      - BackgroundJob

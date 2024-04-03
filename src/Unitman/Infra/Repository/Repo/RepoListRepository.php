@@ -34,7 +34,7 @@ final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList, Can
         $this->connection->executeQuery('DROP TABLE repo_list');
     }
 
-    function truncate()
+    function truncate(): void
     {
         $table = self::TABLE;
         $this->connection->executeQuery("TRUNCATE $table");

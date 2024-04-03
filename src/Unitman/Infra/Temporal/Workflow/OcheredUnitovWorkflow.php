@@ -15,10 +15,14 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 final class OcheredUnitovWorkflow
 {
+    /**
+     * @psalm-suppress MissingPropertyType
+     * */
     private $ocheredUnitovActivity;
 
     public function __construct()
     {
+
         $this->ocheredUnitovActivity = Workflow::newActivityStub(
             OcheredUnitovActivity::class,
             ActivityOptions::new()
@@ -27,6 +31,9 @@ final class OcheredUnitovWorkflow
         );
     }
 
+    /**
+     * @psalm-suppress MissingReturnType
+     * */
     #[WorkflowMethod('ObrabotkaZadach')]
     function run()
     {

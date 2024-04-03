@@ -13,7 +13,7 @@ final class BackgroundJobService
     {
     }
 
-    function init()
+    function init(): void
     {
         $this->jobRepository->init();
     }
@@ -40,10 +40,10 @@ final class BackgroundJobService
             );
 
             $counter = $workflow->getCounter();
+            /** @var int $counter*/
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            return false;
         }
-
 
         return isset($counter);
     }

@@ -74,7 +74,7 @@ final class ProjectionsManager
         }
     }
 
-    public function pullAllProjectionsByAggregateRoot(AggregateRoot $aggregateRoot)
+    public function pullAllProjectionsByAggregateRoot(AggregateRoot $aggregateRoot): void
     {
         $this->connection->beginTransaction();
 
@@ -99,7 +99,7 @@ final class ProjectionsManager
 
     }
 
-    public function rebuildAll()
+    public function rebuildAll(): void
     {
         $this->connection->beginTransaction();
         try {

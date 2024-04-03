@@ -33,9 +33,9 @@ final class DoctrineStreamRepository
     }
 
     /**
-     * @param class-string<AggregateRoot>
+     * @param class-string $aggregateClass
      * */
-    public function getEventStreamByAggregateName(string $aggregateClass)
+    public function getEventStreamByAggregateName(string $aggregateClass): StreamName
     {
         $typeName = $this->classNameInflector->classNameToType($aggregateClass);
         return new StreamName($typeName);
@@ -51,6 +51,7 @@ final class DoctrineStreamRepository
     {
         try {
             $events = $this->retrieveAllEvents($aggregateRootId);
+            /** @psalm-suppress InvalidArgument*/
             return $aggregateClass::reconstituteFromEvents($aggregateRootId, $events);
         } catch (\Throwable $throwable) {
             throw UnableToReconstituteAggregateRoot::becauseOf($throwable->getMessage(), $throwable);
@@ -59,11 +60,11 @@ final class DoctrineStreamRepository
 
     private function retrieveAllEvents(AggregateRootId $aggregateRootId): Generator
     {
-        /** @var Generator<Message> $messages */
         $messages = $this->messageRepository->retrieveAll($aggregateRootId);
+        /** @var Generator<Message> $messages */
 
         foreach ($messages as $message) {
-            yield $message->event();
+            yield $message->payload();
         }
 
         return $messages->getReturn();
@@ -125,7 +126,7 @@ final class DoctrineStreamRepository
         $rows = $this->connection
             ->fetchAllAssociative($sql);
         try {
-            return $this->yieldMessagesFromPayloads(array_map(fn(array $row)=> $row['payload'],$rows));
+            return $this->yieldMessagesFromPayloads(array_map(fn(array $row): string => $row['payload'],$rows));
         } catch (\Throwable $exception) {
             throw UnableToRetrieveMessages::dueTo('', $exception);
         }

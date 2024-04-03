@@ -11,7 +11,7 @@ final class JobRepository
     {
     }
 
-    public function init()
+    public function init(): void
     {
         $table = self::TABLE;
         $this->connection->executeQuery("create table IF NOT EXISTS $table
