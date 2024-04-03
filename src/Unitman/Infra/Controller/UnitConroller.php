@@ -46,10 +46,12 @@ use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
+use App\Unitman\Infra\Temporal\Workflow\OcheredUnitovWorkflow;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Temporal\Client\WorkflowClient;
 
 #[Route('/api/unit')]
 final class UnitConroller extends AbstractController
@@ -74,7 +76,7 @@ final class UnitConroller extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
-    #[Route('/read', methods: ['POST'])]
+    #[Route('/obnovit', methods: ['POST'])]
     public function read(GetUnitReadModelById $command, GetUnitByIdQuery $query): Response
     {
         $data = $query->handle($command);
@@ -110,8 +112,8 @@ final class UnitConroller extends AbstractController
         }
     }
 
-    #[Route('/obnovit', methods: ['POST'])]
-    public function obnovit(ObnovitKodUnita $command, ObnovitKodUnitaUseCase $useCase): Response
+    #[Route('/obnovitKodUnita', methods: ['POST'])]
+    public function obnovitKodUnita(ObnovitKodUnita $command, ObnovitKodUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);

@@ -13,7 +13,7 @@ final class SpisokUnitovReadModel
         public readonly string $branch,
         public readonly string $state,
         public readonly bool $waitResultFromRunner,
-        public readonly ?string $commands,
+        public readonly array $commands = [],
         public readonly ?string $url = null
     )
     {

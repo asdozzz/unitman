@@ -295,6 +295,8 @@ final class Unit implements AggregateRoot
             throw new \DomainException(join(', ', $errs));
         }
 
+        $this->variableValues = $tmpVariables;
+
         if ($this->esliZapushen()) {
             $state = $this->newState(new Zapushen());
         } elseif ($this->esliPodgotovlen()) {
@@ -313,6 +315,21 @@ final class Unit implements AggregateRoot
     {
         $this->variableValues = $this->makeVariableCollectionByArray($fact->values);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    public function esliConfigZapolnenPravilon(): bool
+    {
+        if (empty($this->configUnita)) {
+            return false;
+        }
+
+        $errs = $this->configUnita->validateValues($this->variableValues);
+
+        if (!empty($errs)) {
+            return false;
+        }
+
+        return true;
     }
 
     public function nachatPodgotovkuUnita(JobId $jobId): void

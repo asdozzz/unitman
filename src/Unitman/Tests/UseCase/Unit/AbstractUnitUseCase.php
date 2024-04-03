@@ -41,10 +41,9 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
     public function stubProekta(string $projectId, string $userId, string $projectName = 'uwin'): Project
     {
         $repoId = Uuid::uuid7()->toString();
-        $project = Project::addProject($projectId, new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru'));
+        $project = Project::addProject($projectId, new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru'), $userId);
         $project->postavitVOcheredNaSborku('stub');
         $project->successfullyBuild('success');
-        $project->addUser(new AddUserToProject($projectId, $userId));
         $project->enable();
         return $project;
     }
@@ -85,6 +84,6 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
         $this->assertEquals($spisokUnitovReadModel2->name, 'task-123');
         $this->assertEquals($spisokUnitovReadModel2->branch, 'feature/123');
         $this->assertEquals($spisokUnitovReadModel2->projectId, $projectId);
-        $this->assertEquals($spisokUnitovReadModel2->commands, json_encode(['nachatSborku','nachatUdalenie']));
+        $this->assertEquals($spisokUnitovReadModel2->commands, ['nachatSborku','nachatUdalenie']);
     }
 }

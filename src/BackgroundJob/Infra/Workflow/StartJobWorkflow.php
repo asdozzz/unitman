@@ -2,6 +2,7 @@
 
 namespace App\BackgroundJob\Infra\Workflow;
 
+use Temporal\Client\WorkflowOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\QueryMethod;
 use Temporal\Workflow\ReturnType;
@@ -22,11 +23,10 @@ final class StartJobWorkflow
      * */
     #[WorkflowMethod(name: "startJob")]
     #[ReturnType("int")]
-    function startJob(string $className, string $method, array $args)
+    function startJob(string $className, string $method)
     {
-        $result = 0;
         while (true) {
-            yield Workflow::timer(2);
+            yield Workflow::timer(1);
 
             if ($this->pause) {
                 continue;
@@ -36,19 +36,21 @@ final class StartJobWorkflow
                 break;
             }
 
-            $child = Workflow::newChildWorkflowStub($className);
-            $init = yield $child->{$method}(...$args);
-            $result += $init;
+            try {
+                $child = Workflow::newChildWorkflowStub(
+                    $className,
+                    Workflow\ChildWorkflowOptions::new()
+                        ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
 
-            $this->counter++;
-
-            if ($this->counter >= 3) {
-                return Workflow::newContinueAsNewStub(self::class)->startJob($className, $method, $args);
+                );
+                yield $child->{$method}();
+            } catch (\Exception $e) {
             }
 
+            $this->counter++;
         }
 
-        return $result;
+        return 'OK';
     }
 
     #[SignalMethod]

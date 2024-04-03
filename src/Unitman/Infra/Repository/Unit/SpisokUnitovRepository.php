@@ -21,7 +21,8 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
 
     function init(): void
     {
-        $this->connection->executeQuery("create table spisok_unitov
+        $table = self::TABLE;
+        $this->connection->executeQuery("create table IF NOT EXISTS $table
             (
                 id varchar(128) not null constraint spisok_unitov_pk primary key,
                 payload jsonb
@@ -31,7 +32,8 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
 
     function destroy(): void
     {
-        $this->connection->executeQuery('DROP TABLE IF EXISTS spisok_unitov');
+        $table = self::TABLE;
+        $this->connection->executeQuery("DROP TABLE IF EXISTS $table");
     }
     function truncate()
     {

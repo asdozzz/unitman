@@ -42,10 +42,11 @@ use Ramsey\Uuid\Uuid;
 
 final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
 {
-    function addProject(string $repoId,string $projectCode, string $projectName, string $mainBranch, string $proxyHost): string
+    function addProject(string $repoId,string $projectCode, string $projectName, string $mainBranch, string $proxyHost, string $userId): string
     {
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $projectId = Uuid::uuid7()->toString();
@@ -67,6 +68,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals($project->buildInfo, null);
         $this->assertEquals($project->removeInfo, null);
         $this->assertEquals($project->proxyHost, $proxyHost);
+        $this->assertEquals($project->users, [new ProjectUsersList($userId, 'ADMIN')]);
 
         return $projectId;
     }
@@ -76,9 +78,10 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
     function user_udalen_is_proekta()
     {
         $repoId = Uuid::uuid7()->toString();
+        $adminId = Uuid::uuid7()->toString();
         $userId = Uuid::uuid7()->toString();
         $userId2 = Uuid::uuid7()->toString();
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'thttp://testcase.su');
+        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'thttp://testcase.su', $adminId);
 
         $addUserUseCase = self::$container->get(AddUserToProjectUseCase::class);
         $command = new AddUserToProject($projectId, $userId);
@@ -90,7 +93,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectRepo = self::$container->get(SqlProjectListRepository::class);
         /** @var $projectRepo SqlProjectListRepository*/
         $project = $projectRepo->getById($projectId);
-        $expectedUsers = [new ProjectUsersList($userId, 'USER'), new ProjectUsersList($userId2, 'USER')];
+        $expectedUsers = [new ProjectUsersList($adminId, 'ADMIN'), new ProjectUsersList($userId, 'USER'), new ProjectUsersList($userId2, 'USER')];
         $this->assertEquals($expectedUsers, $project->users);
 
         $removeCommand = new RemoveUserFromProject($projectId, $userId);
@@ -99,7 +102,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
 
         $project = $projectRepo->getById($projectId);
 
-        $expectedUsers = [new ProjectUsersList($userId2, 'USER')];
+        $expectedUsers = [new ProjectUsersList($adminId, 'ADMIN'),new ProjectUsersList($userId2, 'USER')];
         $this->assertEquals($expectedUsers, $project->users);
     }
 
@@ -109,7 +112,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
     function dannie_proekta_izmeneni()
     {
         $repoId = Uuid::uuid7()->toString();
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su');
+        $adminId = Uuid::uuid7()->toString();
+        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $command = new UpdateProjectData($projectId, 'Юниты2', 'https://testcase2.su');
         $useCase = self::$container->get(UpdateProjectDataUseCase::class);
@@ -129,7 +133,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
     function proekt_vikluchen()
     {
         $repoId = Uuid::uuid7()->toString();
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su');
+        $adminId = Uuid::uuid7()->toString();
+        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, 'success_build'));
@@ -173,7 +178,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
     function sborka_proekta_zavershilas_oshibkoi()
     {
         $repoId = Uuid::uuid7()->toString();
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su');
+        $adminId = Uuid::uuid7()->toString();
+        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, false, 'error_when_build'));
@@ -201,7 +207,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
     function proekt_uspeshno_udalen()
     {
         $repoId = Uuid::uuid7()->toString();
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su');
+        $adminId = Uuid::uuid7()->toString();
+        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, true, 'success_remove'));
@@ -221,7 +228,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
     function proekt_udalen_vruchnuyu()
     {
         $repoId = Uuid::uuid7()->toString();
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su');
+        $adminId = Uuid::uuid7()->toString();
+        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, false, 'error when remove'));
@@ -254,12 +262,15 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
     function poluchenie_moih_proektov()
     {
         $repoId = Uuid::uuid7()->toString();
+        $adminId = Uuid::uuid7()->toString();
         $userId = Uuid::uuid7()->toString();
         $userId2 = Uuid::uuid7()->toString();
 
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
-        $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
+        $securityService->expects($this->any())->method('getCurrentUserId')->willReturnOnConsecutiveCalls(
+            $adminId,$adminId,$adminId, $userId
+        );
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $projectId = Uuid::uuid7()->toString();
@@ -326,15 +337,15 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         /** @var $polzovateliProekta PoluchitSpisokPolzovateleiProektaQuery*/
 
         $actualUsers = $polzovateliProekta->handle(new PoluchitSpisokPolzovateleiProekta($projectId));
-        $expectedUsers = [new ProjectUsersList($userId, 'USER'), new ProjectUsersList($userId2, 'USER')];
+        $expectedUsers = [new ProjectUsersList($adminId, 'ADMIN'), new ProjectUsersList($userId, 'USER'), new ProjectUsersList($userId2, 'USER')];
         $this->assertEquals($expectedUsers, $actualUsers);
 
         $actualUsers = $polzovateliProekta->handle(new PoluchitSpisokPolzovateleiProekta($projectId2));
-        $expectedUsers = [new ProjectUsersList($userId, 'USER')];
+        $expectedUsers = [new ProjectUsersList($adminId, 'ADMIN'), new ProjectUsersList($userId, 'USER')];
         $this->assertEquals($expectedUsers, $actualUsers);
 
         $actualUsers = $polzovateliProekta->handle(new PoluchitSpisokPolzovateleiProekta($projectId3));
-        $expectedUsers = [new ProjectUsersList($userId2, 'USER')];
+        $expectedUsers = [new ProjectUsersList($adminId, 'ADMIN'), new ProjectUsersList($userId2, 'USER')];
         $this->assertEquals($expectedUsers, $actualUsers);
     }
 

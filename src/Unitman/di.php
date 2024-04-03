@@ -15,6 +15,7 @@ use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
+use App\Unitman\Infra\Temporal\Activity\OcheredUnitovActivity;
 use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use Doctrine\DBAL\Connection;
@@ -97,4 +98,7 @@ return function (ContainerConfigurator $configuration) {
         ->args([
             service('unitman.projections_manager'),
         ]);
+
+    $services->set(OcheredUnitovActivity::class)
+        ->tag('temporal.activity.registry');
 };

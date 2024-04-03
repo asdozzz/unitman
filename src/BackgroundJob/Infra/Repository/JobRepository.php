@@ -11,6 +11,19 @@ final class JobRepository
     {
     }
 
+    public function init()
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("create table IF NOT EXISTS $table
+            (
+                id  serial constraint background_jobs_pk primary key,
+                name    varchar      not null,
+                run_id varchar,
+                status int
+            );
+        ");
+    }
+
     public function getByName(string $name): array
     {
         $table = self::TABLE;
@@ -21,6 +34,17 @@ final class JobRepository
         }
 
         return $res;
+    }
+
+    public function findRunIdByName(string $name): ?string
+    {
+        $job = $this->getByName($name);
+
+        if (empty($job['run_id'])) {
+            return null;
+        }
+
+        return $job['run_id'];
     }
 
     public function getRunIdByName(string $name): string
@@ -36,7 +60,13 @@ final class JobRepository
 
     public function start(string $name, string $runId): void
     {
-        $this->connection->update(self::TABLE, ['status' => 1, 'run_id' => $runId], ['name' => $name]);
+        $job = $this->getByName($name);
+
+        if (!empty($job)) {
+            $this->connection->update(self::TABLE, ['status' => 1, 'run_id' => $runId], ['name' => $name]);
+        } else {
+            $this->connection->insert(self::TABLE, ['name' => $name, 'status' => 1, 'run_id' => $runId]);
+        }
     }
 
     public function pause(string $name): void

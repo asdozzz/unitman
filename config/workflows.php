@@ -13,5 +13,6 @@ return [
     \App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\NachatSbrosPodgotovkiUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow::class,
-    \App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow::class
+    \App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow::class,
+    \App\Unitman\Infra\Temporal\Workflow\OcheredUnitovWorkflow::class
 ];

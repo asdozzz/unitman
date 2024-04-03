@@ -27,11 +27,18 @@ final class Sobran extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [
+        $arr = [
             StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatObnovlenie,
             StateUserCommand::zapolnitPeremenie,
-            StateUserCommand::nachatPodgotovku
+
         ];
+
+        if ($unit->esliConfigZapolnenPravilon()){
+            $arr[] = StateUserCommand::nachatPodgotovku;
+        }
+
+        return $arr;
+
     }
 }

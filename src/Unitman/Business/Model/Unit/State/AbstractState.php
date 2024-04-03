@@ -32,7 +32,7 @@ abstract class AbstractState
 
         return [
             'code' => $this->getCode(),
-            'commands' => json_encode($arr)
+            'commands' => $arr
         ];
     }
 }

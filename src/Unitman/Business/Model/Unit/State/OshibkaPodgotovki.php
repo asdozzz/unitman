@@ -23,11 +23,16 @@ final class OshibkaPodgotovki extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [
+        $arr = [
             StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatObnovlenie,
-            StateUserCommand::nachatPodgotovku,
             StateUserCommand::zapolnitPeremenie
         ];
+
+        if ($unit->esliConfigZapolnenPravilon()){
+            $arr[] =StateUserCommand::nachatPodgotovku;
+        }
+
+        return $arr;
     }
 }

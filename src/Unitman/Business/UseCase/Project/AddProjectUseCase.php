@@ -32,7 +32,7 @@ final class AddProjectUseCase
 
         $projectId = $this->canGeneateGuid->makeGuid();
 
-        $project = Project::addProject($projectId, $command);
+        $project = Project::addProject($projectId, $command, $this->securityService->getCurrentUserId());
         $this->projectRepository->save($project);
     }
 }

@@ -12,7 +12,7 @@ use App\Unitman\Infra\Repository\Repo\RepoListRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 
-final class RepoListProjection extends AbstractProjection implements SyncProjectionForRepo
+final class RepoListProjection extends AbstractProjection implements UnitmanProjection
 {
     public function __construct(
         private RepoListRepository $repoListRepository

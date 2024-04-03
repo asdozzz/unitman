@@ -22,7 +22,7 @@ use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 
-final class ProjectListProjection extends AbstractProjection implements SyncProjectionForProject
+final class ProjectListProjection extends AbstractProjection implements UnitmanProjection
 {
     public function __construct(
         private SqlProjectListRepository $projectListRepository,

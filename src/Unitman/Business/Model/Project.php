@@ -71,12 +71,12 @@ final class Project implements AggregateRoot
         return $this->repoId;
     }
 
-    public static function addProject(string $id, AddProject $command): static
+    public static function addProject(string $id, AddProject $command, string $userId): static
     {
         $projectId = ProjectId::fromString($id);
         $project = new static($projectId);
         $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost));
-
+        $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
     }
 

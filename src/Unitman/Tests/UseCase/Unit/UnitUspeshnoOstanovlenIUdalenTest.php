@@ -26,7 +26,9 @@ use App\Unitman\Business\Model\Runner\ResultatSborkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
+use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Port\RunnerService;
+use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
@@ -47,6 +49,8 @@ use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Adapter\MemoryRunnerService;
+use App\Unitman\Infra\Projection\OcheredUnitovProjection;
+use App\Unitman\Infra\Repository\Unit\OcheredUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
 
@@ -94,15 +98,28 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_SBORKI');
 
+        $ocheredUnitovRepo = self::$container->get(OcheredUnitovRepository::class);
+        /** @var $ocheredUnitovRepo OcheredUnitovRepository*/
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::SBORKA);
+        $this->assertTrue(!empty($job));
+
         $useCase = self::$container->get(UstanovitResultatSborkiUnitaUseCase::class);
         $ustanovitResultatSborkiUnita = new UstanovitResultatSborkiUnita($unitId);
         $useCase->handle($ustanovitResultatSborkiUnita);
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::SBORKA);
+        $this->assertTrue(empty($job));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
 
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
+        $this->assertEquals($spisokUnitovReadModel->commands, [
+            StateUserCommand::nachatUdalenie->value,
+            StateUserCommand::nachatObnovlenie->value,
+            StateUserCommand::zapolnitPeremenie->value,
+        ]);
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
@@ -111,12 +128,25 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'ORDER_SERVICE' => 'master'
         ]));
 
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
+
+        $this->assertEquals($spisokUnitovReadModel->commands, [
+            StateUserCommand::nachatUdalenie->value,
+            StateUserCommand::nachatObnovlenie->value,
+            StateUserCommand::zapolnitPeremenie->value,
+            StateUserCommand::nachatPodgotovku->value,
+        ]);
+
         $useCase = self::$container->get(PodgotovitUnitKZapuskuUseCase::class);
         $useCase->handle(new PodgotovitUnitKZapusku($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_PODGOTOVKI');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::PODGOTOVKA);
+        $this->assertTrue(!empty($job));
 
         $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
@@ -125,12 +155,18 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'OSHIBKA_PODGOTOVKI');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::PODGOTOVKA);
+        $this->assertTrue(empty($job));
+
         $useCase = self::$container->get(ObnovitKodUnitaUseCase::class);
         $useCase->handle(new ObnovitKodUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_OBNOVLENIYA');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OBNOVLENIE);
+        $this->assertTrue(!empty($job));
 
 
         $useCase = self::$container->get(UstanovitResultatObnovleniyaUnitaUseCase::class);
@@ -139,6 +175,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OBNOVLENIE);
+        $this->assertTrue(empty($job));
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
@@ -153,11 +192,18 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_PODGOTOVKI');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::PODGOTOVKA);
+        $this->assertTrue(!empty($job));
+
         $useCase = self::$container->get(UstanovitResultatPodgotovkiUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatPodgotovkiUnita($unitId));
+
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::PODGOTOVKA);
+        $this->assertTrue(empty($job));
 
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
         $useCase->handle(new SbrositPodgotovkuUnita($unitId));
@@ -165,6 +211,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_SBROSA_PODGOTOVKI');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
+        $this->assertTrue(!empty($job));
 
         $useCase = self::$container->get(UstanovitResultatSbrosaPodgotovkiUseCase::class);
         $useCase->handle(new UstanovitResultatSbrosaPodgotovki($unitId));
@@ -173,6 +222,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'OSHIBKA_SBROSA_PODGOTOVKI');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
+        $this->assertTrue(empty($job));
+
         $useCase = self::$container->get(ObnovitKodUnitaUseCase::class);
         $useCase->handle(new ObnovitKodUnita($unitId));
 
@@ -180,12 +232,18 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_OBNOVLENIYA');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OBNOVLENIE);
+        $this->assertTrue(!empty($job));
+
         $useCase = self::$container->get(UstanovitResultatObnovleniyaUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatObnovleniyaUnita($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OBNOVLENIE);
+        $this->assertTrue(empty($job));
 
 
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
@@ -195,12 +253,18 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_SBROSA_PODGOTOVKI');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
+        $this->assertTrue(!empty($job));
+
         $useCase = self::$container->get(UstanovitResultatSbrosaPodgotovkiUseCase::class);
         $useCase->handle(new UstanovitResultatSbrosaPodgotovki($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
+        $this->assertTrue(empty($job));
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
@@ -229,6 +293,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_ZAPUSKA');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::ZAPUSK);
+        $this->assertTrue(!empty($job));
+
         $useCase = self::$container->get(UstanovitResultatZapuskaUseCase::class);
         $useCase->handle(new UstanovitResultatZapuska($unitId));
 
@@ -237,12 +304,18 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_ZAPUSHEN');
         $this->assertEquals($spisokUnitovReadModel->url, 'https://task-123.uwin.testcase.ru');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::ZAPUSK);
+        $this->assertTrue(empty($job));
+
         $useCase = self::$container->get(OstanovitUnitUseCase::class);
         $useCase->handle(new OstanovitUnit($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_OSTANOVKI');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OSTANOVKA);
+        $this->assertTrue(!empty($job));
 
         $useCase = self::$container->get(UstanovitResultatOstanovkiUnitaUseCase::class);
         $useCase->handle(new UstanovitResultatOstanovkiUnita($unitId));
@@ -252,6 +325,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->url, null);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OSTANOVKA);
+        $this->assertTrue(empty($job));
+
         $useCase = self::$container->get(UdalitUnitUseCase::class);
         $useCase->handle(new UdalitUnit($unitId));
 
@@ -259,12 +335,18 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
         $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTAT_UDALENIYA');
 
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::UDALENIE);
+        $this->assertTrue(!empty($job));
+
         $useCase = self::$container->get(UstanovitResultatUdaleniyaUseCase::class);
         $useCase->handle(new UstanovitResultatUdaleniya($unitId));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'SLOMAN');
+
+        $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::UDALENIE);
+        $this->assertTrue(empty($job));
 
         $useCase = self::$container->get(UdalitSlomaniyUnitUseCase::class);
         $useCase->handle(new UdalitSlomaniyUnit($unitId));

@@ -35,7 +35,7 @@ use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-final class SpisokUnitovProjection extends AbstractProjection implements SyncProjectionForUnit
+final class SpisokUnitovProjection extends AbstractProjection implements UnitmanProjection
 {
     public function __construct(
         private SpisokUnitovRepository $repository,
@@ -113,7 +113,12 @@ final class SpisokUnitovProjection extends AbstractProjection implements SyncPro
 
     function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
     {
-
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
+        ]);
+        $this->repository->update($readModel);
     }
 
     function handlePodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
