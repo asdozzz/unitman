@@ -20,9 +20,9 @@ final class UstanovitResultatSbrosaPodgotovkiUseCase
         $unit = $this->unitRepository->getById($command->id);
         $resultatSbrosaPodgotovki = $this->runnerService->poluchitResultatSbrosaPodgotovkiUnita($unit);
         if ($resultatSbrosaPodgotovki->success) {
-            $unit->ustanovitUspehSbrosaPodgotovki($resultatSbrosaPodgotovki->message);
+            $unit->ustanovitUspehSbrosaPodgotovki($resultatSbrosaPodgotovki->steps);
         } else {
-            $unit->ustanovitOshibkuSbrosaPodgotovki($resultatSbrosaPodgotovki->message);
+            $unit->ustanovitOshibkuSbrosaPodgotovki($resultatSbrosaPodgotovki->steps);
         }
         $this->unitRepository->save($unit);
     }

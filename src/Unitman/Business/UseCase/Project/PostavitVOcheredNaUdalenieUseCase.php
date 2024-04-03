@@ -29,13 +29,13 @@ final class PostavitVOcheredNaUdalenieUseCase
             $result = $this->runnerService->removeProject($project);
             $project->postavitVOcheredNaUdanlenie($result->jobId);
             if ($result->success) {
-                $project->successfullyRemoving($result->info);
+                $project->successfullyRemoving($result->steps);
             } else {
-                $project->errorWhenRemoving($result->info);
+                $project->errorWhenRemoving($result->steps);
             }
         } else {
             $project->postavitVOcheredNaUdanlenie('STUB_FOR_NEW_PROJECT');
-            $project->successfullyRemoving('');
+            $project->successfullyRemoving([]);
         }
 
 

@@ -34,9 +34,9 @@ final class PostavitVOcheredNaSborkuUseCase
         $result = $this->runnerService->buildProject($project);
         $project->postavitVOcheredNaSborku($result->jobId);
         if ($result->success) {
-            $project->successfullyBuild($result->info);
+            $project->successfullyBuild($result->steps);
         } else {
-            $project->errorWhenBuild($result->info);
+            $project->errorWhenBuild($result->steps);
         }
         $this->projectRepository->save($project);
     }

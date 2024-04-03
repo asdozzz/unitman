@@ -9,6 +9,7 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatSborkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
@@ -31,9 +32,11 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, new JobId('SBORKA_UNITA'));
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSborkiUnita(false, 'text_ot_runnera_oshibka_sborki'));
+        $stepsFail = [new RunnerJobStep('command', 'response', false, 123123123)];
+        $stepsSuccess = [new RunnerJobStep('command', 'response', true, 123123123)];
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSborkiUnita(false, $stepsFail));
         $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, new JobId('UDALENIE_UNITA'));
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(true, 'text_ot_runnera_oshibka_sborki'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(true, $stepsSuccess));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         $useCase = self::$container->get(SobratUnitUseCase::class);

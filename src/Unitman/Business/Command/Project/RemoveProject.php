@@ -8,7 +8,7 @@ final class RemoveProject implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly string $id,
-        public readonly string $info,
+        public readonly array $steps,
     )
     {
     }

@@ -8,24 +8,24 @@ final class ProjectDataAboutRemoving
         public readonly string $jobId,
         public readonly bool $isFinish = false,
         public readonly bool $success = false,
-        public readonly string $info = '',
+        public readonly array $steps = [],
         public readonly bool $manually = false,
     )
     {
     }
 
-    function success(string $info): static
+    function success(array $info): static
     {
         return new static($this->jobId, true, true, $info);
     }
 
-    function fail(string $error): static
+    function fail(array $error): static
     {
         return new static($this->jobId, true, false, $error);
     }
 
     function removeManually(): static
     {
-        return new static($this->jobId, $this->isFinish, $this->success, $this->info, true);
+        return new static($this->jobId, $this->isFinish, $this->success, $this->steps, true);
     }
 }

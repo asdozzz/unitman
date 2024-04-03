@@ -24,9 +24,9 @@ final class UstanovitResultatObnovleniyaUnitaUseCase
 
         if ($resultatObnovleniya->success) {
             $config = $this->canParseYaml->parse($resultatObnovleniya->config ?? '');
-            $unit->ustanovitUspehObnovleniya($resultatObnovleniya->message, $config);
+            $unit->ustanovitUspehObnovleniya($resultatObnovleniya->steps, $config);
         } else {
-            $unit->ustanovitOshibkuObnovleniya($resultatObnovleniya->message);
+            $unit->ustanovitOshibkuObnovleniya($resultatObnovleniya->steps);
         }
 
         $this->unitRepository->save($unit);

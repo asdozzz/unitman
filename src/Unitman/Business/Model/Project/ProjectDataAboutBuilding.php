@@ -8,19 +8,19 @@ final class ProjectDataAboutBuilding
         public readonly string $jobId,
         public readonly bool $isFinish = false,
         public readonly bool $success = false,
-        public readonly string $info = ''
+        public readonly array $steps = []
     )
     {
     }
 
-    function success(string $info): static
+    function success(array $steps): static
     {
-        return new static($this->jobId, true, true, $info);
+        return new static($this->jobId, true, true, $steps);
     }
 
-    function fail(string $error): static
+    function fail(array $steps): static
     {
-        return new static($this->jobId, true, false, $error);
+        return new static($this->jobId, true, false, $steps);
     }
 
 }

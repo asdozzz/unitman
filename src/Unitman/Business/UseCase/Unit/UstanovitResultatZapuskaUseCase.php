@@ -23,9 +23,9 @@ final class UstanovitResultatZapuskaUseCase
         $resultatZapuska = $this->runnerService->poluchitResultatZapuskaUnita($unit);
         if ($resultatZapuska->success) {
             $project = $this->projectRepository->getById($unit->getProjectId());
-            $unit->ustanovitUspehZapuska($resultatZapuska->message, (string) $project->getProxyHost(), $project->getName());
+            $unit->ustanovitUspehZapuska($resultatZapuska->steps, (string) $project->getProxyHost(), $project->getName());
         } else {
-            $unit->ustanovitOshibkuZapuska($resultatZapuska->message);
+            $unit->ustanovitOshibkuZapuska($resultatZapuska->steps);
         }
         $this->unitRepository->save($unit);
     }

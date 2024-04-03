@@ -13,12 +13,13 @@ use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokPolzovateleiProekta;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\ReadModel\ProjectList;
 use Doctrine\DBAL\Connection;
+use DomainException;
 use Symfony\Component\Serializer\Serializer;
 
 final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProjectList, CanGetActiveProjectList, UmeetPoluchatSpisokProektovDlyPolzovatelya, UmeetPoluchatSpisokPolzovateleiProekta
 {
     const TABLE = 'project_list';
-    public function __construct(private Connection $connection, private Serializer $serializer)
+    public function __construct(private readonly Connection $connection, private readonly Serializer $serializer)
     {
     }
 
@@ -39,7 +40,7 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $this->connection->executeQuery('DROP TABLE IF EXISTS project_list');
     }
 
-    function truncate()
+    function truncate(): void
     {
         $table = self::TABLE;
         $this->connection->executeQuery("TRUNCATE $table");
@@ -66,19 +67,19 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $row = $this->findRowById($id);
 
         if (empty($row)) {
-            throw new \DomainException('project.not_found');
+            throw new DomainException('project.not_found');
         }
 
         return $this->makeProjectByDbRow($row);
     }
 
-    function updateState(string $projectId,ProjectList\ProjectListStateType $state, ?string $buildInfo = null): void
+    function updateState(string $projectId,ProjectList\ProjectListStateType $state, array $steps = []): void
     {
         $project = $this->getById($projectId);
         $project->state = $state;
 
-        if ($buildInfo) {
-            $project->buildInfo = $buildInfo;
+        if (!empty($steps)) {
+            $project->buildInfo = $steps;
         }
 
         $this->update($project);
@@ -88,7 +89,7 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     {
         $project = $this->getById($fact->id);
         $project->state = ProjectList\ProjectListStateType::REMOVE_ERROR;
-        $project->removeInfo = $fact->errorText;
+        $project->removeInfo = $fact->steps;
         $project->isActive = $fact->isActive;
 
         $this->update($project);

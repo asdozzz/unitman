@@ -11,6 +11,7 @@ use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Model\Step;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
@@ -30,6 +31,16 @@ final class RunnerAdapter implements RunnerService
     {
     }
 
+    /**
+     * @param array<Step> $Steps
+     *
+     * @return array<Unit\Runner\RunnerJobStep>
+     * */
+    private function convertRunnerSteps(array $Steps): array
+    {
+        return array_map(fn(Step $step) => new Unit\Runner\RunnerJobStep($step->Command, $step->Response, $step->Success, $step->Unixtime), $Steps);
+    }
+
     public function buildProject(Project $project): Project\ProjectDataAboutBuilding
     {
         $repo = $this->repoRepository->getById($project->getRepoId());
@@ -37,7 +48,7 @@ final class RunnerAdapter implements RunnerService
         $command = new InitProjectCommand($project->getId(), $project->getMainBranchName(), $storageUrl.'/'.$project->getCode().'.git');
         $initProjectResult = $this->runnerApi->initProject($command);
 
-        return new Project\ProjectDataAboutBuilding('stub', true, $initProjectResult->Success, $initProjectResult->Message);
+        return new Project\ProjectDataAboutBuilding('stub', true, $initProjectResult->Success, $this->convertRunnerSteps($initProjectResult->Steps));
     }
 
     public function removeProject(Project $project): Project\ProjectDataAboutRemoving
@@ -45,7 +56,7 @@ final class RunnerAdapter implements RunnerService
         $command = new RemoveProjectCommand($project->getId());
         $removeResult = $this->runnerApi->removeProject($command);
 
-        return new Project\ProjectDataAboutRemoving('stub', true, $removeResult->Success, $removeResult->Message);
+        return new Project\ProjectDataAboutRemoving('stub', true, $removeResult->Success, $this->convertRunnerSteps($removeResult->Steps));
     }
 
     public function nachatSborkuUnita(Unit $unit): JobId
@@ -108,7 +119,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.sborka_eshe_ne_zakonchena');
         }
 
-        return new ResultatSborkiUnita((bool)$result->Success, $result->Message, $result->Config);
+        return new ResultatSborkiUnita((bool)$result->Success, $this->convertRunnerSteps($result->Steps), $result->Config);
     }
 
     public function poluchitResultatObnovleniyaUnita(Unit $unit): ResultatObnovleniyaUnita
@@ -119,7 +130,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.obnovlenie_eshe_ne_zakoncheno');
         }
 
-        return new ResultatObnovleniyaUnita((bool) $result->Success, $result->Message, $result->Config);
+        return new ResultatObnovleniyaUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps), $result->Config);
     }
 
     public function poluchitResultatPodgotovki(Unit $unit): ResultatPodgotovkiUnita
@@ -130,7 +141,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.podgotovka_eshe_ne_zakonchena');
         }
 
-        return new ResultatPodgotovkiUnita((bool) $result->Success, $result->Message);
+        return new ResultatPodgotovkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
 
@@ -142,7 +153,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.sbros_podgotovki_eshe_ne_zakonchen');
         }
 
-        return new ResultatSbrosaPodgotovkiUnita((bool) $result->Success, $result->Message);
+        return new ResultatSbrosaPodgotovkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
     public function poluchitResultatZapuskaUnita(Unit $unit): ResultatZapuskaUnita
@@ -153,7 +164,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.zapusk_eshe_ne_zakonchen');
         }
 
-        return new ResultatZapuskaUnita((bool) $result->Success, $result->Message);
+        return new ResultatZapuskaUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
     public function poluchitResultatOstanovkiUnita(Unit $unit): ResultatOstanovkiUnita
@@ -164,7 +175,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.ostanovka_eshe_ne_zakonchena');
         }
 
-        return new ResultatOstanovkiUnita((bool) $result->Success, $result->Message);
+        return new ResultatOstanovkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
     public function poluchitResultatUdaleniyaUnita(Unit $unit): ResultatUdaleniyaUnita
@@ -175,7 +186,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.udalenie_eshe_ne_zakoncheno');
         }
 
-        return new ResultatUdaleniyaUnita((bool) $result->Success, $result->Message);
+        return new ResultatUdaleniyaUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
     /**

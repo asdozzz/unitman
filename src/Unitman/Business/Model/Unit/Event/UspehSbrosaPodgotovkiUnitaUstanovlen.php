@@ -6,7 +6,7 @@ final class UspehSbrosaPodgotovkiUnitaUstanovlen
 {
     public function __construct(
         public readonly string $unitId,
-        public readonly string $textOtRunnera,
+        public readonly array $steps,
         public readonly array $stateAsArray
     )
     {

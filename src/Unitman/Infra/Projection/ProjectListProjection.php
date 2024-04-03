@@ -55,8 +55,8 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             $fact->mainBranch,
             false,
             ProjectList\ProjectListStateType::NEW,
-            null,
-            null,
+            [],
+            [],
             $fact->proxyHost
         );
         $this->projectListRepository->insert($projectList);
@@ -69,12 +69,12 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
 
     function handleProjectWasBuilt(ProjectWasBuilt $fact): void
     {
-        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::BUILD_SUCCESS, $fact->buildInfo);
+        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::BUILD_SUCCESS, $fact->steps);
     }
 
     function handleProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
     {
-        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::BUILD_ERROR, $fact->buildInfo);
+        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::BUILD_ERROR, $fact->steps);
     }
 
     function handleProjectWasEnabled(ProjectWasEnabled $fact): void

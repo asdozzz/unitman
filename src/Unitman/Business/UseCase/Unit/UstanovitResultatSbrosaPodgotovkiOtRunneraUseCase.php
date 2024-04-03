@@ -17,9 +17,9 @@ final class UstanovitResultatSbrosaPodgotovkiOtRunneraUseCase
     {
         $unit = $this->unitRepository->getById($command->id);
         if ($command->success) {
-            $unit->ustanovitUspehSbrosaPodgotovki($command->message);
+            $unit->ustanovitUspehSbrosaPodgotovki($command->steps);
         } else {
-            $unit->ustanovitOshibkuSbrosaPodgotovki($command->message);
+            $unit->ustanovitOshibkuSbrosaPodgotovki($command->steps);
         }
         $this->unitRepository->save($unit);
     }

@@ -16,7 +16,7 @@ final class RemoveProjectUseCase
     public function handle(RemoveProject $command): void
     {
         $project = $this->projectRepository->getById($command->id);
-        $project->successfullyRemoving($command->info);
+        $project->successfullyRemoving($command->steps);
         $this->projectRepository->save($project);
     }
 }

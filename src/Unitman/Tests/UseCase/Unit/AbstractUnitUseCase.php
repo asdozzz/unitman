@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Project;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
@@ -43,7 +44,7 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
         $repoId = Uuid::uuid7()->toString();
         $project = Project::addProject($projectId, new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru'), $userId);
         $project->postavitVOcheredNaSborku('stub');
-        $project->successfullyBuild('success');
+        $project->successfullyBuild([new RunnerJobStep('command', 'response', true, 1231231)]);
         $project->enable();
         return $project;
     }

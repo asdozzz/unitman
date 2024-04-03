@@ -16,7 +16,7 @@ final class SetErrorWhenRemoveProjectUseCase
     public function handle(SetErrorWhenRemoveProject $command): void
     {
         $project = $this->projectRepository->getById($command->id);
-        $project->errorWhenRemoving($command->error);
+        $project->errorWhenRemoving($command->steps);
         $this->projectRepository->save($project);
     }
 }

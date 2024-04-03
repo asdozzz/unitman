@@ -1,15 +1,21 @@
 <?php
 
-namespace App\Unitman\Business\Model\Unit;
+namespace App\Unitman\Business\Model\Unit\Runner;
 
 final class RunnerJob
 {
     private string $jobId;
     private bool $isFinish;
     private bool $success;
-    private string $textOtRunnera;
+    /**
+     * @var array<RunnerJobStep>
+     * */
+    private array $steps;
 
-    public function __construct(string $jobId, bool $isFinish = false, bool $success = false, string $textOtRunnera = '')
+    /**
+     * @param array<RunnerJobStep> $steps
+     * */
+    public function __construct(string $jobId, bool $isFinish = false, bool $success = false, array $steps = [])
     {
         if (empty($jobId)) {
             throw new \DomainException('unit.sborka.jobId_is_empty');
@@ -17,7 +23,7 @@ final class RunnerJob
         $this->jobId = $jobId;
         $this->isFinish = $isFinish;
         $this->success = $success;
-        $this->textOtRunnera = $textOtRunnera;
+        $this->steps = $steps;
     }
 
     static function start(string $jobId): static
@@ -25,14 +31,14 @@ final class RunnerJob
         return new static($jobId);
     }
 
-    function ustanovitUspeh(string $textOtRunnera): static
+    function ustanovitUspeh(array $steps): static
     {
-        return new static($this->jobId, true, true, $textOtRunnera);
+        return new static($this->jobId, true, true, $steps);
     }
 
-    function ustanovitOshibku(string $textOtRunnera): static
+    function ustanovitOshibku(array $steps): static
     {
-        return new static($this->jobId, true, false, $textOtRunnera);
+        return new static($this->jobId, true, false, $steps);
     }
 
     /**
@@ -62,9 +68,9 @@ final class RunnerJob
     /**
      * @return string
      */
-    public function getTextOtRunnera(): string
+    public function getSteps(): array
     {
-        return $this->textOtRunnera;
+        return $this->steps;
     }
 
 

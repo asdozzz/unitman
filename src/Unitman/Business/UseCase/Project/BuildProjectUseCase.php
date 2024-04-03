@@ -16,7 +16,7 @@ final class BuildProjectUseCase
     public function handle(BuildProject $command): void
     {
         $project = $this->projectRepository->getById($command->id);
-        $project->successfullyBuild($command->info);
+        $project->successfullyBuild($command->steps);
         $this->projectRepository->save($project);
     }
 }

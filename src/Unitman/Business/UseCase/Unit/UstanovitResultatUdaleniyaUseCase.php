@@ -20,9 +20,9 @@ final class UstanovitResultatUdaleniyaUseCase
         $unit = $this->unitRepository->getById($command->id);
         $resultatUdaleniya = $this->runnerService->poluchitResultatUdaleniyaUnita($unit);
         if ($resultatUdaleniya->success) {
-            $unit->ustanovitUspehUdaleniya($resultatUdaleniya->message);
+            $unit->ustanovitUspehUdaleniya($resultatUdaleniya->steps);
         } else {
-            $unit->ustanovitOshibkuUdaleniya($resultatUdaleniya->message);
+            $unit->ustanovitOshibkuUdaleniya($resultatUdaleniya->steps);
         }
         $this->unitRepository->save($unit);
     }

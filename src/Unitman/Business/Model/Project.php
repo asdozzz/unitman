@@ -4,8 +4,6 @@ namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
-use App\Unitman\Business\Command\Project\EnableProject;
-use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
@@ -29,7 +27,7 @@ use App\Unitman\Business\Model\Project\ProjectName;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Project\ProxyHost;
-use App\Unitman\Business\Model\Repo\RepoId;
+use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 
@@ -71,10 +69,10 @@ final class Project implements AggregateRoot
         return $this->repoId;
     }
 
-    public static function addProject(string $id, AddProject $command, string $userId): static
+    public static function addProject(string $id, AddProject $command, string $userId): self
     {
         $projectId = ProjectId::fromString($id);
-        $project = new static($projectId);
+        $project = new self($projectId);
         $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost));
         $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
@@ -106,13 +104,13 @@ final class Project implements AggregateRoot
     public function addUser(AddUserToProject $command): void
     {
         if ($this->dataAboutRemoving) {
-            throw new \DomainException('project.removing');
+            throw new DomainException('project.removing');
         }
 
         $userIndex = $this->findIndexUserById($command->userId);
 
         if (isset($userIndex)) {
-            throw new \DomainException('project.user_already_exist');
+            throw new DomainException('project.user_already_exist');
         }
 
         $this->recordThat(new UserAddedToProject($this->getId(), $command->userId, ProjectUserRole::USER->name));
@@ -126,13 +124,13 @@ final class Project implements AggregateRoot
     public function removeUser(RemoveUserFromProject $command): void
     {
         if ($this->dataAboutRemoving) {
-            throw new \DomainException('project.removing');
+            throw new DomainException('project.removing');
         }
 
         $userIndex = $this->findIndexUserById($command->userId);
 
         if (!isset($userIndex)) {
-            throw new \DomainException('project.user_not_found_in_project');
+            throw new DomainException('project.user_not_found_in_project');
         }
 
         $this->recordThat(new UserRemovedFromProject($this->getId(), $command->userId));
@@ -149,7 +147,7 @@ final class Project implements AggregateRoot
     public function changeData(UpdateProjectData $command): void
     {
         if ($this->dataAboutRemoving) {
-            throw new \DomainException('project.removing');
+            throw new DomainException('project.removing');
         }
 
         /*if ($this->dataAboutBuilding) {
@@ -172,11 +170,11 @@ final class Project implements AggregateRoot
     public function postavitVOcheredNaUdanlenie(string $jobId): void
     {
         if ($this->dataAboutRemoving) {
-            throw new \DomainException('project.already_in_queue');
+            throw new DomainException('project.already_in_queue');
         }
 
         if ($this->dataAboutBuilding && !$this->dataAboutBuilding->isFinish) {
-            throw new \DomainException('project.in_pending_for_build');
+            throw new DomainException('project.in_pending_for_build');
         }
 
         $this->recordThat(new ProektPostavlenVOcheredNaUdalenie($this->getId(), $jobId));
@@ -189,59 +187,59 @@ final class Project implements AggregateRoot
         $this->dataAboutRemoving = new ProjectDataAboutRemoving($fact->jobId);
     }
 
-    public function successfullyRemoving(string $info): void
+    public function successfullyRemoving(array $steps): void
     {
         if (!$this->dataAboutRemoving) {
-            throw new \DomainException('project.not_found_data_about_removing');
+            throw new DomainException('project.not_found_data_about_removing');
         }
 
         if ($this->dataAboutRemoving->isFinish) {
-            throw new \DomainException('project.removing_already_execute');
+            throw new DomainException('project.removing_already_execute');
         }
 
-        $this->recordThat(new ProjectWasDeleted($this->getId(), $info));
+        $this->recordThat(new ProjectWasDeleted($this->getId(), $steps));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyProjectWasDeleted(ProjectWasDeleted $fact): void
     {
-        $this->dataAboutRemoving = $this->dataAboutRemoving->success($fact->info);
+        $this->dataAboutRemoving = $this->dataAboutRemoving->success($fact->steps);
     }
 
-    public function errorWhenRemoving(string $info): void
+    public function errorWhenRemoving(array $steps): void
     {
         if (!$this->dataAboutRemoving) {
-            throw new \DomainException('project.not_found_data_about_removing');
+            throw new DomainException('project.not_found_data_about_removing');
         }
 
         if ($this->dataAboutRemoving->isFinish) {
-            throw new \DomainException('project.removing_already_execute');
+            throw new DomainException('project.removing_already_execute');
         }
 
-        $this->recordThat(new ProjectWasNotDeleted($this->getId(), $info, false));
+        $this->recordThat(new ProjectWasNotDeleted($this->getId(), $steps, false));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyProjectWasNotDeleted(ProjectWasNotDeleted $fact): void
     {
-        $this->dataAboutRemoving = $this->dataAboutRemoving->fail($fact->errorText);
+        $this->dataAboutRemoving = $this->dataAboutRemoving->fail($fact->steps);
         $this->isActive = $fact->isActive;
     }
 
     public function removeManually(): void
     {
         if (!$this->dataAboutRemoving) {
-            throw new \DomainException('project.not_found_data_about_removing');
+            throw new DomainException('project.not_found_data_about_removing');
         }
 
         if ($this->dataAboutRemoving->isFinish && $this->dataAboutRemoving->manually) {
-            throw new \DomainException('project.project_already_remove');
+            throw new DomainException('project.project_already_remove');
         }
 
         if ($this->dataAboutRemoving->isFinish && $this->dataAboutRemoving->success) {
-            throw new \DomainException('project.project_already_remove');
+            throw new DomainException('project.project_already_remove');
         }
 
         $this->recordThat(new ProjectWasDeletedManually($this->getId()));
@@ -259,7 +257,7 @@ final class Project implements AggregateRoot
         $errors = $this->proverkaProektaDlyNachlaSborki();
 
         if (!empty($errors)) {
-            throw new \DomainException($errors[0]);
+            throw new DomainException($errors[0]);
         }
 
         $this->recordThat(new ProektPostavlenVOcheredNaSborku($this->getId(), $jobId));
@@ -272,37 +270,37 @@ final class Project implements AggregateRoot
         $this->dataAboutBuilding = new ProjectDataAboutBuilding($fact->jobId);
     }
 
-    public function successfullyBuild(string $info): void
+    public function successfullyBuild(array $steps): void
     {
         if (!$this->dataAboutBuilding) {
-            throw new \DomainException('project.not_found_data_about_building');
+            throw new DomainException('project.not_found_data_about_building');
         }
 
         if ($this->dataAboutBuilding->isFinish) {
-            throw new \DomainException('project.building_already_execute');
+            throw new DomainException('project.building_already_execute');
         }
 
-        $this->recordThat(new ProjectWasBuilt($this->getId(), $info));
+        $this->recordThat(new ProjectWasBuilt($this->getId(), $steps));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyProjectWasBuilt(ProjectWasBuilt $fact): void
     {
-        $this->dataAboutBuilding = $this->dataAboutBuilding->success($fact->buildInfo);
+        $this->dataAboutBuilding = $this->dataAboutBuilding->success($fact->steps);
     }
 
-    public function errorWhenBuild(string $info): void
+    public function errorWhenBuild(array $steps): void
     {
         if (!$this->dataAboutBuilding) {
-            throw new \DomainException('project.not_found_data_about_building');
+            throw new DomainException('project.not_found_data_about_building');
         }
 
         if ($this->dataAboutBuilding->isFinish) {
-            throw new \DomainException('project.building_already_execute');
+            throw new DomainException('project.building_already_execute');
         }
 
-        $this->recordThat(new ProjectWasNotBuilt($this->getId(), $info));
+        $this->recordThat(new ProjectWasNotBuilt($this->getId(), $steps));
     }
 
     /**
@@ -310,25 +308,25 @@ final class Project implements AggregateRoot
      */
     private function applyProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
     {
-        $this->dataAboutBuilding = $this->dataAboutBuilding->fail($fact->buildInfo);
+        $this->dataAboutBuilding = $this->dataAboutBuilding->fail($fact->steps);
     }
 
     public function enable(): void
     {
         if (!$this->dataAboutBuilding) {
-            throw new \DomainException('project.not_found_data_about_building');
+            throw new DomainException('project.not_found_data_about_building');
         }
 
         if (!$this->dataAboutBuilding->isFinish) {
-            throw new \DomainException('project.pending_building');
+            throw new DomainException('project.pending_building');
         }
 
         if ($this->isActive) {
-            throw new \DomainException('project.already_enabled');
+            throw new DomainException('project.already_enabled');
         }
 
         if ($this->dataAboutRemoving) {
-            throw new \DomainException('project.removing');
+            throw new DomainException('project.removing');
         }
 
         $this->recordThat(new ProjectWasEnabled($this->getId()));
@@ -342,19 +340,19 @@ final class Project implements AggregateRoot
     public function disable(): void
     {
         if (!$this->dataAboutBuilding) {
-            throw new \DomainException('project.not_found_data_about_building');
+            throw new DomainException('project.not_found_data_about_building');
         }
 
         if (!$this->dataAboutBuilding->isFinish) {
-            throw new \DomainException('project.pending_building');
+            throw new DomainException('project.pending_building');
         }
 
         if ($this->dataAboutRemoving) {
-            throw new \DomainException('project.removing');
+            throw new DomainException('project.removing');
         }
 
         if (!$this->isActive) {
-            throw new \DomainException('project.already_disabled');
+            throw new DomainException('project.already_disabled');
         }
 
         $this->recordThat(new ProjectWasDisabled($this->getId()));

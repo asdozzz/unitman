@@ -16,7 +16,7 @@ final class SetErrorWhenBuildProjectUseCase
     public function handle(SetErrorWhenBuildProject $command): void
     {
         $project = $this->projectRepository->getById($command->id);
-        $project->errorWhenBuild($command->error);
+        $project->errorWhenBuild($command->steps);
         $this->projectRepository->save($project);
     }
 }

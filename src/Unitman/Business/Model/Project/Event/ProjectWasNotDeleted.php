@@ -6,7 +6,7 @@ final class ProjectWasNotDeleted
 {
     public function __construct(
         public readonly string $id,
-        public readonly string $errorText,
+        public readonly array $steps,
         public readonly bool $isActive
     )
     {

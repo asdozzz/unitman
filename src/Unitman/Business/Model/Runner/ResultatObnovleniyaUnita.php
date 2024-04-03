@@ -6,7 +6,7 @@ final class ResultatObnovleniyaUnita
 {
     public function __construct(
         public readonly bool $success,
-        public readonly string $message,
+        public readonly array $steps,
         public readonly ?string $config = null,
     )
     {

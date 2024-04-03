@@ -24,9 +24,9 @@ final class UstanovitResultatSborkiUnitaUseCase
 
         if ($resultatSborki->success) {
             $config = $this->canParseYaml->parse($resultatSborki->config ?? '');
-            $unit->ustanovitUspehSborki($resultatSborki->message, $config);
+            $unit->ustanovitUspehSborki($resultatSborki->steps, $config);
         } else {
-            $unit->ustanovitOshibkuSborki($resultatSborki->message);
+            $unit->ustanovitOshibkuSborki($resultatSborki->steps);
         }
         $this->unitRepository->save($unit);
     }

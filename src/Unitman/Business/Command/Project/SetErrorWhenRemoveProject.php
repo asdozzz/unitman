@@ -6,7 +6,7 @@ final class SetErrorWhenRemoveProject
 {
     public function __construct(
         public readonly string $id,
-        public readonly string $error,
+        public readonly array $steps,
     )
     {
     }

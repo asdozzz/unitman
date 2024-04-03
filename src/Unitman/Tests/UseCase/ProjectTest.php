@@ -17,6 +17,7 @@ use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
 use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -65,8 +66,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals($project->mainBranch, $mainBranch);
         $this->assertEquals($project->isActive, false);
         $this->assertEquals($project->state, ProjectListStateType::NEW);
-        $this->assertEquals($project->buildInfo, null);
-        $this->assertEquals($project->removeInfo, null);
+        $this->assertEquals($project->buildInfo, []);
+        $this->assertEquals($project->removeInfo, []);
         $this->assertEquals($project->proxyHost, $proxyHost);
         $this->assertEquals($project->users, [new ProjectUsersList($userId, 'ADMIN')]);
 
@@ -137,7 +138,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, 'success_build'));
+        $steps = [new RunnerJobStep('command', 'response', true, 123123123)];
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, $steps));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь на сборку
@@ -151,7 +153,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
 
         $this->assertEquals($project->isActive, false);
         $this->assertEquals($project->state, ProjectListStateType::BUILD_SUCCESS);
-        $this->assertEquals($project->buildInfo, 'success_build');
+        $this->assertEquals($project->buildInfo, $steps);
 
         //Активировали проект
         $enableCommand = new EnableProject($projectId);
@@ -182,7 +184,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, false, 'error_when_build'));
+        $steps = [new RunnerJobStep('command', 'response', false, 123123123)];
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, false, $steps));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь на сборку
@@ -196,7 +199,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
 
         $this->assertEquals($project->isActive, false);
         $this->assertEquals($project->state, ProjectListStateType::BUILD_ERROR);
-        $this->assertEquals($project->buildInfo, 'error_when_build');
+        $this->assertEquals($project->buildInfo, $steps);
 
 
     }
@@ -211,7 +214,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, true, 'success_remove'));
+        $steps = [new RunnerJobStep('command', 'response', true, 123123123)];
+        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, true, $steps));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь
@@ -232,7 +236,8 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, false, 'error when remove'));
+        $steps = [new RunnerJobStep('command', 'response', false, 123123123)];
+        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, false, $steps));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь
@@ -244,7 +249,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         /** @var $projectListRepo SqlProjectListRepository*/
         $project = $projectListRepo->getById($projectId);
         $this->assertEquals($project->state, ProjectListStateType::REMOVE_ERROR);
-        $this->assertEquals($project->removeInfo, 'error when remove');
+        $this->assertEquals($project->removeInfo, $steps);
         $this->assertEquals($project->isActive, false);
 
         //Ручное удаление сборки юнита
@@ -283,9 +288,10 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $this->addProjectRaw($repoId, 'test3', 'name3', 'main', 'http://test.ru');
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, 'success_build'));
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, 'success_build'));
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, 'success_build'));
+        $steps = [new RunnerJobStep('command', 'response', true, 123123123)];
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, $steps));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь на сборку
