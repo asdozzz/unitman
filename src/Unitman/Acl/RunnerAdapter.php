@@ -38,7 +38,7 @@ final class RunnerAdapter implements RunnerService
      * */
     private function convertRunnerSteps(array $Steps): array
     {
-        return array_map(fn(Step $step) => new Unit\Runner\RunnerJobStep($step->Command, $step->Response, $step->Success, $step->Unixtime), $Steps);
+        return array_map(fn(array $step) => new Unit\Runner\RunnerJobStep($step['Command'], $step['Response'], $step['Success'], $step['Unixtime']), $Steps);
     }
 
     public function buildProject(Project $project): Project\ProjectDataAboutBuilding
@@ -47,7 +47,6 @@ final class RunnerAdapter implements RunnerService
         $storageUrl = $repo->getRepoUrlWithCredentials();
         $command = new InitProjectCommand($project->getId(), $project->getMainBranchName(), $storageUrl.'/'.$project->getCode().'.git');
         $initProjectResult = $this->runnerApi->initProject($command);
-
         return new Project\ProjectDataAboutBuilding('stub', true, $initProjectResult->Success, $this->convertRunnerSteps($initProjectResult->Steps));
     }
 
