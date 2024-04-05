@@ -183,4 +183,9 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     {
         $this->repository->removeByUnitId($fact->unitId);
     }
+
+    function isSyncProjection(): bool
+    {
+        return true;
+    }
 }

@@ -23,7 +23,7 @@ final class InitProjectWorkflow
             'InitProjectActivity',
             [$command],
             ActivityOptions::new()
-                ->withStartToCloseTimeout(3)
+                ->withStartToCloseTimeout(30)
                 ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
         );
     }

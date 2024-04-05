@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\Adapter;
 
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
@@ -19,4 +20,6 @@ interface StorageApiAdapter
     public function getRepoTypeModel(): RepoTypeList;
 
     public function poluchitVetkiProekta(Repo $repo, string $projectCode): array;
+
+    public function getUrlForInitProject(Repo $repo, Project $project): string;
 }

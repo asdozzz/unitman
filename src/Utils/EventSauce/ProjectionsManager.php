@@ -83,6 +83,7 @@ final class ProjectionsManager
 
             foreach ($this->projections as $projection) {
                 if ($streamName->aggregateType !== $projection->getStreamName()->aggregateType) continue;
+                if (!$projection->isSyncProjection()) continue;
                 $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
                 if ($checkpoint === 0) {
                     $projection->init();

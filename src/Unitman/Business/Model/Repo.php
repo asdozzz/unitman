@@ -115,13 +115,4 @@ final class Repo implements AggregateRoot
     {
         return $this->credentials;
     }
-
-    public function getRepoUrlWithCredentials(): string
-    {
-        $url = $this->credentials->url;
-        $scheme = parse_url($url, PHP_URL_SCHEME);
-        $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
-        $newUrl = $scheme.'://'.$this->credentials->token.'@'.$urlWithoutScheme;
-        return $newUrl;
-    }
 }

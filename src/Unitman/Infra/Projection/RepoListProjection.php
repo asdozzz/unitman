@@ -20,6 +20,10 @@ final class RepoListProjection extends AbstractProjection implements UnitmanProj
     {
     }
 
+    function isSyncProjection(): bool
+    {
+        return true;
+    }
     function init(): void
     {
        $this->repoListRepository->init();

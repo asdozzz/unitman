@@ -30,6 +30,10 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
     {
     }
 
+    function isSyncProjection(): bool
+    {
+        return true;
+    }
     function getProjectionName(): string
     {
         return 'project_list';

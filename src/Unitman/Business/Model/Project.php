@@ -73,6 +73,7 @@ final class Project implements AggregateRoot
     {
         $projectId = ProjectId::fromString($id);
         $project = new self($projectId);
+        ProjectName::validate($command->projectName);
         $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost));
         $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
@@ -157,7 +158,7 @@ final class Project implements AggregateRoot
         /*if ($command->newProjectName === (string)$this->name) {
             throw new \DomainException('project.old_name_equal_new_name');
         }*/
-
+        ProjectName::validate($command->newProjectName);
         $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->newProxyHost));
     }
 

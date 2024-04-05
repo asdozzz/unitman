@@ -8,6 +8,7 @@ final class NachatSbrosPodgotovkiUnita
         public readonly string $UnitId,
         public readonly string $ProjectId,
         public readonly string $Name,
+        public readonly string $StorageUrl,
         public readonly array $Commands,
         public readonly array $Variables,
     )

@@ -79,4 +79,8 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
         $this->JWTUserRepository->update($user);
     }
 
+    function isSyncProjection(): bool
+    {
+        return true;
+    }
 }

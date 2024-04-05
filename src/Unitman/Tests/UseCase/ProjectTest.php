@@ -116,7 +116,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         $adminId = Uuid::uuid7()->toString();
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
-        $command = new UpdateProjectData($projectId, 'Юниты2', 'https://testcase2.su');
+        $command = new UpdateProjectData($projectId, 'Units2', 'https://testcase2.su');
         $useCase = self::$container->get(UpdateProjectDataUseCase::class);
         $useCase->handle($command);
 
@@ -124,7 +124,7 @@ final class ProjectTest extends AbstractTestCaseWithTransactionWrapper
         /** @var $projectListRepo SqlProjectListRepository*/
         $project = $projectListRepo->getById($projectId);
 
-        $this->assertEquals($project->name, 'Юниты2');
+        $this->assertEquals($project->name, 'Units2');
         $this->assertEquals($project->proxyHost, 'https://testcase2.su');
     }
 

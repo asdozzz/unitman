@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\Adapter;
 
 use App\Unitman\Business\Command\Repo\GetRepoTypeList;
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
@@ -67,5 +68,11 @@ final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluc
     {
         $adapter = $this->getAdapterByRepo($repo->getType());
         return $adapter->poluchitVetkiProekta($repo, $projectCode);
+    }
+
+    function getUrlForInitProject(Repo $repo, Project $project): string
+    {
+        $adapter = $this->getAdapterByRepo($repo->getType());
+        return $adapter->getUrlForInitProject($repo, $project);
     }
 }

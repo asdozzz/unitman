@@ -25,7 +25,7 @@ final class ChangeCredentialsOfRepoUseCase
 
         $repo = $this->repoRepository->getById($command->repoId);
 
-        $url = $this->umeetPoluchatUrlHranilisha->poluchitUrlHranilisha($repo->getType(), $command->repoUrl);
+        $url = $this->umeetPoluchatUrlHranilisha->poluchitUrlHranilisha($repo->getType(), $command->repoUrl ?? $repo->getCredentials()->url);
 
         $repo->changeCredentials($command, $url);
         $this->repoRepository->save($repo);

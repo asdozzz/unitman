@@ -24,10 +24,17 @@ use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\RunnerService;
+use App\Unitman\Infra\Adapter\StorageApiAdapterFactory;
+use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 
 final class RunnerAdapter implements RunnerService
 {
-    public function __construct(private readonly RunnerApi $runnerApi, private readonly RepoRepository $repoRepository)
+    public function __construct(
+        private readonly RunnerApi $runnerApi,
+        private readonly RepoRepository $repoRepository,
+        private SqlProjectEventsRepository $projectEventsRepository,
+        private StorageApiAdapterFactory $storageApiAdapterFactory
+    )
     {
     }
 
@@ -43,9 +50,8 @@ final class RunnerAdapter implements RunnerService
 
     public function buildProject(Project $project): Project\ProjectDataAboutBuilding
     {
-        $repo = $this->repoRepository->getById($project->getRepoId());
-        $storageUrl = $repo->getRepoUrlWithCredentials();
-        $command = new InitProjectCommand($project->getId(), $project->getMainBranchName(), $storageUrl.'/'.$project->getCode().'.git');
+        $projectUrl = $this->getProjectUrl($project);
+        $command = new InitProjectCommand($project->getId(), $project->getMainBranchName(), $projectUrl);
         $initProjectResult = $this->runnerApi->initProject($command);
         return new Project\ProjectDataAboutBuilding('stub', true, $initProjectResult->Success, $this->convertRunnerSteps($initProjectResult->Steps));
     }
@@ -60,52 +66,66 @@ final class RunnerAdapter implements RunnerService
 
     public function nachatSborkuUnita(Unit $unit): JobId
     {
-        $command = new NachatSborkuUnita($unit->getProjectId(), $unit->getName(), $unit->getBranch());
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
+        $command = new NachatSborkuUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $unit->getBranch());
         $workflowId = $this->runnerApi->nachatSborkuUnita($command);
         return new JobId($workflowId);
     }
     public function nachatPodgotovkuUnita(Unit $unit): JobId
     {
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $unit->getName(), $unit->poluchitKomandiPodgotovki(), $variables);
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables);
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($command);
         return new JobId($workflowId);
     }
 
     public function nachatObnovlenieUnita(Unit $unit): JobId
     {
-        $command = new NachatObnovlenieUnita($unit->getProjectId(), $unit->getName());
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
+        $command = new NachatObnovlenieUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl);
         $workflowId = $this->runnerApi->nachatObnovlenieUnita($command);
         return new JobId($workflowId);
     }
 
     public function nachatSbrosPodgotovkiUnita(Unit $unit): JobId
     {
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $unit->getName(), $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
+        $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $unit->getName(), $storageUrl, $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
         $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($command);
         return new JobId($workflowId);
     }
 
     public function nachatZapuskUnita(Unit $unit, Project $project): JobId
     {
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getName(), $unit->poluchitKomandiZapuska(), $variables);
+        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables);
         $workflowId = $this->runnerApi->nachatZapuskUnita($command);
         return new JobId($workflowId);
     }
 
     public function nachatOstanovkuUnita(Unit $unit, Project $project): JobId
     {
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatOstanovkuUnita($unit->getProjectId(), $project->getName(),$unit->getName(), $unit->poluchitKomandiOstanovki(), $variables);
+        $command = new NachatOstanovkuUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiOstanovki(), $variables);
         $workflowId = $this->runnerApi->nachatOstanovkuUnita($command);
         return new JobId($workflowId);
     }
 
     public function nachatUdalenieUnita(Unit $unit): JobId
     {
-        $command = new NachatUdalenieUnita($unit->getProjectId(), $unit->getName());
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
+        $command = new NachatUdalenieUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl);
         $workflowId = $this->runnerApi->nachatUdalenieUnita($command);
         return new JobId($workflowId);
     }
@@ -196,5 +216,16 @@ final class RunnerAdapter implements RunnerService
     {
         $variables = array_map(fn(Unit\VariableValue $variableValue) => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue()), $unit->poluchitZnacheniyaPeremenih());
         return $variables;
+    }
+
+    /**
+     * @param Project $project
+     * @return string
+     */
+    private function getProjectUrl(Project $project): string
+    {
+        $repo = $this->repoRepository->getById($project->getRepoId());
+        $projectUrl = $this->storageApiAdapterFactory->getUrlForInitProject($repo, $project);
+        return $projectUrl;
     }
 }

@@ -8,6 +8,11 @@ final class ProjectName implements \Stringable
 
     public function __construct(string $name)
     {
+        $this->name = $name;
+    }
+
+    static function validate($name)
+    {
         if (empty($name)) {
             throw new \DomainException('project.name_is_empty');
         }
@@ -16,13 +21,10 @@ final class ProjectName implements \Stringable
             throw new \DomainException('project.length_name_invalid');
         }
 
-        if (!preg_match('/[a-zA-Z0-9_]+/mu', $name)) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/mu', $name)) {
             throw new \DomainException('project.name_invalid');
         }
-
-        $this->name = $name;
     }
-
 
     public function __toString(): string
     {

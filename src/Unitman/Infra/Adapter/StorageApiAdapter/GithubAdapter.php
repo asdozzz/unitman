@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\Adapter\StorageApiAdapter;
 
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
@@ -52,5 +53,15 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         list($login, $code) = explode('/', $projectCode);
         $branches = $client->repositories()->branches($login, $code);
         return array_map(fn(array $branch) => new VetkaProekta($branch['name']), $branches);
+    }
+
+    public function getUrlForInitProject(Repo $repo, Project $project): string
+    {
+        $url = $repo->getCredentials()->url;
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
+        $storageUrl = $scheme.'://'.$repo->getCredentials()->token.'@'.$urlWithoutScheme;
+        $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';
+        return $projectUrl;
     }
 }

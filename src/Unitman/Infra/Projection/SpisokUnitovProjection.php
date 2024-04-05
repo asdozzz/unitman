@@ -44,7 +44,10 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     {
     }
 
-
+    function isSyncProjection(): bool
+    {
+        return true;
+    }
     function getProjectionName(): string
     {
         return 'spisok_unitov';
