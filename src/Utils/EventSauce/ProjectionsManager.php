@@ -100,6 +100,26 @@ final class ProjectionsManager
 
     }
 
+    public function pullProjectionByName(string $projectionName)
+    {
+        $this->connection->beginTransaction();
+        try {
+            $projection = $this->getProjectionByName($projectionName);
+            $checkpoint = $this->checkpointStore->getCheckpoint($projectionName);
+
+            if ($checkpoint === 0) {
+                $projection->init();
+            }
+
+            $this->handleEventsByCheckpoint($projection, $checkpoint);
+
+            $this->connection->commit();
+        } catch (\Exception $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
+    }
+
     public function rebuildAll(): void
     {
         $this->connection->beginTransaction();

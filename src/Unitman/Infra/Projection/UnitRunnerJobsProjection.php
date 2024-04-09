@@ -27,7 +27,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
-use App\Unitman\Business\ReadModel\Unit\UnitRunnerJobs;
+use App\Unitman\Business\ReadModel\Unit\UnitRunnerJob;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\OcheredUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\UnitRunnerJobRepository;
@@ -36,6 +36,8 @@ use App\Utils\EventSauce\Model\StreamName;
 
 final class UnitRunnerJobsProjection extends AbstractProjection implements UnitmanProjection
 {
+    const PROJECTION_NAME = 'unit_runner_jobs';
+
     public function __construct(private UnitRunnerJobRepository $repository)
     {
     }
@@ -47,7 +49,7 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function getProjectionName(): string
     {
-        return 'unit_runner_jobs';
+        return self::PROJECTION_NAME;
     }
 
     function init(): void
@@ -82,13 +84,13 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::SBORKA, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBORKA, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::SBORKA, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBORKA, true, $fact->steps);
         $this->repository->insert($job);
     }
 
@@ -104,13 +106,13 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::PODGOTOVKA, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::PODGOTOVKA, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::PODGOTOVKA, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::PODGOTOVKA, true, $fact->steps);
         $this->repository->insert($job);
     }
 
@@ -121,13 +123,13 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, true, $fact->steps);
         $this->repository->insert($job);
     }
 
@@ -138,13 +140,13 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehSbrosaPodgotovkiUnitaUstanovlen(UspehSbrosaPodgotovkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI, true, $fact->steps);
         $this->repository->insert($job);
     }
 
@@ -155,13 +157,13 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, true, $fact->steps);
         $this->repository->insert($job);
     }
 
@@ -172,13 +174,13 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::OSTANOVKA, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OSTANOVKA, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehOstanovkiUnitaUstanovlen(UspehOstanovkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::OSTANOVKA, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OSTANOVKA, true, $fact->steps);
         $this->repository->insert($job);
     }
 
@@ -189,13 +191,13 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehUdaleniyaUnitaUstanovlen(UspehUdaleniyaUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJobs('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, true, $fact->steps);
         $this->repository->insert($job);
     }
     function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void

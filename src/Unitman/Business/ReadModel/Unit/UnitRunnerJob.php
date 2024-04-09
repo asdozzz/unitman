@@ -4,7 +4,7 @@ namespace App\Unitman\Business\ReadModel\Unit;
 
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 
-final class UnitRunnerJobs
+final class UnitRunnerJob
 {
     const SBORKA = 'SBORKA';
     const OBNOVLENIE = 'OBNOVLENIE';

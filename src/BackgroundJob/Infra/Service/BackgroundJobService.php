@@ -6,6 +6,8 @@ use App\BackgroundJob\Infra\Repository\JobRepository;
 use App\BackgroundJob\Infra\Workflow\StartJobWorkflow;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
+use Temporal\Common\IdReusePolicy;
+use Temporal\Exception\Client\WorkflowExecutionAlreadyStartedException;
 
 final class BackgroundJobService
 {
@@ -21,6 +23,7 @@ final class BackgroundJobService
     private function getWorkflowJobOptions(): WorkflowOptions
     {
         return WorkflowOptions::new()
+            ->withWorkflowIdReusePolicy(IdReusePolicy::POLICY_UNSPECIFIED)
             ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName);
     }
 
@@ -50,18 +53,20 @@ final class BackgroundJobService
 
     function start(BackgroundJobInterface $job): void
     {
-        if ($this->isAlreadyRun($job->getName())) {
-            return;
+        $options = $this->getWorkflowJobOptions();
+
+        try {
+            $workflow = $this->workflowClient->newWorkflowStub(
+                StartJobWorkflow::class,
+                $options->withWorkflowId($job->getName())
+            );
+
+            $run = $this->workflowClient->start($workflow, $job->getWorkflowClass(), $job->getMethodName());
+            $this->jobRepository->start($job->getName(), $run->getExecution()->getID());
+        } catch (WorkflowExecutionAlreadyStartedException $e) {
+            $workflow = $this->workflowClient->newUntypedRunningWorkflowStub($job->getName());
+            $this->jobRepository->start($job->getName(), $workflow->getExecution()->getID());
         }
-
-        $workflow = $this->workflowClient->newWorkflowStub(
-            StartJobWorkflow::class,
-            $this->getWorkflowJobOptions()
-        );
-
-        $run = $this->workflowClient->start($workflow, $job->getWorkflowClass(), $job->getMethodName());
-
-        $this->jobRepository->start($job->getName(), $run->getExecution()->getID());
     }
 
     function stop(BackgroundJobInterface $job): void

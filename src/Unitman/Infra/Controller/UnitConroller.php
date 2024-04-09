@@ -5,6 +5,7 @@ namespace App\Unitman\Infra\Controller;
 use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
+use App\Unitman\Business\Command\Unit\GetUnitRunnerJobs;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
@@ -27,6 +28,7 @@ use App\Unitman\Business\Command\Unit\ZapustitUnit;
 use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
+use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobsQuery;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
@@ -283,6 +285,17 @@ final class UnitConroller extends AbstractController
 
     #[Route('/poluchitPeremenieUnita', methods: ['POST'])]
     public function poluchitPeremenieUnita(PoluchitPeremenieUnita $command, PoluchitPeremenieUnitaQuery $query): Response
+    {
+        try {
+            $data = $query->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/poluchitVipolnenieZadachiRunnera', methods: ['POST'])]
+    public function poluchitVipolnenieZadachiRunnera(GetUnitRunnerJobs $command, GetUnitRunnerJobsQuery $query): Response
     {
         try {
             $data = $query->handle($command);

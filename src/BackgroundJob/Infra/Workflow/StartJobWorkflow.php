@@ -13,6 +13,7 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 final class StartJobWorkflow
 {
+    public const WORKFLOW_ID = 'StartJobWorkflow';
     private bool $pause = false;
     private bool $stop = false;
     private int $counter = 0;

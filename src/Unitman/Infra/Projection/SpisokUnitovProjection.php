@@ -99,6 +99,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => true
         ]);
         $this->repository->update($readModel);
     }
@@ -110,6 +111,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => false
         ]);
         $this->repository->update($readModel);
     }
@@ -142,6 +144,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => true
         ]);
         $this->repository->update($readModel);
     }
@@ -153,6 +156,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => false
         ]);
         $this->repository->update($readModel);
     }
@@ -176,6 +180,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => true
         ]);
         $this->repository->update($readModel);
     }
@@ -187,6 +192,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => false
         ]);
         $this->repository->update($readModel);
     }
@@ -209,6 +215,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => true
         ]);
         $this->repository->update($readModel);
     }
@@ -220,6 +227,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => false
         ]);
         $this->repository->update($readModel);
     }
@@ -242,6 +250,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => true
         ]);
         $this->repository->update($readModel);
     }
@@ -254,6 +263,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'commands' => $fact->stateAsArray['commands'],
             'url' => $fact->url,
             'waitResultFromRunner' => false,
+            'error' => false
         ]);
         $this->repository->update($readModel);
     }
@@ -276,6 +286,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => true
         ]);
         $this->repository->update($readModel);
     }
@@ -288,6 +299,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
             'url' => null,
+            'error' => false
         ]);
         $this->repository->update($readModel);
     }
@@ -310,6 +322,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'error' => true
         ]);
         $this->repository->update($readModel);
     }

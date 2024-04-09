@@ -16,6 +16,7 @@ use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use App\Unitman\Infra\Temporal\Activity\OcheredUnitovActivity;
+use App\Unitman\Infra\Temporal\Activity\UnitRunnerJobsProjectionActivity;
 use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use Doctrine\DBAL\Connection;
@@ -83,7 +84,6 @@ return function (ContainerConfigurator $configuration) {
         ->arg('$checkpointStore', service('app.checkpoint_store'))
         ->arg('$eventsRepository', service('unitman.stream_repository'));
 
-
     $services->set(SqlRepoEvensRepository::class)
         ->args([
             service('unitman.projections_manager')
@@ -100,5 +100,9 @@ return function (ContainerConfigurator $configuration) {
         ]);
 
     $services->set(OcheredUnitovActivity::class)
+        ->tag('temporal.activity.registry');
+
+    $services->set(UnitRunnerJobsProjectionActivity::class)
+        ->arg('$projectionsManager', service('unitman.projections_manager'))
         ->tag('temporal.activity.registry');
 };
