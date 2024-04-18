@@ -11,37 +11,47 @@ use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
-use App\Runner\Business\Model\InitProjectResult;
-use App\Runner\Business\Model\RemoveProjectResult;
-use App\Runner\Business\Model\ResultatObnovleniyaUnita;
-use App\Runner\Business\Model\ResultatOstanovkiUnita;
-use App\Runner\Business\Model\ResultatPodgotovkiUnita;
-use App\Runner\Business\Model\ResultatSbrokiUnita;
-use App\Runner\Business\Model\ResultatSbrosaPodgotovkiUnita;
-use App\Runner\Business\Model\ResultatUdaleniyaUnita;
-use App\Runner\Business\Model\ResultatZapuskaUnita;
+use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
+use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
+use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatSborkuUnitaWorkflow;
-use App\Runner\Infra\Workflow\NachatSbrosPodgotovkiUnitaWorkflow;
+use App\Runner\Infra\Workflow\NachatSbrosPodgotovkiWorkflow;
 use App\Runner\Infra\Workflow\NachatUdalenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow;
 use App\Runner\Infra\Workflow\RemoveProjectWorkflow;
 use Carbon\CarbonInterval;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
-use Temporal\Common\RetryOptions;
-use Temporal\Exception\Client\ServiceClientException;
 use Temporal\Exception\Client\WorkflowFailedException;
 use Temporal\Exception\Client\WorkflowServiceException;
 use Temporal\Exception\WorkflowExecutionFailedException;
 
 final class RunnerApi
 {
-    public function __construct(private WorkflowClient $workflowClient)
+    public function __construct(private WorkflowClient $workflowClient, private RunnerRepository $runnerRepository)
     {
+    }
+
+    function getTaskQueue(): string
+    {
+        $runnerState = $this->runnerRepository->getDefaultRunnerState();
+
+        if (!$runnerState->isActive()) {
+            throw new \Exception('runner.state.is_non_active');
+        }
+
+        return $runnerState->getTaskQueue();
     }
 
     public function initProject(InitProjectCommand $command): InitProjectResult
@@ -136,8 +146,8 @@ final class RunnerApi
 
     public function nachatSbrosPodgotovkiUnita(NachatSbrosPodgotovkiUnita $command): string
     {
-        $workflow = $this->workflowClient->newUntypedWorkflowStub(
-            NachatSbrosPodgotovkiUnitaWorkflow::class,
+        $workflow = $this->workflowClient->newWorkflowStub(
+            NachatSbrosPodgotovkiWorkflow::class,
             WorkflowOptions::new()
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
@@ -231,9 +241,12 @@ final class RunnerApi
             $result = $workflow->getResult($type, 5);
             return $result;
         } catch (WorkflowServiceException $e) {
-            return new $type(false, $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result');
+            $msg = $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result';
+            $steps = [$this->stepAsArray('error workflow', $msg, false, time())];
+            return new $type(0, $steps);
         } catch (WorkflowExecutionFailedException|WorkflowFailedException $exp) {
-            return new $type(false, $exp->getMessage());
+            $steps = [$this->stepAsArray('error workflow', $exp->getMessage(), false, time())];
+            return new $type(0, $steps);
         } catch (\Throwable $throwable) {
             throw $throwable;
         }
@@ -252,12 +265,20 @@ final class RunnerApi
             $result = $workflow->getResult($type, 5);
             return $result;
         } catch (WorkflowServiceException $e) {
-            return new $type(false, $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result_with_config', '');
+            $msg = $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result_with_config';
+            $steps = [$this->stepAsArray('error workflow', $msg, false, time())];
+            return new $type(0, $steps);
         } catch (WorkflowExecutionFailedException|WorkflowFailedException $exp) {
-            return new $type(false, $exp->getMessage() ?? 'runner.unknown_error_when_make_result_with_config', '');
+            $msg = $exp->getMessage() ?? 'runner.unknown_error_when_make_result_with_config';
+            $steps = [$this->stepAsArray('error workflow', $msg, false, time())];
+            return new $type(0, $steps);
         } catch (\Throwable $throwable) {
             throw $throwable;
         }
     }
 
+    private function stepAsArray(string $command, string $response, bool $success, int $unixtime): array
+    {
+        return ['Command' => $command, 'Response' => $response, 'Success'=>$success, 'Unixtime' => $unixtime];
+    }
 }

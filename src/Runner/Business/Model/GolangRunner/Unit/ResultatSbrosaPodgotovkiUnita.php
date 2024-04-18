@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Runner\Business\Model;
+namespace App\Runner\Business\Model\GolangRunner\Unit;
 
-final class ResultatUdaleniyaUnita
+final class ResultatSbrosaPodgotovkiUnita
 {
     /**
      * @param array<Step> $Steps

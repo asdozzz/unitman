@@ -48,12 +48,10 @@ use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
-use App\Unitman\Infra\Temporal\Workflow\OcheredUnitovWorkflow;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Temporal\Client\WorkflowClient;
 
 #[Route('/api/unit')]
 final class UnitConroller extends AbstractController

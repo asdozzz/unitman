@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Runner;
 
+use App\Runner\Business\Port\CanGenerateGuid;
+use App\Runner\Infra\Activity\UstanovitResultatRabotosposobnostiRunneraActivity;
+use App\Runner\Infra\Adapter\RamseyGuidGenerator;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
@@ -18,5 +21,10 @@ return function (ContainerConfigurator $configuration) {
         ->public();
 
     $services->set(\App\Runner\Infra\Activity\UstanovitResultatSbrosaPodgotovkiUnitaActivity::class)
+        ->tag('temporal.activity.registry');
+
+    $services->set(CanGenerateGuid::class, RamseyGuidGenerator::class);
+
+    $services->set(UstanovitResultatRabotosposobnostiRunneraActivity::class)
         ->tag('temporal.activity.registry');
 };

@@ -76,6 +76,8 @@ final class Unit implements AggregateRoot
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?string $authorId;
 
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ?AbstractState $state;
     private ?ConfigUnita $configUnita = null;
 
     private ?string $url = null;
@@ -91,8 +93,6 @@ final class Unit implements AggregateRoot
     private ?RunnerJob $zapusk = null;
     private ?RunnerJob $ostanovka = null;
     private ?RunnerJob $udalenie = null;
-
-    private ?AbstractState $state = null;
 
     private bool $isDeleted = false;
     /**
@@ -299,15 +299,7 @@ final class Unit implements AggregateRoot
 
         $this->variableValues = $tmpVariables;
 
-        if ($this->esliZapushen()) {
-            $state = $this->newState(new Zapushen());
-        } elseif ($this->esliPodgotovlen()) {
-            $state = $this->newState(new Podgotovlen());
-        } else {
-            $state = $this->newState(new Sobran());
-        }
-
-        $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $values, $state->toArray($this)));
+        $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $values, $this->state->toArray($this)));
     }
 
     /**

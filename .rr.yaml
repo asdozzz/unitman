@@ -1,4 +1,4 @@
-version: "2.7"
+version: "3"
 
 server:
   command: "php public/index.php"
@@ -6,7 +6,7 @@ server:
       APP_RUNTIME: Runtime\RoadRunnerSymfonyNyholm\Runtime
 
 rpc:
-  listen: "tcp://0.0.0.0:6001"
+  listen: tcp://127.0.0.1:6001
 
 http:
   address: 0.0.0.0:8080
@@ -18,3 +18,14 @@ temporal:
   activities:
     command: "php bin/console temporal:workflow:runtime"
     num_workers: 10
+
+service:
+  ochered_unitov:
+    command: "php bin/console app:service:start runner_health_check"
+    process_num: 1
+    timeout_stop_sec: 10
+    exec_timeout: 0s
+    remain_after_exit: true
+    service_name_in_log: false
+    restart_sec: 1
+

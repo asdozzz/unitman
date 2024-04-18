@@ -3,10 +3,9 @@
 namespace App\Runner\Infra\Activity;
 
 use App\Runner\Acl\UnitmanAdapter;
-use App\Runner\Business\Model\ResultatSbrosaPodgotovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use Temporal\Activity\ActivityInterface;
 use Temporal\Activity\ActivityMethod;
-use Temporal\Workflow\ReturnType;
 
 #[ActivityInterface(prefix:"")]
 class UstanovitResultatSbrosaPodgotovkiUnitaActivity

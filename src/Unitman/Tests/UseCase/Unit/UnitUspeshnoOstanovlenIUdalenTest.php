@@ -208,6 +208,12 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::PODGOTOVKA);
         $this->assertTrue(empty($job));
 
+        $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
+        $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
+            'DICTIONARY_SERVICE' => 'http://v3.dict.ru',
+            'DICTIONARY_USER' => 'asdozzz'
+        ]));
+
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
         $useCase->handle(new SbrositPodgotovkuUnita($unitId));
 

@@ -11,7 +11,7 @@ final class ProjectName implements \Stringable
         $this->name = $name;
     }
 
-    static function validate($name)
+    static function validate(string $name): void
     {
         if (empty($name)) {
             throw new \DomainException('project.name_is_empty');

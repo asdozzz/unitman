@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Runner\Business\Model;
+namespace App\Runner\Business\Model\GolangRunner\Unit;
 
 final class ResultatSbrokiUnita
 {

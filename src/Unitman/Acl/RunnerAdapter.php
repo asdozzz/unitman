@@ -11,7 +11,7 @@ use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
-use App\Runner\Business\Model\Step;
+use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
@@ -39,7 +39,7 @@ final class RunnerAdapter implements RunnerService
     }
 
     /**
-     * @param array<Step> $Steps
+     * @param array $Steps
      *
      * @return array<Unit\Runner\RunnerJobStep>
      * */

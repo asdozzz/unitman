@@ -8,10 +8,12 @@ services:
       POSTGRES_USER: temporal
     ports:
       - 5433:5432
+    volumes:
+      - ./var/volume/pgdata_temporal:/var/lib/postgresql/data
 
   temporal:
     container_name: temporal
-    image: temporalio/auto-setup:1.16.2
+    image: temporalio/auto-setup:1.23.0
     depends_on:
       - postgresql
     environment:
@@ -20,30 +22,30 @@ services:
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
       - POSTGRES_SEEDS=postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
     ports:
       - 7233:7233
 
   temporal-admin-tools:
     container_name: temporal-admin-tools
-    image: temporalio/admin-tools:1.16.2
+    image: temporalio/admin-tools:1.23.0
     depends_on:
       - temporal
     environment:
+      - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CLI_ADDRESS=temporal:7233
     stdin_open: true
     tty: true
 
-  temporal-web:
-    container_name: temporal-web
-    image: temporalio/web:1.13.0
+  temporal-ui:
+    container_name: temporal-ui
     depends_on:
       - temporal
     environment:
-      - TEMPORAL_GRPC_ENDPOINT=temporal:7233
-      - TEMPORAL_PERMIT_WRITE_API=true
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_UI_ENABLED=true
+    image: temporalio/ui:2.22.3
     ports:
-      - 8088:8088
+      - 8088:8080
 
   web:
     extends:
@@ -51,6 +53,11 @@ services:
       service: web
     depends_on:
       - temporal
+    environment:
+      - PHP_OPCACHE_ENABLE=0
+      - PHP_OPCACHE_ENABLE_CLI=0
+      - PHP_ERROR_REPORTING="E_ALL"
+      - PHP_DISPLAY_ERRORS=On
 
   postgres:
     extends:

@@ -2,9 +2,8 @@
 
 namespace App\Runner\Acl;
 
-use App\Runner\Business\Model\ResultatSbrosaPodgotovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Unitman\Api\UnitmanApi;
-use App\Unitman\Business\Command\Unit\UstanovitResultatSbrosaPodgotovki;
 use App\Unitman\Business\Command\Unit\UstanovitResultatSbrosaPodgotovkiOtRunnera;
 
 final class UnitmanAdapter

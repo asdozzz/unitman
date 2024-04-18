@@ -198,11 +198,12 @@
       <path value="$PROJECT_DIR$/vendor/qossmic/deptrac-shim" />
       <path value="$PROJECT_DIR$/vendor/highcore/temporal-bundle" />
       <path value="$PROJECT_DIR$/vendor/m4tthumphrey/php-gitlab-api" />
+      <path value="$PROJECT_DIR$/vendor/spiral/roadrunner-services" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
     <interpreters>
-      <interpreter id="b934fcd4-923a-48c8-8f01-9adbdbf05297" name="web" home="docker-compose://DATA" false="false" debugger_id="php.debugger.XDebug">
+      <interpreter id="b934fcd4-923a-48c8-8f01-9adbdbf05297" name="web" home="docker-compose://DATA" auto="false" debugger_id="php.debugger.XDebug">
         <remote_data INTERPRETER_PATH="php" HELPERS_PATH="/opt/.phpstorm_helpers" VALID="true" RUN_AS_ROOT_VIA_SUDO="false" DOCKER_ACCOUNT_NAME="Docker" DOCKER_COMPOSE_SERVICE_NAME="web" DOCKER_REMOTE_PROJECT_PATH="/opt/project">
           <type_data command="RUN" />
           <dockerComposeConfigurationPaths>

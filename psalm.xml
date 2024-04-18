@@ -17,9 +17,6 @@
             <directory name="src/*/Tests" />
         </ignoreFiles>
     </projectFiles>
-    <extraFiles>
-        <directory name="var/cache/dev/Symfony/Config" /> <!-- https://github.com/psalm/psalm-plugin-symfony/issues/201 -->
-    </extraFiles>
     <plugins>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
     </plugins>

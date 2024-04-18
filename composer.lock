@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1832e8dad2c77f73a236f8b6bcc4b61e",
+    "content-hash": "c603f985c3594c56f13cfed8705fa650",
     "packages": [
         {
             "name": "amphp/amp",
@@ -5566,6 +5566,72 @@
                 "source": "https://github.com/spiral/roadrunner-kv/tree/v3.0.0"
             },
             "time": "2022-09-26T08:54:18+00:00"
+        },
+        {
+            "name": "spiral/roadrunner-services",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spiral/roadrunner-services.git",
+                "reference": "5f7305e34aa65b3ae84e11afa1264e6ab5d48871"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spiral/roadrunner-services/zipball/5f7305e34aa65b3ae84e11afa1264e6ab5d48871",
+                "reference": "5f7305e34aa65b3ae84e11afa1264e6ab5d48871",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "google/protobuf": "^3.7",
+                "php": ">=7.4",
+                "spiral/goridge": "^3.1",
+                "spiral/roadrunner": "^2.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.5",
+                "phpunit/phpunit": "^9.5",
+                "vimeo/psalm": ">=4.4"
+            },
+            "suggest": {
+                "ext-igbinary": "(>3.1.6) Igbinary serailizer support",
+                "ext-sodium": "Sodium serailizer support"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "GPBMetadata\\": "generated/GPBMetadata",
+                    "Spiral\\RoadRunner\\Services\\": [
+                        "src",
+                        "generated/Spiral/RoadRunner/Services"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Pavel Buchnev (butschster)",
+                    "email": "pavel.buchnev@spiralscout.com"
+                },
+                {
+                    "name": "RoadRunner Community",
+                    "homepage": "https://github.com/spiral/roadrunner/graphs/contributors"
+                }
+            ],
+            "description": "RoadRunner services manager",
+            "support": {
+                "issues": "https://github.com/spiral/roadrunner-services/issues",
+                "source": "https://github.com/spiral/roadrunner-services/tree/1.1.0"
+            },
+            "time": "2022-11-09T08:58:28+00:00"
         },
         {
             "name": "spiral/roadrunner-worker",

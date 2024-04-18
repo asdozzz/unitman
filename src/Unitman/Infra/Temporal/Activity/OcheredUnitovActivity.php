@@ -20,9 +20,7 @@ use App\Unitman\Business\UseCase\Unit\UstanovitResultatSbrosaPodgotovkiUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
 use App\Unitman\Infra\Repository\Unit\OcheredUnitovRepository;
-use Temporal\Activity\ActivityInterface;
 
-#[ActivityInterface(prefix: 'UnitmanActivity.')]
 final class OcheredUnitovActivity
 {
     public function __construct(

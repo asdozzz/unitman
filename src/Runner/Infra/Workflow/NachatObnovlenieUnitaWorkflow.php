@@ -3,9 +3,8 @@
 namespace App\Runner\Infra\Workflow;
 
 use App\App\Infra\Workflow\WorkflowClientFactory;
-
 use App\Runner\Business\Command\NachatObnovlenieUnita;
-use App\Runner\Business\Model\ResultatObnovleniyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\ReturnType;

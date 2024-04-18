@@ -20,7 +20,7 @@ abstract class AbstractState
     {
         $nextCodes = array_map(fn(AbstractState $state) => $state->getCode(), $this->getNextStates());
         if (!in_array($state->getCode(), $nextCodes)) {
-            throw new \DomainException(sprintf('Invalid new state, allowed: %s', join(',', $nextCodes)));
+            throw new \DomainException(sprintf('Invalid new state - %s, current state - %s waited: %s',$state->getCode(), $this->getCode(), join(',', $nextCodes)));
         }
 
         return $state;

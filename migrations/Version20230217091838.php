@@ -59,6 +59,13 @@ final class Version20230217091838 extends AbstractMigration
             constraint unitman_reconstitution
                 unique (aggregate_root_id, version)
         );");
+
+        $this->addSql("create table IF NOT EXISTS runner_state
+            (
+                id varchar(128) not null constraint runner_state_pk primary key,
+                payload jsonb
+            );
+        ");
     }
 
     public function down(Schema $schema): void
@@ -66,5 +73,6 @@ final class Version20230217091838 extends AbstractMigration
         $this->addSql('DROP TABLE checkpoint_store');
         $this->addSql('DROP TABLE account_event_store');
         $this->addSql('DROP TABLE unitman_event_store');
+        $this->addSql('DROP TABLE runner_state');
     }
 }

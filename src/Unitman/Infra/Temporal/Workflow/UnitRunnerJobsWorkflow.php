@@ -2,42 +2,26 @@
 
 namespace App\Unitman\Infra\Temporal\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
-use App\Unitman\Infra\Temporal\Activity\OcheredUnitovActivity;
-use App\Unitman\Infra\Temporal\Activity\UnitRunnerJobsProjectionActivity;
-use Carbon\CarbonInterval;
-use Temporal\Activity\ActivityOptions;
-use Temporal\Promise;
-use Temporal\Workflow;
-use Temporal\Workflow\WorkflowInterface;
-use Temporal\Workflow\WorkflowMethod;
+use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
+use App\Unitman\Infra\Projection\UnitRunnerJobsProjection;
+use App\Utils\EventSauce\ProjectionsManager;
 
-#[WorkflowInterface]
-final class UnitRunnerJobsWorkflow
+final class UnitRunnerJobsWorkflow extends AbstractBackgroundJob
 {
-    /**
-     * @psalm-suppress MissingPropertyType
-     * */
-    private $activity;
-
-    public function __construct()
+    public function __construct(private ProjectionsManager $projectionsManager)
     {
-        $this->activity = Workflow::newActivityStub(
-            UnitRunnerJobsProjectionActivity::class,
-            ActivityOptions::new()
-                ->withScheduleToCloseTimeout(CarbonInterval::seconds(10))
-                ->withTaskQueue(WorkflowClientFactory::monoQueueName)
-        );
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     * */
-    #[WorkflowMethod('ObrabotkaProekzii')]
-    function run(): \Generator
+    function getName(): string
     {
-        yield $this->activity->handleNewEvents();
+        return 'unit_runner_jobs';
+    }
 
-        return 'OK';
+    function run(): bool
+    {
+        $this->projectionsManager->pullProjectionByName(UnitRunnerJobsProjection::PROJECTION_NAME);
+
+        return true;
     }
 }

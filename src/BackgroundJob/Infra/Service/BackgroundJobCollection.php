@@ -16,6 +16,24 @@ final class BackgroundJobCollection
         $this->collection = $collection;
     }
 
+    public function getJobByName(string $name): BackgroundJobInterface
+    {
+        $result = null;
+
+        foreach ($this->collection as $job) {
+            if ($job->getName() === $name) {
+                $result = $job;
+                break;
+            }
+        }
+
+        if (empty($result)) {
+            throw new \Exception('job.not_found_by_name');
+        }
+
+        return $result;
+    }
+
     public function startAll(): void
     {
         $this->backgroundJobService->init();

@@ -3,16 +3,15 @@
 namespace App\BackgroundJob\Infra\Service;
 
 use App\BackgroundJob\Infra\Repository\JobRepository;
-use App\BackgroundJob\Infra\Workflow\StartJobWorkflow;
-use Temporal\Client\WorkflowClient;
-use Temporal\Client\WorkflowOptions;
-use Temporal\Common\IdReusePolicy;
-use Temporal\Exception\Client\WorkflowExecutionAlreadyStartedException;
+use Spiral\Goridge\RPC\RPC;
+use Spiral\RoadRunner\Services\Exception\ServiceException;
+use Spiral\RoadRunner\Services\Manager;
 
 final class BackgroundJobService
 {
-    public function __construct(private WorkflowClient $workflowClient, private JobRepository $jobRepository)
+    public function __construct(private JobRepository $jobRepository)
     {
+        $this->manager = new Manager(RPC::create('tcp://127.0.0.1:6001'));
     }
 
     function init(): void
@@ -20,77 +19,63 @@ final class BackgroundJobService
         $this->jobRepository->init();
     }
 
-    private function getWorkflowJobOptions(): WorkflowOptions
+    private function getStatus(BackgroundJobInterface $job): array
     {
-        return WorkflowOptions::new()
-            ->withWorkflowIdReusePolicy(IdReusePolicy::POLICY_UNSPECIFIED)
-            ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName);
-    }
-
-    function isAlreadyRun(string $name): bool
-    {
-        $oldRunId = $this->jobRepository->findRunIdByName($name);
-
-        if (empty($oldRunId)) {
-            return false;
-        }
-
         try {
-            /** @psalm-suppress NoValue*/
-            $workflow = $this->workflowClient->newRunningWorkflowStub(
-                StartJobWorkflow::class,
-                $oldRunId
-            );
+            $status = $this->manager->statuses(name: $job->getName());
 
-            $counter = $workflow->getCounter();
-            /** @var int $counter*/
-        } catch (\Exception $e) {
-            return false;
+            return $status;
+        } catch (ServiceException) {
+            return [];
         }
 
-        return isset($counter);
     }
 
     function start(BackgroundJobInterface $job): void
     {
-        $options = $this->getWorkflowJobOptions();
+        $status = $this->getStatus($job);
 
         try {
-            $workflow = $this->workflowClient->newWorkflowStub(
-                StartJobWorkflow::class,
-                $options->withWorkflowId($job->getName())
-            );
 
-            $run = $this->workflowClient->start($workflow, $job->getWorkflowClass(), $job->getMethodName());
-            $this->jobRepository->start($job->getName(), $run->getExecution()->getID());
-        } catch (WorkflowExecutionAlreadyStartedException $e) {
-            $workflow = $this->workflowClient->newUntypedRunningWorkflowStub($job->getName());
-            $this->jobRepository->start($job->getName(), $workflow->getExecution()->getID());
+            if (!empty($status)) {
+                $this->manager->restart($job->getName());
+            } else {
+                $result = $this->manager->create(
+                    name: $job->getName(),
+                    command: 'php bin/console app:service:start '.$job->getName(),
+                    remainAfterExit: true,
+                    restartSec: 1
+                );
+
+                if (!$result) {
+                    throw new ServiceException('Service creation failed.');
+                }
+            }
+
+            $this->jobRepository->start($job->getName(), $job->getName());
+        } catch (ServiceException $exception) {
+            dd($exception);
         }
+
     }
 
     function stop(BackgroundJobInterface $job): void
     {
-        $runId = $this->jobRepository->findRunIdByName($job->getName());
-
-        if (empty($runId)) {
-            $this->jobRepository->stop($job->getName());
-            return;
-        }
-
         try {
-            /** @psalm-suppress NoValue*/
-            $workflow = $this->workflowClient->newRunningWorkflowStub(
-                StartJobWorkflow::class,
-                $runId
-            );
+            $status = $this->getStatus($job);
 
-            $workflow->stop();
-        } catch (\Exception $e) {
+            if (!empty($status)) {
+                $result = $this->manager->terminate(name: $job->getName());
 
+                if (!$result) {
+                    throw new ServiceException('Service termination failed.');
+                }
+            }
+
+            $this->jobRepository->stop($job->getName());
+        } catch (ServiceException $exception) {
+            dd($exception);
         }
 
-
-        $this->jobRepository->stop($job->getName());
     }
 }

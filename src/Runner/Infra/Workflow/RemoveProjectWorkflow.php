@@ -3,7 +3,7 @@
 namespace App\Runner\Infra\Workflow;
 use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\RemoveProjectCommand;
-use App\Runner\Business\Model\RemoveProjectResult;
+use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\WorkflowInterface;

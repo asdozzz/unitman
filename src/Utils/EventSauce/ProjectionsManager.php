@@ -100,7 +100,7 @@ final class ProjectionsManager
 
     }
 
-    public function pullProjectionByName(string $projectionName)
+    public function pullProjectionByName(string $projectionName): void
     {
         $this->connection->beginTransaction();
         try {

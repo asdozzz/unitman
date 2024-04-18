@@ -3,7 +3,7 @@
 namespace App\Runner\Infra\Workflow;
 use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\InitProjectCommand;
-use App\Runner\Business\Model\InitProjectResult;
+use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\WorkflowInterface;

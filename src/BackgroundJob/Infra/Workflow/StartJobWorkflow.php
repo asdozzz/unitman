@@ -4,6 +4,7 @@ namespace App\BackgroundJob\Infra\Workflow;
 
 use Temporal\Client\WorkflowOptions;
 use Temporal\Workflow;
+use Temporal\Workflow\ContinueAsNewOptions;
 use Temporal\Workflow\QueryMethod;
 use Temporal\Workflow\ReturnType;
 use Temporal\Workflow\SignalMethod;
@@ -13,7 +14,6 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 final class StartJobWorkflow
 {
-    public const WORKFLOW_ID = 'StartJobWorkflow';
     private bool $pause = false;
     private bool $stop = false;
     private int $counter = 0;

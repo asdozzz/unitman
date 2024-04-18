@@ -4,7 +4,7 @@ namespace App\Runner\Infra\Workflow;
 
 use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\NachatUdalenieUnita;
-use App\Runner\Business\Model\ResultatUdaleniyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\ReturnType;

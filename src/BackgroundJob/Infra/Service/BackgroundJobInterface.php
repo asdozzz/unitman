@@ -6,7 +6,9 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 #[AutoconfigureTag('app.background_job')]
 interface BackgroundJobInterface
 {
-    function getWorkflowClass(): string;
-    function getMethodName(): string;
     function getName(): string;
+
+    function run(): bool;
+
+    function getDelay(): int;
 }
