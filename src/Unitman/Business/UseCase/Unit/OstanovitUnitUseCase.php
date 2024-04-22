@@ -6,13 +6,15 @@ use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 
 final class OstanovitUnitUseCase
 {
     public function __construct(
         private UnitRepository $unitRepository,
         private RunnerService $runnerService,
-        private ProjectRepository $projectRepository
+        private ProjectRepository $projectRepository,
+        private UnitmanSecurityService $securityService
     )
     {
     }
@@ -20,6 +22,7 @@ final class OstanovitUnitUseCase
     function handle(OstanovitUnit $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
+        $unit->proverkaPrav($this->securityService->getCurrentUserId());
         $project = $this->projectRepository->getById($unit->getProjectId());
         $jobId = $this->runnerService->nachatOstanovkuUnita($unit, $project);
         $unit->nachatOstanovkuUnita($jobId);

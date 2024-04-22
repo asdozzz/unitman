@@ -985,4 +985,11 @@ final class Unit implements AggregateRoot
     {
         return $this->configUnita;
     }
+
+    function proverkaPrav(string $userId): void
+    {
+        if (!$this->esliRazreshenoUpravlyatUnitom($userId)) {
+            throw new DomainException('unit.ne_hvataet_prav');
+        }
+    }
 }

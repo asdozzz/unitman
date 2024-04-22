@@ -18,9 +18,7 @@ final class ZapolnitPeremenieUnitaUseCase
     function handle(ZapolnitPeremenieUnita $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
-        if (!$unit->esliRazreshenoUpravlyatUnitom($this->securityService->getCurrentUserId())) {
-            throw new \DomainException('unit.ne_hvataet_prav');
-        }
+        $unit->proverkaPrav($this->securityService->getCurrentUserId());
         $unit->zapolnitPeremenie($command->values);
         $this->unitRepository->save($unit);
     }

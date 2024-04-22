@@ -22,10 +22,7 @@ final class ZapustitUnitUseCase
     function handle(ZapustitUnit $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
-
-        if (!$unit->esliRazreshenoUpravlyatUnitom($this->securityService->getCurrentUserId())) {
-            throw new \DomainException('unit.ne_hvataet_prav');
-        }
+        $unit->proverkaPrav($this->securityService->getCurrentUserId());
 
         $project = $this->projectRepository->getById($unit->getProjectId());
 

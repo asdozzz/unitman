@@ -27,6 +27,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -39,7 +40,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
 {
     public function __construct(
         private SpisokUnitovRepository $repository,
-        private ProjectRepository $projectRepository
+        private ProjectRepository $projectRepository,
+        private UnitmanSecurityService $securityService,
     )
     {
     }
@@ -66,9 +68,11 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleUnitSozdan(UnitSozdan $fact): void
     {
         $project = $this->projectRepository->getById($fact->projectId);
+        $authorName = $this->securityService->getEmailByUserId($fact->authorId);
         $readModel = new SpisokUnitovReadModel(
             $fact->id,
             $fact->authorId,
+            $authorName,
             $fact->name,
             $fact->projectId,
             $project->getName(),

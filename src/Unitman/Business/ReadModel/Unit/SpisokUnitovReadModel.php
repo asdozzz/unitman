@@ -7,6 +7,7 @@ final class SpisokUnitovReadModel
     public function __construct(
         public readonly string $id,
         public readonly string $authorId,
+        public readonly string $authorName,
         public readonly string $name,
         public readonly string $projectId,
         public readonly string $projectName,
@@ -38,6 +39,7 @@ final class SpisokUnitovReadModel
         return new static(
             $id,
             $authorId,
+            $this->authorName,
             $name,
             $projectId,
             $projectName,

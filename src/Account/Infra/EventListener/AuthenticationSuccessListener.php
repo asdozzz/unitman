@@ -2,6 +2,7 @@
 
 namespace App\Account\Infra\EventListener;
 
+use App\Account\Business\Model\JWTUser;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -14,12 +15,13 @@ final class AuthenticationSuccessListener
         $data = $event->getData();
         $user = $event->getUser();
 
-        if (!$user instanceof JWTUserInterface) {
+        if (!$user instanceof JWTUser) {
             return;
         }
 
         $data['user'] = array(
-            'email' => $user->getUserIdentifier(),
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
             'roles' => $user->getRoles(),
         );
 

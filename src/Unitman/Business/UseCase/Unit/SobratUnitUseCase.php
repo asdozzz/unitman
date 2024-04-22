@@ -20,9 +20,7 @@ final class SobratUnitUseCase
     function handle(SobratUnit $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
-        if (!$unit->esliRazreshenoUpravlyatUnitom($this->securityService->getCurrentUserId())) {
-            throw new \DomainException('unit.ne_hvataet_prav');
-        }
+        $unit->proverkaPrav($this->securityService->getCurrentUserId());
         $jobId = $this->runnerService->nachatSborkuUnita($unit);
         $unit->nachatSborkuUnita($jobId);
         $this->unitRepository->save($unit);
