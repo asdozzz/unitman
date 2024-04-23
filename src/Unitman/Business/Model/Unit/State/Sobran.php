@@ -7,9 +7,11 @@ use App\Unitman\Business\Model\Unit;
 final class Sobran extends AbstractState
 {
 
+    const CODE = 'USPESHNO_SOBRAN';
+
     public function getCode(): string
     {
-        return 'USPESHNO_SOBRAN';
+        return self::CODE;
     }
 
     /**

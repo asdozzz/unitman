@@ -9,13 +9,14 @@ use App\Unitman\Business\Port\UnitmanSecurityService;
 final class GetUnitListQuery
 {
     public function __construct(
-        private CanGetUnitList $repo
+        private CanGetUnitList $repo,
+        private UnitmanSecurityService $securityService
     )
     {
     }
 
     function handle(GetUnitList $query): array
     {
-        return $this->repo->getList($query);
+        return $this->repo->getList($query, $this->securityService->getCurrentUserId());
     }
 }

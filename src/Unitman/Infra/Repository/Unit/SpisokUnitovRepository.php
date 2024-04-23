@@ -99,11 +99,41 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         return !empty($row);
     }
 
-    function getList(GetUnitList $query): array
+    function getList(GetUnitList $query, string $currentUserId): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table ORDER BY id desc LIMIT :limit OFFSET :offset",
-            ['limit' => $query->limit, 'offset' => $query->offset]);
+        $params = ['limit' => $query->limit, 'offset' => $query->offset];
+        $whereArr = [];
+
+        if (!empty($query->filter->onlyMine)) {
+            $whereArr[] = "payload->>'authorId' = :authorId";
+            $params['authorId'] = $currentUserId;
+        }
+
+        if (!empty($query->filter->name)) {
+            $whereArr[] = "payload->>'name' = :name";
+            $params['name'] = $query->filter->name;
+        }
+
+        if (!empty($query->filter->branch)) {
+            $whereArr[] = "payload->>'branch' = :branch";
+            $params['branch'] = $query->filter->branch;
+        }
+
+        if (!empty($query->filter->projectId)) {
+            $whereArr[] = "payload->>'projectId' = :projectId";
+            $params['projectId'] = $query->filter->projectId;
+        }
+
+        if (!empty($whereArr)) {
+            $where = "WHERE ".join(' AND ', $whereArr);
+        } else {
+            $where = '';
+        }
+
+
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table $where ORDER BY id desc LIMIT :limit OFFSET :offset",
+            $params);
 
         $result = [];
         foreach ($rows as $row) {

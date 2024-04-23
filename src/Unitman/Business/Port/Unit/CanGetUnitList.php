@@ -10,5 +10,5 @@ interface CanGetUnitList
     /**
      * @return SpisokUnitovReadModel[]
      * */
-    function getList(GetUnitList $query): array;
+    function getList(GetUnitList $query, string $currentUserId): array;
 }
