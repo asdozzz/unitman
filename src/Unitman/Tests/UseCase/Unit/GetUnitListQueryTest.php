@@ -17,9 +17,14 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         yield [new GetUnitListFilter(true), '6', ['4', '3']];
         yield [new GetUnitListFilter(true), '7', ['6', '5']];
         yield [new GetUnitListFilter(name: '001'), '6', ['1']];
+        yield [new GetUnitListFilter(name: '01'), '6', ['1']];
         yield [new GetUnitListFilter(name: '002'), '6', ['2']];
+        yield [new GetUnitListFilter(name: '00'), '6', ['6', '5','4','3','2','1']];
         yield [new GetUnitListFilter(branch: 'master'), '6', ['2', '1']];
+        yield [new GetUnitListFilter(branch: 'ster'), '6', ['2', '1']];
         yield [new GetUnitListFilter(branch:  'feature/001'), '6', ['6', '5','4','3']];
+        yield [new GetUnitListFilter(branch:  'feature'), '6', ['6', '5','4','3']];
+        yield [new GetUnitListFilter(branch:  '001'), '6', ['6', '5','4','3']];
         yield [new GetUnitListFilter(projectId:  'pr1'), '6', ['4', '3','2','1']];
         yield [new GetUnitListFilter(), '6', ['6', '5','4','3','2','1']];
     }

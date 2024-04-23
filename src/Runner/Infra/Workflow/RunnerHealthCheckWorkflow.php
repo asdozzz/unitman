@@ -5,7 +5,9 @@ use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Model\GolangRunner\Runner\RunnerHealthCheckResult;
 use App\Runner\Infra\Activity\UstanovitResultatRabotosposobnostiRunneraActivity;
 use Carbon\CarbonInterval;
+use PharIo\Version\Exception;
 use Temporal\Activity\ActivityOptions;
+use Temporal\Common\RetryOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\WorkflowInterface;
 use Temporal\Workflow\WorkflowMethod;
@@ -38,15 +40,25 @@ final class RunnerHealthCheckWorkflow
         $runners = yield $this->activity->getAll();
 
         foreach ($runners as $runner) {
-            $result = yield Workflow::executeActivity(
-                'RunnerHealthCheckActivity',
-                [],
-                ActivityOptions::new()
-                    ->withStartToCloseTimeout(5)
-                    ->withTaskQueue($runner['taskQueue'])
-            );
-            /** @var RunnerHealthCheckResult $result*/
-            yield $this->activity->updateState($runner['id'], $result->Success);
+            try {
+                $result = yield Workflow::executeActivity(
+                    'RunnerHealthCheckActivity',
+                    [],
+                    ActivityOptions::new()
+                        ->withRetryOptions(
+                            RetryOptions::new()
+                                ->withMaximumAttempts(1)
+                        )
+                        ->withStartToCloseTimeout(10)
+                        ->withScheduleToStartTimeout(10)
+                        ->withTaskQueue($runner['taskQueue'])
+                );
+                /** @var RunnerHealthCheckResult $result*/
+                yield $this->activity->updateState($runner['id'], $result->Success);
+            } catch (\Throwable $e) {
+                yield $this->activity->updateState($runner['id'], false);
+            }
+
         }
 
         return "<pre>" . print_r($runners, true) . "</pre>";

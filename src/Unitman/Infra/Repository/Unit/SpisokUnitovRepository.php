@@ -111,13 +111,13 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         }
 
         if (!empty($query->filter->name)) {
-            $whereArr[] = "payload->>'name' = :name";
-            $params['name'] = $query->filter->name;
+            $whereArr[] = "payload->>'name' like :name";
+            $params['name'] = '%'.$query->filter->name.'%';
         }
 
         if (!empty($query->filter->branch)) {
-            $whereArr[] = "payload->>'branch' = :branch";
-            $params['branch'] = $query->filter->branch;
+            $whereArr[] = "payload->>'branch' like :branch";
+            $params['branch'] = '%'.$query->filter->branch.'%';
         }
 
         if (!empty($query->filter->projectId)) {
