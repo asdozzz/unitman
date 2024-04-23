@@ -299,7 +299,13 @@ final class Unit implements AggregateRoot
 
         $this->variableValues = $tmpVariables;
 
-        $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $values, $this->state->toArray($this)));
+        if (empty($this->state)) {
+            $state = new Sozdan();
+        } else {
+            $state = $this->state;
+        }
+
+        $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $values, $state->toArray($this)));
     }
 
     /**

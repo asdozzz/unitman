@@ -9,6 +9,7 @@ use Spiral\RoadRunner\Services\Manager;
 
 final class BackgroundJobService
 {
+    private Manager $manager;
     public function __construct(private JobRepository $jobRepository)
     {
         $this->manager = new Manager(RPC::create('tcp://127.0.0.1:6001'));

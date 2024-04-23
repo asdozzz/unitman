@@ -44,10 +44,10 @@ final class RoadrunnerServiceCommand extends Command
                     sleep($job->getDelay());
                 } catch (\Exception $e) {
                     $countError++;
-                    $this->logger->error(sprintf('service %s occured error: %', $serviceName, $e->getMessage()));
+                    $this->logger->error(sprintf('service %s occured error: %s', $serviceName, $e->getMessage()));
                     if ($countError >= 3) {
                         $this->logger->error('Max count error with service'.$serviceName);
-                        continue;
+                        break;
                     }
 
                     sleep($job->getDelay()*5);

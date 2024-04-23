@@ -26,5 +26,6 @@ deptrac:
     Account:
     BackgroundJob:
     Runner:
+      - BackgroundJob
     Unitman:
       - BackgroundJob

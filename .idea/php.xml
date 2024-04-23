@@ -195,7 +195,6 @@
       <path value="$PROJECT_DIR$/vendor/spiral/roadrunner-http" />
       <path value="$PROJECT_DIR$/vendor/eventsauce/id-encoding" />
       <path value="$PROJECT_DIR$/vendor/nelmio/cors-bundle" />
-      <path value="$PROJECT_DIR$/vendor/qossmic/deptrac-shim" />
       <path value="$PROJECT_DIR$/vendor/highcore/temporal-bundle" />
       <path value="$PROJECT_DIR$/vendor/m4tthumphrey/php-gitlab-api" />
       <path value="$PROJECT_DIR$/vendor/spiral/roadrunner-services" />

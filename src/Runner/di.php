@@ -20,9 +20,6 @@ return function (ContainerConfigurator $configuration) {
         ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
         ->public();
 
-    $services->set(\App\Runner\Infra\Activity\UstanovitResultatSbrosaPodgotovkiUnitaActivity::class)
-        ->tag('temporal.activity.registry');
-
     $services->set(CanGenerateGuid::class, RamseyGuidGenerator::class);
 
     $services->set(UstanovitResultatRabotosposobnostiRunneraActivity::class)

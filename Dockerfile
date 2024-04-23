@@ -8,7 +8,7 @@ RUN adduser -u ${CURRENT_USER_ID} -G groupcontainer -h /home/containeruser -D co
 RUN adduser containeruser root
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-COPY --from=temporalio/admin-tools /usr/local/bin/tctl /usr/local/bin/tctl
+COPY --from=temporalio/admin-tools:1.23.0 /usr/local/bin/tctl /usr/local/bin/tctl
 
 RUN mkdir www
 

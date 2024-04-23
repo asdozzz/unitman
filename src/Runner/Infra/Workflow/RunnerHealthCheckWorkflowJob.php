@@ -3,6 +3,7 @@
 namespace App\Runner\Infra\Workflow;
 
 use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
+use PharIo\Version\Exception;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
 use Temporal\Common\IdReusePolicy;
@@ -27,16 +28,21 @@ final class RunnerHealthCheckWorkflowJob implements BackgroundJobInterface
 
     function run(): bool
     {
-        $options = $this->getWorkflowJobOptions();
+        try {
+            $options = $this->getWorkflowJobOptions();
 
-        $workflow = $this->workflowClient->newWorkflowStub(
-            RunnerHealthCheckWorkflow::class,
-            $options->withWorkflowId($this->getName())
-        );
+            $workflow = $this->workflowClient->newWorkflowStub(
+                RunnerHealthCheckWorkflow::class,
+                $options->withWorkflowId($this->getName())
+            );
 
-        $workflow->run();
+            $workflow->run();
 
-        return true;
+            return true;
+        } catch (Exception) {
+            return false;
+        }
+
     }
 
     function getDelay(): int

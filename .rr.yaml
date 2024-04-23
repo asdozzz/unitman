@@ -21,7 +21,7 @@ temporal:
 
 service:
   ochered_unitov:
-    command: "php bin/console app:service:start runner_health_check"
+    command: "php bin/console app:service:start ochered_unitov"
     process_num: 1
     timeout_stop_sec: 10
     exec_timeout: 0s

@@ -40,7 +40,7 @@ final class SymfonyConverter extends Converter
         try {
             return $this->serializer->deserialize($payload->getData(), $type->getName(), 'json');
         } catch (\Exception $e) {
-            throw new DataConverterException($e->getMessage(), $e->getCode(), $e);
+            throw new DataConverterException($e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 }

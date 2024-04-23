@@ -27,7 +27,7 @@ services:
 
   temporal-admin-tools:
     container_name: temporal-admin-tools
-    image: temporalio/admin-tools:1.23.0
+    image: temporalio/admin-tools:1.23
     depends_on:
       - temporal
     environment:
@@ -38,12 +38,12 @@ services:
 
   temporal-ui:
     container_name: temporal-ui
+    image: temporalio/ui:2.22.3
     depends_on:
       - temporal
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_UI_ENABLED=true
-    image: temporalio/ui:2.22.3
     ports:
       - 8088:8080
 
