@@ -105,7 +105,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $params = ['limit' => $query->limit, 'offset' => $query->offset];
         $whereArr = [];
 
-        if (!empty($query->filter->onlyMine)) {
+        if ($query->filter->onlyMine) {
             $whereArr[] = "payload->>'authorId' = :authorId";
             $params['authorId'] = $currentUserId;
         }
