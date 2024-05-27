@@ -56,7 +56,7 @@ final class UnitRunnerJobRepository implements CanGetUnitRunnerJobs
     function findAllRunnerJobsByUnitId(string $unitId): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE unit_id = :unitId", ['unitId' => $unitId]);
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE unit_id = :unitId  ORDER BY id desc", ['unitId' => $unitId]);
         if (empty($rows)) {
             return [];
         }
