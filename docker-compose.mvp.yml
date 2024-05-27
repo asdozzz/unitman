@@ -1,0 +1,79 @@
+version: '3.7'
+services:
+  postgresql:
+    container_name: temporal-postgresql
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: temporal
+      POSTGRES_USER: temporal
+    ports:
+      - 5433:5432
+    volumes:
+      - ./var/volume/pgdata_temporal:/var/lib/postgresql/data
+
+  temporal:
+    container_name: temporal
+    image: temporalio/auto-setup:1.23.0
+    depends_on:
+      - postgresql
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=postgresql
+    ports:
+      - 7233:7233
+
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    image: temporalio/admin-tools:1.23
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    container_name: temporal-ui
+    image: temporalio/ui:2.22.3
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_UI_ENABLED=true
+    ports:
+      - 8088:8080
+
+  web:
+    extends:
+      file: common-services.yml
+      service: web
+    depends_on:
+      - temporal
+    environment:
+      - PHP_OPCACHE_ENABLE=0
+      - PHP_OPCACHE_ENABLE_CLI=0
+      - PHP_ERROR_REPORTING="E_ALL"
+      - PHP_DISPLAY_ERRORS=On
+
+  postgres:
+    extends:
+      file: common-services.yml
+      service: postgres
+
+  unitman-proxy:
+    extends:
+      file: common-services.yml
+      service: unitman-proxy
+
+  unitman-front:
+    build: https://oauth2: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@github.com/asdozzz/unitman-front.git
+    ports:
+      - ${UNITMAN_FRONT_PORT}:80
+    depends_on:
+      - web
+
+
