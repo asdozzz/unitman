@@ -6,6 +6,7 @@ final class NachatPodgotovkuUnita
 {
     public function __construct(
         public readonly string $ProjectId,
+        public readonly string $ProjectName,
         public readonly string $Id,
         public readonly string $Name,
         public readonly string $StorageUrl,

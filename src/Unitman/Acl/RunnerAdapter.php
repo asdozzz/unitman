@@ -77,7 +77,7 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit);
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables);
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables);
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($command);
         return new JobId($workflowId);
     }
