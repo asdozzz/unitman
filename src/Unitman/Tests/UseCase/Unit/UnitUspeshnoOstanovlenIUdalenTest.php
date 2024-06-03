@@ -87,6 +87,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_ZAPUSKA, new ResultatZapuskaUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::OSTANOVKA_UNITA, new JobId('OSTANOVKA_UNITA'));
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OSTANOVKI, new ResultatOstanovkiUnita(true,$stepsSuccess));
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, new JobId('SBROS_PODGOTOVKI_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, new JobId('UDALENIE_UNITA'));
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(false,$stepsFail));
         self::$container->set(RunnerService::class, $memoryRunner);
@@ -344,6 +346,12 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OSTANOVKA);
         $this->assertTrue(empty($job));
+
+        $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);
+        $useCase->handle(new SbrositPodgotovkuUnita($unitId));
+
+        $useCase = self::$container->get(UstanovitResultatSbrosaPodgotovkiUseCase::class);
+        $useCase->handle(new UstanovitResultatSbrosaPodgotovki($unitId));
 
         $useCase = self::$container->get(UdalitUnitUseCase::class);
         $useCase->handle(new UdalitUnit($unitId));
