@@ -123,6 +123,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             StateUserCommand::nachatObnovlenie->value,
             StateUserCommand::zapolnitPeremenie->value,
         ]);
+        $this->assertEquals($spisokUnitovReadModel->links,
+            ['https://80.task-123.uwin.testcase.ru', 'https://8080.task-123.uwin.testcase.ru', 'tcp://task-123.uwin:5043'],
+        );
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
@@ -178,6 +181,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
+        $this->assertEquals($spisokUnitovReadModel->links,
+            ['https://80.task-123.uwin.testcase.ru', 'https://8080.task-123.uwin.testcase.ru', 'tcp://task-123.uwin:5043'],
+        );
 
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OBNOVLENIE);
         $this->assertTrue(empty($job));
@@ -250,6 +256,10 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
+        $this->assertEquals($spisokUnitovReadModel->links,
+            ['https://80.task-123.uwin.testcase.ru', 'https://8080.task-123.uwin.testcase.ru', 'tcp://task-123.uwin:5043'],
+        );
+
 
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OBNOVLENIE);
         $this->assertTrue(empty($job));
@@ -311,7 +321,6 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_ZAPUSHEN');
-        $this->assertEquals($spisokUnitovReadModel->url, 'https://task-123.uwin.testcase.ru');
 
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::ZAPUSK);
         $this->assertTrue(empty($job));
@@ -331,7 +340,6 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->url, null);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
 
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::OSTANOVKA);

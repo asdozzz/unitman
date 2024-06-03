@@ -11,8 +11,7 @@ final class UstanovitResultatZapuskaUseCase
 {
     public function __construct(
         private UnitRepository $unitRepository,
-        private RunnerService $runnerService,
-        private ProjectRepository $projectRepository
+        private RunnerService $runnerService
     )
     {
     }
@@ -22,8 +21,7 @@ final class UstanovitResultatZapuskaUseCase
         $unit = $this->unitRepository->getById($command->id);
         $resultatZapuska = $this->runnerService->poluchitResultatZapuskaUnita($unit);
         if ($resultatZapuska->success) {
-            $project = $this->projectRepository->getById($unit->getProjectId());
-            $unit->ustanovitUspehZapuska($resultatZapuska->steps, (string) $project->getProxyHost(), $project->getName());
+            $unit->ustanovitUspehZapuska($resultatZapuska->steps);
         } else {
             $unit->ustanovitOshibkuZapuska($resultatZapuska->steps);
         }

@@ -16,7 +16,7 @@ final class SpisokUnitovReadModel
         public readonly bool $waitResultFromRunner,
         public readonly array $commands = [],
         public readonly bool $error = false,
-        public readonly ?string $url = null,
+        public readonly array $links = [],
     )
     {
     }
@@ -33,7 +33,7 @@ final class SpisokUnitovReadModel
         $state = $props['state']??$this->state;
         $waitResultFromRunner = isset($props['waitResultFromRunner'])?$props['waitResultFromRunner']:$this->waitResultFromRunner;
         $commands = isset($props['commands'])?$props['commands']:$this->commands;
-        $url = array_key_exists('url', $props)?$props['url']:$this->url;
+        $links = array_key_exists('links', $props)?$props['links']:$this->links;
         $error = array_key_exists('error', $props)?$props['error']:$this->error;
 
         return new static(
@@ -48,7 +48,7 @@ final class SpisokUnitovReadModel
             $waitResultFromRunner,
             $commands,
             $error,
-            $url,
+            $links,
         );
     }
 }

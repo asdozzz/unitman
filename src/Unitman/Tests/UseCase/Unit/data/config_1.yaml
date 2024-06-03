@@ -23,6 +23,16 @@ variables:
         projectCode: services/orders
     defaultValue: master
 
+services:
+  web:
+    ports:
+      - port: 80
+        type: 'http'
+      - port: 8080
+        type: 'http'
+      - port: 5043
+        type: 'tcp'
+
 prepare:
   - cp -f .env.runner .env
   - mkdir -p config/jwt

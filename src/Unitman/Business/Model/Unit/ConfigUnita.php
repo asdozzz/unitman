@@ -2,22 +2,31 @@
 
 namespace App\Unitman\Business\Model\Unit;
 
+use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
 use App\Unitman\Business\Model\Unit\ConfigVariable\ConfigVariableFactory;
 
 final class ConfigUnita
 {
+    /**
+     * @var ConfigVariable[]
+     * */
     private array $variables;
     private array $prepare;
     private array $resetPrepare;
     private array $up;
     private array $down;
+    /**
+     * @var KonfigServisa[]
+     * */
+    private array $services;
 
     public function __construct(
         array $variables,
         array $prepare,
         array $resetPrepare,
         array $up,
-        array $down
+        array $down,
+        array $services
     )
     {
         //TODO вынести вызов фабрики в тест кейс и использовать DI
@@ -34,10 +43,18 @@ final class ConfigUnita
         if (empty($down)) {
             throw new \DomainException('unit.config.down_is_empty');
         }
+        if (empty($services)) {
+            throw new \DomainException('unit.config.services_is_empty');
+        }
         $this->prepare = $prepare;
         $this->resetPrepare = $resetPrepare;
         $this->up = $up;
         $this->down = $down;
+
+        $this->services = [];
+        foreach ($services as $serviceName => $serviceData) {
+            $this->services[] = KonfigServisa::fromServiceData($serviceName, $serviceData);
+        }
     }
 
     function toArray(): array
@@ -48,6 +65,7 @@ final class ConfigUnita
             'reset_prepare' => $this->resetPrepare,
             'up' => $this->up,
             'down' => $this->down,
+            'services' => array_map(fn(KonfigServisa $service): array => $service->toArray(), $this->services),
         ];
     }
 
@@ -59,6 +77,7 @@ final class ConfigUnita
             isset($cfg['reset_prepare']) && is_array($cfg['reset_prepare'])?$cfg['reset_prepare']:[],
             isset($cfg['up']) && is_array($cfg['up'])?$cfg['up']:[],
             isset($cfg['down']) && is_array($cfg['down'])?$cfg['down']:[],
+            isset($cfg['services']) && is_array($cfg['services'])?$cfg['services']:[],
         );
     }
 
@@ -126,5 +145,13 @@ final class ConfigUnita
     public function getDown(): array
     {
         return $this->down;
+    }
+
+    /**
+     * @return KonfigServisa[]
+     * */
+    public function getServices(): array
+    {
+        return $this->services;
     }
 }

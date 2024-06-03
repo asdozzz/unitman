@@ -110,10 +110,43 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
 
     function handleUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
     {
+        $links = [];
+
         $readModel =$this->repository->getById($fact->unitId);
+
+        if (!empty($fact->configUnita['services'])) {
+            $project = $this->projectRepository->getById($readModel->projectId);
+
+            $projectProxyHost = $project->getProxyHost();
+            $projectName = $project->getName();
+            $pathinfo = parse_url((string)$projectProxyHost);
+            /** @var array|false $pathinfo*/
+
+            if ($pathinfo === false) {
+                throw new \DomainException('unit.invalid_proxy_host');
+            }
+
+            foreach ($fact->configUnita['services'] as $service) {
+                foreach ($service['ports'] as $portData) {
+                    if ($portData['type'] == 'http') {
+                        $link = $pathinfo['scheme'].'://'.$portData['port'].'.'.$readModel->name.'.'.$projectName.'.'.$pathinfo['host'];
+                        if (!empty($pathinfo['port'])) {
+                            $link .= ':'.$pathinfo['port'];
+                        }
+                    } else {
+                        $link = $portData['type'].'://'.$readModel->name.'.'.$projectName.':'.$portData['port'];
+                    }
+                    $links[] = $link;
+                }
+            }
+        }
+
+
+
         $readModel = $readModel->copyAndUpdateData([
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
+            'links' => $links,
             'waitResultFromRunner' => false,
             'error' => false
         ]);
@@ -262,10 +295,10 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
         $readModel =$this->repository->getById($fact->unitId);
+
         $readModel = $readModel->copyAndUpdateData([
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
-            'url' => $fact->url,
             'waitResultFromRunner' => false,
             'error' => false
         ]);
@@ -302,7 +335,6 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
-            'url' => null,
             'error' => false
         ]);
         $this->repository->update($readModel);

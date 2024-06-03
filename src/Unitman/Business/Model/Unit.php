@@ -629,7 +629,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitUspehZapuska(array $steps, string $projectProxyHost, string $projectName): void
+    public function ustanovitUspehZapuska(array $steps): void
     {
         if (empty($this->zapusk)) {
             throw new DomainException('unit.zapusk_ne_nachalas');
@@ -639,26 +639,14 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.resultat_zapusk_uge_ustanovlen');
         }
 
-        $pathinfo = parse_url($projectProxyHost);
-        /** @var array|false $pathinfo*/
-
-        if ($pathinfo === false) {
-            throw new DomainException('unit.invalid_proxy_host');
-        }
-
-        $unitUrl = $pathinfo['scheme'].'://'.$this->name.'.'.$projectName.'.'.$pathinfo['host'];
-        if (!empty($pathinfo['port'])) {
-            $unitUrl .= ':'.$pathinfo['port'];
-        }
         $state = $this->newState(new Zapushen());
-        $this->recordThat(new UspehZapuskaUnitaUstanovlen($this->getId(), $steps, $unitUrl, $state->toArray($this)));
+        $this->recordThat(new UspehZapuskaUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
-        $this->url = $fact->url;
         $this->zapusk = $this->zapusk->ustanovitUspeh($fact->steps);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
