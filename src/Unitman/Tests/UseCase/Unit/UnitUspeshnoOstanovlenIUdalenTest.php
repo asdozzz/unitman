@@ -71,6 +71,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(false,$stepsFail));
         $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, new JobId('OBNOVLENIE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(false, $stepsFail));
+        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, new JobId('OBNOVLENIE_UNITA'));
         $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(true, $stepsSuccess, $configText2));
         $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
@@ -165,6 +167,21 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::PODGOTOVKA);
         $this->assertTrue(empty($job));
+
+        $useCase = self::$container->get(ObnovitKodUnitaUseCase::class);
+        $useCase->handle(new ObnovitKodUnita($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_OBNOVLENIYA');
+
+        $useCase = self::$container->get(UstanovitResultatObnovleniyaUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatObnovleniyaUnita($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->state, 'OSHIBKA_OBNOVLENIYA');
+
 
         $useCase = self::$container->get(ObnovitKodUnitaUseCase::class);
         $useCase->handle(new ObnovitKodUnita($unitId));

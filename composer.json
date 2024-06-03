@@ -98,6 +98,7 @@
         "post-update-cmd": [
             "@auto-scripts"
         ],
+        "coverage": "XDEBUG_MODE=coverage php bin/phpunit --coverage-html ./var/coverage --path-coverage",
         "check-psalm": "php vendor/bin/psalm",
         "check-phpunit": "php vendor/bin/phpunit",
         "check-deptrac": "php deptrac.phar",
