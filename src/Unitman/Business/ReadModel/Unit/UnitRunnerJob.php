@@ -21,7 +21,7 @@ final class UnitRunnerJob
      * @param array<RunnerJobStep> $steps
      */
     public function __construct(
-        public readonly string $id,
+        public string $id,
         public readonly string $unitId,
         public readonly string $jobType,
         public readonly bool $success,

@@ -56,7 +56,7 @@ final class UnitRunnerJobRepository implements CanGetUnitRunnerJobs
     function findAllRunnerJobsByUnitId(string $unitId): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE unit_id = :unitId  ORDER BY id desc", ['unitId' => $unitId]);
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE unit_id = :unitId ORDER BY id desc", ['unitId' => $unitId]);
         if (empty($rows)) {
             return [];
         }
@@ -67,6 +67,7 @@ final class UnitRunnerJobRepository implements CanGetUnitRunnerJobs
     function makeReadModelByRow(array $row): UnitRunnerJob
     {
         $unit = $this->serializer->deserialize($row['payload'], UnitRunnerJob::class, 'json');
+        $unit->id = $row['id'];
         return $unit;
     }
 }
