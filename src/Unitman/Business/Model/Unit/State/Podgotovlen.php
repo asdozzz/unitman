@@ -18,7 +18,7 @@ final class Podgotovlen extends AbstractState
     public function getNextStates(): array
     {
         return [
-            new VOcherediNaUdalenie(),
+            //new VOcherediNaUdalenie(),
             new VOcherediNaObnovlenie(),
             new VOcherediNaSbrosPodgotovki(),
             new VOcherediNaZapusk(),
@@ -28,7 +28,7 @@ final class Podgotovlen extends AbstractState
     public function getCommands(Unit $unit): array
     {
         return [
-            StateUserCommand::nachatUdalenie,
+            //StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatObnovlenie,
             StateUserCommand::zapolnitPeremenie,
             StateUserCommand::nachatSbrosPodgotovki,
