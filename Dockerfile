@@ -21,7 +21,8 @@ COPY --chown=containeruser:groupcontainer . .
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN composer dump-autoload --optimize && \
+RUN composer install && \
+    composer dump-autoload --optimize && \
     composer check-platform-reqs && \
     php bin/console cache:warmup
 
