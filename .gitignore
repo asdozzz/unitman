@@ -15,6 +15,8 @@
 ###< phpunit/phpunit ###
 
 /.idea/dataSources.xml
+/.idea/php.xml
+/.idea/unitman_back.iml
 /.bash_history
 
 ###> lexik/jwt-authentication-bundle ###
