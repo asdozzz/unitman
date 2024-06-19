@@ -81,5 +81,5 @@ services:
 networks:
   default:
     external: true
-    name: unitman-default
+    name: unitman_default
 
