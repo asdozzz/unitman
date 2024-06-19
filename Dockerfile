@@ -25,6 +25,4 @@ RUN composer install && \
     composer check-platform-reqs && \
     php bin/console cache:warmup
 
-RUN mv vendor /tmp/vendor
-
-CMD cp -a /tmp/vendor vendor && ["/usr/local/bin/wait-for-temporal.sh", "temporal", "rr", "serve","-c",".rr.yaml"]
+CMD ["/usr/local/bin/wait-for-temporal.sh", "temporal", "rr", "serve","-c",".rr.yaml"]
