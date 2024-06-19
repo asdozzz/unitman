@@ -10,11 +10,10 @@ RUN adduser containeruser root
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY --from=temporalio/admin-tools:1.23.0 /usr/local/bin/tctl /usr/local/bin/tctl
 
-RUN mkdir www
-
 COPY wait-for-temporal.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/wait-for-temporal.sh
 
+USER containeruser
 WORKDIR /home/containeruser/www
 
 COPY --chown=containeruser:groupcontainer . .
