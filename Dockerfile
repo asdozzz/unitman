@@ -19,6 +19,8 @@ WORKDIR /home/containeruser/www
 
 COPY --chown=containeruser:groupcontainer . .
 
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 RUN composer dump-autoload --optimize && \
     composer check-platform-reqs && \
     php bin/console cache:warmup
