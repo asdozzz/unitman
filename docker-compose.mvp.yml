@@ -70,7 +70,7 @@ services:
       service: unitman-proxy
 
   unitman-front:
-    build: https://oauth2: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@github.com/asdozzz/unitman-front.git
+    build: https://oauth2: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@github.com/asdozzz/unitman-front.git
     ports:
       - ${UNITMAN_FRONT_PORT}:80
     depends_on:
