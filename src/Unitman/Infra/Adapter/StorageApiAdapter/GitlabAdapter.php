@@ -49,7 +49,12 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
     public function poluchitVetkiProekta(Repo $repo, string $projectCode): array
     {
         $client = $this->clientFactory->makeClient($repo);
-        $branches = $client->repositories()->branches($projectCode);
+        $branches = $client->repositories()->branches($projectCode, ['per_page' => 100]);
+        usort($branches, function ($a, $b) {
+            $datetime1 = strtotime($a['commit']['created_at']);
+            $datetime2 = strtotime($b['commit']['created_at']);
+            return $datetime2 - $datetime1;
+        });
 
         return array_map(fn(array $branch) => new VetkaProekta($branch['name']), $branches);
     }
