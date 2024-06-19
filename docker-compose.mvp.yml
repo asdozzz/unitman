@@ -71,9 +71,14 @@ services:
 
   unitman-front:
     build: https://oauth2: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@github.com/asdozzz/unitman-front.git
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - ${UNITMAN_FRONT_PORT}:80
     depends_on:
       - web
 
+networks:
+  default:
+    name: unitman-default
 
