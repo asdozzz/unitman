@@ -5,6 +5,7 @@ namespace App\Unitman\Business\Model;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
+use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
@@ -241,14 +242,29 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.resultat_sborki_uge_ustanovlen');
         }
 
+        $state = $this->newState(new Sobran());
+        $this->recordThat(new UspehSborkiUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+
         $errs = $this->validateConfig($configUnita);
 
-        if (!empty($errs)) {
-            $configUnita = null;
+        if (empty($errs)) {
+            $this->recordThat(new KonfigUnitaUstanovlen($this->getId(), $configUnita));
         }
 
-        $state = $this->newState(new Sobran());
-        $this->recordThat(new UspehSborkiUnitaUstanovlen($this->getId(), $steps, $configUnita, $state->toArray($this)));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
+    {
+        $this->sborka = $this->sborka->ustanovitUspeh($fact->steps);
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    public function applyKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact)
+    {
+        $this->configUnita = ConfigUnita::fromArray($fact->configUnita);
     }
 
     public function validateConfig(array $configUnita): array
@@ -264,17 +280,7 @@ final class Unit implements AggregateRoot
         return $errors;
     }
 
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
-    {
-        $this->sborka = $this->sborka->ustanovitUspeh($fact->steps);
-        if (!empty($fact->configUnita)) {
-            $this->configUnita = ConfigUnita::fromArray($fact->configUnita);
-        }
-        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-    }
+
 
     public function zapolnitPeremenie(array $values): void
     {
@@ -488,7 +494,11 @@ final class Unit implements AggregateRoot
             }
         }
 
-        $this->recordThat(new UspehObnovleniyaUnitaUstanovlen($this->getId(), $steps, $configUnita, $state->toArray($this)));
+        $this->recordThat(new UspehObnovleniyaUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+
+        if (!empty($configUnita)) {
+            $this->recordThat(new KonfigUnitaUstanovlen($this->getId(), $configUnita));
+        }
     }
     /**
      * @psalm-suppress PossiblyNullReference

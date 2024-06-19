@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
@@ -118,6 +119,11 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     function handleUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
         $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::OBNOVLENIE);
+    }
+
+    function handleKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact): void
+    {
+
     }
 
     function handleSbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void

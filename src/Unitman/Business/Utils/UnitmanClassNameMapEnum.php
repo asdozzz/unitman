@@ -54,4 +54,5 @@ enum UnitmanClassNameMapEnum: string
     case UspehUdaleniyaUnitaUstanovlen = 'UspehUdaleniyaUnitaUstanovlen';
     case UspehZapuskaUnitaUstanovlen = 'UspehZapuskaUnitaUstanovlen';
     case ZapuskUnitNachalsya = 'ZapuskUnitNachalsya';
+    case KonfigUnitaUstanovlen = 'KonfigUnitaUstanovlen';
 }

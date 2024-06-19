@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
@@ -110,6 +111,19 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
 
     function handleUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
     {
+        $readModel =$this->repository->getById($fact->unitId);
+
+        $readModel = $readModel->copyAndUpdateData([
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
+            'waitResultFromRunner' => false,
+            'error' => false
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact): void
+    {
         $links = [];
 
         $readModel =$this->repository->getById($fact->unitId);
@@ -141,16 +155,11 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             }
         }
 
-
-
         $readModel = $readModel->copyAndUpdateData([
-            'state' => $fact->stateAsArray['code'],
-            'commands' => $fact->stateAsArray['commands'],
             'links' => $links,
-            'waitResultFromRunner' => false,
-            'error' => false
         ]);
         $this->repository->update($readModel);
+
     }
 
     function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void

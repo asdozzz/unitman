@@ -49,6 +49,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Model\Unit\UnitId;
+use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
 
 final class ClassNameMapFactory
@@ -105,7 +106,7 @@ final class ClassNameMapFactory
             UspehUdaleniyaUnitaUstanovlen::class => UnitmanClassNameMapEnum::UspehUdaleniyaUnitaUstanovlen,
             UspehZapuskaUnitaUstanovlen::class => UnitmanClassNameMapEnum::UspehZapuskaUnitaUstanovlen,
             ZapuskUnitNachalsya::class => UnitmanClassNameMapEnum::ZapuskUnitNachalsya,
-
+            KonfigUnitaUstanovlen::class => UnitmanClassNameMapEnum::KonfigUnitaUstanovlen,
         ];
         $map = [];
 

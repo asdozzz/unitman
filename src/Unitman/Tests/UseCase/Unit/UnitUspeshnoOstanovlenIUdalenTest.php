@@ -127,6 +127,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             StateUserCommand::nachatObnovlenie->value,
             StateUserCommand::zapolnitPeremenie->value,
         ]);
+
         $this->assertEquals($spisokUnitovReadModel->links,
             ['https://80.task-123.uwin.testcase.ru', 'https://8080.task-123.uwin.testcase.ru', 'tcp://task-123.uwin:5043'],
         );

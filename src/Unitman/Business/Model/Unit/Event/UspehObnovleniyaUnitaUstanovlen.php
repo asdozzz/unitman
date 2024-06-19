@@ -7,7 +7,6 @@ final class UspehObnovleniyaUnitaUstanovlen
     public function __construct(
         public readonly string $unitId,
         public readonly array $steps,
-        public readonly ?array $configUnita,
         public readonly array $stateAsArray
     )
     {

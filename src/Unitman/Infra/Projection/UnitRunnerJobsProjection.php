@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
@@ -131,6 +132,11 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, true, $fact->steps);
         $this->repository->insert($job);
+    }
+
+    function handleKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact): void
+    {
+
     }
 
     function handleSbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
