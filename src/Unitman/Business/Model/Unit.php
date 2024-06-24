@@ -269,9 +269,11 @@ final class Unit implements AggregateRoot
 
     public function validateConfig(array $configUnita): array
     {
-        if (empty($configUnita)) return [];
         $errors = [];
         try {
+            if (empty($configUnita)) {
+                throw new DomainException('unit.config_is_empty');
+            }
             ConfigUnita::fromArray($configUnita);
         } catch (Exception $e) {
             $errors[] = $e->getMessage();
