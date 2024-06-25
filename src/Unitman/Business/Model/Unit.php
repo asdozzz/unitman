@@ -580,28 +580,22 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.resultat_obnovleniya_uge_ustanovlen');
         }
 
-        $errs = $this->validateConfig($configUnita);
-
-        //TODO придумать как убрать эту какаху
-        if (!empty($errs)) {
-            $configUnita = null;
-            $steps = [];
-            $state = $this->newState(new OshibkaObnovleniya());
+        if ($this->esliZapushen()) {
+            $state = $this->newState(new Zapushen());
+        } elseif ($this->esliPodgotovlen()) {
+            $state = $this->newState(new Podgotovlen());
         } else {
-            if ($this->esliZapushen()) {
-                $state = $this->newState(new Zapushen());
-            } elseif ($this->esliPodgotovlen()) {
-                $state = $this->newState(new Podgotovlen());
-            } else {
-                $state = $this->newState(new Sobran());
-            }
+            $state = $this->newState(new Sobran());
         }
 
         $this->recordThat(new UspehObnovleniyaUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
 
-        if (!empty($configUnita)) {
+        $errs = $this->validateConfig($configUnita);
+
+        if (empty($errs)) {
             $this->recordThat(new KonfigUnitaUstanovlen($this->getId(), $configUnita));
         }
+
     }
     /**
      * @psalm-suppress PossiblyNullReference

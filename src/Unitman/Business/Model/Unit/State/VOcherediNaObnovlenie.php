@@ -18,13 +18,14 @@ final class VOcherediNaObnovlenie extends AbstractState
             new OshibkaObnovleniya(),
             new Sobran(),
             new Podgotovlen(),
-            new UdalenVruchnuyu()
+            new VOcherediNaUdalenie()
         ];
     }
 
     public function getCommands(Unit $unit): array
     {
         return [
+            StateUserCommand::nachatUdalenie,
             StateUserCommand::ustanovitResultatObnovleniya
         ];
     }

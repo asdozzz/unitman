@@ -15,13 +15,14 @@ final class VOcheredNaIzmenenieVetki extends AbstractState
     {
         return [
             new Sobran(),
-            new UdalenVruchnuyu()
+            new VOcherediNaUdalenie(),
         ];
     }
 
     public function getCommands(Unit $unit): array
     {
         return [
+            StateUserCommand::nachatUdalenie,
             StateUserCommand::ustanovitResultatIzmeneniyaVetki
         ];
     }

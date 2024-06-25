@@ -17,13 +17,14 @@ final class VOcherediNaPodgotovku extends AbstractState
         return [
             new OshibkaPodgotovki(),
             new Podgotovlen(),
-            new UdalenVruchnuyu()
+            new VOcherediNaUdalenie()
         ];
     }
 
     public function getCommands(Unit $unit): array
     {
         return [
+            StateUserCommand::nachatUdalenie,
             StateUserCommand::ustanovitResultatPodgotovki
         ];
     }

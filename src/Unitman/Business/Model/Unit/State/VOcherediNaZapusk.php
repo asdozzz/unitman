@@ -20,13 +20,14 @@ final class VOcherediNaZapusk extends AbstractState
         return [
             new OshibkaZapuska(),
             new Zapushen(),
-            new UdalenVruchnuyu()
+            new VOcherediNaUdalenie()
         ];
     }
 
     public function getCommands(Unit $unit): array
     {
         return [
+            StateUserCommand::nachatUdalenie,
             StateUserCommand::ustanovitResultatZapuska
         ];
     }

@@ -20,13 +20,14 @@ final class VOcherediNaSbrosPodgotovki extends AbstractState
         return [
             new OshibkaSbrosaPodgotovki(),
             new Sobran(),
-            new UdalenVruchnuyu()
+            new VOcherediNaUdalenie()
         ];
     }
 
     public function getCommands(Unit $unit): array
     {
         return [
+            StateUserCommand::nachatUdalenie,
             StateUserCommand::ustanovitResultatSbrosaPodgotovki
         ];
     }
