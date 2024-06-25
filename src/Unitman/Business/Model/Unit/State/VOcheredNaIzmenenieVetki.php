@@ -4,29 +4,25 @@ namespace App\Unitman\Business\Model\Unit\State;
 
 use App\Unitman\Business\Model\Unit;
 
-final class Sozdan extends AbstractState
+final class VOcheredNaIzmenenieVetki extends AbstractState
 {
-
-    const CODE = 'SOZDAN';
-
     public function getCode(): string
     {
-        return self::CODE;
+        return 'JDET_RESULTATI_IZMENENIYA_VETKI';
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getNextStates(): array
     {
         return [
-            new VOcherediNaSborku(),
-            new VOcherediNaUdalenie()
+            new Sobran(),
+            new UdalenVruchnuyu()
         ];
     }
 
     public function getCommands(Unit $unit): array
     {
-        return [StateUserCommand::nachatSborku, StateUserCommand::nachatUdalenie];
+        return [
+            StateUserCommand::ustanovitResultatIzmeneniyaVetki
+        ];
     }
 }

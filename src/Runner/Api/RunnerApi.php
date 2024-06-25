@@ -3,6 +3,7 @@
 namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
@@ -13,6 +14,7 @@ use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
@@ -22,6 +24,7 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
 use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
+use App\Runner\Infra\Workflow\NachatIzmenenieVetkiUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow;
@@ -118,6 +121,12 @@ final class RunnerApi
         return $this->makeResult($workflow, ResultatUdaleniyaUnita::class);
     }
 
+    public function poluchitResultatIzmeneniyaVetki(string $workflowId): ?ResultatIzmeneniyaVetkiUnita
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, ResultatIzmeneniyaVetkiUnita::class);
+    }
+
     public function nachatPodgotovkuUnita(NachatPodgotovkuUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -135,6 +144,19 @@ final class RunnerApi
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatObnovlenieUnitaWorkflow::class,
+            WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
+        );
+
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
+
+    public function nachatIzmenenieVetkiUnita(NachatIzmenenieVetkiUnita $command): string
+    {
+        $workflow = $this->workflowClient->newWorkflowStub(
+            NachatIzmenenieVetkiUnitaWorkflow::class,
             WorkflowOptions::new()
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))

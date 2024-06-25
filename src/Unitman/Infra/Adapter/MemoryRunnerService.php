@@ -4,6 +4,7 @@ namespace App\Unitman\Infra\Adapter;
 
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
+use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
@@ -34,6 +35,9 @@ final class MemoryRunnerService implements RunnerService
     const RESULTAT_OSTANOVKI = 'RESULTAT_OSTANOVKI';
     const UDALENIE_UNITA = 'UDALENIE_UNITA';
     const RESULTAT_UDALENIYA = 'RESULTAT_UDALENIYA';
+
+    const IZMENENIYE_UNITA = 'IZMENENIYE_UNITA';
+    const RESULTAT_IZMENENIYA_VETKI = 'RESULTAT_IZMENENIYA_VETKI';
     private array $responses = [];
     public function __construct()
     {
@@ -72,6 +76,10 @@ final class MemoryRunnerService implements RunnerService
         return $this->getNextResponse(self::RESULTAT_SBORKI);
     }
 
+    public function nachatIzmenenieVetkiUnita(Unit $unit, string $newBranch): JobId
+    {
+        return $this->getNextResponse(self::IZMENENIYE_UNITA);
+    }
     public function nachatPodgotovkuUnita(Unit $unit): JobId
     {
         return $this->getNextResponse(self::PODGOTOVKA_UNITA);
@@ -130,5 +138,10 @@ final class MemoryRunnerService implements RunnerService
     public function poluchitResultatUdaleniyaUnita(Unit $unit): ResultatUdaleniyaUnita
     {
         return $this->getNextResponse(self::RESULTAT_UDALENIYA);
+    }
+
+    public function poluchitResultatIzmeneniyaVetki(Unit $unit): ResultatIzmeneniyaVetkiUnita
+    {
+        return $this->getNextResponse(self::RESULTAT_IZMENENIYA_VETKI);
     }
 }

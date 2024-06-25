@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
 use App\Unitman\Business\Command\Unit\GetUnitRunnerJobs;
+use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
@@ -16,6 +17,7 @@ use App\Unitman\Business\Command\Unit\SobratUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
+use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatPodgotovkiUnita;
@@ -29,6 +31,7 @@ use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobsQuery;
+use App\Unitman\Business\UseCase\Unit\IzmenitVetkuUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
@@ -39,6 +42,7 @@ use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatIzmeneniyaVetkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatOstanovkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatPodgotovkiUnitaUseCase;
@@ -103,6 +107,28 @@ final class UnitConroller extends AbstractController
 
     #[Route('/ustanovitResultatSborki', methods: ['POST'])]
     public function ustanovitResultatSborki(UstanovitResultatSborkiUnita $command, UstanovitResultatSborkiUnitaUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/izmenitVetku', methods: ['POST'])]
+    public function izmenitVetku(IzmenitVetkuUnita $command, IzmenitVetkuUnitaUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/ustanovitResultatIzmenenniyaVetki', methods: ['POST'])]
+    public function ustanovitResultatIzmenenniyaVetki(UstanovitResultatIzmenenniyaVetkiUnita $command, UstanovitResultatIzmeneniyaVetkiUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);

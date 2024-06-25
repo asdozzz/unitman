@@ -28,7 +28,8 @@ final class StateFactory
             new VOcherediNaSbrosPodgotovki(),
             new VOcherediNaUdalenie(),
             new VOcherediNaZapusk(),
-            new Zapushen()
+            new Zapushen(),
+            new VOcheredNaIzmenenieVetki(),
         ];
 
         $result = null;

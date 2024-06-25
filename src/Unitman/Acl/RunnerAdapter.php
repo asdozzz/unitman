@@ -3,6 +3,7 @@
 namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApi;
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
@@ -14,6 +15,7 @@ use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
+use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
@@ -227,5 +229,25 @@ final class RunnerAdapter implements RunnerService
         $repo = $this->repoRepository->getById($project->getRepoId());
         $projectUrl = $this->storageApiAdapterFactory->getUrlForInitProject($repo, $project);
         return $projectUrl;
+    }
+
+    public function poluchitResultatIzmeneniyaVetki(Unit $unit): ResultatIzmeneniyaVetkiUnita
+    {
+        $result = $this->runnerApi->poluchitResultatIzmeneniyaVetki($unit->poluchitWorkflowIdDlyIzmeneniya());
+
+        if (empty($result)) {
+            throw new \Exception('runner.izmenenie_vetki_eshe_ne_zakoncheno');
+        }
+
+        return new ResultatIzmeneniyaVetkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
+    }
+
+    public function nachatIzmenenieVetkiUnita(Unit $unit, string $newBranch): JobId
+    {
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $storageUrl = $this->getProjectUrl($project);
+        $command = new NachatIzmenenieVetkiUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $newBranch);
+        $workflowId = $this->runnerApi->nachatIzmenenieVetkiUnita($command);
+        return new JobId($workflowId);
     }
 }

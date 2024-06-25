@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
+use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
@@ -9,6 +10,7 @@ use App\Unitman\Business\Command\Unit\SbrositPodgotovkuUnita;
 use App\Unitman\Business\Command\Unit\SobratUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
+use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatPodgotovkiUnita;
@@ -19,6 +21,7 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
 use App\Unitman\Business\Model\Runner\JobId;
+use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
@@ -31,6 +34,7 @@ use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
+use App\Unitman\Business\UseCase\Unit\IzmenitVetkuUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
@@ -39,6 +43,7 @@ use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatIzmeneniyaVetkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatOstanovkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatPodgotovkiUnitaUseCase;
@@ -83,6 +88,10 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(true, $stepsSuccess, $configText2));
         $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, new JobId('SBROS_PODGOTOVKI_UNITA'));
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(true,$stepsSuccess));
+        $memoryRunner->addResponse(MemoryRunnerService::IZMENENIYE_UNITA, new JobId('IZMENENIYE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_IZMENENIYA_VETKI, new ResultatIzmeneniyaVetkiUnita(false,$stepsFail));
+        $memoryRunner->addResponse(MemoryRunnerService::IZMENENIYE_UNITA, new JobId('IZMENENIYE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_IZMENENIYA_VETKI, new ResultatIzmeneniyaVetkiUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, new JobId('ZAPUSK_UNITA'));
@@ -126,6 +135,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             StateUserCommand::nachatUdalenie->value,
             StateUserCommand::nachatObnovlenie->value,
             StateUserCommand::zapolnitPeremenie->value,
+            StateUserCommand::izmenitVetku->value
         ]);
 
         $this->assertEquals($spisokUnitovReadModel->links,
@@ -146,7 +156,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             StateUserCommand::nachatUdalenie->value,
             StateUserCommand::nachatObnovlenie->value,
             StateUserCommand::zapolnitPeremenie->value,
+            StateUserCommand::izmenitVetku->value,
             StateUserCommand::nachatPodgotovku->value,
+
         ]);
 
         $useCase = self::$container->get(PodgotovitUnitKZapuskuUseCase::class);
@@ -304,6 +316,38 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $job = $ocheredUnitovRepo->findByUnitIdAndQueueName($unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
         $this->assertTrue(empty($job));
+
+
+        $useCase = self::$container->get(IzmenitVetkuUnitaUseCase::class);
+        $useCase->handle(new IzmenitVetkuUnita($unitId, 'feature/newBranch'));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_IZMENENIYA_VETKI');
+        $this->assertEquals($spisokUnitovReadModel->branch, 'feature/123');
+
+        $useCase = self::$container->get(UstanovitResultatIzmeneniyaVetkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatIzmenenniyaVetkiUnita($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
+
+        $useCase = self::$container->get(IzmenitVetkuUnitaUseCase::class);
+        $useCase->handle(new IzmenitVetkuUnita($unitId, 'feature/newBranch'));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
+        $this->assertEquals($spisokUnitovReadModel->state, 'JDET_RESULTATI_IZMENENIYA_VETKI');
+
+        $useCase = self::$container->get(UstanovitResultatIzmeneniyaVetkiUnitaUseCase::class);
+        $useCase->handle(new UstanovitResultatIzmenenniyaVetkiUnita($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
+        $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
+        $this->assertEquals($spisokUnitovReadModel->branch, 'feature/newBranch');
+
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [

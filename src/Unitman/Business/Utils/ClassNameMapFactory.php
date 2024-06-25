@@ -107,6 +107,9 @@ final class ClassNameMapFactory
             UspehZapuskaUnitaUstanovlen::class => UnitmanClassNameMapEnum::UspehZapuskaUnitaUstanovlen,
             ZapuskUnitNachalsya::class => UnitmanClassNameMapEnum::ZapuskUnitNachalsya,
             KonfigUnitaUstanovlen::class => UnitmanClassNameMapEnum::KonfigUnitaUstanovlen,
+            Unit\Event\IzmenenieVetkiNachalos::class => UnitmanClassNameMapEnum::IzmenenieVetkiNachalos,
+            Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena::class => UnitmanClassNameMapEnum::OshibkaIzmeneniyaVetkiUnitaUstanovlena,
+            Unit\Event\UspehIzmeneniyaVetkiUstanovlen::class => UnitmanClassNameMapEnum::UspehIzmeneniyaVetkiUstanovlen,
         ];
         $map = [];
 

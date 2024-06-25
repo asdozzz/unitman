@@ -2,11 +2,14 @@
 
 namespace App\Unitman\Business\Model;
 
+use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
+use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
@@ -22,6 +25,7 @@ use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehPodgotovkiUnitaUstanovlen;
@@ -52,6 +56,7 @@ use App\Unitman\Business\Model\Unit\State\VOcherediNaSborku;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaSbrosPodgotovki;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaUdalenie;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaZapusk;
+use App\Unitman\Business\Model\Unit\State\VOcheredNaIzmenenieVetki;
 use App\Unitman\Business\Model\Unit\State\Zapushen;
 use App\Unitman\Business\Model\Unit\UnitBranch;
 use App\Unitman\Business\Model\Unit\UnitId;
@@ -95,7 +100,12 @@ final class Unit implements AggregateRoot
     private ?RunnerJob $ostanovka = null;
     private ?RunnerJob $udalenie = null;
 
+    private ?RunnerJob $izmenenieVetki = null;
+
     private bool $isDeleted = false;
+
+    private ?UnitBranch $newBranch = null;
+
     /**
      * @template-use AggregateRootBehaviour<UnitId>
      * */
@@ -125,6 +135,7 @@ final class Unit implements AggregateRoot
             'zapusk',
             'ostanovka',
             'udalenie',
+            'izmenenieVetki',
         ];
 
         foreach ($props as $prop) {
@@ -262,7 +273,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function applyKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact)
+    public function applyKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact): void
     {
         $this->configUnita = ConfigUnita::fromArray($fact->configUnita);
     }
@@ -282,7 +293,80 @@ final class Unit implements AggregateRoot
         return $errors;
     }
 
+    public function nachatIzmenenieVetkiUnita(JobId $jobId, string $newBranch): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
 
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if (!$this->state || $this->state->getCode() !== Sobran::CODE) {
+            throw new DomainException('unit.allow_after_build');
+        }
+
+        $state = $this->newState(new VOcheredNaIzmenenieVetki());
+        $this->recordThat(new IzmenenieVetkiNachalos($this->getId(), (string)$jobId, $newBranch, $state->toArray($this)));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyIzmenenieVetkiNachalos(IzmenenieVetkiNachalos $fact): void
+    {
+        $this->izmenenieVetki = RunnerJob::start($fact->jobId);
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->newBranch = new UnitBranch($fact->newBranch);
+    }
+
+    public function ustanovitOshibkuIzmeneniyaVetki(array $steps): void
+    {
+        if (empty($this->izmenenieVetki)) {
+            throw new DomainException('unit.izmenenieVetki_ne_nachalas');
+        }
+
+        if ($this->izmenenieVetki->isFinish()) {
+            throw new DomainException('unit.resultat_izmenenieVetki_uge_ustanovlen');
+        }
+        $state = $this->newState(new Sobran());
+        $this->recordThat(new OshibkaIzmeneniyaVetkiUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyOshibkaIzmeneniyaVetkiUnitaUstanovlena(OshibkaIzmeneniyaVetkiUnitaUstanovlena $fact): void
+    {
+        $this->izmenenieVetki = $this->izmenenieVetki->ustanovitOshibku($fact->steps);
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->newBranch = null;
+    }
+
+    public function ustanovitUspehIzmeneniyaVetki(array $steps): void
+    {
+        if (empty($this->izmenenieVetki)) {
+            throw new DomainException('unit.izmenenieVetki_ne_nachalas');
+        }
+
+        if ($this->izmenenieVetki->isFinish()) {
+            throw new DomainException('unit.resultat_izmenenieVetki_uge_ustanovlen');
+        }
+
+        $state = $this->newState(new Sobran());
+        $this->recordThat(new UspehIzmeneniyaVetkiUstanovlen($this->getId(), $steps, $state->toArray($this), (string)$this->newBranch));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyUspehIzmeneniyaVetkiUstanovlen(UspehIzmeneniyaVetkiUstanovlen $fact): void
+    {
+        $this->izmenenieVetki = $this->izmenenieVetki->ustanovitUspeh($fact->steps);
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->branch = new UnitBranch($fact->newBranch);
+    }
 
     public function zapolnitPeremenie(array $values): void
     {
@@ -914,6 +998,15 @@ final class Unit implements AggregateRoot
         }
         return $this->udalenie->getJobId();
     }
+
+    public function poluchitWorkflowIdDlyIzmeneniya(): string
+    {
+        if (empty($this->izmenenieVetki)) {
+            throw new DomainException('unit.izmenenieVetki_not_found');
+        }
+        return $this->izmenenieVetki->getJobId();
+    }
+
 
     public function poluchitKomandiPodgotovki(): array
     {

@@ -5,6 +5,7 @@ namespace App\Unitman\Business\Port;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResponseToBuildProject;
+use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
@@ -18,6 +19,8 @@ interface RunnerService
 {
     public function buildProject(Project $project): Project\ProjectDataAboutBuilding;
     public function removeProject(Project $project): Project\ProjectDataAboutRemoving;
+
+    public function nachatIzmenenieVetkiUnita(Unit $unit, string $newBranch): JobId;
 
     public function nachatSborkuUnita(Unit $unit): JobId;
 
@@ -46,4 +49,6 @@ interface RunnerService
     public function nachatUdalenieUnita(Unit $unit): JobId;
 
     public function poluchitResultatUdaleniyaUnita(Unit $unit): ResultatUdaleniyaUnita;
+
+    public function poluchitResultatIzmeneniyaVetki(Unit $unit): ResultatIzmeneniyaVetkiUnita;
 }

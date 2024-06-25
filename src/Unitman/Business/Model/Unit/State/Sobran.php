@@ -23,7 +23,8 @@ final class Sobran extends AbstractState
             new VOcherediNaUdalenie(),
             new VOcherediNaObnovlenie(),
             new Sobran(),
-            new VOcherediNaPodgotovku()
+            new VOcherediNaPodgotovku(),
+            new VOcheredNaIzmenenieVetki()
         ];
     }
 
@@ -33,7 +34,7 @@ final class Sobran extends AbstractState
             StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatObnovlenie,
             StateUserCommand::zapolnitPeremenie,
-
+            StateUserCommand::izmenitVetku,
         ];
 
         if ($unit->esliConfigZapolnenPravilon()){

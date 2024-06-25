@@ -12,6 +12,8 @@ final class OcheredUnitovReadModel
     const OSTANOVKA = 'OSTANOVKA';
     const UDALENIE = 'UDALENIE';
 
+    const IZMENENIYE_VETKI = 'IZMENENIYE_VETKI';
+
     public function __construct(
         public readonly int $id,
         public readonly string $unitId,

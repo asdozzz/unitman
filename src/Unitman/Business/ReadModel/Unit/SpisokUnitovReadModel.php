@@ -28,13 +28,13 @@ final class SpisokUnitovReadModel
         $name = $this->name;
         $projectId = $this->projectId;
         $projectName = $this->projectName;
-        $branch = $this->branch;
 
         $state = $props['state']??$this->state;
         $waitResultFromRunner = isset($props['waitResultFromRunner'])?$props['waitResultFromRunner']:$this->waitResultFromRunner;
         $commands = isset($props['commands'])?$props['commands']:$this->commands;
         $links = array_key_exists('links', $props)?$props['links']:$this->links;
         $error = array_key_exists('error', $props)?$props['error']:$this->error;
+        $branch = array_key_exists('branch', $props)?$props['branch']:$this->branch;
 
         return new static(
             $id,
