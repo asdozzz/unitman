@@ -842,14 +842,6 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.udalen');
         }
 
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
-            throw new DomainException('unit.zapushen');
-        }
-
         $state = $this->newState(new VOcherediNaUdalenie());
         $this->recordThat(new UdalenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this)));
     }
