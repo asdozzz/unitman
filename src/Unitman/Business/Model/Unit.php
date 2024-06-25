@@ -179,6 +179,29 @@ final class Unit implements AggregateRoot
     }
 
     /**
+     * @param string $newBranch
+     * @return void
+     */
+    public function validateNewBranch(string $userId, string $newBranch): void
+    {
+        $this->proverkaPrav($userId);
+
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if (!$this->state || $this->state->getCode() !== Sobran::CODE) {
+            throw new DomainException('unit.allow_after_build');
+        }
+
+        $this->branch->validateNewBranch($newBranch);
+    }
+
+    /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUnitSozdan(UnitSozdan $fact): void
@@ -295,17 +318,7 @@ final class Unit implements AggregateRoot
 
     public function nachatIzmenenieVetkiUnita(JobId $jobId, string $newBranch): void
     {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if (!$this->state || $this->state->getCode() !== Sobran::CODE) {
-            throw new DomainException('unit.allow_after_build');
-        }
+        $this->validateNewBranch($newBranch);
 
         $state = $this->newState(new VOcheredNaIzmenenieVetki());
         $this->recordThat(new IzmenenieVetkiNachalos($this->getId(), (string)$jobId, $newBranch, $state->toArray($this)));

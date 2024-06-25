@@ -20,7 +20,8 @@ final class IzmenitVetkuUnitaUseCase
     function handle(IzmenitVetkuUnita $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
-        $unit->proverkaPrav($this->securityService->getCurrentUserId());
+        $unit->validateNewBranch($this->securityService->getCurrentUserId(), $command->newBranch);
+
         $jobId = $this->runnerService->nachatIzmenenieVetkiUnita($unit, $command->newBranch);
         $unit->nachatIzmenenieVetkiUnita($jobId, $command->newBranch);
         $this->unitRepository->save($unit);

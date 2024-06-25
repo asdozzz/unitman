@@ -22,6 +22,6 @@ enum StateUserCommand: string
     case nachatUdalenie = 'nachatUdalenie';
     case ustanovitResultatUdaleniya = 'ustanovitResultatUdaleniya';
     case udalitVruchnuyu = 'udalitVruchnuyu';
-    case izmenitVetku = 'izmenitVetku';
+    case nachatIzmenenieVetki = 'nachatIzmenenieVetki';
     case ustanovitResultatIzmeneniyaVetki = 'ustanovitResultatIzmeneniyaVetki';
 }

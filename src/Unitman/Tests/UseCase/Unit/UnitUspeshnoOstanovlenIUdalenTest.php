@@ -135,7 +135,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             StateUserCommand::nachatUdalenie->value,
             StateUserCommand::nachatObnovlenie->value,
             StateUserCommand::zapolnitPeremenie->value,
-            StateUserCommand::izmenitVetku->value
+            StateUserCommand::nachatIzmenenieVetki->value
         ]);
 
         $this->assertEquals($spisokUnitovReadModel->links,
@@ -156,7 +156,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             StateUserCommand::nachatUdalenie->value,
             StateUserCommand::nachatObnovlenie->value,
             StateUserCommand::zapolnitPeremenie->value,
-            StateUserCommand::izmenitVetku->value,
+            StateUserCommand::nachatIzmenenieVetki->value,
             StateUserCommand::nachatPodgotovku->value,
 
         ]);

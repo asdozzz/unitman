@@ -34,7 +34,7 @@ final class Sobran extends AbstractState
             StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatObnovlenie,
             StateUserCommand::zapolnitPeremenie,
-            StateUserCommand::izmenitVetku,
+            StateUserCommand::nachatIzmenenieVetki,
         ];
 
         if ($unit->esliConfigZapolnenPravilon()){
