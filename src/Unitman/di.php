@@ -28,6 +28,7 @@ use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineMessageRepository;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use function _HumbugBoxd1ea71d4b9d8\Symfony\Component\DependencyInjection\Loader\Configurator\env;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -35,7 +36,8 @@ return function (ContainerConfigurator $configuration) {
     $services = $configuration->services()
         ->defaults()
         ->autowire()
-        ->autoconfigure();
+        ->autoconfigure()
+        ->bind('$appEnv','%env(APP_ENV)%');
 
     $services->load('App\\Unitman\\', './{Business,Infra,Acl,Api}')
         ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])

@@ -2,8 +2,10 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
@@ -19,6 +21,7 @@ use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehPodgotovkiUnitaUstanovlen;
@@ -94,6 +97,25 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBORKA, true, $fact->steps);
         $this->repository->insert($job);
     }
+
+    function handleIzmenenieVetkiNachalos(IzmenenieVetkiNachalos $fact): void
+    {
+
+    }
+
+    function handleOshibkaIzmeneniyaVetkiUnitaUstanovlena(OshibkaIzmeneniyaVetkiUnitaUstanovlena $fact): void
+    {
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI, false, $fact->steps);
+        $this->repository->insert($job);
+    }
+
+    function handleUspehIzmeneniyaVetkiUstanovlen(UspehIzmeneniyaVetkiUstanovlen $fact): void
+    {
+        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI, true, $fact->steps);
+        $this->repository->insert($job);
+    }
+
+
 
     function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
     {

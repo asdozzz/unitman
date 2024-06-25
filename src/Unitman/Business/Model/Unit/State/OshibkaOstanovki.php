@@ -19,7 +19,8 @@ final class OshibkaOstanovki extends AbstractState
     {
         return [
             new VOcherediNaUdalenie(),
-            new VOcherediNaOstanovku()
+            new VOcherediNaOstanovku(),
+            new VOcherediNaSbrosPodgotovki()
         ];
     }
 
@@ -27,7 +28,8 @@ final class OshibkaOstanovki extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::nachatOstanovku
+            StateUserCommand::nachatOstanovku,
+            StateUserCommand::nachatSbrosPodgotovki
         ];
     }
 }

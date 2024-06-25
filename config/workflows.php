@@ -13,4 +13,5 @@ return [
     \App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\RunnerHealthCheckWorkflow::class,
+    \App\Runner\Infra\Workflow\NachatIzmenenieVetkiUnitaWorkflow::class,
 ];

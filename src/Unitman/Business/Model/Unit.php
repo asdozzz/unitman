@@ -198,6 +198,10 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.allow_after_build');
         }
 
+        if (!$this->branch) {
+            throw new DomainException('unit.old_branch_is_empty');
+        }
+
         $this->branch->validateNewBranch($newBranch);
     }
 
@@ -316,9 +320,9 @@ final class Unit implements AggregateRoot
         return $errors;
     }
 
-    public function nachatIzmenenieVetkiUnita(JobId $jobId, string $newBranch): void
+    public function nachatIzmenenieVetkiUnita(JobId $jobId, string $userId, string $newBranch): void
     {
-        $this->validateNewBranch($newBranch);
+        $this->validateNewBranch($userId, $newBranch);
 
         $state = $this->newState(new VOcheredNaIzmenenieVetki());
         $this->recordThat(new IzmenenieVetkiNachalos($this->getId(), (string)$jobId, $newBranch, $state->toArray($this)));

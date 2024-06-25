@@ -23,7 +23,7 @@ final class IzmenitVetkuUnitaUseCase
         $unit->validateNewBranch($this->securityService->getCurrentUserId(), $command->newBranch);
 
         $jobId = $this->runnerService->nachatIzmenenieVetkiUnita($unit, $command->newBranch);
-        $unit->nachatIzmenenieVetkiUnita($jobId, $command->newBranch);
+        $unit->nachatIzmenenieVetkiUnita($jobId, $this->securityService->getCurrentUserId(), $command->newBranch);
         $this->unitRepository->save($unit);
     }
 }

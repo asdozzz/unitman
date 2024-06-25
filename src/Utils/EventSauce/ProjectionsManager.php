@@ -22,18 +22,21 @@ final class ProjectionsManager
     private Connection $connection;
     private CheckpointStore $checkpointStore;
     private DoctrineStreamRepository $eventsRepository;
+    private string $appEnv;
 
     public function __construct(
         Connection               $connection,
         CheckpointStore          $checkpointStore,
         iterable                 $projections,
-        DoctrineStreamRepository $eventsRepository
+        DoctrineStreamRepository $eventsRepository,
+        string $appEnv
     )
     {
         $this->projections = $projections;
         $this->connection = $connection;
         $this->checkpointStore = $checkpointStore;
         $this->eventsRepository = $eventsRepository;
+        $this->appEnv = $appEnv;
     }
 
     private function getProjectionByName(string $projectName): CanProjectEvents
@@ -83,7 +86,7 @@ final class ProjectionsManager
 
             foreach ($this->projections as $projection) {
                 if ($streamName->aggregateType !== $projection->getStreamName()->aggregateType) continue;
-                if (!$projection->isSyncProjection()) continue;
+                if (!$projection->isSyncProjection() && $this->appEnv != 'test') continue;
                 $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
                 if ($checkpoint === 0) {
                     $projection->init();

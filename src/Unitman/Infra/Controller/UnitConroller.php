@@ -116,8 +116,8 @@ final class UnitConroller extends AbstractController
         }
     }
 
-    #[Route('/izmenitVetku', methods: ['POST'])]
-    public function izmenitVetku(IzmenitVetkuUnita $command, IzmenitVetkuUnitaUseCase $useCase): Response
+    #[Route('/izmenitVetkuUnita', methods: ['POST'])]
+    public function izmenitVetkuUnita(IzmenitVetkuUnita $command, IzmenitVetkuUnitaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);

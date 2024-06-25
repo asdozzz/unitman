@@ -8,12 +8,9 @@ use App\Account\Business\Model\Account;
 use App\Account\Business\Port\UuidGenerator;
 use App\Account\Business\Utils\EventTypeMapFactory;
 use App\Account\Infra\Adapter\RamseyUuidGenerator;
-use App\Account\Infra\Projection\AccountMessageDispatcherFactory;
-use App\Account\Infra\Projection\SyncProjectionForAccount;
 use App\Account\Infra\Repository\SqlAccountRepository;
 use App\App\Infra\EventStore\AuthorMessageDecorator;
 use App\Utils\EventSauce\ProjectionsManager;
-use App\Utils\EventSauce\Repository\CheckpointStore;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\DefaultHeadersDecorator;
@@ -35,7 +32,8 @@ return function (ContainerConfigurator $configuration) {
     $services = $configuration->services()
         ->defaults()
         ->autowire()
-        ->autoconfigure();
+        ->autoconfigure()
+        ->bind('$appEnv','%env(APP_ENV)%');
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
         ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
