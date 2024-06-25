@@ -124,7 +124,7 @@ final class RunnerApi
     public function poluchitResultatIzmeneniyaVetki(string $workflowId): ?ResultatIzmeneniyaVetkiUnita
     {
         $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResult($workflow, ResultatIzmeneniyaVetkiUnita::class);
+        return $this->makeResultWithConfig($workflow, ResultatIzmeneniyaVetkiUnita::class);
     }
 
     public function nachatPodgotovkuUnita(NachatPodgotovkuUnita $command): string

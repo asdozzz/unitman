@@ -6,7 +6,8 @@ final class ResultatIzmeneniyaVetkiUnita
 {
     public function __construct(
         public readonly bool $success,
-        public readonly array $steps
+        public readonly array $steps,
+        public readonly ?string $config = null,
     )
     {
     }

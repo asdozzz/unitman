@@ -239,7 +239,7 @@ final class RunnerAdapter implements RunnerService
             throw new \Exception('runner.izmenenie_vetki_eshe_ne_zakoncheno');
         }
 
-        return new ResultatIzmeneniyaVetkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
+        return new ResultatIzmeneniyaVetkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps), $result->Config);
     }
 
     public function nachatIzmenenieVetkiUnita(Unit $unit, string $newBranch): JobId
