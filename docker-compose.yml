@@ -72,9 +72,4 @@ services:
       file: common-services.yml
       service: unitman-proxy
 
-networks:
-  default:
-    external: true
-    name: unitman_default
-
 
