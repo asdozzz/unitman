@@ -12,6 +12,8 @@ COPY --from=temporalio/admin-tools:1.23.0 /usr/local/bin/tctl /usr/local/bin/tct
 
 COPY wait-for-temporal.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/wait-for-temporal.sh
+COPY entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER containeruser
 WORKDIR /home/containeruser/www
