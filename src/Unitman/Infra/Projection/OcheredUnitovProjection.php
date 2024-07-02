@@ -196,12 +196,12 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
 
     function handleOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::UDALENIE);
+        $this->repository->removeByUnitId($fact->unitId);
     }
 
     function handleUspehUdaleniyaUnitaUstanovlen(UspehUdaleniyaUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::UDALENIE);
+        $this->repository->removeByUnitId($fact->unitId);
     }
     function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void
     {
