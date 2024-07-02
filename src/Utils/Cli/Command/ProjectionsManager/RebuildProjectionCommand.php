@@ -58,7 +58,7 @@ final class RebuildProjectionCommand extends Command
             return Command::SUCCESS;
         } catch (\Exception $e) {
 
-            $output->writeln('error: '. $e->getMessage());
+            $output->writeln('REBUILD ERROR: '. $e->getMessage());
             return Command::FAILURE;
         }
 
