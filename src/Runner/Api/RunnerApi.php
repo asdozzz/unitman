@@ -185,7 +185,7 @@ final class RunnerApi
             NachatZapuskUnitaWorkflow::class,
             WorkflowOptions::new()
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
-                ->withWorkflowExecutionTimeout(CarbonInterval::minute(20))
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(60))
         );
 
         $run = $this->workflowClient->start($workflow, $command);
