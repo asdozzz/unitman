@@ -36,47 +36,38 @@ final class BackgroundJobService
     {
         $status = $this->getStatus($job);
 
-        try {
+        if (!empty($status)) {
+            $this->manager->restart($job->getName());
+        } else {
+            $result = $this->manager->create(
+                name: $job->getName(),
+                command: 'php bin/console app:service:start '.$job->getName(),
+                remainAfterExit: true,
+                restartSec: 1
+            );
 
-            if (!empty($status)) {
-                $this->manager->restart($job->getName());
-            } else {
-                $result = $this->manager->create(
-                    name: $job->getName(),
-                    command: 'php bin/console app:service:start '.$job->getName(),
-                    remainAfterExit: true,
-                    restartSec: 1
-                );
-
-                if (!$result) {
-                    throw new ServiceException('Service creation failed.');
-                }
+            if (!$result) {
+                throw new ServiceException('Service creation failed.');
             }
-
-            $this->jobRepository->start($job->getName(), $job->getName());
-        } catch (ServiceException $exception) {
-            dd($exception);
         }
+
+        $this->jobRepository->start($job->getName(), $job->getName());
 
     }
 
     function stop(BackgroundJobInterface $job): void
     {
-        try {
-            $status = $this->getStatus($job);
+        $status = $this->getStatus($job);
 
-            if (!empty($status)) {
-                $result = $this->manager->terminate(name: $job->getName());
+        if (!empty($status)) {
+            $result = $this->manager->terminate(name: $job->getName());
 
-                if (!$result) {
-                    throw new ServiceException('Service termination failed.');
-                }
+            if (!$result) {
+                throw new ServiceException('Service termination failed.');
             }
-
-            $this->jobRepository->stop($job->getName());
-        } catch (ServiceException $exception) {
-            dd($exception);
         }
+
+        $this->jobRepository->stop($job->getName());
 
     }
 }
