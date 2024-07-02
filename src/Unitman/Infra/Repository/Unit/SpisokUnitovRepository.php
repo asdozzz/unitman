@@ -95,7 +95,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     public function isExistsDoubleByName(string $projectId, string $unitName): bool
     {
         $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE payload->>'project_id' = :projectId and payload->>'name' = :name", ['name' => $unitName, 'projectId' => $projectId]);
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE payload->>'projectId' = :projectId and payload->>'name' = :name", ['name' => $unitName, 'projectId' => $projectId]);
         return !empty($row);
     }
 

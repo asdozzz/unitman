@@ -1,3 +1,7 @@
-/var/volume/
 /.phpunit.result.cache
 /.deptrac.cache
+docs/
+public/bundles/
+tests/
+var/
+vendor/
