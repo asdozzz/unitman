@@ -18,10 +18,15 @@ final class OcheredUnitovWorkflow extends AbstractBackgroundJob
 
     function run(): bool
     {
-        $zadachi = $this->ocheredUnitovActivity->poluchitZadachiNaObrabotku(20);
+        $zadachi = $this->ocheredUnitovActivity->poluchitZadachiNaObrabotku(100);
 
         foreach ($zadachi as $zadacha) {
-            $this->ocheredUnitovActivity->obrabotatZadachu($zadacha);
+            try {
+                $this->ocheredUnitovActivity->obrabotatZadachu($zadacha);
+            } catch (\Exception) {
+                continue;
+            }
+
         }
 
         return true;

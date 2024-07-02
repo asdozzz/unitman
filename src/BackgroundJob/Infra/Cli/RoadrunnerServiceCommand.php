@@ -46,7 +46,7 @@ final class RoadrunnerServiceCommand extends Command
                     $countError++;
                     $this->logger->error(sprintf('service %s occured error: %s', $serviceName, $e->getMessage()));
                     if ($countError >= 3) {
-                        $this->logger->error('Max count error with service'.$serviceName);
+                        $this->logger->error('Max count error with service '.$serviceName);
                         break;
                     }
 
