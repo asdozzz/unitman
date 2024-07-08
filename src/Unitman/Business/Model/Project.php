@@ -416,4 +416,21 @@ final class Project implements AggregateRoot
     {
         return $this->proxyHost;
     }
+
+    public function getProjectUserById(string $userId): ProjectUser
+    {
+        $result = null;
+
+        foreach ($this->users as $user) {
+            if ($user->userId === $userId) {
+                $result = $user;
+            }
+        }
+
+        if (empty($result)) {
+            throw new \DomainException('project.user_not_found');
+        }
+
+        return $result;
+    }
 }

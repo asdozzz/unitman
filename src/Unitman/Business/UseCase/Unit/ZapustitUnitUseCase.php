@@ -22,10 +22,9 @@ final class ZapustitUnitUseCase
     function handle(ZapustitUnit $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
-        $unit->proverkaPrav($this->securityService->getCurrentUserId());
-
         $project = $this->projectRepository->getById($unit->getProjectId());
-
+        $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
+        $unit->proverkaPrav($projectUser);
         $jobId = $this->runnerService->nachatZapuskUnita($unit, $project);
         $unit->nachatZapuskUnita($jobId);
         $this->unitRepository->save($unit);

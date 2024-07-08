@@ -4,6 +4,8 @@ namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Model\Project\ProjectUser;
+use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
@@ -147,9 +149,9 @@ final class Unit implements AggregateRoot
         return false;
     }
 
-    public function esliRazreshenoUpravlyatUnitom(string $userId): bool
+    public function esliRazreshenoUpravlyatUnitom(ProjectUser $projectUser): bool
     {
-        return $this->authorId === $userId;
+        return $this->authorId === $projectUser->userId || $projectUser->userRole === ProjectUserRole::ADMIN;
     }
     public static function sozdatUnit(string $id, string $authorId, SozdatUnit $command): self
     {
@@ -182,9 +184,9 @@ final class Unit implements AggregateRoot
      * @param string $newBranch
      * @return void
      */
-    public function validateNewBranch(string $userId, string $newBranch): void
+    public function validateNewBranch(ProjectUser $projectUser, string $newBranch): void
     {
-        $this->proverkaPrav($userId);
+        $this->proverkaPrav($projectUser);
 
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
@@ -320,9 +322,9 @@ final class Unit implements AggregateRoot
         return $errors;
     }
 
-    public function nachatIzmenenieVetkiUnita(JobId $jobId, string $userId, string $newBranch): void
+    public function nachatIzmenenieVetkiUnita(JobId $jobId, ProjectUser $projectUser, string $newBranch): void
     {
-        $this->validateNewBranch($userId, $newBranch);
+        $this->validateNewBranch($projectUser, $newBranch);
 
         $state = $this->newState(new VOcheredNaIzmenenieVetki());
         $this->recordThat(new IzmenenieVetkiNachalos($this->getId(), (string)$jobId, $newBranch, $state->toArray($this)));
@@ -612,9 +614,9 @@ final class Unit implements AggregateRoot
     }
 
     //----------Сброс подготовки
-    public function nachatSbrosPodgotovkiUnita(JobId $jobId, string $userId): void
+    public function nachatSbrosPodgotovkiUnita(JobId $jobId, ProjectUser $user): void
     {
-        $errors = $this->esliMognoSbrositPodgotvku($userId);
+        $errors = $this->esliMognoSbrositPodgotvku($user);
 
         if (!empty($errors)) {
             throw new Exception($errors[0]);
@@ -1058,10 +1060,10 @@ final class Unit implements AggregateRoot
     /**
      * @return array
      */
-    function esliMognoSbrositPodgotvku(string $userId): array
+    function esliMognoSbrositPodgotvku(ProjectUser $projectUser): array
     {
         $errors = [];
-        if (!$this->esliRazreshenoUpravlyatUnitom($userId)) {
+        if (!$this->esliRazreshenoUpravlyatUnitom($projectUser)) {
             $errors[] = 'unit.ne_hvataet_prav';
         }
 
@@ -1088,9 +1090,9 @@ final class Unit implements AggregateRoot
         return $this->configUnita;
     }
 
-    function proverkaPrav(string $userId): void
+    function proverkaPrav(ProjectUser $projectUser): void
     {
-        if (!$this->esliRazreshenoUpravlyatUnitom($userId)) {
+        if (!$this->esliRazreshenoUpravlyatUnitom($projectUser)) {
             throw new DomainException('unit.ne_hvataet_prav');
         }
     }
