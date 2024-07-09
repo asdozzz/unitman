@@ -11,5 +11,5 @@ interface UmeetPoluchatSpisokVetokProekta
     /**
      * @return VetkaProekta[]
      * */
-    function poluchitVetkiProekta(Repo $repo, string $projectCode): array;
+    function poluchitVetkiProekta(Repo $repo, string $projectCode, ?string $query): array;
 }

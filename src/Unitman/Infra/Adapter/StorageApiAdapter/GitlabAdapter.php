@@ -46,10 +46,14 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return new RepoTypeList(Repo\RepoType::GITLAB->value, Repo\RepoType::GITLAB->name);
     }
 
-    public function poluchitVetkiProekta(Repo $repo, string $projectCode): array
+    public function poluchitVetkiProekta(Repo $repo, string $projectCode, ?string $query): array
     {
         $client = $this->clientFactory->makeClient($repo);
-        $branches = $client->repositories()->branches($projectCode, ['per_page' => 100]);
+        $parameters = ['per_page' => 100];
+        if (!empty($query)) {
+            $parameters['search'] = $query;
+        }
+        $branches = $client->repositories()->branches($projectCode, $parameters);
         usort($branches, function ($a, $b) {
             $datetime1 = strtotime($a['commit']['created_at']);
             $datetime2 = strtotime($b['commit']['created_at']);

@@ -64,10 +64,10 @@ final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluc
         return $res;
     }
 
-    function poluchitVetkiProekta(Repo $repo, string $projectCode): array
+    function poluchitVetkiProekta(Repo $repo, string $projectCode, ?string $query): array
     {
         $adapter = $this->getAdapterByRepo($repo->getType());
-        return $adapter->poluchitVetkiProekta($repo, $projectCode);
+        return $adapter->poluchitVetkiProekta($repo, $projectCode, $query);
     }
 
     function getUrlForInitProject(Repo $repo, Project $project): string

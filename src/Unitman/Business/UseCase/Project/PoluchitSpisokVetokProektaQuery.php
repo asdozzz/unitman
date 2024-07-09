@@ -25,6 +25,6 @@ final class PoluchitSpisokVetokProektaQuery
     {
         $project = $this->projectRepository->getById($command->id);
         $repo = $this->repoRepository->getById($project->getRepoId());
-        return $this->umeetPoluchatSpisokVetokProekta->poluchitVetkiProekta($repo, $project->getCode());
+        return $this->umeetPoluchatSpisokVetokProekta->poluchitVetkiProekta($repo, $project->getCode(), $command->query);
     }
 }

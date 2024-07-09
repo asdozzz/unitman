@@ -19,7 +19,7 @@ interface StorageApiAdapter
 
     public function getRepoTypeModel(): RepoTypeList;
 
-    public function poluchitVetkiProekta(Repo $repo, string $projectCode): array;
+    public function poluchitVetkiProekta(Repo $repo, string $projectCode, ?string $query): array;
 
     public function getUrlForInitProject(Repo $repo, Project $project): string;
 }

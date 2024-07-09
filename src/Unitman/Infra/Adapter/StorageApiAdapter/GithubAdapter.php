@@ -47,11 +47,18 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return new RepoTypeList(Repo\RepoType::GITHUB->value, Repo\RepoType::GITHUB->name);
     }
 
-    public function poluchitVetkiProekta(Repo $repo, string $projectCode): array
+    public function poluchitVetkiProekta(Repo $repo, string $projectCode,?string $query): array
     {
         $client = $this->githubClientFactory->makeClient($repo);
         list($login, $code) = explode('/', $projectCode);
-        $branches = $client->repositories()->branches($login, $code);
+        $branches = $client->repositories()->branches($login, $code, null, ['per_page' => 100]);
+        if (!empty($query)) {
+            $tmp = array_filter($branches, function (array $branch) use ($query) {
+                return strpos($branch['name'], $query) !== false;
+            });
+            $branches = array_values($tmp);
+        }
+
         return array_map(fn(array $branch) => new VetkaProekta($branch['name']), $branches);
     }
 
