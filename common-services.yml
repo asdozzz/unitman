@@ -2,11 +2,15 @@ services:
   web:
     build:
       context: ./
+      args:
+        - CURRENT_USER_ID=${UID}
+        - CURRENT_USER_GROUP=${GID}
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - '${UNITMAN_API_PORT}:8080'
+    user: root
     environment:
       - "TEMPORAL_CLI_ADDRESS=temporal:7233"
     extra_hosts:
