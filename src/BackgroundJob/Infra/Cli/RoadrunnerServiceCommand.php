@@ -38,9 +38,15 @@ final class RoadrunnerServiceCommand extends Command
             $job = $this->backgroundJobCollection->getJobByName($serviceName);
 
             $countError = 0;
+            $countSuccess = 0;
             while (true) {
                 try {
                     $job->run();
+                    $countSuccess++;
+                    if ($countSuccess >= 100) {
+                        $this->logger->error('Max count success with service '.$serviceName);
+                        break;
+                    }
                     sleep($job->getDelay());
                 } catch (\Exception $e) {
                     $countError++;
