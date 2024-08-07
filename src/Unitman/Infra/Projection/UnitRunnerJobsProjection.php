@@ -4,8 +4,10 @@ namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
+use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
@@ -33,7 +35,6 @@ use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
 use App\Unitman\Business\ReadModel\Unit\UnitRunnerJob;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
-use App\Unitman\Infra\Repository\Unit\OcheredUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\UnitRunnerJobRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
@@ -230,5 +231,15 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
     }
     function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void
     {
+    }
+
+    function handleObnovlenieKodaUnitaPosleZapuskaNachalos(ObnovlenieKodaUnitaPosleZapuskaNachalos $fact): void
+    {
+
+    }
+
+    function handleOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
+    {
+
     }
 }

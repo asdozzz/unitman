@@ -34,4 +34,14 @@ final class SbrositPodgotovkuUnitaUseCase
         $unit->nachatSbrosPodgotovkiUnita($jobId, $projectUser);
         $this->unitRepository->save($unit);
     }
+
+    function handleTemporal(SbrositPodgotovkuUnita $command): void
+    {
+        $unit = $this->unitRepository->getById($command->id);
+        $project = $this->projectRepository->getById($unit->getProjectId());
+        $projectUser = $project->getProjectUserById($unit->getAuthorId());
+        $jobId = $this->runnerService->nachatSbrosPodgotovkiUnita($unit);
+        $unit->nachatSbrosPodgotovkiUnita($jobId, $projectUser);
+        $this->unitRepository->save($unit);
+    }
 }

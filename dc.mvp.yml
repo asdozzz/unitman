@@ -61,6 +61,16 @@ services:
     volumes:
       - ./config/jwt:/home/containeruser/www/config/jwt
 
+  elasticsearch:
+    extends:
+      file: common-services.yml
+      service: elasticsearch
+
+  kibana:
+    extends:
+      file: common-services.yml
+      service: kibana
+
   postgres:
     extends:
       file: common-services.yml

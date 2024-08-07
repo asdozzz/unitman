@@ -15,6 +15,8 @@ use EventSauce\EventSourcing\Serialization\ObjectMapperPayloadSerializer;
 use EventSauce\EventSourcing\Serialization\PayloadSerializerSupportingObjectMapperAndSerializablePayload;
 use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
+use Monolog\Level;
+use Symfony\Bridge\Monolog\Handler\ElasticsearchLogstashHandler;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Temporal\Client\WorkflowClient;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -41,4 +43,10 @@ return function (ContainerConfigurator $configuration) {
     $services->set(WorkflowClient::class)
         ->factory(service(WorkflowClientFactory::class))
         ->args(['%env(TEMPORAL_CLI_ADDRESS)%']);
+
+    $services->set(ElasticsearchLogstashHandler::class)
+        ->args([
+            '$endpoint' => "http://elasticsearch:9200",
+            '$index' => "monolog",
+        ]);
 };

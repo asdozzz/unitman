@@ -62,6 +62,16 @@ services:
       - PHP_ERROR_REPORTING="E_ALL"
       - PHP_DISPLAY_ERRORS=On
 
+  elasticsearch:
+    extends:
+      file: common-services.yml
+      service: elasticsearch
+
+  kibana:
+    extends:
+      file: common-services.yml
+      service: kibana
+
   postgres:
     extends:
       file: common-services.yml

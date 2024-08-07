@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Unitman\Infra\Temporal\Workflow;
+namespace App\Unitman\Infra\BackgroundJob\OcheredUnitov;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
-use App\Unitman\Infra\Temporal\Activity\OcheredUnitovActivity;
+use App\Unitman\Infra\BackgroundJob\OcheredUnitov\OcheredUnitovActivity;
 
-final class OcheredUnitovWorkflow extends AbstractBackgroundJob
+final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
 {
     public function __construct(private OcheredUnitovActivity $ocheredUnitovActivity)
     {

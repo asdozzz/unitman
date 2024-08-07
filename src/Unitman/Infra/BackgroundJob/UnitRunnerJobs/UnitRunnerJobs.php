@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Unitman\Infra\Temporal\Workflow;
+namespace App\Unitman\Infra\BackgroundJob\UnitRunnerJobs;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
 use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
 use App\Unitman\Infra\Projection\UnitRunnerJobsProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
-final class UnitRunnerJobsWorkflow extends AbstractBackgroundJob
+final class UnitRunnerJobs extends AbstractBackgroundJob
 {
     public function __construct(private ProjectionsManager $projectionsManager)
     {

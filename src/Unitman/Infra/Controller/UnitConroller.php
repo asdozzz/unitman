@@ -8,6 +8,7 @@ use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
 use App\Unitman\Business\Command\Unit\GetUnitRunnerJobs;
 use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
+use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigUnita;
@@ -32,6 +33,7 @@ use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobsQuery;
 use App\Unitman\Business\UseCase\Unit\IzmenitVetkuUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
@@ -65,7 +67,7 @@ final class UnitConroller extends AbstractController
     {
         try {
             $unitId = $useCase->handle($command);
-            //TODO плохо, переделать на proccess manager
+            //TODO плохо, переделать на process manager
             $sobratUnitUseCase->handle(new SobratUnit($unitId));
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
@@ -149,6 +151,17 @@ final class UnitConroller extends AbstractController
         }
     }
 
+    #[Route('/obnovitKodUnitaPosleZapuska', methods: ['POST'])]
+    public function obnovitKodUnitaPosleZapuska(ObnovitKodUnitaPosleZapuska $command, ObnovitKodUnitaPosleZapuskaUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
     #[Route('/zapolnitPeremenie', methods: ['POST'])]
     public function zapolnitPeremenie(ZapolnitPeremenieUnita $command, ZapolnitPeremenieUnitaUseCase $useCase): Response
     {
@@ -187,7 +200,7 @@ final class UnitConroller extends AbstractController
     {
         try {
             $isSuccess = $useCase->handle($command);
-            //TODO плохо, переделать на proccess manager
+            //TODO плохо, переделать на process manager
             if ($isSuccess) {
                 $zapustitUnitUseCase->handle(new ZapustitUnit($command->id));
             }

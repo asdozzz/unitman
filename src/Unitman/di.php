@@ -15,7 +15,8 @@ use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
-use App\Unitman\Infra\Temporal\Workflow\UnitRunnerJobsWorkflow;
+use App\Unitman\Infra\Temporal\Activity\ProzesObnovlenieKodaPosleZapuskaActivity;
+use App\Unitman\Infra\BackgroundJob\UnitRunnerJobs\UnitRunnerJobs;
 use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use Doctrine\DBAL\Connection;
@@ -100,8 +101,11 @@ return function (ContainerConfigurator $configuration) {
             service('unitman.projections_manager'),
         ]);
 
-    $services->set(UnitRunnerJobsWorkflow::class)
+    $services->set(UnitRunnerJobs::class)
         ->args([
             service('unitman.projections_manager'),
         ]);
+
+    $services->set(ProzesObnovlenieKodaPosleZapuskaActivity::class)
+        ->tag('temporal.activity.registry');
 };

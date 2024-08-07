@@ -59,4 +59,7 @@ enum UnitmanClassNameMapEnum: string
     case IzmenenieVetkiNachalos = 'IzmenenieVetkiNachalos';
     case OshibkaIzmeneniyaVetkiUnitaUstanovlena = 'OshibkaIzmeneniyaVetkiUnitaUstanovlena';
     case UspehIzmeneniyaVetkiUstanovlen = 'UspehIzmeneniyaVetkiUstanovlen';
+    case ObnovlenieKodaUnitaPosleZapuskaNachalos = 'ObnovlenieKodaUnitaPosleZapuskaNachalos';
+    case OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena = 'OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena';
+
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Unitman\Infra\Temporal\Activity;
+namespace App\Unitman\Infra\BackgroundJob\OcheredUnitov;
 
 use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;

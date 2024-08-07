@@ -4,8 +4,10 @@ namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
+use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
@@ -230,6 +232,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'jdemObnovlenieKodaPosleZapuska' => false,
             'error' => true
         ]);
         $this->repository->update($readModel);
@@ -266,6 +269,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'jdemObnovlenieKodaPosleZapuska' => false,
             'error' => true
         ]);
         $this->repository->update($readModel);
@@ -301,6 +305,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'jdemObnovlenieKodaPosleZapuska' => false,
             'error' => true
         ]);
         $this->repository->update($readModel);
@@ -336,6 +341,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'jdemObnovlenieKodaPosleZapuska' => false,
             'error' => true
         ]);
         $this->repository->update($readModel);
@@ -349,6 +355,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'jdemObnovlenieKodaPosleZapuska' => false,
             'error' => false
         ]);
         $this->repository->update($readModel);
@@ -372,6 +379,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
+            'jdemObnovlenieKodaPosleZapuska' => false,
             'error' => true
         ]);
         $this->repository->update($readModel);
@@ -408,6 +416,24 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
             'error' => true
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleObnovlenieKodaUnitaPosleZapuskaNachalos(ObnovlenieKodaUnitaPosleZapuskaNachalos $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'jdemObnovlenieKodaPosleZapuska' => true,
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'jdemObnovlenieKodaPosleZapuska' => false,
         ]);
         $this->repository->update($readModel);
     }

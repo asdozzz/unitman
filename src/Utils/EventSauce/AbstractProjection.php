@@ -7,6 +7,10 @@ use EventSauce\EventSourcing\MessageConsumer;
 
 abstract class AbstractProjection implements CanProjectEvents
 {
+    protected function getExceptionEvents(): array
+    {
+        return [];
+    }
     public function handle(Message $message): void
     {
         $event = $message->payload();
@@ -16,7 +20,7 @@ abstract class AbstractProjection implements CanProjectEvents
         $methodName = 'handle'.$eventClass;
         if (method_exists($this::class, $methodName)) {
             $this->{$methodName}($event);
-        } else {
+        } else if (!in_array($event::class, $this->getExceptionEvents())) {
             throw new \RuntimeException(sprintf('Handler %s for event=%s in %s not found', $methodName, $eventClass, $this::class));
         }
     }

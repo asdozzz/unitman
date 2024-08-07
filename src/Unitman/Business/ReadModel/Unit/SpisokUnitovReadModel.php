@@ -17,6 +17,7 @@ final class SpisokUnitovReadModel
         public readonly array $commands = [],
         public readonly bool $error = false,
         public readonly array $links = [],
+        public readonly bool $jdemObnovlenieKodaPosleZapuska = false
     )
     {
     }
@@ -35,6 +36,7 @@ final class SpisokUnitovReadModel
         $links = array_key_exists('links', $props)?$props['links']:$this->links;
         $error = array_key_exists('error', $props)?$props['error']:$this->error;
         $branch = array_key_exists('branch', $props)?$props['branch']:$this->branch;
+        $jdemObnovlenieKodaPosleZapuska = isset($props['jdemObnovlenieKodaPosleZapuska'])?$props['jdemObnovlenieKodaPosleZapuska']:$this->jdemObnovlenieKodaPosleZapuska;
 
         return new static(
             $id,
@@ -49,6 +51,7 @@ final class SpisokUnitovReadModel
             $commands,
             $error,
             $links,
+            $jdemObnovlenieKodaPosleZapuska
         );
     }
 }

@@ -32,21 +32,27 @@ use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
-use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
+use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuska;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
-use App\Unitman\Infra\Repository\Unit\OcheredUnitovRepository;
+use App\Unitman\Infra\Repository\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 
-final class OcheredUnitovProjection extends AbstractProjection implements UnitmanProjection
+final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractProjection implements UnitmanProjection
 {
-    public function __construct(private OcheredUnitovRepository $repository)
+    public function __construct(private OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository $repository, private UnitRepository $unitRepository)
     {
+    }
+
+    function isSyncProjection(): bool
+    {
+        return true;
     }
 
     function getProjectionName(): string
     {
-        return 'ochered_unitov';
+        return 'prozess_obnovlenie_koda_posle_zapuska';
     }
 
     function init(): void
@@ -69,134 +75,124 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);
     }
 
-    function handleUnitSozdan(UnitSozdan $fact): void
+    protected function getExceptionEvents(): array
     {
-
-    }
-
-    function handleObnovlenieKodaUnitaPosleZapuskaNachalos(ObnovlenieKodaUnitaPosleZapuskaNachalos $fact): void
-    {
-
-    }
-
-    function handleSborkaUnitNachalas(SborkaUnitNachalas $fact): void
-    {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::SBORKA);
-    }
-
-    function handleOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
-    {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::SBORKA);
-    }
-
-    function handleUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
-    {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::SBORKA);
-    }
-
-    function handleIzmenenieVetkiNachalos(IzmenenieVetkiNachalos $fact): void
-    {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI);
-    }
-
-    function handleOshibkaIzmeneniyaVetkiUnitaUstanovlena(OshibkaIzmeneniyaVetkiUnitaUstanovlena $fact): void
-    {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI);
-    }
-
-    function handleUspehIzmeneniyaVetkiUstanovlen(UspehIzmeneniyaVetkiUstanovlen $fact): void
-    {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI);
-    }
-
-    function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
-    {
-
-    }
-
-    function handlePodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
-    {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::PODGOTOVKA);
+        return [
+            UnitSozdan::class,
+            SborkaUnitNachalas::class,
+            OshibkaSborkiUnitaUstanovlena::class,
+            UspehSborkiUnitaUstanovlen::class,
+            IzmenenieVetkiNachalos::class,
+            OshibkaIzmeneniyaVetkiUnitaUstanovlena::class,
+            UspehIzmeneniyaVetkiUstanovlen::class,
+            PeremenieUnitaZapolneni::class,
+            PodgotovkaUnitaNachalas::class,
+            ObnovlenieKodaUnitaPosleZapuskaNachalos::class,
+            ObnovlenieUnitaNachalos::class,
+            KonfigUnitaUstanovlen::class,
+            SbrosPodgotovkiNachalsya::class,
+            OstanovkaUnitaNachalas::class
+        ];
     }
 
     function handleOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::PODGOTOVKA);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
+        }
     }
 
     function handleUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::PODGOTOVKA);
-    }
-
-    function handleObnovlenieUnitaNachalos(ObnovlenieUnitaNachalos $fact): void
-    {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::OBNOVLENIE);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::PODGOTOVLEN);
+        }
     }
 
     function handleOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::OBNOVLENIE);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
+        }
     }
 
     function handleUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::OBNOVLENIE);
-    }
-
-    function handleKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact): void
-    {
-
-    }
-
-    function handleSbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
-    {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::OBNOVLEN);
+        }
     }
 
     function handleOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
+        }
     }
 
     function handleUspehSbrosaPodgotovkiUnitaUstanovlen(UspehSbrosaPodgotovkiUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::SBROSHENA_PODGOTOVKA);
+        }
     }
 
     function handleZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
     {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::ZAPUSK);
+        $this->repository->removeByUnitId($fact->unitId);
     }
 
     function handleOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::ZAPUSK);
+        $this->repository->removeByUnitId($fact->unitId);
     }
 
     function handleUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::ZAPUSK);
-    }
-
-    function handleOstanovkaUnitaNachalas(OstanovkaUnitaNachalas $fact): void
-    {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::OSTANOVKA);
+        $this->repository->removeByUnitId($fact->unitId);
     }
 
     function handleOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::OSTANOVKA);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
+        }
     }
 
     function handleUspehOstanovkiUnitaUstanovlen(UspehOstanovkiUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::OSTANOVKA);
+        $this->repository->removeByUnitId($fact->unitId);
+        $unit = $this->unitRepository->getById($fact->unitId);
+        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        if (!empty($workflowId)) {
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::OSTANOVLEN);
+        }
     }
 
     function handleUdalenieUnitaNachalos(UdalenieUnitaNachalos $fact): void
     {
-        $this->repository->insert($fact->unitId, OcheredUnitovReadModel::UDALENIE);
+        $this->repository->removeByUnitId($fact->unitId);
     }
 
     function handleOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
@@ -215,11 +211,7 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
 
     function handleOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
     {
-
+        $this->repository->removeByUnitId($fact->unitId);
     }
 
-    function isSyncProjection(): bool
-    {
-        return true;
-    }
 }

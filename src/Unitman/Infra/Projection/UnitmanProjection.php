@@ -2,11 +2,11 @@
 
 namespace App\Unitman\Infra\Projection;
 
-use EventSauce\EventSourcing\MessageConsumer;
+use App\Utils\EventSauce\CanProjectEvents;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag('unitman.projection')]
-interface UnitmanProjection extends MessageConsumer
+interface UnitmanProjection extends CanProjectEvents
 {
 
 }

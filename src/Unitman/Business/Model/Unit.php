@@ -4,14 +4,17 @@ namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Command\Unit\UstanovitOshibkuObnovleniyaUnitaPosleZapuska;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
+use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
@@ -103,6 +106,8 @@ final class Unit implements AggregateRoot
     private ?RunnerJob $udalenie = null;
 
     private ?RunnerJob $izmenenieVetki = null;
+
+    private ?string $obnovleniePosleZapuska = null;
 
     private bool $isDeleted = false;
 
@@ -496,6 +501,7 @@ final class Unit implements AggregateRoot
     {
         $this->podgotovka = $this->podgotovka->ustanovitOshibku($fact->steps);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->obnovleniePosleZapuska = null;
     }
 
     public function ustanovitUspehPodgotovki(array $steps): void
@@ -549,6 +555,48 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
+    public function nachatObnovlenieUnitaPosleZapuska(JobId $jobId): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if (!empty($this->obnovleniePosleZapuska)) {
+            throw new DomainException('unit.obnovlenie_uge_zapusheno');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if (!$this->esliZapushen()) {
+            throw new DomainException('unit.unit_ne_zapushen');
+        }
+
+        $this->recordThat(new ObnovlenieKodaUnitaPosleZapuskaNachalos($this->getId(), (string) $jobId));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyObnovlenieKodaUnitaPosleZapuskaNachalos(ObnovlenieKodaUnitaPosleZapuskaNachalos $fact): void
+    {
+        $this->obnovleniePosleZapuska = $fact->jobId;
+    }
+
+    public function ustanovitOshibkuObnovleniyaPosleZapuska(string $error): void
+    {
+        $this->recordThat(new OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena($this->getId(), $error));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
+    {
+        $this->obnovleniePosleZapuska = null;
+    }
+
     public function ustanovitOshibkuObnovleniya(array $steps): void
     {
         if (empty($this->obnovlenie)) {
@@ -569,6 +617,7 @@ final class Unit implements AggregateRoot
     {
         $this->obnovlenie = $this->obnovlenie->ustanovitOshibku($fact->steps);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->obnovleniePosleZapuska = null;
     }
 
     public function ustanovitUspehObnovleniya(array $steps, array $configUnita): void
@@ -657,6 +706,7 @@ final class Unit implements AggregateRoot
     {
         $this->sbrosPodgotovki = $this->sbrosPodgotovki->ustanovitOshibku($fact->steps);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->obnovleniePosleZapuska = null;
     }
 
     public function ustanovitUspehSbrosaPodgotovki(array $steps): void
@@ -712,8 +762,8 @@ final class Unit implements AggregateRoot
     private function applyZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
     {
         $this->zapusk = RunnerJob::start($fact->jobId);
-
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->obnovleniePosleZapuska = null;
     }
 
     public function ustanovitOshibkuZapuska(array $steps): void
@@ -810,8 +860,8 @@ final class Unit implements AggregateRoot
     private function applyOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
         $this->ostanovka = $this->ostanovka->ustanovitOshibku($fact->steps);
-
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->obnovleniePosleZapuska = null;
     }
 
     public function ustanovitUspehOstanovki(array $steps): void
@@ -1095,5 +1145,18 @@ final class Unit implements AggregateRoot
         if (!$this->esliRazreshenoUpravlyatUnitom($projectUser)) {
             throw new DomainException('unit.ne_hvataet_prav');
         }
+    }
+
+    function poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska(): ?string
+    {
+        return $this->obnovleniePosleZapuska;
+    }
+
+    /**
+     * @psalm-ignore-nullable-return
+     * */
+    function getAuthorId(): ?string
+    {
+        return $this->authorId;
     }
 }

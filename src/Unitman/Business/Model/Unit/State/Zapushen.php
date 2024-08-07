@@ -25,7 +25,8 @@ final class Zapushen extends AbstractState
     public function getCommands(Unit $unit): array
     {
         return [
-            StateUserCommand::nachatOstanovku
+            StateUserCommand::nachatOstanovku,
+            StateUserCommand::nachatObnovleniePosleZapuska,
         ];
     }
 }
