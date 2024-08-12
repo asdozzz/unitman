@@ -15,8 +15,7 @@ use App\Account\Business\UseCase\RegisterAccountUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/account')]
 final class AccountController extends AbstractController

@@ -25,7 +25,7 @@ final class LockCommand extends Command
             ->addArgument('value', InputArgument::REQUIRED, '0 - unblock, 1 - block');
         ;
     }
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
             $output->writeln([

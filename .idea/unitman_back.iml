@@ -141,8 +141,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/spiral/roadrunner-cli" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/spiral/logger" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/spiral/roadrunner-http" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/php-http/message-factory" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/runtime/roadrunner-symfony-nyholm" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-factory" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/http-message" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/psr-http-message-bridge" />
@@ -158,7 +156,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/doctrine-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/sql-formatter" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/doctrine-bridge" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/annotations" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/psr/clock" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/lcobucci/jwt" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/lcobucci/clock" />
@@ -166,7 +163,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/lexik/jwt-authentication-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/migrations" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/doctrine-migrations-bundle" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/sensio/framework-extra-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/uid" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-uuid" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/eventsauce/clock" />
@@ -238,6 +234,14 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/vendor/twig" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/vendor/vimeo" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/vendor/webmozart" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/carbonphp/carbon-doctrine-types" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/fluffydiscord/roadrunner-symfony-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/roadrunner-php/roadrunner-api-dto" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/roadrunner-php/version-checker" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/spiral/roadrunner-metrics" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/clock" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php81" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php83" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -2,39 +2,36 @@
 
 namespace App\Utils\Converter;
 
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Sensio\Bundle\FrameworkExtraBundle\Request\ParamConverter\ParamConverterInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
+use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
-final class JsonBodySerializableConverter implements ParamConverterInterface
+final class JsonBodySerializableConverter implements ValueResolverInterface
 {
     public function __construct(private SerializerInterface $serializer)
     {
     }
 
-    public function apply(Request $request, ParamConverter $configuration): bool
+    public function resolve(Request $request, ArgumentMetadata $argument): iterable
     {
-        $body = $request->getContent();
-
-        if (empty($body))
-        {
-            $body = '';
+        if (!$this->supports($argument)) {
+            return [];
         }
 
-        $obj = $this->serializer->deserialize($body, $configuration->getClass() ?? '', 'json',[
+        $obj = $this->serializer->deserialize($request->getContent(), $argument->getType() ?? '', 'json',[
             AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false
         ]);
 
-        $request->attributes->set($configuration->getName(), $obj);
+        $request->attributes->set($argument->getName(), $obj);
 
-        return true;
+        return [$obj];
     }
 
-    public function supports(ParamConverter $configuration)
+    public function supports(ArgumentMetadata $argument)
     {
-        $class = $configuration->getClass();
+        $class = $argument->getType();
         if (empty($class)) {
             return false;
         }

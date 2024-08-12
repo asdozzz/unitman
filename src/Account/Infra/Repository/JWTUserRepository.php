@@ -79,12 +79,12 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         throw new \Exception('upgradePassword');
     }
 
-    public function refreshUser(UserInterface $user)
+    public function refreshUser(UserInterface $user): UserInterface
     {
         throw new \Exception('refreshUser');
     }
 
-    public function supportsClass(string $class)
+    public function supportsClass(string $class): bool
     {
         return JWTUser::class === $class;
     }

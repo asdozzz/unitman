@@ -26,7 +26,7 @@ final class RoadrunnerServiceCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
             $serviceName = $input->getArgument('serviceName');

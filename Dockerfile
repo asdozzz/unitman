@@ -1,10 +1,21 @@
-FROM spacetabio/roadrunner-alpine:8.1-base-xdebug-1.11.0
+FROM ghcr.io/roadrunner-server/roadrunner:2024.2 as roadrunner
+
+FROM spiralscout/php-grpc:8.2-xdebug
+
+# https://github.com/mlocati/docker-php-extension-installer
+# https://github.com/docker-library/docs/tree/0fbef0e8b8c403f581b794030f9180a68935af9d/php#how-to-install-more-php-extensions
+RUN --mount=type=bind,from=mlocati/php-extension-installer:2,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
+     install-php-extensions @composer-2 pdo_pgsql pgsql && \
+     apk del --no-cache ${PHPIZE_DEPS} ${BUILD_DEPENDS}
+
+COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
+
 
 ARG CURRENT_USER_ID=1000
 ARG CURRENT_USER_GROUP=1000
 
-RUN addgroup --g ${CURRENT_USER_GROUP} groupcontainer
-RUN adduser -u ${CURRENT_USER_ID} -G groupcontainer -h /home/containeruser -D containeruser
+RUN addgroup --gid ${CURRENT_USER_GROUP} groupcontainer
+RUN adduser --uid ${CURRENT_USER_ID} -G groupcontainer -h /home/containeruser -D containeruser
 RUN adduser containeruser root
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

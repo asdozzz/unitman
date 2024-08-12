@@ -6,19 +6,17 @@ services:
         - CURRENT_USER_ID=${UID}
         - CURRENT_USER_GROUP=${GID}
     restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - '${UNITMAN_API_PORT}:8080'
+      - 2112:2112
     user: root
     environment:
       - "TEMPORAL_CLI_ADDRESS=temporal:7233"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - elasticsearch
 
   elasticsearch:
+    container_name: elasticsearch
     image: elasticsearch:7.14.0
     restart: always
     ports:
@@ -28,6 +26,7 @@ services:
       - xpack.security.enabled=false
 
   kibana:
+    container_name: kibana
     image: kibana:7.14.0
     depends_on:
       - elasticsearch

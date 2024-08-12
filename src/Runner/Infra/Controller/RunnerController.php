@@ -5,7 +5,7 @@ namespace App\Runner\Infra\Controller;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/runner')]
 final class RunnerController extends AbstractController

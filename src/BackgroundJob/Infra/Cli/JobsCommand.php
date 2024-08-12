@@ -24,7 +24,7 @@ final class JobsCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
             $commandName = $input->getArgument('commandName');
