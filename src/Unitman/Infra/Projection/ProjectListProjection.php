@@ -30,6 +30,10 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
     {
     }
 
+    function isAllowedRebuild(): bool
+    {
+        return true;
+    }
     function isSyncProjection(): bool
     {
         return true;

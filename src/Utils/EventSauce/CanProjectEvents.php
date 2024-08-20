@@ -21,4 +21,6 @@ interface CanProjectEvents extends MessageConsumer
     function getStreamName(): StreamName;
 
     function isSyncProjection(): bool;
+
+    function isAllowedRebuild(): bool;
 }

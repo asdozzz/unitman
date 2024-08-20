@@ -11,6 +11,11 @@ abstract class AbstractProjection implements CanProjectEvents
     {
         return [];
     }
+
+    function isAllowedRebuild(): bool
+    {
+        return true;
+    }
     public function handle(Message $message): void
     {
         $event = $message->payload();

@@ -128,6 +128,7 @@ final class ProjectionsManager
         $this->connection->beginTransaction();
         try {
             foreach ($this->projections as $projection) {
+                if (!$projection->isAllowedRebuild()) return;
                 $this->checkpointStore->resetCheckpoint($projection->getProjectionName());
                 $projection->init();
                 $projection->reset();
@@ -146,6 +147,11 @@ final class ProjectionsManager
         $this->connection->beginTransaction();
         try {
             $projection = $this->getProjectionByName($projectionName);
+
+            if (!$projection->isAllowedRebuild()) {
+                throw new \DomainException('projections_manager.rebuild_not_allowed');
+            }
+
             $this->checkpointStore->resetCheckpoint($projectionName);
             $projection->init();
             $projection->reset();
