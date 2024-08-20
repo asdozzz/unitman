@@ -168,9 +168,15 @@ final class ProjectionsManager
     {
         $events = $this->eventsRepository->getStream($projection->getStreamName(), $checkpoint);
 
+        $oldCheckpoint = $checkpoint;
+
         foreach ($events as $event) {
             $projection->handle($event);
             $checkpoint++;
+        }
+
+        if ($oldCheckpoint == $checkpoint) {
+            return;
         }
 
         $this->checkpointStore->saveCheckpoint($projection->getProjectionName(), $checkpoint);

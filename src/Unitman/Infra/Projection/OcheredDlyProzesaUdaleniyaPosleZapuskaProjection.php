@@ -35,15 +35,15 @@ use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Unit\UnitRepository;
-use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuska;
+use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuska;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
-use App\Unitman\Infra\Repository\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository;
+use App\Unitman\Infra\Repository\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 
-final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractProjection implements UnitmanProjection
+final class OcheredDlyProzesaUdaleniyaPosleZapuskaProjection extends AbstractProjection implements UnitmanProjection
 {
-    public function __construct(private OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository $repository, private UnitRepository $unitRepository)
+    public function __construct(private OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaRepository $repository, private UnitRepository $unitRepository)
     {
     }
 
@@ -54,7 +54,7 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
 
     function getProjectionName(): string
     {
-        return 'prozess_obnovlenie_koda_posle_zapuska';
+        return 'prozess_udaleniya_unita_posle_zapuska';
     }
 
     function init(): void
@@ -90,62 +90,29 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
             PeremenieUnitaZapolneni::class,
             PodgotovkaUnitaNachalas::class,
             ObnovlenieKodaUnitaPosleZapuskaNachalos::class,
+            OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena::class,
             ObnovlenieUnitaNachalos::class,
+            OshibkaObnovleniyaUnitaUstanovlena::class,
+            UspehObnovleniyaUnitaUstanovlen::class,
             KonfigUnitaUstanovlen::class,
             SbrosPodgotovkiNachalsya::class,
             OstanovkaUnitaNachalas::class,
-            UdalenieUnitaPosleZapuskaNachalos::class,
-            OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class
+            OshibkaPodgotovkiUnitaUstanovlena::class,
+            UspehPodgotovkiUnitaUstanovlen::class,
+            ZapuskUnitNachalsya::class,
+            OshibkaZapuskaUnitaUstanovlena::class,
+            UspehZapuskaUnitaUstanovlen::class,
+            UdalenieUnitaPosleZapuskaNachalos::class
         ];
-    }
-
-    function handleOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-        $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
-        if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
-        }
-    }
-
-    function handleUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-        $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
-        if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::PODGOTOVLEN);
-        }
-    }
-
-    function handleOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-        $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
-        if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
-        }
-    }
-
-    function handleUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-        $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
-        if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::OBNOVLEN);
-        }
     }
 
     function handleOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
         $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR);
         }
     }
 
@@ -153,34 +120,19 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
     {
         $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::SBROSHENA_PODGOTOVKA);
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::SBROSHENA_PODGOTOVKA);
         }
-    }
-
-    function handleZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-    }
-
-    function handleOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-    }
-
-    function handleUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
     }
 
     function handleOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
         $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR);
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR);
         }
     }
 
@@ -188,9 +140,9 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
     {
         $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
-        $workflowId = $unit->poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska();
+        $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaObnovleniyaKodaPosleZapuska::OSTANOVLEN);
+            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::OSTANOVLEN);
         }
     }
 
@@ -213,9 +165,8 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
         $this->repository->removeByUnitId($fact->unitId);
     }
 
-    function handleOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
+    function handleOshibkaUdaleniyaUnitaPosleZapuskaUstanovlena(OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena $fact): void
     {
         $this->repository->removeByUnitId($fact->unitId);
     }
-
 }

@@ -14,6 +14,9 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
+/**
+ * @implements UserProviderInterface<JWTUser>
+ * */
 final class JWTUserRepository implements UserProviderInterface, CanFindDouble, UmeetPoluchatSpisokVsehPolzovatelei
 {
     const TABLE = 'jwt_user';

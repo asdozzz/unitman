@@ -13,6 +13,7 @@ use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSborkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSbrosaPodgotovkiUnitaUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaZapuskaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
@@ -22,6 +23,7 @@ use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
@@ -77,14 +79,26 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);
     }
 
-    function handleUnitSozdan(UnitSozdan $fact): void
+    protected function getExceptionEvents(): array
     {
-
-    }
-
-    function handleSborkaUnitNachalas(SborkaUnitNachalas $fact): void
-    {
-
+        return [
+            UdalenieUnitaPosleZapuskaNachalos::class,
+            OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class,
+            ObnovlenieKodaUnitaPosleZapuskaNachalos::class,
+            OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena::class,
+            UnitSozdan::class,
+            SborkaUnitNachalas::class,
+            IzmenenieVetkiNachalos::class,
+            PeremenieUnitaZapolneni::class,
+            PodgotovkaUnitaNachalas::class,
+            ObnovlenieUnitaNachalos::class,
+            KonfigUnitaUstanovlen::class,
+            SbrosPodgotovkiNachalsya::class,
+            ZapuskUnitNachalsya::class,
+            OstanovkaUnitaNachalas::class,
+            UdalenieUnitaNachalos::class,
+            SlomaniyUnitUdalen::class
+        ];
     }
 
     function handleOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
@@ -99,11 +113,6 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
         $this->repository->insert($job);
     }
 
-    function handleIzmenenieVetkiNachalos(IzmenenieVetkiNachalos $fact): void
-    {
-
-    }
-
     function handleOshibkaIzmeneniyaVetkiUnitaUstanovlena(OshibkaIzmeneniyaVetkiUnitaUstanovlena $fact): void
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI, false, $fact->steps);
@@ -114,18 +123,6 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI, true, $fact->steps);
         $this->repository->insert($job);
-    }
-
-
-
-    function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
-    {
-
-    }
-
-    function handlePodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
-    {
-
     }
 
     function handleOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
@@ -140,11 +137,6 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
         $this->repository->insert($job);
     }
 
-    function handleObnovlenieUnitaNachalos(ObnovlenieUnitaNachalos $fact): void
-    {
-
-    }
-
     function handleOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, false, $fact->steps);
@@ -155,16 +147,6 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, true, $fact->steps);
         $this->repository->insert($job);
-    }
-
-    function handleKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact): void
-    {
-
-    }
-
-    function handleSbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
-    {
-
     }
 
     function handleOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
@@ -179,11 +161,6 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
         $this->repository->insert($job);
     }
 
-    function handleZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
-    {
-
-    }
-
     function handleOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, false, $fact->steps);
@@ -194,11 +171,6 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, true, $fact->steps);
         $this->repository->insert($job);
-    }
-
-    function handleOstanovkaUnitaNachalas(OstanovkaUnitaNachalas $fact): void
-    {
-
     }
 
     function handleOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
@@ -213,11 +185,6 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
         $this->repository->insert($job);
     }
 
-    function handleUdalenieUnitaNachalos(UdalenieUnitaNachalos $fact): void
-    {
-
-    }
-
     function handleOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, false, $fact->steps);
@@ -228,18 +195,5 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, true, $fact->steps);
         $this->repository->insert($job);
-    }
-    function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void
-    {
-    }
-
-    function handleObnovlenieKodaUnitaPosleZapuskaNachalos(ObnovlenieKodaUnitaPosleZapuskaNachalos $fact): void
-    {
-
-    }
-
-    function handleOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
-    {
-
     }
 }

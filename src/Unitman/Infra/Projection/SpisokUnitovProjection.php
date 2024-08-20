@@ -13,6 +13,7 @@ use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSborkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSbrosaPodgotovkiUnitaUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaZapuskaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
@@ -22,6 +23,7 @@ use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
@@ -306,6 +308,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
             'jdemObnovlenieKodaPosleZapuska' => false,
+            'jdemUdaleniyaPosleZapuska' => false,
             'error' => true
         ]);
         $this->repository->update($readModel);
@@ -380,6 +383,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => false,
             'jdemObnovlenieKodaPosleZapuska' => false,
+            'jdemUdaleniyaPosleZapuska' => false,
             'error' => true
         ]);
         $this->repository->update($readModel);
@@ -434,6 +438,24 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'jdemObnovlenieKodaPosleZapuska' => false,
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleUdalenieUnitaPosleZapuskaNachalos(UdalenieUnitaPosleZapuskaNachalos $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'jdemUdaleniyaPosleZapuska' => true,
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleOshibkaUdaleniyaUnitaPosleZapuskaUstanovlena(OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'jdemUdaleniyaPosleZapuska' => false,
         ]);
         $this->repository->update($readModel);
     }

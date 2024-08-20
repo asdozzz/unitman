@@ -27,6 +27,7 @@ final class Zapushen extends AbstractState
         return [
             StateUserCommand::nachatOstanovku,
             StateUserCommand::nachatObnovleniePosleZapuska,
+            StateUserCommand::nachatUdaleniePosleZapuska,
         ];
     }
 }

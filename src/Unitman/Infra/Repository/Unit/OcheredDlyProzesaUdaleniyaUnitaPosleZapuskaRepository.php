@@ -2,12 +2,12 @@
 
 namespace App\Unitman\Infra\Repository\Unit;
 
-use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuska;
+use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuska;
 use Doctrine\DBAL\Connection;
 
-final class OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository
+final class OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaRepository
 {
-    const TABLE = 'ochered_dly_prozesa_obnovleniya';
+    const TABLE = 'ochered_dly_prozesa_udaleniya';
     public function __construct(private Connection $connection)
     {
     }
@@ -50,11 +50,11 @@ final class OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository
 
     /**
      * @param array $row
-     * @return OcheredDlyProzesaObnovleniyaKodaPosleZapuska
+     * @return OcheredDlyProzesaUdaleniyaUnitaPosleZapuska
      */
-    private function makeModelByRow(array $row): OcheredDlyProzesaObnovleniyaKodaPosleZapuska
+    private function makeModelByRow(array $row): OcheredDlyProzesaUdaleniyaUnitaPosleZapuska
     {
-        return new OcheredDlyProzesaObnovleniyaKodaPosleZapuska(
+        return new OcheredDlyProzesaUdaleniyaUnitaPosleZapuska(
             (int)$row['id'],
             (string)$row['unit_id'],
             (string)$row['state'],
@@ -62,7 +62,7 @@ final class OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository
     }
 
     /**
-     * @return OcheredDlyProzesaObnovleniyaKodaPosleZapuska[]
+     * @return OcheredDlyProzesaUdaleniyaUnitaPosleZapuska[]
      * */
     public function poluchitZadachiNaObrabotku(int $limit = 10): array
     {

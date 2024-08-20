@@ -21,6 +21,8 @@
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
     </plugins>
     <issueHandlers>
+        <RiskyTruthyFalsyComparison errorLevel="suppress"/>
+        <TooManyTemplateParams errorLevel="suppress"/>
          <UndefinedClass>
              <errorLevel type="suppress">
                  <!-- These classes have been added in PHP 8.1 -->

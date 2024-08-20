@@ -17,6 +17,7 @@ use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use App\Unitman\Infra\Temporal\Activity\ProzesObnovlenieKodaPosleZapuskaActivity;
 use App\Unitman\Infra\BackgroundJob\UnitRunnerJobs\UnitRunnerJobs;
+use App\Unitman\Infra\Temporal\Activity\ProzesUdaleniyaUnitaPosleZapuskaActivity;
 use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use Doctrine\DBAL\Connection;
@@ -107,5 +108,8 @@ return function (ContainerConfigurator $configuration) {
         ]);
 
     $services->set(ProzesObnovlenieKodaPosleZapuskaActivity::class)
+        ->tag('temporal.activity.registry');
+
+    $services->set(ProzesUdaleniyaUnitaPosleZapuskaActivity::class)
         ->tag('temporal.activity.registry');
 };

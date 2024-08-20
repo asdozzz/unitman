@@ -1,4 +1,7 @@
 {
+    "asdozzz/roadrunnerjobs": {
+        "version": "dev-main"
+    },
     "doctrine/doctrine-bundle": {
         "version": "2.8",
         "recipe": {
@@ -27,7 +30,7 @@
         ]
     },
     "fluffydiscord/roadrunner-symfony-bundle": {
-        "version": "v2.2.5"
+        "version": "dev-jobs-worker"
     },
     "highcore/temporal-bundle": {
         "version": "v1.1.3"

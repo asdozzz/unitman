@@ -29,7 +29,7 @@ final class JsonBodySerializableConverter implements ValueResolverInterface
         return [$obj];
     }
 
-    public function supports(ArgumentMetadata $argument)
+    public function supports(ArgumentMetadata $argument): bool
     {
         $class = $argument->getType();
         if (empty($class)) {

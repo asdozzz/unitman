@@ -5,7 +5,6 @@ server:
   access_logs: true
   env:
     - APP_RUNTIME: FluffyDiscord\RoadRunnerBundle\Runtime\Runtime
-  relay: pipes
 
 #otel:
 #  insecure: true
@@ -21,9 +20,11 @@ rpc:
 
 http:
   address: 0.0.0.0:8080
-  middleware: ["http_metrics", "otel" ]
+  middleware: ["http_metrics" ]
   pool:
-    num_workers: 4
+    max_jobs: 100 # Maximal count of worker executions. Zero (or nothing) means no limit.
+    supervisor:
+      max_worker_memory: 100 # Maximal worker memory usage in megabytes (soft limit). Zero means no limit.
 
 temporal:
   address: "temporal:7233"
@@ -45,3 +46,12 @@ service:
 
 metrics:
   address: 0.0.0.0:2112
+
+#jobs:
+#  consume: [ "local" ]
+#  pipelines:
+#    local:
+#      driver: memory
+#      config:
+#        priority: 10
+#        prefetch: 10000

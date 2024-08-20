@@ -30,7 +30,7 @@ final class CheckpointStore
     {
         $table = $this->tableName;
         $res = $this->connection->fetchAssociative('select * from '.$table.' where name=:name', ['name' => $projectionName]);
-        if (empty($res)) {
+        if ($res === false || empty($res)) {
             $this->addProjectionState($projectionName);
             return 0;
         } else {

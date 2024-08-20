@@ -29,6 +29,7 @@ final class ProzesObnovlenieKodaPosleZapuskaHandler
             OcheredDlyProzesaObnovleniyaKodaPosleZapuska::SBROSHENA_PODGOTOVKA => $this->podgotovkaSbroshena($model->unitId),
             OcheredDlyProzesaObnovleniyaKodaPosleZapuska::OBNOVLEN => $this->obnovlen($model->unitId),
             OcheredDlyProzesaObnovleniyaKodaPosleZapuska::PODGOTOVLEN => $this->podgotovlen($model->unitId),
+            OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR => $this->setError($model->unitId),
         };
 
         return true;

@@ -13,6 +13,7 @@ use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSborkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSbrosaPodgotovkiUnitaUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaZapuskaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
@@ -22,6 +23,7 @@ use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
@@ -69,15 +71,24 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);
     }
 
+    protected function getExceptionEvents(): array
+    {
+        return [
+            UdalenieUnitaPosleZapuskaNachalos::class,
+            OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class,
+            ObnovlenieKodaUnitaPosleZapuskaNachalos::class,
+            OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena::class,
+            KonfigUnitaUstanovlen::class,
+            PeremenieUnitaZapolneni::class,
+        ];
+    }
+
+
     function handleUnitSozdan(UnitSozdan $fact): void
     {
 
     }
 
-    function handleObnovlenieKodaUnitaPosleZapuskaNachalos(ObnovlenieKodaUnitaPosleZapuskaNachalos $fact): void
-    {
-
-    }
 
     function handleSborkaUnitNachalas(SborkaUnitNachalas $fact): void
     {
@@ -109,11 +120,6 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
         $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI);
     }
 
-    function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
-    {
-
-    }
-
     function handlePodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
     {
         $this->repository->insert($fact->unitId, OcheredUnitovReadModel::PODGOTOVKA);
@@ -142,11 +148,6 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     function handleUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
         $this->repository->removeByUnitIdAndQueueName($fact->unitId, OcheredUnitovReadModel::OBNOVLENIE);
-    }
-
-    function handleKonfigUnitaUstanovlen(KonfigUnitaUstanovlen $fact): void
-    {
-
     }
 
     function handleSbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
@@ -211,11 +212,6 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void
     {
         $this->repository->removeByUnitId($fact->unitId);
-    }
-
-    function handleOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
-    {
-
     }
 
     function isSyncProjection(): bool

@@ -18,6 +18,7 @@ use App\Unitman\Business\Command\Unit\SobratUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
+use App\Unitman\Business\Command\Unit\UdalitUnitPosleZapuska;
 use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
@@ -43,6 +44,7 @@ use App\Unitman\Business\UseCase\Unit\SbrositPodgotovkuUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
+use App\Unitman\Business\UseCase\Unit\UdalitUnitPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatIzmeneniyaVetkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
@@ -289,6 +291,17 @@ final class UnitConroller extends AbstractController
 
     #[Route('/ustanovitResultatUdaleniya', methods: ['POST'])]
     public function ustanovitResultatUdaleniya(UstanovitResultatUdaleniya $command, UstanovitResultatUdaleniyaUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/udalitUnitPosleZapuska', methods: ['POST'])]
+    public function udalitUnitPosleZapuska(UdalitUnitPosleZapuska $command, UdalitUnitPosleZapuskaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
