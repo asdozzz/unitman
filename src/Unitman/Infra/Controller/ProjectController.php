@@ -7,17 +7,21 @@ use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Project\BuildProject;
 use App\Unitman\Business\Command\Project\DisableProject;
+use App\Unitman\Business\Command\Project\DobavitPeremenuyuVProekt;
 use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\ForceRemoveProject;
 use App\Unitman\Business\Command\Project\GetActiveProjectList;
 use App\Unitman\Business\Command\Project\GetProjectList;
+use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
 use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
+use App\Unitman\Business\Command\Project\PoluchitSpisokPeremenihProekta;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
 use App\Unitman\Business\Command\Project\PoluchitSpisokVetokProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Command\Project\RemoveProject;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
+use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\UseCase\Project\AddProjectUseCase;
 use App\Unitman\Business\UseCase\Project\AddUserToProjectUseCase;
@@ -28,10 +32,14 @@ use App\Unitman\Business\UseCase\Project\ForceRemoveProjectUseCase;
 use App\Unitman\Business\UseCase\Project\GetActiveProjectListQuery;
 use App\Unitman\Business\UseCase\Project\GetProjectListQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokVetokProektaQuery;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
+use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
+use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiProekta;
+use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
 use App\Unitman\Business\UseCase\Project\RemoveProjectUseCase;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
@@ -127,6 +135,34 @@ final class ProjectController extends AbstractController
 
     #[Route('/removeUser', methods: ['POST'])]
     public function removeUser(RemoveUserFromProject $command, RemoveUserFromProjectUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/spisokPeremenihProekta', methods: ['POST'])]
+    public function variablesList(PoluchitSpisokPeremenihProekta $command, PoluchitSpisokPeremenihProektaQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/dobavitPeremenuyu', methods: ['POST'])]
+    public function addVariable(DobavitPeremenuyuVProekt $command, ProzessDobavleniyaPeremenoiVProekt $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/udalitPeremenuyu', methods: ['POST'])]
+    public function removeVariable(UdalitPeremenuyuIzProekta $command, ProzessUdaleniyaPeremenoiIzProekta $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/izmenitPeremenuyu', methods: ['POST'])]
+    public function izmenitPeremenuyu(IzmenitZnacheniePeremenoiProekta $command, ProzessIzmeneniyaZnacheniyaPeremenoiProekta $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());

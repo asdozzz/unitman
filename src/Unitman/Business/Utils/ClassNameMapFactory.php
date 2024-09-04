@@ -79,6 +79,9 @@ final class ClassNameMapFactory
             ProjectWasNotDeleted::class => UnitmanClassNameMapEnum::ProjectWasNotDeleted,
             UserAddedToProject::class => UnitmanClassNameMapEnum::UserAddedToProject,
             UserRemovedFromProject::class => UnitmanClassNameMapEnum::UserRemovedFromProject,
+            Project\Event\PeremenayaDobavlenaVProekt::class => UnitmanClassNameMapEnum::PeremenayaDobavlenaVProekt,
+            Project\Event\PeremenayaUdalenaIzProekta::class => UnitmanClassNameMapEnum::PeremenayaUdalenaIzProekta,
+            Project\Event\ZnacheniePeremnoiProektaIzmeneno::class => UnitmanClassNameMapEnum::ZnacheniePeremnoiProektaIzmeneno,
 
             Unit::class => UnitmanClassNameMapEnum::Unit,
             UnitId::class => UnitmanClassNameMapEnum::UnitId,

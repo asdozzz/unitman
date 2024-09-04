@@ -9,6 +9,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Port\Project\CanFindProjectDouble;
 use App\Unitman\Business\Port\Project\CanGetActiveProjectList;
 use App\Unitman\Business\Port\Project\CanGetProjectList;
+use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokPeremenihProekta;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokPolzovateleiProekta;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\ReadModel\ProjectList;
@@ -16,7 +17,7 @@ use Doctrine\DBAL\Connection;
 use DomainException;
 use Symfony\Component\Serializer\Serializer;
 
-final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProjectList, CanGetActiveProjectList, UmeetPoluchatSpisokProektovDlyPolzovatelya, UmeetPoluchatSpisokPolzovateleiProekta
+final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProjectList, CanGetActiveProjectList, UmeetPoluchatSpisokProektovDlyPolzovatelya, UmeetPoluchatSpisokPolzovateleiProekta, UmeetPoluchatSpisokPeremenihProekta
 {
     const TABLE = 'project_list';
     public function __construct(private readonly Connection $connection, private readonly Serializer $serializer)
@@ -227,5 +228,14 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     {
         $project = $this->getById($projectId);
         return $project->users;
+    }
+
+    /**
+     * @return
+     * */
+    function poluchitSpisokPeremenihProekta(string $projectId): array
+    {
+        $project = $this->getById($projectId);
+        return $project->variables;
     }
 }

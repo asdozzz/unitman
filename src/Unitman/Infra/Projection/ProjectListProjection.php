@@ -2,6 +2,8 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
+use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
@@ -15,6 +17,8 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
+use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
+use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\ReadModel\ProjectList;
 use App\Unitman\Business\ReadModel\ProjectUsersList;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
@@ -136,6 +140,45 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
         foreach ($users as $user) {
             if ($user->userId == $fact->userId) continue;
             $project->users[] = $user;
+        }
+        $this->projectListRepository->update($project);
+    }
+
+    function handlePeremenayaDobavlenaVProekt(PeremenayaDobavlenaVProekt $fact): void
+    {
+        $project = $this->projectListRepository->getById($fact->projectId);
+        $value = $fact->tip === ProjectVariableType::hidden->value ? '': $fact->value;
+        $project->variables[] = new ProjectList\ProjectListVariable($fact->tip, $fact->code, $value);
+        $this->projectListRepository->update($project);
+    }
+
+    function handlePeremenayaUdalenaIzProekta(PeremenayaUdalenaIzProekta $fact): void
+    {
+        $project = $this->projectListRepository->getById($fact->projectId);
+
+        $variables = $project->variables;
+
+        $project->variables = [];
+        foreach ($variables as $variable) {
+            if ($variable->code == $fact->code) continue;
+            $project->variables[] = $variable;
+        }
+        $this->projectListRepository->update($project);
+    }
+
+    function handleZnacheniePeremnoiProektaIzmeneno(ZnacheniePeremnoiProektaIzmeneno $fact): void
+    {
+        $project = $this->projectListRepository->getById($fact->projectId);
+
+        $variables = $project->variables;
+        $project->variables = [];
+        foreach ($variables as $variable) {
+            if ($variable->code == $fact->code) {
+                $project->variables[] = new ProjectList\ProjectListVariable($variable->tip, $variable->code, $fact->newValue);
+            } else {
+                $project->variables[] = $variable;
+            }
+
         }
         $this->projectListRepository->update($project);
     }

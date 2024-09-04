@@ -78,7 +78,7 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit);
+        $variables = $this->makeVariablesListFromUnit($unit, $project);
         $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables);
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($command);
         return new JobId($workflowId);
@@ -97,7 +97,7 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit);
+        $variables = $this->makeVariablesListFromUnit($unit, $project);
         $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $unit->getName(), $storageUrl, $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
         $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($command);
         return new JobId($workflowId);
@@ -107,7 +107,7 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit);
+        $variables = $this->makeVariablesListFromUnit($unit, $project);
         $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables);
         $workflowId = $this->runnerApi->nachatZapuskUnita($command);
         return new JobId($workflowId);
@@ -117,7 +117,7 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit);
+        $variables = $this->makeVariablesListFromUnit($unit, $project);
         $command = new NachatOstanovkuUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiOstanovki(), $variables);
         $workflowId = $this->runnerApi->nachatOstanovkuUnita($command);
         return new JobId($workflowId);
@@ -214,9 +214,14 @@ final class RunnerAdapter implements RunnerService
      * @param Unit $unit
      * @return array|array[]
      */
-    private function makeVariablesListFromUnit(Unit $unit): array
+    private function makeVariablesListFromUnit(Unit $unit, Project $project): array
     {
         $variables = array_map(fn(Unit\VariableValue $variableValue) => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue()), $unit->poluchitZnacheniyaPeremenih());
+
+        foreach ($project->poluchitPeremenieProekta() as $projectVariable) {
+            $variables[] = array('Id' => 'PV_'.$projectVariable->code, 'Value' => $projectVariable->value);
+        }
+
         return $variables;
     }
 

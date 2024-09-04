@@ -4,8 +4,13 @@ namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
+use App\Unitman\Business\Command\Project\DobavitPeremenuyuVProekt;
+use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
+use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
+use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
+use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
@@ -19,6 +24,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
+use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
 use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
@@ -26,6 +32,8 @@ use App\Unitman\Business\Model\Project\ProjectId;
 use App\Unitman\Business\Model\Project\ProjectName;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
+use App\Unitman\Business\Model\Project\ProjectVariable;
+use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\Model\Project\ProxyHost;
 use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
@@ -59,6 +67,12 @@ final class Project implements AggregateRoot
 
     private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
+
+    /**
+     * @var ProjectVariable[]
+     * */
+    private array $variables = [];
+
     public function getId(): string
     {
         return $this->aggregateRootId->toString();
@@ -432,5 +446,90 @@ final class Project implements AggregateRoot
         }
 
         return $result;
+    }
+
+    public function dobavitPeremenuyu(DobavitPeremenuyuVProekt $command): void
+    {
+        foreach ($this->variables as $variable) {
+            if ($variable->code == $command->code) {
+                throw new \DomainException('project.variable.duplicate');
+            }
+        }
+
+        ProjectVariable::validate($command->code, $command->value);
+
+        $this->recordThat(new PeremenayaDobavlenaVProekt($this->getId(), $command->tip, $command->code, $command->value));
+    }
+
+    private function applyPeremenayaDobavlenaVProekt(PeremenayaDobavlenaVProekt $fact): void
+    {
+        $this->variables[] = new ProjectVariable(ProjectVariableType::from($fact->tip), $fact->code, $fact->value);
+    }
+
+
+    /**
+     * @param string $code
+     * @return int|null
+     */
+    public function findVariableIndexByCode(string $code): ?int
+    {
+        $index = null;
+
+        foreach ($this->variables as $i => $variable) {
+            if ($variable->code == $code) {
+                $index = $i;
+            }
+        }
+        return $index;
+    }
+
+    public function udalitPeremenuyu(UdalitPeremenuyuIzProekta $command): void
+    {
+        $index = $this->findVariableIndexByCode($command->code);
+
+        if (!isset($index)) {
+            throw new \DomainException('project.variable.not_found');
+        }
+
+        $this->recordThat(new PeremenayaUdalenaIzProekta($this->getId(), $command->code));
+    }
+
+    public function applyPeremenayaUdalenaIzProekta(PeremenayaUdalenaIzProekta $fact): void
+    {
+        $index = $this->findVariableIndexByCode($fact->code);
+        if (isset($index)) {
+            unset($this->variables[$index]);
+        }
+
+    }
+
+    public function izmenitZnacheniePeremenoi(IzmenitZnacheniePeremenoiProekta $command): void
+    {
+        $index = $this->findVariableIndexByCode($command->code);
+
+        if (!isset($index)) {
+            throw new \DomainException('project.variable.not_found');
+        }
+
+        if ($this->variables[$index]->value === $command->newValue) {
+            throw new \DomainException('project.variable.new_value_equal_old_value');
+        }
+
+        $this->recordThat(new ZnacheniePeremnoiProektaIzmeneno($this->getId(), $command->code, $command->newValue));
+    }
+
+    public function applyZnacheniePeremnoiProektaIzmeneno(ZnacheniePeremnoiProektaIzmeneno $fact): void
+    {
+        $index = $this->findVariableIndexByCode($fact->code);
+        if (!isset($index)) {
+            throw new \DomainException('project.variable.not_found');
+        }
+        $oldVariable = $this->variables[$index];
+        $this->variables[$index] = new ProjectVariable($oldVariable->tip, $oldVariable->code, $fact->newValue);
+    }
+
+    public function poluchitPeremenieProekta(): array
+    {
+        return $this->variables;
     }
 }

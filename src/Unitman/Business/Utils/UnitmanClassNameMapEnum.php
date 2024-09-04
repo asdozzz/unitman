@@ -27,6 +27,9 @@ enum UnitmanClassNameMapEnum: string
     case ProjectWasNotDeleted = 'ProjectWasNotDeleted';
     case UserAddedToProject = 'UserAddedToProject';
     case UserRemovedFromProject = 'UserRemovedFromProject';
+    case PeremenayaDobavlenaVProekt = 'PeremenayaDobavlenaVProekt';
+    case PeremenayaUdalenaIzProekta = 'PeremenayaUdalenaIzProekta';
+    case ZnacheniePeremnoiProektaIzmeneno = 'ZnacheniePeremnoiProektaIzmeneno';
 
     case Unit = 'Unit';
     case UnitId = 'UnitId';

@@ -4,14 +4,10 @@ namespace App\Unitman\Business\ReadModel;
 
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
+use App\Unitman\Business\ReadModel\ProjectList\ProjectListVariable;
 
 final class ProjectList
 {
-    /**
-     * @var ProjectUsersList[]
-     * */
-    public array $users;
-
     /**
      * @var RunnerJobStep[]
      * */
@@ -24,6 +20,7 @@ final class ProjectList
 
     /**
      * @param ProjectUsersList[] $users
+     * @param ProjectListVariable[] $variables
      * */
     public function __construct(
         public readonly string $id,
@@ -36,10 +33,10 @@ final class ProjectList
         array $buildInfo = [],
         array $removeInfo = [],
         public ?string $proxyHost = null,
-        array $users = []
+        public array $users = [],
+        public array $variables = []
     )
     {
-        $this->users = $users;
         $this->buildInfo = $buildInfo;
         $this->removeInfo = $removeInfo;
     }
