@@ -177,6 +177,18 @@ final class Unit implements AggregateRoot
     }
 
     /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyUnitSozdan(UnitSozdan $fact): void
+    {
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->project = new UnitProject($fact->projectId);
+        $this->name = new UnitName($fact->name);
+        $this->branch = new UnitBranch($fact->branch);
+        $this->authorId = $fact->authorId;
+    }
+
+    /**
      * @param array $values
      * @return array
      */
@@ -216,17 +228,6 @@ final class Unit implements AggregateRoot
         $this->branch->validateNewBranch($newBranch);
     }
 
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyUnitSozdan(UnitSozdan $fact): void
-    {
-        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->project = new UnitProject($fact->projectId);
-        $this->name = new UnitName($fact->name);
-        $this->branch = new UnitBranch($fact->branch);
-        $this->authorId = $fact->authorId;
-    }
 
     private function newState(AbstractState $state): AbstractState
     {

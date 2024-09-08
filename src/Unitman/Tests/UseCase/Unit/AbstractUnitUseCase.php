@@ -82,7 +82,7 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
 
         $this->assertEquals($spisokUnitovReadModel2->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel2->state, 'SOZDAN');
-        $this->assertEquals($spisokUnitovReadModel2->name, 'task-123');
+        $this->assertEquals($spisokUnitovReadModel2->name, $unitName);
         $this->assertEquals($spisokUnitovReadModel2->branch, 'feature/123');
         $this->assertEquals($spisokUnitovReadModel2->projectId, $projectId);
         $this->assertEquals($spisokUnitovReadModel2->commands, ['nachatSborku','nachatUdalenie']);
