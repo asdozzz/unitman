@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
+use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
@@ -95,7 +96,8 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
             SbrosPodgotovkiNachalsya::class,
             OstanovkaUnitaNachalas::class,
             UdalenieUnitaPosleZapuskaNachalos::class,
-            OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class
+            OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class,
+            KodVetkiIzmenilsyaVHranilishe::class,
         ];
     }
 

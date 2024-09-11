@@ -24,6 +24,8 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
     #volumes:
     # - ./var/volume/elasticsearch_data:/usr/share/elasticsearch/data
 

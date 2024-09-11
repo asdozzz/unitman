@@ -8,6 +8,7 @@ use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Project\BuildProject;
 use App\Unitman\Business\Command\Project\DisableProject;
 use App\Unitman\Business\Command\Project\DobavitPeremenuyuVProekt;
+use App\Unitman\Business\Command\Project\DobavitSobitieIzHranilisha;
 use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\ForceRemoveProject;
 use App\Unitman\Business\Command\Project\GetActiveProjectList;
@@ -27,6 +28,7 @@ use App\Unitman\Business\UseCase\Project\AddProjectUseCase;
 use App\Unitman\Business\UseCase\Project\AddUserToProjectUseCase;
 use App\Unitman\Business\UseCase\Project\BuildProjectUseCase;
 use App\Unitman\Business\UseCase\Project\DisableProjectUseCase;
+use App\Unitman\Business\UseCase\Project\DobavitSobitieIzHranilishaUseCase;
 use App\Unitman\Business\UseCase\Project\EnableProjectUseCase;
 use App\Unitman\Business\UseCase\Project\ForceRemoveProjectUseCase;
 use App\Unitman\Business\UseCase\Project\GetActiveProjectListQuery;
@@ -45,6 +47,7 @@ use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -180,5 +183,12 @@ final class ProjectController extends AbstractController
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/{id}/hook', methods: ['POST'])]
+    public function hook(string $id, Request $request, DobavitSobitieIzHranilishaUseCase $useCase): Response
+    {
+        $id = $useCase->handle(new DobavitSobitieIzHranilisha($id, $request->getContent()));
+        return $this->json(\App\Utils\Model\Reponse\Response::success(['eventId' => $id]));
     }
 }

@@ -16,6 +16,7 @@ use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Clock\ClockInterface;
 
 abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper
 {

@@ -45,7 +45,7 @@ final class ProzesObnovlenieKodaPosleZapuskaActivity
     }
     #[Am(name: "obnovitKod")]
     public function obnovitKod(string $unitId): bool {
-        $this->obnovitKodUnitaUseCase->handleTemporal(new ObnovitKodUnita($unitId));
+        $this->obnovitKodUnitaUseCase->handleSystem(new ObnovitKodUnita($unitId));
 
         return true;
     }

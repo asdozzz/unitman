@@ -10,6 +10,7 @@ use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
+use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
@@ -116,6 +117,10 @@ final class Unit implements AggregateRoot
     private bool $isDeleted = false;
 
     private ?UnitBranch $newBranch = null;
+
+    private ?int $unixtimePoslednegoObnovleniyaKodaUnita = null;
+
+    private ?int $unixtimePoslednegoObnovleniyaKodaVHranilishe = null;
 
     /**
      * @template-use AggregateRootBehaviour<UnitId>
@@ -237,7 +242,7 @@ final class Unit implements AggregateRoot
         return $this->state->newState($state);
     }
 
-    public function nachatSborkuUnita(JobId $jobId): void
+    public function nachatSborkuUnita(JobId $jobId, int $unixtime): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
@@ -247,7 +252,7 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.uge_sobran');
         }
         $state = $this->newState(new VOcherediNaSborku());
-        $this->recordThat(new SborkaUnitNachalas($this->getId(), (string) $jobId, $state->toArray($this)));
+        $this->recordThat(new SborkaUnitNachalas($this->getId(), (string) $jobId, $state->toArray($this), $unixtime));
     }
 
     /**
@@ -257,6 +262,8 @@ final class Unit implements AggregateRoot
     {
         $this->sborka = RunnerJob::start($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->unixtimePoslednegoObnovleniyaKodaUnita = $fact->unixtime ?? time();
+        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = $fact->unixtime ?? time();
     }
 
     public function ustanovitOshibkuSborki(array $steps): void
@@ -348,6 +355,8 @@ final class Unit implements AggregateRoot
         $this->izmenenieVetki = RunnerJob::start($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
         $this->newBranch = new UnitBranch($fact->newBranch);
+        $this->unixtimePoslednegoObnovleniyaKodaUnita = null;
+        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = null;
     }
 
     public function ustanovitOshibkuIzmeneniyaVetki(array $steps): void
@@ -533,7 +542,7 @@ final class Unit implements AggregateRoot
     }
 
     //---------Обновление
-    public function nachatObnovlenieUnita(JobId $jobId): void
+    public function nachatObnovlenieUnita(JobId $jobId, int $unixtime): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
@@ -548,7 +557,7 @@ final class Unit implements AggregateRoot
         }
 
         $state = $this->newState(new VOcherediNaObnovlenie());
-        $this->recordThat(new ObnovlenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this)));
+        $this->recordThat(new ObnovlenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this), $unixtime));
     }
 
     /**
@@ -558,6 +567,8 @@ final class Unit implements AggregateRoot
     {
         $this->obnovlenie = RunnerJob::start($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->unixtimePoslednegoObnovleniyaKodaUnita = $fact->unixtime ?? time();
+        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = $fact->unixtime ?? time();
     }
 
     public function nachatObnovlenieUnitaPosleZapuska(JobId $jobId): void
@@ -1023,6 +1034,19 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
+    public function izmenitVremyaPoslednegoIzmeneniyaKodaVHranilishe(int $unixtime): void
+    {
+        if ($this->unixtimePoslednegoObnovleniyaKodaVHranilishe > $unixtime) {
+            return;
+        }
+        $this->recordThat(new KodVetkiIzmenilsyaVHranilishe($this->getId(), $unixtime));
+    }
+
+    private function applyKodVetkiIzmenilsyaVHranilishe(KodVetkiIzmenilsyaVHranilishe $fact): void
+    {
+        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = $fact->unixtime;
+    }
+
     public function getName(): string
     {
         if (empty($this->name)) {
@@ -1187,6 +1211,16 @@ final class Unit implements AggregateRoot
         return $errors;
     }
 
+    function esliMognoObnovit(): bool
+    {
+        if ($this->isDeleted) return false;
+        if ($this->isWaitResultFromRunner()) return false;
+        if (empty($this->sborka)) return false;
+        if (!empty($this->podgotovka)) return false;
+
+        return true;
+    }
+
     function getConfig(): ConfigUnita|null
     {
         return $this->configUnita;
@@ -1215,5 +1249,10 @@ final class Unit implements AggregateRoot
     function getAuthorId(): ?string
     {
         return $this->authorId;
+    }
+
+    function esliNugnoObnovitKodUnita(): bool
+    {
+        return $this->unixtimePoslednegoObnovleniyaKodaVHranilishe > $this->unixtimePoslednegoObnovleniyaKodaUnita;
     }
 }

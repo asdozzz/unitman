@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
+use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
@@ -100,6 +101,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
+            'unixtimePoslednegoObnovleniyaUnita' => $fact->unixtime
         ]);
         $this->repository->update($readModel);
     }
@@ -136,6 +138,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
+            'unixtimePoslednegoObnovleniyaUnita' => null,
+            'unixtimePoslednegoObnovleniyaVHranilishe' => null
         ]);
         $this->repository->update($readModel);
     }
@@ -259,6 +263,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
+            'unixtimePoslednegoObnovleniyaUnita' => $fact->unixtime
         ]);
         $this->repository->update($readModel);
     }
@@ -467,6 +472,15 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void
     {
         $this->repository->delete($fact->unitId);
+    }
+
+    function handleKodVetkiIzmenilsyaVHranilishe(KodVetkiIzmenilsyaVHranilishe $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'unixtimePoslednegoObnovleniyaVHranilishe' => $fact->unixtime,
+        ]);
+        $this->repository->update($readModel);
     }
 
     function init(): void

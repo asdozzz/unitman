@@ -156,4 +156,21 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
 
         return $result;
     }
+
+    /**
+     * @return string[]
+     * */
+    function findIdsByBranch(string $projectId, string $vetka): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT id FROM $table where payload->>'projectId' = :projectId and payload->>'branch' = :branch",
+            ['branch' => $vetka, 'projectId' => $projectId]);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $row['id'];
+        }
+
+        return $result;
+    }
 }

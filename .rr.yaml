@@ -31,6 +31,9 @@ temporal:
   activities:
     command: "php bin/console temporal:workflow:runtime"
     num_workers: 10
+    max_jobs: 100
+    supervisor:
+      max_worker_memory: 100
   metrics:
     address: 0.0.0.0:9091
 

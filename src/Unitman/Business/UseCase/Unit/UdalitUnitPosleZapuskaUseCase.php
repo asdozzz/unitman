@@ -28,4 +28,15 @@ final class UdalitUnitPosleZapuskaUseCase
         $unit->nachatUdalenieUnitaPosleZapuska($jobId);
         $this->unitRepository->save($unit);
     }
+
+    function handleSystem(UdalitUnitPosleZapuska $command): void
+    {
+        $unit = $this->unitRepository->getById($command->id);
+        $project = $this->projectRepository->getById($unit->getProjectId());
+        $projectUser = $project->getProjectUserById($unit->getAuthorId());
+        $unit->proverkaPrav($projectUser);
+        $jobId = $this->umeetUdalyatUnitPosleZapuska->udalitUnitPosleZapuska($unit->getId());
+        $unit->nachatUdalenieUnitaPosleZapuska($jobId);
+        $this->unitRepository->save($unit);
+    }
 }

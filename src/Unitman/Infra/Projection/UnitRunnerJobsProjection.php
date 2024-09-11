@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
+use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
@@ -97,7 +98,8 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
             ZapuskUnitNachalsya::class,
             OstanovkaUnitaNachalas::class,
             UdalenieUnitaNachalos::class,
-            SlomaniyUnitUdalen::class
+            SlomaniyUnitUdalen::class,
+            KodVetkiIzmenilsyaVHranilishe::class,
         ];
     }
 

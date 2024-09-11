@@ -19,6 +19,8 @@ final class SpisokUnitovReadModel
         public readonly array $links = [],
         public readonly bool $jdemObnovlenieKodaPosleZapuska = false,
         public readonly bool $jdemUdaleniyaPosleZapuska = false,
+        public readonly ?int $unixtimePoslednegoObnovleniyaUnita = null,
+        public readonly ?int $unixtimePoslednegoObnovleniyaVHranilishe = null,
     )
     {
     }
@@ -39,6 +41,8 @@ final class SpisokUnitovReadModel
         $branch = array_key_exists('branch', $props)?$props['branch']:$this->branch;
         $jdemObnovlenieKodaPosleZapuska = isset($props['jdemObnovlenieKodaPosleZapuska'])?$props['jdemObnovlenieKodaPosleZapuska']:$this->jdemObnovlenieKodaPosleZapuska;
         $jdemUdaleniyaPosleZapuska = isset($props['jdemUdaleniyaPosleZapuska'])?$props['jdemUdaleniyaPosleZapuska']:$this->jdemUdaleniyaPosleZapuska;
+        $unixtimePoslednegoObnovleniyaUnita = isset($props['unixtimePoslednegoObnovleniyaUnita'])?$props['unixtimePoslednegoObnovleniyaUnita']:$this->unixtimePoslednegoObnovleniyaUnita;
+        $unixtimePoslednegoObnovleniyaVHranilishe = isset($props['unixtimePoslednegoObnovleniyaVHranilishe'])?$props['unixtimePoslednegoObnovleniyaVHranilishe']:$this->unixtimePoslednegoObnovleniyaVHranilishe;
 
 
         return new static(
@@ -55,7 +59,9 @@ final class SpisokUnitovReadModel
             $error,
             $links,
             $jdemObnovlenieKodaPosleZapuska,
-            $jdemUdaleniyaPosleZapuska
+            $jdemUdaleniyaPosleZapuska,
+            $unixtimePoslednegoObnovleniyaUnita,
+            $unixtimePoslednegoObnovleniyaVHranilishe
         );
     }
 }

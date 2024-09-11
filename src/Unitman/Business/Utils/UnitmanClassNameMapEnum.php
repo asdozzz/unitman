@@ -66,5 +66,6 @@ enum UnitmanClassNameMapEnum: string
     case OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena = 'OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena';
     case UdalenieUnitaPosleZapuskaNachalos = 'UdalenieUnitaPosleZapuskaNachalos';
     case OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena = 'OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena';
+    case KodVetkiIzmenilsyaVHranilishe = 'KodVetkiIzmenilsyaVHranilishe';
 
 }

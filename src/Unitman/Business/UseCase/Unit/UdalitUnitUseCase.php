@@ -30,7 +30,7 @@ final class UdalitUnitUseCase
         $this->unitRepository->save($unit);
     }
 
-    function handleTemporal(UdalitUnit $command): void
+    function handleSystem(UdalitUnit $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
         $project = $this->projectRepository->getById($unit->getProjectId());

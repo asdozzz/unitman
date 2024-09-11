@@ -47,7 +47,7 @@ final class ProzesUdaleniyaUnitaPosleZapuskaActivity
     }
     #[Am(name: "udalit")]
     public function udalit(string $unitId): bool {
-        $this->udalitUnitUseCase->handleTemporal(new UdalitUnit($unitId));
+        $this->udalitUnitUseCase->handleSystem(new UdalitUnit($unitId));
 
         return true;
     }
