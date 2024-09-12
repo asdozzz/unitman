@@ -247,9 +247,11 @@
       <path value="$PROJECT_DIR$/vendor/carbonphp/carbon-doctrine-types" />
       <path value="$PROJECT_DIR$/vendor/symfony/clock" />
       <path value="$PROJECT_DIR$/vendor/spiral/roadrunner-metrics" />
-      <path value="$PROJECT_DIR$/vendor/spiral/roadrunner-jobs" />
       <path value="$PROJECT_DIR$/vendor/fluffydiscord/roadrunner-symfony-bundle" />
       <path value="$PROJECT_DIR$/vendor/symfony/psr-http-message-bridge" />
+      <path value="$PROJECT_DIR$/vendor/roadrunner-php/centrifugo" />
+      <path value="$PROJECT_DIR$/vendor/fresh/centrifugo-bundle" />
+      <path value="$PROJECT_DIR$/vendor/fresh/datetime" />
     </include_path>
   </component>
   <component name="PhpInterpreters">

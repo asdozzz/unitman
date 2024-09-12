@@ -55,6 +55,9 @@ services:
       - '.:/home/containeruser/www'
     depends_on:
       - temporal
+      - centrifugo
+      - elasticsearch
+      - postgres
     environment:
       - PHP_OPCACHE_ENABLE=0
       - PHP_OPCACHE_ENABLE_CLI=0
@@ -85,6 +88,11 @@ services:
     extends:
       file: common-services.yml
       service: unitman-proxy
+
+  centrifugo:
+    extends:
+      file: common-services.yml
+      service: centrifugo
 
   #zipkin:
   #  image: openzipkin/zipkin:3

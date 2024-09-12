@@ -9,6 +9,7 @@ services:
     ports:
       - '${UNITMAN_API_PORT}:8080'
       - 2112:2112
+      - 30000:30000
     user: root
     environment:
       - "TEMPORAL_CLI_ADDRESS=temporal:7233"
@@ -68,3 +69,16 @@ services:
       - ./.docker/nginx/html/index.html:/usr/share/nginx/html/index.html
     ports:
       - '8087:80'
+
+  centrifugo:
+    container_name: centrifugo
+    image: centrifugo/centrifugo:v5
+    volumes:
+      - ./.docker/centrifugo/config.json:/centrifugo/config.json
+    command: centrifugo -c config.json
+    ports:
+      - 8000:8000
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535

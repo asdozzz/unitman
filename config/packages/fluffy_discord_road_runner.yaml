@@ -1,0 +1,6 @@
+fluffy_discord_road_runner:
+  rr_config_path: ".rr.yaml"
+  http:
+    lazy_boot: false
+  centrifugo:
+    lazy_boot: false

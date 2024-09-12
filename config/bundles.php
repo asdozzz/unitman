@@ -15,4 +15,5 @@ return [
     Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true],
     Highcore\TemporalBundle\TemporalBundle::class => ['all' => true],
     FluffyDiscord\RoadRunnerBundle\FluffyDiscordRoadRunnerBundle::class => ['all' => true],
+    Fresh\CentrifugoBundle\FreshCentrifugoBundle::class => ['all' => true],
 ];

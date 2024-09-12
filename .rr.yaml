@@ -47,6 +47,9 @@ service:
     service_name_in_log: false
     restart_sec: 1
 
+centrifuge:
+  proxy_address: "tcp://0.0.0.0:30000"
+
 metrics:
   address: 0.0.0.0:2112
 
