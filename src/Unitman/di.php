@@ -12,6 +12,7 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\BackgroundJob\SobitiyaIzHranilisha\TestJobHandler;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
@@ -112,4 +113,7 @@ return function (ContainerConfigurator $configuration) {
 
     $services->set(ProzesUdaleniyaUnitaPosleZapuskaActivity::class)
         ->tag('temporal.activity.registry');
+
+    $services->set(TestJobHandler::class)
+        ->tag('roadrunner_jobs.handler');
 };

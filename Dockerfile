@@ -39,3 +39,4 @@ RUN composer install && \
     php bin/console cache:warmup
 
 CMD ["/usr/local/bin/wait-for-temporal.sh", "temporal", "rr", "serve","-c",".rr.yaml"]
+#ENTRYPOINT ["tail", "-f", "/dev/null"]
