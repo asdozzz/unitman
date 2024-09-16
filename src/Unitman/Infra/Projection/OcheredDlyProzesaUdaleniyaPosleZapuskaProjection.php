@@ -38,13 +38,15 @@ use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuska;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
-use App\Unitman\Infra\Repository\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaRepository;
+use App\Unitman\Infra\Jobs\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler;
+use App\Unitman\Infra\Jobs\ZadachaDlyOcherediService;
+use App\Unitman\Infra\Repository\ZadachaDlyOcherediRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 
 final class OcheredDlyProzesaUdaleniyaPosleZapuskaProjection extends AbstractProjection implements UnitmanProjection
 {
-    public function __construct(private OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaRepository $repository, private UnitRepository $unitRepository)
+    public function __construct(private ZadachaDlyOcherediService $zadachaDlyOcherediService, private ZadachaDlyOcherediRepository $repository, private UnitRepository $unitRepository)
     {
     }
 
@@ -105,70 +107,63 @@ final class OcheredDlyProzesaUdaleniyaPosleZapuskaProjection extends AbstractPro
             UspehZapuskaUnitaUstanovlen::class,
             UdalenieUnitaPosleZapuskaNachalos::class,
             KodVetkiIzmenilsyaVHranilishe::class,
+            UdalenieUnitaNachalos::class,
+            OshibkaUdaleniyaUnitaUstanovlena::class,
+            UspehUdaleniyaUnitaUstanovlen::class,
+            SlomaniyUnitUdalen::class,
+            OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class,
         ];
+    }
+
+    /**
+     * @param OcheredDlyProzesaUdaleniyaUnitaPosleZapuska $model
+     * @return void
+     */
+    public function sozdatZadachu(OcheredDlyProzesaUdaleniyaUnitaPosleZapuska $model): void
+    {
+        $this->zadachaDlyOcherediService
+            ->dobavitZadachuVOchered(OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler::QUEUE_NAME, $model, 2);
     }
 
     function handleOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
         $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR);
+            $model = new OcheredDlyProzesaUdaleniyaUnitaPosleZapuska($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR);
+            $this->sozdatZadachu($model);
         }
     }
 
     function handleUspehSbrosaPodgotovkiUnitaUstanovlen(UspehSbrosaPodgotovkiUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
         $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::SBROSHENA_PODGOTOVKA);
+            $model = new OcheredDlyProzesaUdaleniyaUnitaPosleZapuska($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::SBROSHENA_PODGOTOVKA);
+            $this->sozdatZadachu($model);
         }
     }
 
     function handleOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
-        $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
         $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR);
+            $model = new OcheredDlyProzesaUdaleniyaUnitaPosleZapuska($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR);
+            $this->sozdatZadachu($model);
         }
     }
 
     function handleUspehOstanovkiUnitaUstanovlen(UspehOstanovkiUnitaUstanovlen $fact): void
     {
-        $this->repository->removeByUnitId($fact->unitId);
         $unit = $this->unitRepository->getById($fact->unitId);
         $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
+
         if (!empty($workflowId)) {
-            $this->repository->insert($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::OSTANOVLEN);
+            $model = new OcheredDlyProzesaUdaleniyaUnitaPosleZapuska($fact->unitId, OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::OSTANOVLEN);
+            $this->sozdatZadachu($model);
         }
     }
 
-    function handleUdalenieUnitaNachalos(UdalenieUnitaNachalos $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-    }
-
-    function handleOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-    }
-
-    function handleUspehUdaleniyaUnitaUstanovlen(UspehUdaleniyaUnitaUstanovlen $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-    }
-    function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-    }
-
-    function handleOshibkaUdaleniyaUnitaPosleZapuskaUstanovlena(OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena $fact): void
-    {
-        $this->repository->removeByUnitId($fact->unitId);
-    }
 }

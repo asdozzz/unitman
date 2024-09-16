@@ -1,40 +1,44 @@
 <?php
 
-namespace App\Unitman\Infra\BackgroundJob\ProzesUdaleniyaUnitaPosleZapuska;
+namespace App\Unitman\Infra\Jobs;
 
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuska;
-use App\Unitman\Infra\Repository\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaRepository;
 use App\Unitman\Infra\Temporal\Workflow\ProzesUdaleniyaUnitaPosleZapuskaWorkflow;
+use FluffyDiscord\RoadRunnerBundle\Worker\JobsWorker\JobsHandlerInterface;
+use Psr\Log\LoggerInterface;
+use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Temporal\Client\WorkflowClient;
 
-final class ProzesUdaleniyaUnitaPosleZapuskaHandler
+final class OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler implements JobsHandlerInterface
 {
+    const QUEUE_NAME = 'prozess_udaleniya_unita_posle_zapuska';
+
     public function __construct(
         protected WorkflowClient $workflowClient,
         private UnitRepository $unitRepository,
-        private OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaRepository $ocheredRepository,
+        private SerializerInterface $serializer,
+        private LoggerInterface $logger
     )
     {
     }
 
-    /**
-     * @return OcheredDlyProzesaUdaleniyaUnitaPosleZapuska[]
-     * */
-    public function poluchitZadachiNaObrabotku(int $limit = 10): array
+
+    public function isSupported(ReceivedTaskInterface $task): bool
     {
-        return $this->ocheredRepository->poluchitZadachiNaObrabotku($limit);
+        return $task->getPipeline() === self::QUEUE_NAME;
     }
 
-    public function obrabotatZadachu(OcheredDlyProzesaUdaleniyaUnitaPosleZapuska $model): bool
+    public function handle(ReceivedTaskInterface $task): void
     {
+        $model = $this->serializer->deserialize($task->getPayload(), $task->getName(), 'json');
+        /** @var OcheredDlyProzesaUdaleniyaUnitaPosleZapuska $model*/
         match ($model->state) {
             OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::OSTANOVLEN => $this->ostanovlen($model->unitId),
             OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::SBROSHENA_PODGOTOVKA => $this->podgotovkaSbroshena($model->unitId),
             OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR => $this->setError($model->unitId),
         };
-
-        return true;
     }
 
     /**
@@ -55,33 +59,26 @@ final class ProzesUdaleniyaUnitaPosleZapuskaHandler
     {
         $unit = $this->unitRepository->getById($unitId);
         $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
-
-        if (!empty($workflowId)) {
-            $workflow = $this->getWorkflowById(ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class, $workflowId);
-            /** @var ProzesUdaleniyaUnitaPosleZapuskaWorkflow $workflow */
-            $workflow->ostanovlen();
-        }
+        $workflow = $this->getWorkflowById(ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class, $workflowId);
+        /** @var ProzesUdaleniyaUnitaPosleZapuskaWorkflow $workflow */
+        $workflow->ostanovlen();
     }
 
     private function podgotovkaSbroshena(string $unitId): void
     {
         $unit = $this->unitRepository->getById($unitId);
         $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
-        if (!empty($workflowId)) {
-            $workflow = $this->getWorkflowById(ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class, $workflowId);
-            /** @var ProzesUdaleniyaUnitaPosleZapuskaWorkflow $workflow */
-            $workflow->podgotovkaSbroshena();
-        }
+        $workflow = $this->getWorkflowById(ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class, $workflowId);
+        /** @var ProzesUdaleniyaUnitaPosleZapuskaWorkflow $workflow */
+        $workflow->podgotovkaSbroshena();
     }
 
     private function setError(string $unitId): void
     {
         $unit = $this->unitRepository->getById($unitId);
         $workflowId = $unit->poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska();
-        if (!empty($workflowId)) {
-            $workflow = $this->getWorkflowById(ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class, $workflowId);
-            /** @var ProzesUdaleniyaUnitaPosleZapuskaWorkflow $workflow */
-            $workflow->oshibka();
-        }
+        $workflow = $this->getWorkflowById(ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class, $workflowId);
+        /** @var ProzesUdaleniyaUnitaPosleZapuskaWorkflow $workflow */
+        $workflow->oshibka();
     }
 }

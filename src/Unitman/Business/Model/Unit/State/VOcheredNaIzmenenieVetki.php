@@ -6,9 +6,11 @@ use App\Unitman\Business\Model\Unit;
 
 final class VOcheredNaIzmenenieVetki extends AbstractState
 {
+    const CODE = 'JDET_RESULTATI_IZMENENIYA_VETKI';
+
     public function getCode(): string
     {
-        return 'JDET_RESULTATI_IZMENENIYA_VETKI';
+        return self::CODE;
     }
 
     public function getNextStates(): array

@@ -1,29 +1,33 @@
 <?php
 
-namespace App\Unitman\Infra\BackgroundJob\ProzesObnovlenieKodaPosleZapuska;
+namespace App\Unitman\Infra\Jobs;
 
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuska;
-use App\Unitman\Infra\Repository\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository;
 use App\Unitman\Infra\Temporal\Workflow\ProzesObnovlenieKodaPosleZapuskaWorkflow;
+use FluffyDiscord\RoadRunnerBundle\Worker\JobsWorker\JobsHandlerInterface;
+use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Temporal\Client\WorkflowClient;
 
-final class ProzesObnovlenieKodaPosleZapuskaHandler
+final class OcheredDlyProzesaObnovleniyaPosleZapuskaJobHandler implements JobsHandlerInterface
 {
-    public function __construct(protected WorkflowClient $workflowClient, private UnitRepository $unitRepository, private OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository $ocheredRepository)
+    const QUEUE_NAME = 'prozess_obnovlenie_koda_posle_zapuska';
+
+    public function __construct(private SerializerInterface $serializer,protected WorkflowClient $workflowClient, private UnitRepository $unitRepository)
     {
     }
 
-    /**
-     * @return OcheredDlyProzesaObnovleniyaKodaPosleZapuska[]
-     * */
-    public function poluchitZadachiNaObrabotku(int $limit = 10): array
+
+    public function isSupported(ReceivedTaskInterface $task): bool
     {
-        return $this->ocheredRepository->poluchitZadachiNaObrabotku($limit);
+        return $task->getPipeline() === self::QUEUE_NAME;
     }
 
-    public function obrabotatZadachu(OcheredDlyProzesaObnovleniyaKodaPosleZapuska $model): bool
+    public function handle(ReceivedTaskInterface $task): void
     {
+        $model = $this->serializer->deserialize($task->getPayload(), $task->getName(), 'json');
+        /** @var OcheredDlyProzesaObnovleniyaKodaPosleZapuska $model **/
         match ($model->state) {
             OcheredDlyProzesaObnovleniyaKodaPosleZapuska::OSTANOVLEN => $this->ostanovlen($model->unitId),
             OcheredDlyProzesaObnovleniyaKodaPosleZapuska::SBROSHENA_PODGOTOVKA => $this->podgotovkaSbroshena($model->unitId),
@@ -31,8 +35,6 @@ final class ProzesObnovlenieKodaPosleZapuskaHandler
             OcheredDlyProzesaObnovleniyaKodaPosleZapuska::PODGOTOVLEN => $this->podgotovlen($model->unitId),
             OcheredDlyProzesaObnovleniyaKodaPosleZapuska::ERROR => $this->setError($model->unitId),
         };
-
-        return true;
     }
 
     /**

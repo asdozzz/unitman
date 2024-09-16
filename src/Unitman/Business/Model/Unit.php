@@ -136,6 +136,46 @@ final class Unit implements AggregateRoot
     {
         return !empty($this->zapusk) && $this->zapusk->isSuccess();
     }
+
+    function esliJdetResultatSborki(): bool
+    {
+        return $this->state->getCode() === VOcherediNaSborku::CODE;
+    }
+
+    function esliJdetResultatZapuska(): bool
+    {
+        return $this->state->getCode() === VOcherediNaZapusk::CODE;
+    }
+
+    function esliJdetResultatOstanovki(): bool
+    {
+        return $this->state->getCode() === VOcherediNaOstanovku::CODE;
+    }
+
+    function esliJdetResultatIzmeneniyaVetki(): bool
+    {
+        return $this->state->getCode() === VOcheredNaIzmenenieVetki::CODE;
+    }
+    function esliJdetResultatUdaleniya(): bool
+    {
+        return $this->state->getCode() === VOcherediNaUdalenie::CODE;
+    }
+
+    function esliJdetResultatObnovleniya(): bool
+    {
+        return $this->state->getCode() === VOcherediNaObnovlenie::CODE;
+    }
+
+    function esliJdetResultatPodgotovki(): bool
+    {
+        return $this->state->getCode() === VOcherediNaPodgotovku::CODE;
+    }
+
+    function esliJdetResultatSbrosaPodgotovki(): bool
+    {
+        return $this->state->getCode() === VOcherediNaSbrosPodgotovki::CODE;
+    }
+
     function esliPodgotovlen(): bool
     {
         return !empty($this->podgotovka) && $this->podgotovka->isSuccess();

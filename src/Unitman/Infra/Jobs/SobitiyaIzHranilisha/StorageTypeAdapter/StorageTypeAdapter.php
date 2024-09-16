@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Unitman\Infra\BackgroundJob\SobitiyaIzHranilisha\StorageTypeAdapter;
+namespace App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\SobitieIzHranilisha;
 use App\Unitman\Business\Model\SobitieIzHranilisha\DannieSobitiya;

@@ -12,8 +12,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "eventsauce/eventsauce": "*",
         "eventsauce/message-repository-for-doctrine": "*",
-        "fluffydiscord/roadrunner-symfony-bundle": "*",
-        "fresh/centrifugo-bundle": "^5.3",
+        "fluffydiscord/roadrunner-symfony-bundle": "dev-jobs-worker",
         "grpc/grpc": "^1.42",
         "highcore/temporal-bundle": "*",
         "knplabs/github-api": "^3.0",
@@ -59,7 +58,8 @@
         "temporal/sdk": "^2.5",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
-        "vimeo/psalm": "^5.2"
+        "vimeo/psalm": "^5.2",
+        "spiral/roadrunner-jobs": "4.6.0"
     },
     "config": {
         "allow-plugins": {
@@ -136,5 +136,11 @@
         "symfony/phpunit-bridge": "^7.0",
         "symfony/stopwatch": "7.0.*",
         "symfony/web-profiler-bundle": "7.0.*"
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/asdozzz/roadrunner-symfony-bundle"
+        }
+    ]
 }
