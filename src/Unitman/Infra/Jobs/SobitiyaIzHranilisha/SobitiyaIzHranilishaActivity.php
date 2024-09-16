@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Unitman\Infra\BackgroundJob\SobitiyaIzHranilisha;
+namespace App\Unitman\Infra\Jobs\SobitiyaIzHranilisha;
 
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnitPosleZapuska;
 use App\Unitman\Business\Model\SobitieIzHranilisha;
+use App\Unitman\Business\Model\SobitieIzHranilisha\DannieSobitiya;
+use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
@@ -14,18 +16,13 @@ use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
-use App\Unitman\Business\Model\SobitieIzHranilisha\DannieSobitiya;
-use App\Unitman\Infra\BackgroundJob\SobitiyaIzHranilisha\StorageTypeAdapter\StorageTypeAdapterFactory;
-use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
-use App\Unitman\Infra\Repository\Project\SobitieIzHranilishaRepository;
+use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter\StorageTypeAdapterFactory;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
-use Psr\Log\LoggerInterface;
 
 //TODO декомпозировать класс
 final class SobitiyaIzHranilishaActivity
 {
     public function __construct(
-        private SobitieIzHranilishaRepository $repository,
         private StorageTypeAdapterFactory $storageTypeAdapterFactory,
         private ProjectRepository $projectRepository,
         private RepoRepository $repoRepository,
@@ -35,29 +32,8 @@ final class SobitiyaIzHranilishaActivity
         private UdalitUnitPosleZapuskaUseCase $udalitUnitPosleZapuskaUseCase,
         private ObnovitKodUnitaPosleZapuskaUseCase $obnovitKodUnitaPosleZapuskaUseCase,
         private ObnovitKodUnitaUseCase $obnovitKodUnitaUseCase,
-        private LoggerInterface $logger
     )
     {
-    }
-
-    function poluchitZadachiNaObrabotku(int $limit = 10): array
-    {
-        return $this->repository->poluchitZadachiNaObrabotku($limit);
-    }
-
-    function udalitZadachuIzOcheredi(string $id): void
-    {
-        $this->repository->udalitZadachuIzOcheredi($id);
-    }
-
-    function setError(string $id, string $error): void
-    {
-        $this->repository->setError($id, $error);
-    }
-
-    function setSuccess(string $id, string $result): void
-    {
-        $this->repository->setSuccess($id, $result);
     }
 
     function obrabotatZadachu(SobitieIzHranilisha $model): string

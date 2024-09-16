@@ -7,9 +7,11 @@ use App\Unitman\Business\Model\Unit;
 final class VOcherediNaOstanovku extends AbstractState
 {
 
+    const CODE = 'JDET_RESULTATI_OSTANOVKI';
+
     public function getCode(): string
     {
-        return 'JDET_RESULTATI_OSTANOVKI';
+        return self::CODE;
     }
 
     public function getNextStates(): array

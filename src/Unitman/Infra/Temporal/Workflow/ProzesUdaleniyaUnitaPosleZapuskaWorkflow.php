@@ -53,6 +53,7 @@ final class ProzesUdaleniyaUnitaPosleZapuskaWorkflow
         );
 
         try {
+            yield Workflow::timer(CarbonInterval::seconds(2));
             yield $activity->ostanovit($unitId);
 
             yield Workflow::awaitWithTimeout(120, fn() => $this->esliOstanovlen || $this->esliOshibka);

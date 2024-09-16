@@ -12,7 +12,6 @@ final class OcheredDlyProzesaObnovleniyaKodaPosleZapuska
     const ERROR = 'ERROR';
 
     public function __construct(
-        public readonly int $id,
         public readonly string $unitId,
         public readonly string $state,
     )

@@ -1,4 +1,4 @@
-FROM ghcr.io/roadrunner-server/roadrunner:2024.2 as roadrunner
+FROM ghcr.io/roadrunner-server/roadrunner:2024.2.1 as roadrunner
 
 FROM spiralscout/php-grpc:8.2-xdebug
 

@@ -6,12 +6,15 @@ abstract class AbstractMemoryGuidGenerator
 {
     private int $currentIndex = 0;
     /**
-     * @param array<string> $guids
+     * @param array<non-empty-string> $guids
      * */
     public function __construct(private array $guids = [])
     {
     }
 
+    /**
+     * @return non-empty-string
+     * */
     function makeGuid(): string
     {
         if (!isset($this->guids[$this->currentIndex])) {

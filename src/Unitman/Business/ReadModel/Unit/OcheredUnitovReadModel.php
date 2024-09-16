@@ -15,9 +15,8 @@ final class OcheredUnitovReadModel
     const IZMENENIYE_VETKI = 'IZMENENIYE_VETKI';
 
     public function __construct(
-        public readonly int $id,
         public readonly string $unitId,
-        public readonly string $queueName,
+        public readonly string $type
     )
     {
     }

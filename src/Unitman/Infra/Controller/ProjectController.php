@@ -58,18 +58,7 @@ final class ProjectController extends AbstractController
 {
     #[Route('/list', methods: ['POST'])]
     public function list(GetProjectList $command, GetProjectListQuery $query): Response
-
     {
-/*        $jobs = new Jobs(RPC::create('tcp://127.0.0.1:6001'));
-        $queue = $jobs->connect('local');
-
-        $tasks = [];
-
-        for ($i = 0; $i < 1000; $i++) {
-            $tasks[] = $queue->create('task-name', json_encode(['asd' => 1]));
-        }
-
-        $queue->dispatchMany(...$tasks);*/
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }

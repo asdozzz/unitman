@@ -7,9 +7,11 @@ use App\Unitman\Business\Model\Unit;
 final class VOcherediNaZapusk extends AbstractState
 {
 
+    const CODE = 'JDET_RESULTATI_ZAPUSKA';
+
     public function getCode(): string
     {
-        return 'JDET_RESULTATI_ZAPUSKA';
+        return self::CODE;
     }
 
     /**

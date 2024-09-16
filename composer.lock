@@ -2117,12 +2117,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/asdozzz/roadrunner-symfony-bundle.git",
-                "reference": "1e6ea39b19e17eb2d0d881f4f7859763863680c6"
+                "reference": "28faaefbfed696199d05198a159cd6e970ff11e7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/asdozzz/roadrunner-symfony-bundle/zipball/1e6ea39b19e17eb2d0d881f4f7859763863680c6",
-                "reference": "1e6ea39b19e17eb2d0d881f4f7859763863680c6",
+                "url": "https://api.github.com/repos/asdozzz/roadrunner-symfony-bundle/zipball/28faaefbfed696199d05198a159cd6e970ff11e7",
+                "reference": "28faaefbfed696199d05198a159cd6e970ff11e7",
                 "shasum": ""
             },
             "require": {
@@ -2170,7 +2170,7 @@
             "support": {
                 "source": "https://github.com/asdozzz/roadrunner-symfony-bundle/tree/jobs-worker"
             },
-            "time": "2024-09-13T05:42:20+00:00"
+            "time": "2024-09-16T16:02:40+00:00"
         },
         {
             "name": "google/common-protos",

@@ -2,6 +2,7 @@ version: "3"
 
 server:
   command: "php public/index.php"
+  relay: pipes
   access_logs: true
   env:
     - APP_RUNTIME: FluffyDiscord\RoadRunnerBundle\Runtime\Runtime
@@ -38,8 +39,8 @@ temporal:
     address: 0.0.0.0:9091
 
 service:
-  ochered_unitov:
-    command: "php bin/console app:service:start ochered_unitov"
+  unit_runner_jobs:
+    command: "php bin/console app:service:start unit_runner_jobs"
     process_num: 1
     timeout_stop_sec: 10
     exec_timeout: 0s
@@ -50,19 +51,48 @@ service:
 metrics:
   address: 0.0.0.0:2112
 
-jobs:
-  num_pollers: 64
-  timeout: 5
-  pipeline_size: 100000
+amqp:
+  addr: amqp://asd:asd@rabbit:5672
 
+jobs:
+  num_pollers: 24
+  timeout: 5
   pool:
-    num_workers: 10
+    max_jobs: 200
+    num_workers: 4
     allocate_timeout: 60s
     destroy_timeout: 60s
-  consume: [ "local" ]
+  consume: [ "ochered_unitov", "prozess_obnovlenie_koda_posle_zapuska", "prozess_udaleniya_unita_posle_zapuska", "sobitiya_iz_hranilisha" ]
   pipelines:
-    local:
-      driver: memory
+    ochered_unitov:
+      driver: amqp
       config:
-        priority: 10
-        prefetch: 10000
+        queue: ochered_unitov
+        routing_key: ochered_unitov
+        priority: 1
+        prefetch: 10
+        exchange: default
+    prozess_obnovlenie_koda_posle_zapuska:
+      driver: amqp
+      config:
+        queue: prozess_obnovlenie_koda_posle_zapuska
+        routing_key: prozess_obnovlenie_koda_posle_zapuska
+        priority: 2
+        prefetch: 10
+        exchange: default
+    prozess_udaleniya_unita_posle_zapuska:
+      driver: amqp
+      config:
+        queue: prozess_udaleniya_unita_posle_zapuska
+        routing_key: prozess_udaleniya_unita_posle_zapuska
+        priority: 3
+        prefetch: 10
+        exchange: default
+    sobitiya_iz_hranilisha:
+      driver: amqp
+      config:
+        queue: sobitiya_iz_hranilisha
+        routing_key: sobitiya_iz_hranilisha
+        priority: 4
+        prefetch: 10
+        exchange: default
