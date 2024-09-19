@@ -89,6 +89,11 @@ services:
     depends_on:
       - web
 
+  rabbit:
+    extends:
+      file: common-services.yml
+      service: rabbit
+
 networks:
   default:
     external: true
