@@ -94,6 +94,11 @@ services:
       file: common-services.yml
       service: rabbit
 
+  centrifugo:
+    extends:
+      file: common-services.yml
+      service: centrifugo
+
 networks:
   default:
     external: true
