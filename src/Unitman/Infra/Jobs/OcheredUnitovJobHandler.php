@@ -66,7 +66,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
                 OcheredUnitovReadModel::IZMENENIYE_VETKI => $this->izmenitVetku($model),
             };
         } catch (\Exception $e) {
-            $task->withHeader('attempts', 2);
+            $task->withAddedHeader('attempts', 2);
             throw $e;
         }
 
@@ -75,7 +75,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function sborka(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatSborki()) {
+        if (!$unit->esliPoluchenResultatSborki()) {
             $this->ustanovitResultatSborkiUnitaUseCase->handle(new UstanovitResultatSborkiUnita($model->unitId));
         }
 
@@ -85,7 +85,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function obnovlenie(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatObnovleniya()) {
+        if (!$unit->esliPoluchenResultatObnovleniya()) {
             $this->ustanovitResultatObnovleniyaUnitaUseCase->handle(new UstanovitResultatObnovleniyaUnita($model->unitId));
         }
 
@@ -95,7 +95,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function podgotovka(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatPodgotovki()) {
+        if (!$unit->esliPoluchenResultatPodgotovki()) {
             $this->ustanovitResultatPodgotovkiUnitaUseCase->handle(new UstanovitResultatPodgotovkiUnita($model->unitId));
         }
 
@@ -105,7 +105,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function sbrosPodgotovki(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatSbrosaPodgotovki()) {
+        if (!$unit->esliPoluchenResultatSbrosaPodgotovki()) {
             $this->ustanovitResultatSbrosaPodgotovkiUseCase->handle(new UstanovitResultatSbrosaPodgotovki($model->unitId));
         }
 
@@ -115,7 +115,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function zapusk(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatZapuska()) {
+        if (!$unit->esliPoluchenResultatZapuska()) {
             $this->ustanovitResultatZapuskaUseCase->handle(new UstanovitResultatZapuska($model->unitId));
         }
 
@@ -125,7 +125,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function ostanovka(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatOstanovki()) {
+        if (!$unit->esliPoluchenResultatOstanovki()) {
             $this->ustanovitResultatOstanovkiUnitaUseCase->handle(new UstanovitResultatOstanovkiUnita($model->unitId));
         }
 
@@ -135,7 +135,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function udalenie(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatUdaleniya()) {
+        if (!$unit->esliPoluchenResultatUdaleniya()) {
             $this->ustanovitResultatUdaleniyaUseCase->handle(new UstanovitResultatUdaleniya($model->unitId));
         }
 
@@ -145,7 +145,7 @@ final class OcheredUnitovJobHandler implements JobsHandlerInterface
     private function izmenitVetku(OcheredUnitovReadModel $model): bool
     {
         $unit = $this->unitRepository->getById($model->unitId);
-        if ($unit->esliJdetResultatIzmeneniyaVetki()) {
+        if (!$unit->esliPoluchenResultatIzmeneniyaVetki()) {
             $this->ustanovitResultatIzmeneniyaVetkiUnitaUseCase->handle(new UstanovitResultatIzmenenniyaVetkiUnita($model->unitId));
         }
 

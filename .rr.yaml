@@ -48,9 +48,6 @@ service:
     service_name_in_log: false
     restart_sec: 1
 
-centrifuge:
-  proxy_address: "tcp://0.0.0.0:30000"
-
 metrics:
   address: 0.0.0.0:2112
 
@@ -65,7 +62,13 @@ jobs:
     num_workers: 4
     allocate_timeout: 60s
     destroy_timeout: 60s
-  consume: [ "ochered_unitov", "prozess_obnovlenie_koda_posle_zapuska", "prozess_udaleniya_unita_posle_zapuska", "sobitiya_iz_hranilisha" ]
+  consume: [
+    "ochered_unitov",
+    "prozess_obnovlenie_koda_posle_zapuska",
+    "prozess_udaleniya_unita_posle_zapuska",
+    "sobitiya_iz_hranilisha",
+    "websocket_unit_event"
+  ]
   pipelines:
     ochered_unitov:
       driver: amqp
@@ -97,5 +100,13 @@ jobs:
         queue: sobitiya_iz_hranilisha
         routing_key: sobitiya_iz_hranilisha
         priority: 4
+        prefetch: 10
+        exchange: default
+    websocket_unit_event:
+      driver: amqp
+      config:
+        queue: websocket_unit_event
+        routing_key: websocket_unit_event
+        priority: 5
         prefetch: 10
         exchange: default

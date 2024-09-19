@@ -137,43 +137,43 @@ final class Unit implements AggregateRoot
         return !empty($this->zapusk) && $this->zapusk->isSuccess();
     }
 
-    function esliJdetResultatSborki(): bool
+    function esliPoluchenResultatSborki(): bool
     {
-        return $this->state->getCode() === VOcherediNaSborku::CODE;
+        return !empty($this->sborka) && $this->sborka->isFinish();
     }
 
-    function esliJdetResultatZapuska(): bool
+    function esliPoluchenResultatZapuska(): bool
     {
-        return $this->state->getCode() === VOcherediNaZapusk::CODE;
+        return !empty($this->zapusk) && $this->zapusk->isFinish();
     }
 
-    function esliJdetResultatOstanovki(): bool
+    function esliPoluchenResultatOstanovki(): bool
     {
-        return $this->state->getCode() === VOcherediNaOstanovku::CODE;
+        return !empty($this->ostanovka) && $this->ostanovka->isFinish();
     }
 
-    function esliJdetResultatIzmeneniyaVetki(): bool
+    function esliPoluchenResultatIzmeneniyaVetki(): bool
     {
-        return $this->state->getCode() === VOcheredNaIzmenenieVetki::CODE;
+        return !empty($this->izmenenieVetki) && $this->izmenenieVetki->isFinish();
     }
-    function esliJdetResultatUdaleniya(): bool
+    function esliPoluchenResultatUdaleniya(): bool
     {
-        return $this->state->getCode() === VOcherediNaUdalenie::CODE;
-    }
-
-    function esliJdetResultatObnovleniya(): bool
-    {
-        return $this->state->getCode() === VOcherediNaObnovlenie::CODE;
+        return !empty($this->udalenie) && $this->udalenie->isFinish();
     }
 
-    function esliJdetResultatPodgotovki(): bool
+    function esliPoluchenResultatObnovleniya(): bool
     {
-        return $this->state->getCode() === VOcherediNaPodgotovku::CODE;
+        return !empty($this->obnovlenie) && $this->obnovlenie->isFinish();
     }
 
-    function esliJdetResultatSbrosaPodgotovki(): bool
+    function esliPoluchenResultatPodgotovki(): bool
     {
-        return $this->state->getCode() === VOcherediNaSbrosPodgotovki::CODE;
+        return !empty($this->podgotovka) && $this->podgotovka->isFinish();
+    }
+
+    function esliPoluchenResultatSbrosaPodgotovki(): bool
+    {
+        return !empty($this->sbrosPodgotovki) && $this->sbrosPodgotovki->isFinish();
     }
 
     function esliPodgotovlen(): bool

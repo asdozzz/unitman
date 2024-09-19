@@ -23,4 +23,6 @@ interface CanProjectEvents extends MessageConsumer
     function isSyncProjection(): bool;
 
     function isAllowedRebuild(): bool;
+
+    function getPriority(): int;
 }

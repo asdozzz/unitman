@@ -55,6 +55,12 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     {
     }
 
+    public function getPriority(): int
+    {
+        return 1000;
+    }
+
+
     function isSyncProjection(): bool
     {
         return true;

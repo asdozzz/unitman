@@ -12,10 +12,12 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\BackgroundJob\WebsocketUnitEvent\WebsocketUnitEventJob;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaObnovleniyaPosleZapuskaJobHandler;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler;
 use App\Unitman\Infra\Jobs\OcheredUnitovJobHandler;
 use App\Unitman\Infra\Jobs\SobitieIzHranilishaJobsHandler;
+use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
@@ -111,6 +113,11 @@ return function (ContainerConfigurator $configuration) {
             service('unitman.projections_manager'),
         ]);
 
+    $services->set(WebsocketUnitEventJob::class)
+        ->args([
+            service('unitman.projections_manager'),
+        ]);
+
     $services->set(ProzesObnovlenieKodaPosleZapuskaActivity::class)
         ->tag('temporal.activity.registry');
 
@@ -127,5 +134,8 @@ return function (ContainerConfigurator $configuration) {
         ->tag('roadrunner_jobs.handler');
 
     $services->set(SobitieIzHranilishaJobsHandler::class)
+        ->tag('roadrunner_jobs.handler');
+
+    $services->set(WebsocketUnitEventReadModelJobHandler::class)
         ->tag('roadrunner_jobs.handler');
 };

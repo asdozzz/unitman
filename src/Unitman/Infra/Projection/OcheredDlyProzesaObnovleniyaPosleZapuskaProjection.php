@@ -52,6 +52,11 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
     {
     }
 
+    function isAllowedRebuild(): bool
+    {
+        return false;
+    }
+
     function isSyncProjection(): bool
     {
         return true;

@@ -29,4 +29,9 @@ abstract class AbstractProjection implements CanProjectEvents
             throw new \RuntimeException(sprintf('Handler %s for event=%s in %s not found', $methodName, $eventClass, $this::class));
         }
     }
+
+    public function getPriority(): int
+    {
+        return 1;
+    }
 }

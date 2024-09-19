@@ -117,7 +117,7 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     function handleSborkaUnitNachalas(SborkaUnitNachalas $fact): void
     {
         $ocheredUnitovReadModel = new OcheredUnitovReadModel($fact->unitId, OcheredUnitovReadModel::SBORKA);
-        $this->dobavitZadach($ocheredUnitovReadModel, 10, 20);
+        $this->dobavitZadach($ocheredUnitovReadModel);
     }
 
     function handleIzmenenieVetkiNachalos(IzmenenieVetkiNachalos $fact): void
@@ -129,7 +129,7 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     function handlePodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
     {
         $ocheredUnitovReadModel = new OcheredUnitovReadModel($fact->unitId, OcheredUnitovReadModel::PODGOTOVKA);
-        $this->dobavitZadach($ocheredUnitovReadModel);
+        $this->dobavitZadach($ocheredUnitovReadModel, 5, 20);
     }
 
     function handleObnovlenieUnitaNachalos(ObnovlenieUnitaNachalos $fact): void
@@ -147,7 +147,7 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     function handleZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
     {
         $ocheredUnitovReadModel = new OcheredUnitovReadModel($fact->unitId, OcheredUnitovReadModel::ZAPUSK);
-        $this->dobavitZadach($ocheredUnitovReadModel);
+        $this->dobavitZadach($ocheredUnitovReadModel, 10, 20);
     }
 
     function handleOstanovkaUnitaNachalas(OstanovkaUnitaNachalas $fact): void

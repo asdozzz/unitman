@@ -4,7 +4,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-json": "*",
@@ -13,6 +13,7 @@
         "eventsauce/eventsauce": "*",
         "eventsauce/message-repository-for-doctrine": "*",
         "fluffydiscord/roadrunner-symfony-bundle": "dev-jobs-worker",
+        "fresh/centrifugo-bundle": "^5.3",
         "grpc/grpc": "^1.42",
         "highcore/temporal-bundle": "*",
         "knplabs/github-api": "^3.0",
@@ -26,6 +27,7 @@
         "ramsey/uuid": "^4.6",
         "roadrunner-php/centrifugo": "^2.2",
         "spiral/roadrunner-http": "^3.5",
+        "spiral/roadrunner-jobs": "4.6.0",
         "spiral/roadrunner-metrics": "^3.2",
         "spiral/roadrunner-services": "^2.2",
         "symfony/asset": "7.0.*",
@@ -58,8 +60,7 @@
         "temporal/sdk": "^2.5",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
-        "vimeo/psalm": "^5.2",
-        "spiral/roadrunner-jobs": "4.6.0"
+        "vimeo/psalm": "^5.2"
     },
     "config": {
         "allow-plugins": {

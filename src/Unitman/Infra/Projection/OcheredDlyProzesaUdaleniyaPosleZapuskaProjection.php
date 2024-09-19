@@ -50,6 +50,11 @@ final class OcheredDlyProzesaUdaleniyaPosleZapuskaProjection extends AbstractPro
     {
     }
 
+    function isAllowedRebuild(): bool
+    {
+        return false;
+    }
+
     function isSyncProjection(): bool
     {
         return true;
