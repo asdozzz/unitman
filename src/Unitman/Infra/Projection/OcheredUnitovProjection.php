@@ -78,7 +78,7 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
      * @param OcheredUnitovReadModel $ocheredUnitovReadModel
      * @return void
      */
-    public function dobavitZadach(OcheredUnitovReadModel $ocheredUnitovReadModel, $delay = 2, $attempts = 2): void
+    public function dobavitZadach(OcheredUnitovReadModel $ocheredUnitovReadModel, $delay = 2, $attempts = 10): void
     {
         $this->zadachaDlyOcherediService->dobavitZadachuVOchered(OcheredUnitovJobHandler::QUEUE_NAME, $ocheredUnitovReadModel, $attempts, $delay);
     }
@@ -141,13 +141,13 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     function handleSbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
     {
         $ocheredUnitovReadModel = new OcheredUnitovReadModel($fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI);
-        $this->dobavitZadach($ocheredUnitovReadModel);
+        $this->dobavitZadach($ocheredUnitovReadModel, 3, 20);
     }
 
     function handleZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
     {
         $ocheredUnitovReadModel = new OcheredUnitovReadModel($fact->unitId, OcheredUnitovReadModel::ZAPUSK);
-        $this->dobavitZadach($ocheredUnitovReadModel, 10, 20);
+        $this->dobavitZadach($ocheredUnitovReadModel, 10, 60);
     }
 
     function handleOstanovkaUnitaNachalas(OstanovkaUnitaNachalas $fact): void
