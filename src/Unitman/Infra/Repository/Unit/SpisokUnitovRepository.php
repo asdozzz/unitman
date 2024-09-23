@@ -99,7 +99,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         return !empty($row);
     }
 
-    function getList(GetUnitList $query, string $currentUserId): array
+    function getList(GetUnitList $query, string $currentUserId, array $projectIds): array
     {
         $table = self::TABLE;
         $params = ['limit' => $query->limit, 'offset' => $query->offset];
@@ -123,14 +123,11 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         if (!empty($query->filter->projectId)) {
             $whereArr[] = "payload->>'projectId' = :projectId";
             $params['projectId'] = $query->filter->projectId;
-        }
-
-        if (!empty($whereArr)) {
-            $where = "WHERE ".join(' AND ', $whereArr);
         } else {
-            $where = '';
+            $whereArr[] = "payload->>'projectId' in ('".join("','", $projectIds)."')";
         }
 
+        $where = "WHERE ".join(' AND ', $whereArr);
 
         $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table $where ORDER BY id desc LIMIT :limit OFFSET :offset",
             $params);
