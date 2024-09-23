@@ -5,7 +5,10 @@ namespace App\Unitman\Tests\UseCase\Unit;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\GetUnitList\GetUnitListFilter;
 use App\Unitman\Business\Model\Unit\State\Sobran;
+use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\ReadModel\ProjectList;
+use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -49,10 +52,19 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         $readModelRepo->insert($unit5);
         $unit6 = new SpisokUnitovReadModel('6', '7', 'www@asd.ru', '006', 'pr2', 'prName2', 'feature/001', Sobran::CODE, false);
         $readModelRepo->insert($unit6);
+        $unit6 = new SpisokUnitovReadModel('7', '7', 'www@asd.ru', '007', 'pr3', 'prName2', 'feature/001', Sobran::CODE, false);
+        $readModelRepo->insert($unit6);
 
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($currentUserId);
         self::$container->set(UnitmanSecurityService::class, $securityService);
+
+        $spisokProektovRepo = $this->getMockBuilder(UmeetPoluchatSpisokProektovDlyPolzovatelya::class)->getMock();
+        $spisokProektovRepo->expects($this->any())->method('poluchitSpisokProektovDlyPolzovatelya')->willReturn([
+            new ProjectList('pr1', 'repoId', 'pr1Code', 'pr1Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS),
+            new ProjectList('pr2', 'repoId', 'pr2Code', 'pr2Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS),
+        ]);
+        self::$container->set(UmeetPoluchatSpisokProektovDlyPolzovatelya::class, $spisokProektovRepo);
 
 
         $useCase = self::$container->get(GetUnitListQuery::class);
