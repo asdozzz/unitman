@@ -12,7 +12,7 @@ final class WebsocketUnitEventReadModelJobHandler implements JobsHandlerInterfac
 {
     const QUEUE_NAME = 'websocket_unit_event';
 
-    public function __construct(private SerializerInterface $serializer, private CentrifugoInterface $centrifugo)
+    public function __construct(private CentrifugoInterface $centrifugo)
     {
     }
 
@@ -24,7 +24,7 @@ final class WebsocketUnitEventReadModelJobHandler implements JobsHandlerInterfac
 
     public function handle(ReceivedTaskInterface $task): void
     {
-        $arr = json_decode($task->getPayload(), 1);
+        $arr = json_decode($task->getPayload(), true);
         /** @var WebsocketUnitEventReadModel $model*/
         $this->centrifugo->publish($arr, 'spisok_unitov');
     }

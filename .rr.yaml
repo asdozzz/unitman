@@ -63,21 +63,12 @@ jobs:
     allocate_timeout: 60s
     destroy_timeout: 60s
   consume: [
-    "ochered_unitov",
     "prozess_obnovlenie_koda_posle_zapuska",
     "prozess_udaleniya_unita_posle_zapuska",
     "sobitiya_iz_hranilisha",
     "websocket_unit_event"
   ]
   pipelines:
-    ochered_unitov:
-      driver: amqp
-      config:
-        queue: ochered_unitov
-        routing_key: ochered_unitov
-        priority: 1
-        prefetch: 10
-        exchange: default
     prozess_obnovlenie_koda_posle_zapuska:
       driver: amqp
       config:

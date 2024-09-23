@@ -5,6 +5,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Port\CanGeneateGuid;
@@ -30,6 +31,8 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
+        $securityService->expects($this->any())->method('getEmailByUserId')->willReturn('asd@asd.ru');
+        $securityService->expects($this->any())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru'));
         self::$container->set(UnitmanSecurityService::class, $securityService);
         return $securityService;
     }

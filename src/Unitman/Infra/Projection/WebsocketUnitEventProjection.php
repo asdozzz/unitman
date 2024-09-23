@@ -2,11 +2,11 @@
 
 namespace App\Unitman\Infra\Projection;
 
-use App\Unitman\Acl\AccountAdapter;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\WebsocketUnitEventReadModel;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
@@ -16,6 +16,7 @@ use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 use EventSauce\EventSourcing\Message;
 
+
 final class WebsocketUnitEventProjection  extends AbstractProjection implements UnitmanProjection
 {
     const PROJECTION_NAME = 'websocket_unit_event';
@@ -24,7 +25,7 @@ final class WebsocketUnitEventProjection  extends AbstractProjection implements 
         private ZadachaDlyOcherediService $zadachaDlyOcherediService,
         private ZadachaDlyOcherediRepository $repository,
         private UnitRepository $unitRepository,
-        private AccountAdapter $accountAdapter
+        private UnitmanSecurityService $accountAdapter
     )
     {
     }
@@ -63,6 +64,7 @@ final class WebsocketUnitEventProjection  extends AbstractProjection implements 
         return false;
     }
 
+    /** @psalm-suppress ArgumentTypeCoercion*/
     public function handle(Message $message): void
     {
         $event = $message->payload();

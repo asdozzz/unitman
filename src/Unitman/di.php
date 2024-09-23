@@ -124,9 +124,6 @@ return function (ContainerConfigurator $configuration) {
     $services->set(ProzesUdaleniyaUnitaPosleZapuskaActivity::class)
         ->tag('temporal.activity.registry');
 
-    $services->set(OcheredUnitovJobHandler::class)
-        ->tag('roadrunner_jobs.handler');
-
     $services->set(OcheredDlyProzesaObnovleniyaPosleZapuskaJobHandler::class)
         ->tag('roadrunner_jobs.handler');
 
