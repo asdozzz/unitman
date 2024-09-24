@@ -105,97 +105,97 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
 
     function handleOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBORKA, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::SBORKA, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBORKA, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::SBORKA, true, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleOshibkaIzmeneniyaVetkiUnitaUstanovlena(OshibkaIzmeneniyaVetkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::IZMENENIYE_VETKI, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehIzmeneniyaVetkiUstanovlen(UspehIzmeneniyaVetkiUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::IZMENENIYE_VETKI, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::IZMENENIYE_VETKI, true, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::PODGOTOVKA, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::PODGOTOVKA, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::PODGOTOVKA, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::PODGOTOVKA, true, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::OBNOVLENIE, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OBNOVLENIE, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::OBNOVLENIE, true, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::SBROS_PODGOTOVKI, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehSbrosaPodgotovkiUnitaUstanovlen(UspehSbrosaPodgotovkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::SBROS_PODGOTOVKI, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::SBROS_PODGOTOVKI, true, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::ZAPUSK, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::ZAPUSK, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::ZAPUSK, true, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OSTANOVKA, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::OSTANOVKA, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehOstanovkiUnitaUstanovlen(UspehOstanovkiUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::OSTANOVKA, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::OSTANOVKA, true, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, false, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::UDALENIE, false, $fact->steps);
         $this->repository->insert($job);
     }
 
     function handleUspehUdaleniyaUnitaUstanovlen(UspehUdaleniyaUnitaUstanovlen $fact): void
     {
-        $job = new UnitRunnerJob('stub', $fact->unitId, OcheredUnitovReadModel::UDALENIE, true, $fact->steps);
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::UDALENIE, true, $fact->steps);
         $this->repository->insert($job);
     }
 }

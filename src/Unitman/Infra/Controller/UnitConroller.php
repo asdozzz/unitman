@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
 use App\Unitman\Business\Command\Unit\GetUnitRunnerJobs;
+use App\Unitman\Business\Command\Unit\GetUnitRunnerJobSteps;
 use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
@@ -33,6 +34,7 @@ use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobsQuery;
+use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobStepsQuery;
 use App\Unitman\Business\UseCase\Unit\IzmenitVetkuUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
@@ -346,6 +348,17 @@ final class UnitConroller extends AbstractController
 
     #[Route('/poluchitVipolnenieZadachiRunnera', methods: ['POST'])]
     public function poluchitVipolnenieZadachiRunnera(GetUnitRunnerJobs $command, GetUnitRunnerJobsQuery $query): Response
+    {
+        try {
+            $data = $query->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/poluchitShagiZadachiRunnera', methods: ['POST'])]
+    public function poluchitShagiZadachiRunnera(GetUnitRunnerJobSteps $command, GetUnitRunnerJobStepsQuery $query): Response
     {
         try {
             $data = $query->handle($command);

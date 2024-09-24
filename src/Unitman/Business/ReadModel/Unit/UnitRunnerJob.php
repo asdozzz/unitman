@@ -4,7 +4,7 @@ namespace App\Unitman\Business\ReadModel\Unit;
 
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 
-final class UnitRunnerJob
+final class UnitRunnerJob extends UnitRunnerJobWithoutSteps
 {
     const SBORKA = 'SBORKA';
     const OBNOVLENIE = 'OBNOVLENIE';
@@ -13,6 +13,13 @@ final class UnitRunnerJob
     const ZAPUSK = 'ZAPUSK';
     const OSTANOVKA = 'OSTANOVKA';
     const UDALENIE = 'UDALENIE';
+
+    const IZMENENIYE_VETKI = 'IZMENENIYE_VETKI';
+    /**
+     * @var RunnerJobStep[]
+     */
+    public readonly array $steps;
+
     /**
      * @param string $id
      * @param string $unitId
@@ -21,13 +28,15 @@ final class UnitRunnerJob
      * @param array<RunnerJobStep> $steps
      */
     public function __construct(
-        public string $id,
-        public readonly string $unitId,
-        public readonly string $jobType,
-        public readonly bool $success,
-        public readonly array $steps
+        string $id,
+        string $unitId,
+        string $jobType,
+        bool $success,
+        array $steps
     )
     {
+        parent::__construct($id, $unitId, $jobType, $success);
+        $this->steps = $steps;
     }
 
 }
