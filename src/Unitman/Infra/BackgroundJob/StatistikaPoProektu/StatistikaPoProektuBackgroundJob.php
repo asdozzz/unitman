@@ -23,4 +23,11 @@ final class StatistikaPoProektuBackgroundJob extends AbstractBackgroundJob
 
         return true;
     }
+
+    function getDelay(): int
+    {
+        return 10;
+    }
+
+
 }
