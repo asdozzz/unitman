@@ -51,8 +51,8 @@ service:
 metrics:
   address: 0.0.0.0:2112
 
-amqp:
-  addr: amqp://asd:asd@rabbit:5672
+beanstalk:
+  addr: tcp://beanstalk:11300
 
 jobs:
   num_pollers: 24
@@ -63,41 +63,31 @@ jobs:
     allocate_timeout: 60s
     destroy_timeout: 60s
   consume: [
+    "prozess_sozdaniya_unita_systemoi",
     "prozess_obnovlenie_koda_posle_zapuska",
     "prozess_udaleniya_unita_posle_zapuska",
     "sobitiya_iz_hranilisha",
     "websocket_unit_event"
   ]
   pipelines:
+    prozess_sozdaniya_unita_systemoi:
+      driver: beanstalk
+      config:
+        priority: 10
     prozess_obnovlenie_koda_posle_zapuska:
-      driver: amqp
+      driver: beanstalk
       config:
-        queue: prozess_obnovlenie_koda_posle_zapuska
-        routing_key: prozess_obnovlenie_koda_posle_zapuska
-        priority: 2
-        prefetch: 10
-        exchange: default
+        priority: 10
     prozess_udaleniya_unita_posle_zapuska:
-      driver: amqp
+      driver: beanstalk
       config:
-        queue: prozess_udaleniya_unita_posle_zapuska
-        routing_key: prozess_udaleniya_unita_posle_zapuska
-        priority: 3
-        prefetch: 10
-        exchange: default
+        priority: 10
     sobitiya_iz_hranilisha:
-      driver: amqp
+      driver: beanstalk
       config:
-        queue: sobitiya_iz_hranilisha
-        routing_key: sobitiya_iz_hranilisha
-        priority: 4
-        prefetch: 10
-        exchange: default
+        priority: 10
     websocket_unit_event:
-      driver: amqp
+      driver: beanstalk
       config:
-        queue: websocket_unit_event
-        routing_key: websocket_unit_event
-        priority: 5
-        prefetch: 10
-        exchange: default
+        priority: 10
+

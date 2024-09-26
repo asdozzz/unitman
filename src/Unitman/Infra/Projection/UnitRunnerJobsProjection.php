@@ -2,11 +2,13 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\AvtosborkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -26,6 +28,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -88,6 +91,7 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
             ObnovlenieKodaUnitaPosleZapuskaNachalos::class,
             OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena::class,
             UnitSozdan::class,
+            UnitSozdanSystemoi::class,
             SborkaUnitNachalas::class,
             IzmenenieVetkiNachalos::class,
             PeremenieUnitaZapolneni::class,
@@ -100,6 +104,8 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
             UdalenieUnitaNachalos::class,
             SlomaniyUnitUdalen::class,
             KodVetkiIzmenilsyaVHranilishe::class,
+            AvtosborkaUnitaNachalas::class,
+            OshibkaAvtosborkiUstanovlena::class,
         ];
     }
 

@@ -2,11 +2,13 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\AvtosborkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -26,6 +28,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -39,9 +42,7 @@ use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuska;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaObnovleniyaPosleZapuskaJobHandler;
-use App\Unitman\Infra\Jobs\OcheredUnitovJobHandler;
 use App\Unitman\Infra\Jobs\ZadachaDlyOcherediService;
-use App\Unitman\Infra\Repository\Unit\OcheredDlyProzesaObnovleniyaKodaPosleZapuskaRepository;
 use App\Unitman\Infra\Repository\ZadachaDlyOcherediRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
@@ -101,6 +102,7 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
     {
         return [
             UnitSozdan::class,
+            UnitSozdanSystemoi::class,
             SborkaUnitNachalas::class,
             OshibkaSborkiUnitaUstanovlena::class,
             UspehSborkiUnitaUstanovlen::class,
@@ -117,6 +119,8 @@ final class OcheredDlyProzesaObnovleniyaPosleZapuskaProjection extends AbstractP
             UdalenieUnitaPosleZapuskaNachalos::class,
             OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class,
             KodVetkiIzmenilsyaVHranilishe::class,
+            AvtosborkaUnitaNachalas::class,
+            OshibkaAvtosborkiUstanovlena::class,
         ];
     }
 

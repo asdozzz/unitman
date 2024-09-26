@@ -68,16 +68,14 @@ services:
     ports:
       - '8087:80'
 
-  rabbit:
-    image: rabbitmq:3.13.7-management
-    hostname: rabbit
+  beanstalk:
+    image: touchify/beanstalkd
+    hostname: beanstalk
     restart: always
-    ports:
-      - 5672:5672
-      - 15672:15672
+    environment:
+      BEANSTALKD_VERBOSE: 1
     volumes:
-      - ./.docker/rabbit/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ./var/volume/rabbitmq:/var/lib/rabbitmq
+      - ./var/volume/beanstalk:/var/cache/beanstalkd
 
   centrifugo:
     container_name: centrifugo

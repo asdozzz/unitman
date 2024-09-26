@@ -9,11 +9,13 @@ use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
+use App\Unitman\Business\Model\Unit\Event\AvtosborkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -33,6 +35,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -114,6 +117,8 @@ final class Unit implements AggregateRoot
 
     private ?string $udaleniePosleZapuska = null;
 
+    private ?string $avtosborkaUnitaSystemoi = null;
+
     private bool $isDeleted = false;
 
     private ?UnitBranch $newBranch = null;
@@ -121,6 +126,8 @@ final class Unit implements AggregateRoot
     private ?int $unixtimePoslednegoObnovleniyaKodaUnita = null;
 
     private ?int $unixtimePoslednegoObnovleniyaKodaVHranilishe = null;
+
+    private bool $unitSozdanSystemoi = false;
 
     /**
      * @template-use AggregateRootBehaviour<UnitId>
@@ -205,7 +212,7 @@ final class Unit implements AggregateRoot
 
     public function esliRazreshenoUpravlyatUnitom(ProjectUser $projectUser): bool
     {
-        return $this->authorId === $projectUser->userId || $projectUser->userRole === ProjectUserRole::ADMIN;
+        return $this->authorId === $projectUser->userId || $projectUser->userRole === ProjectUserRole::ADMIN || $this->unitSozdanSystemoi;
     }
     public static function sozdatUnit(string $id, string $authorId, SozdatUnit $command): self
     {
@@ -231,6 +238,33 @@ final class Unit implements AggregateRoot
         $this->name = new UnitName($fact->name);
         $this->branch = new UnitBranch($fact->branch);
         $this->authorId = $fact->authorId;
+    }
+
+    public static function sozdatUnitSystemoi(string $id, Account $account, SozdatUnit $command): self
+    {
+        if (empty($command->projectId)) {
+            throw new DomainException('unit.projectId_is_empty');
+        }
+        if (!$account->isSystemRole) {
+            throw new DomainException('unit.author_must_have_system_role');
+        }
+        $unit = new self(UnitId::fromString($id));
+        $state = new Sozdan();
+        $unit->recordThat(new UnitSozdanSystemoi($id, $account->id, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit)));
+        return $unit;
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyUnitSozdanSystemoi(UnitSozdanSystemoi $fact): void
+    {
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->project = new UnitProject($fact->projectId);
+        $this->name = new UnitName($fact->name);
+        $this->branch = new UnitBranch($fact->branch);
+        $this->authorId = $fact->authorId;
+        $this->unitSozdanSystemoi = true;
     }
 
     /**
@@ -326,6 +360,7 @@ final class Unit implements AggregateRoot
     {
         $this->sborka = $this->sborka->ustanovitOshibku($fact->steps);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->avtosborkaUnitaSystemoi = null;
     }
 
     public function ustanovitUspehSborki(array $steps, array $configUnita): void
@@ -556,6 +591,7 @@ final class Unit implements AggregateRoot
         $this->podgotovka = $this->podgotovka->ustanovitOshibku($fact->steps);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
         $this->obnovleniePosleZapuska = null;
+        $this->avtosborkaUnitaSystemoi = null;
     }
 
     public function ustanovitUspehPodgotovki(array $steps): void
@@ -653,6 +689,45 @@ final class Unit implements AggregateRoot
     {
         $this->obnovleniePosleZapuska = null;
     }
+
+    public function nachatAvtosborku(JobId $jobId): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if (!empty($this->avtosborkaUnitaSystemoi)) {
+            throw new DomainException('unit.avtosborka_uge_zapusheno');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        $this->recordThat(new AvtosborkaUnitaNachalas($this->getId(), (string) $jobId));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyAvtosborkaUnitaNachalas(AvtosborkaUnitaNachalas $fact): void
+    {
+        $this->avtosborkaUnitaSystemoi = $fact->jobId;
+    }
+
+    public function ustanovitOshibkuAvtosborki(string $error): void
+    {
+        $this->recordThat(new OshibkaAvtosborkiUstanovlena($this->getId(), $error));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyOshibkaAvtosborkiUstanovlena(OshibkaAvtosborkiUstanovlena $fact): void
+    {
+        $this->avtosborkaUnitaSystemoi = null;
+    }
+
 
     public function nachatUdalenieUnitaPosleZapuska(JobId $jobId): void
     {
@@ -763,9 +838,25 @@ final class Unit implements AggregateRoot
     }
 
     //----------Сброс подготовки
-    public function nachatSbrosPodgotovkiUnita(JobId $jobId, ProjectUser $user): void
+    public function nachatSbrosPodgotovkiUnita(JobId $jobId): void
     {
-        $errors = $this->esliMognoSbrositPodgotvku($user);
+        $errors = [];
+
+        if ($this->isDeleted) {
+            $errors[] = 'unit.udalen';
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            $errors[] = 'unit.wait_runner';
+        }
+
+        if ($this->zapusk && $this->zapusk->isSuccess()) {
+            $errors[] = 'unit.zapushen';
+        }
+
+        if (empty($this->podgotovka)) {
+            $errors[] = 'unit.podgotovka_ne_nachalas';
+        }
 
         if (!empty($errors)) {
             throw new Exception($errors[0]);
@@ -776,6 +867,7 @@ final class Unit implements AggregateRoot
         $state = $this->newState(new VOcherediNaSbrosPodgotovki());
         $this->recordThat(new SbrosPodgotovkiNachalsya($this->getId(), (string) $jobId, $state->toArray($this)));
     }
+
     /**
      * @psalm-suppress PossiblyNullReference
      */
@@ -864,6 +956,7 @@ final class Unit implements AggregateRoot
         $this->zapusk = RunnerJob::start($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
         $this->obnovleniePosleZapuska = null;
+        $this->avtosborkaUnitaSystemoi = null;
     }
 
     public function ustanovitOshibkuZapuska(array $steps): void
@@ -1223,33 +1316,6 @@ final class Unit implements AggregateRoot
         }
     }
 
-    /**
-     * @return array
-     */
-    function esliMognoSbrositPodgotvku(ProjectUser $projectUser): array
-    {
-        $errors = [];
-        if (!$this->esliRazreshenoUpravlyatUnitom($projectUser)) {
-            $errors[] = 'unit.ne_hvataet_prav';
-        }
-
-        if ($this->isDeleted) {
-            $errors[] = 'unit.udalen';
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            $errors[] = 'unit.wait_runner';
-        }
-
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
-            $errors[] = 'unit.zapushen';
-        }
-
-        if (empty($this->podgotovka)) {
-            $errors[] = 'unit.podgotovka_ne_nachalas';
-        }
-        return $errors;
-    }
 
     function esliMognoObnovit(): bool
     {
@@ -1281,6 +1347,11 @@ final class Unit implements AggregateRoot
     function poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska(): ?string
     {
         return $this->udaleniePosleZapuska;
+    }
+
+    function poluchitWorkflowIdDlySozdaniyaUnitaSystemoi(): ?string
+    {
+        return $this->avtosborkaUnitaSystemoi;
     }
 
     /**

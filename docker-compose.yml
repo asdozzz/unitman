@@ -54,7 +54,7 @@ services:
       - '.:/home/containeruser/www'
     depends_on:
       - temporal
-      - rabbit
+      - beanstalk
       - centrifugo
       - postgres
     environment:
@@ -83,10 +83,10 @@ services:
       file: common-services.yml
       service: postgres
 
-  rabbit:
+  beanstalk:
     extends:
       file: common-services.yml
-      service: rabbit
+      service: beanstalk
 
   unitman-proxy:
     extends:

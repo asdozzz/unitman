@@ -7,6 +7,7 @@ use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
+use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Utils\AccountEventTypeEnum;
 use App\Account\Infra\Repository\JWTUserRepository;
@@ -46,6 +47,12 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
     }
 
     public function handleAccountWasRegistered(AccountWasRegistered $event): void
+    {
+        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role]);
+        $this->JWTUserRepository->save($user);
+    }
+
+    public function handleSystemAccountWasRegistered(SystemAccountWasRegistered $event): void
     {
         $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role]);
         $this->JWTUserRepository->save($user);

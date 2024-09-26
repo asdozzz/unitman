@@ -40,4 +40,9 @@ final class AccountApi
         $user = $this->userRepository->getById($userId);
         return $user;
     }
+
+    public function getSystemUser(): JWTUser
+    {
+        return $this->userRepository->getSystemAccount();
+    }
 }

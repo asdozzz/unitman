@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Project\Event\NastroikiHukaProektaUstanovleni;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
@@ -67,11 +68,17 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             $fact->mainBranch,
             false,
             ProjectList\ProjectListStateType::NEW,
+            new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie),
             [],
             [],
             $fact->proxyHost
         );
         $this->projectListRepository->insert($projectList);
+    }
+
+    function handleNastroikiHukaProektaUstanovleni(NastroikiHukaProektaUstanovleni $fact): void
+    {
+        $this->projectListRepository->updateNastroikiHuka($fact->id,new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie));
     }
 
     function handleProektPostavlenVOcheredNaSborku(ProektPostavlenVOcheredNaSborku $fact): void

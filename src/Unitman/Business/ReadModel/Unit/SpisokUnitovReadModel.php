@@ -21,7 +21,9 @@ final class SpisokUnitovReadModel
         public readonly bool $jdemUdaleniyaPosleZapuska = false,
         public readonly ?int $unixtimePoslednegoObnovleniyaUnita = null,
         public readonly ?int $unixtimePoslednegoObnovleniyaVHranilishe = null,
-        public readonly array $peremenie = []
+        public readonly array $peremenie = [],
+        public readonly bool $unitSozdanSystemoi = false,
+        public readonly bool $jdemAvtosborki = false,
     )
     {
     }
@@ -45,6 +47,8 @@ final class SpisokUnitovReadModel
         $unixtimePoslednegoObnovleniyaUnita = isset($props['unixtimePoslednegoObnovleniyaUnita'])?$props['unixtimePoslednegoObnovleniyaUnita']:$this->unixtimePoslednegoObnovleniyaUnita;
         $unixtimePoslednegoObnovleniyaVHranilishe = isset($props['unixtimePoslednegoObnovleniyaVHranilishe'])?$props['unixtimePoslednegoObnovleniyaVHranilishe']:$this->unixtimePoslednegoObnovleniyaVHranilishe;
         $peremenie = !empty($props['peremenie'])?$props['peremenie']:$this->peremenie;
+        $unitSozdanSystemoi = isset($props['unitSozdanSystemoi'])?$props['unitSozdanSystemoi']:$this->unitSozdanSystemoi;
+        $jdemAvtosborki = isset($props['jdemAvtosborki'])?$props['jdemAvtosborki']:$this->jdemAvtosborki;
 
         return new static(
             $id,
@@ -63,7 +67,9 @@ final class SpisokUnitovReadModel
             $jdemUdaleniyaPosleZapuska,
             $unixtimePoslednegoObnovleniyaUnita,
             $unixtimePoslednegoObnovleniyaVHranilishe,
-            $peremenie
+            $peremenie,
+            $unitSozdanSystemoi,
+            $jdemAvtosborki
         );
     }
 }

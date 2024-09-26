@@ -6,4 +6,6 @@ enum TipSobitiya: string
 {
     case KOD_OBNOVLEN = 'KOD_OBNOVLEN';
     case VETKA_UDALENA = 'VETKA_UDALENA';
+
+    case VETKA_SOZDANA = 'VETKA_SOZDANA';
 }

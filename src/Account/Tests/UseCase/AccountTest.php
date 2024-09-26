@@ -13,6 +13,7 @@ use App\Account\Business\UseCase\BlockByAdminUseCase;
 use App\Account\Business\UseCase\ChangeEmailByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
 use App\Account\Business\UseCase\RegisterAccountUseCase;
+use App\Account\Business\UseCase\RegisterSystemAccountUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
 use App\Account\Infra\Adapter\SymfonySecurityService;
 use App\Account\Infra\Repository\JWTUserRepository;
@@ -54,6 +55,26 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals(Role::ROLE_USER->value, $row['roles']);
         $this->assertEquals(0, $row['is_blocked']);
         return $row;
+    }
+
+    /**
+     * @test
+     */
+    public function system_account_was_created(): void
+    {
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        /** @var JWTUserRepository $jwtRepository */
+        $jwtRepository->truncate();
+
+        $sut = self::$container->get(RegisterSystemAccountUseCase::class);
+        /** @var RegisterSystemAccountUseCase $sut */
+        $sut->handle();
+
+        $user = $jwtRepository->getSystemAccount();
+
+        $this->assertEquals('system@system.com', $user->getEmail());
+        $this->assertEquals([Role::ROLE_SYSTEM->value], $user->getRoles());
+        $this->assertEquals(false, $user->isBlocked());
     }
 
     /**

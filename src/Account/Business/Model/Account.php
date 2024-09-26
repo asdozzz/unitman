@@ -12,6 +12,7 @@ use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
+use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 use EventSauce\EventSourcing\AggregateRootId;
@@ -39,6 +40,9 @@ final class Account implements AggregateRoot
 
     public static function registerAccount(string $accountId, RegisterAccount $command): static
     {
+        if ($command->getRoles() === Account\Role::ROLE_SYSTEM->value) {
+            throw new \DomainException('account.as_system_not_allowed');
+        }
         $account = new static(AccountId::fromString($accountId));
         $account->recordThat(new AccountWasRegistered($accountId, $command->getEmail(), $command->getPassword(), $command->getRoles()));
         return $account;
@@ -52,11 +56,28 @@ final class Account implements AggregateRoot
         $this->role = Role::from($fact->role);
     }
 
+    public static function registerSystemAccount(string $accountId, string $password): static
+    {
+        $account = new static(AccountId::fromString($accountId));
+        $account->recordThat(new SystemAccountWasRegistered($accountId, 'system@system.com', $password, Role::ROLE_SYSTEM->value));
+        return $account;
+    }
+
+    private function applySystemAccountWasRegistered(SystemAccountWasRegistered $fact): void
+    {
+        $this->accountId = AccountId::fromString($fact->accountId);
+        $this->email = new Email($fact->email);
+        $this->password = new Password($fact->password);
+        $this->role = Role::from($fact->role);
+    }
+
     public function changePasswordByAdmin(string $newPassword): void
     {
         if ($this->password->__toString() === $newPassword) {
             throw new \RuntimeException('account.old_password_equal_new_password');
         }
+
+        $this->checkSystemRole();
 
         $this->recordThat(new PasswordWasChangedByAdmin($this->accountId->toString(), $newPassword));
     }
@@ -72,6 +93,8 @@ final class Account implements AggregateRoot
             throw new \RuntimeException('account.old_email_equal_new_email');
         }
 
+        $this->checkSystemRole();
+
         $this->recordThat(new EmailWasChangedByAdmin($this->accountId->toString(), $newEmail));
     }
 
@@ -85,6 +108,7 @@ final class Account implements AggregateRoot
         if ($this->isBlocked) {
             throw new \DomainException('account.already_blocked');
         }
+        $this->checkSystemRole();
         $this->recordThat(new AccountWasBlockedByAdmin($this->accountId->toString(), $reason));
     }
 
@@ -98,6 +122,7 @@ final class Account implements AggregateRoot
         if (!$this->isBlocked) {
             throw new \DomainException('account.is_not_blocked');
         }
+        $this->checkSystemRole();
         $this->recordThat(new AccountWasUnblockedByAdmin($this->accountId->toString(), $reason));
     }
 
@@ -109,5 +134,15 @@ final class Account implements AggregateRoot
     public function getEmail(): string
     {
         return (string) $this->email;
+    }
+
+    /**
+     * @return void
+     */
+    private function checkSystemRole(): void
+    {
+        if ($this->role === Account\Role::ROLE_SYSTEM) {
+            throw new \DomainException('account.as_system_not_allowed');
+        }
     }
 }

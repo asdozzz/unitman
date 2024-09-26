@@ -2,8 +2,10 @@
 
 namespace App\Account\Infra\Repository;
 
+use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Port\CanFindDouble;
+use App\Account\Business\Port\UmeetPoluchatAccountDlySystemi;
 use App\Account\Business\Port\UmeetPoluchatSpisokVsehPolzovatelei;
 use App\Account\Business\ReadModel\AccountForManaging;
 use App\Account\Business\ReadModel\UserList;
@@ -17,7 +19,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 /**
  * @implements UserProviderInterface<JWTUser>
  * */
-final class JWTUserRepository implements UserProviderInterface, CanFindDouble, UmeetPoluchatSpisokVsehPolzovatelei
+final class JWTUserRepository implements UserProviderInterface, CanFindDouble, UmeetPoluchatSpisokVsehPolzovatelei, UmeetPoluchatAccountDlySystemi
 {
     const TABLE = 'jwt_user';
     public function __construct(private Connection $connection)
@@ -212,5 +214,29 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         }
 
         return $result;
+    }
+
+    function findSystemAccountId(): ?string
+    {
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative("SELECT id FROM $table WHERE roles = :role", ['role' => Role::ROLE_SYSTEM->value]);
+
+        if (empty($row)) {
+            return null;
+        }
+
+        return $row['id'];
+    }
+
+    function getSystemAccount(): JWTUser
+    {
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE roles = :role", ['role' => Role::ROLE_SYSTEM->value]);
+
+        if (empty($row)) {
+            throw new \DomainException('account.system_account_not_found');
+        }
+
+        return $this->makeUserByDbRow($row);
     }
 }

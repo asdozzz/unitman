@@ -10,6 +10,8 @@ enum AccountEventTypeEnum: string
     case AccountId = 'AccountId';
 
     case AccountWasRegistered = 'AccountWasRegistered';
+
+    case SystemAccountWasRegistered = 'SystemAccountWasRegistered';
     case AccountWasBlockedByAdmin = 'AccountWasBlockedByAdmin';
     case AccountWasUnblockedByAdmin = 'AccountWasUnblockedByAdmin';
     case EmailWasChangedByAdmin = 'EmailWasChangedByAdmin';

@@ -2,6 +2,7 @@
 
 namespace App\Account\Infra\EventListener;
 
+use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\JWTUser;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
@@ -17,6 +18,10 @@ final class AuthenticationSuccessListener
 
         if (!$user instanceof JWTUser) {
             return;
+        }
+
+        if (in_array(Role::ROLE_SYSTEM->value, $user->getRoles())) {
+            throw new \DomainException('account.login_with_system_account_denied');
         }
 
         $data['user'] = array(

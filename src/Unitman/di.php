@@ -14,13 +14,14 @@ use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\BackgroundJob\WebsocketUnitEvent\WebsocketUnitEventJob;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaObnovleniyaPosleZapuskaJobHandler;
+use App\Unitman\Infra\Jobs\OcheredDlyProzesaSozdaniyaUnitaSystemoiJobHandler;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler;
-use App\Unitman\Infra\Jobs\OcheredUnitovJobHandler;
 use App\Unitman\Infra\Jobs\SobitieIzHranilishaJobsHandler;
 use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
+use App\Unitman\Infra\Temporal\Activity\ProzesAvtosborkiUnitaSystemoiActivity;
 use App\Unitman\Infra\Temporal\Activity\ProzesObnovlenieKodaPosleZapuskaActivity;
 use App\Unitman\Infra\BackgroundJob\UnitRunnerJobs\UnitRunnerJobs;
 use App\Unitman\Infra\Temporal\Activity\ProzesUdaleniyaUnitaPosleZapuskaActivity;
@@ -124,10 +125,16 @@ return function (ContainerConfigurator $configuration) {
     $services->set(ProzesUdaleniyaUnitaPosleZapuskaActivity::class)
         ->tag('temporal.activity.registry');
 
+    $services->set(ProzesAvtosborkiUnitaSystemoiActivity::class)
+        ->tag('temporal.activity.registry');
+
     $services->set(OcheredDlyProzesaObnovleniyaPosleZapuskaJobHandler::class)
         ->tag('roadrunner_jobs.handler');
 
     $services->set(OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler::class)
+        ->tag('roadrunner_jobs.handler');
+
+    $services->set(OcheredDlyProzesaSozdaniyaUnitaSystemoiJobHandler::class)
         ->tag('roadrunner_jobs.handler');
 
     $services->set(SobitieIzHranilishaJobsHandler::class)

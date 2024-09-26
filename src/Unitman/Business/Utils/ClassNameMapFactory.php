@@ -82,6 +82,7 @@ final class ClassNameMapFactory
             Project\Event\PeremenayaDobavlenaVProekt::class => UnitmanClassNameMapEnum::PeremenayaDobavlenaVProekt,
             Project\Event\PeremenayaUdalenaIzProekta::class => UnitmanClassNameMapEnum::PeremenayaUdalenaIzProekta,
             Project\Event\ZnacheniePeremnoiProektaIzmeneno::class => UnitmanClassNameMapEnum::ZnacheniePeremnoiProektaIzmeneno,
+            Project\Event\NastroikiHukaProektaUstanovleni::class => UnitmanClassNameMapEnum::NastroikiHukaProektaUstanovleni,
 
             Unit::class => UnitmanClassNameMapEnum::Unit,
             UnitId::class => UnitmanClassNameMapEnum::UnitId,
@@ -101,6 +102,9 @@ final class ClassNameMapFactory
             SlomaniyUnitUdalen::class => UnitmanClassNameMapEnum::SlomaniyUnitUdalen,
             UdalenieUnitaNachalos::class => UnitmanClassNameMapEnum::UdalenieUnitaNachalos,
             UnitSozdan::class => UnitmanClassNameMapEnum::UnitSozdan,
+            Unit\Event\UnitSozdanSystemoi::class => UnitmanClassNameMapEnum::UnitSozdanSystemoi,
+            Unit\Event\AvtosborkaUnitaNachalas::class => UnitmanClassNameMapEnum::AvtosborkaUnitaNachalas,
+            Unit\Event\OshibkaAvtosborkiUstanovlena::class => UnitmanClassNameMapEnum::OshibkaAvtosborkiUstanovlena,
             UspehObnovleniyaUnitaUstanovlen::class => UnitmanClassNameMapEnum::UspehObnovleniyaUnitaUstanovlen,
             UspehOstanovkiUnitaUstanovlen::class => UnitmanClassNameMapEnum::UspehOstanovkiUnitaUstanovlen,
             UspehPodgotovkiUnitaUstanovlen::class => UnitmanClassNameMapEnum::UspehPodgotovkiUnitaUstanovlen,

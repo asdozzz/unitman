@@ -34,8 +34,6 @@ final class ZapustitUnitUseCase
     {
         $unit = $this->unitRepository->getById($command->id);
         $project = $this->projectRepository->getById($unit->getProjectId());
-        $projectUser = $project->getProjectUserById($unit->getAuthorId());
-        $unit->proverkaPrav($projectUser);
         $jobId = $this->runnerService->nachatZapuskUnita($unit, $project);
         $unit->nachatZapuskUnita($jobId);
         $this->unitRepository->save($unit);

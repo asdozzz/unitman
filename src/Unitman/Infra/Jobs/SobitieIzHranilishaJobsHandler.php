@@ -24,8 +24,13 @@ final class SobitieIzHranilishaJobsHandler implements JobsHandlerInterface
 
     public function handle(ReceivedTaskInterface $task): void
     {
-        $model = $this->serializer->deserialize($task->getPayload(), $task->getName(), 'json');
-        /** @var SobitieIzHranilisha $model*/
-        $this->activity->obrabotatZadachu($model);
+        try {
+            $model = $this->serializer->deserialize($task->getPayload(), $task->getName(), 'json');
+            /** @var SobitieIzHranilisha $model*/
+            $this->activity->obrabotatZadachu($model);
+        } catch (\Exception $e) {
+            var_dump('AAAAAAAAAAAAAAAAAAAA:'.$e->getMessage());
+        }
+
     }
 }

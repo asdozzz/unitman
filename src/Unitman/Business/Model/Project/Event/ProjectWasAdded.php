@@ -11,6 +11,9 @@ final class ProjectWasAdded
         public readonly string $projectName,
         public readonly string $mainBranch,
         public readonly string $proxyHost = "",
+        public readonly bool $avtosozdanie = false,
+        public readonly bool $avtoobnovlenie = true,
+        public readonly bool $avtoudalenie = true
     )
     {
     }

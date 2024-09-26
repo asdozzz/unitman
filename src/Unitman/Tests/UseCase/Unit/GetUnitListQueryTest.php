@@ -60,9 +60,10 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $spisokProektovRepo = $this->getMockBuilder(UmeetPoluchatSpisokProektovDlyPolzovatelya::class)->getMock();
+        $nastroikiHukaProektov = new ProjectList\NastroikiHukaProekta(false, true, true);
         $spisokProektovRepo->expects($this->any())->method('poluchitSpisokProektovDlyPolzovatelya')->willReturn([
-            new ProjectList('pr1', 'repoId', 'pr1Code', 'pr1Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS),
-            new ProjectList('pr2', 'repoId', 'pr2Code', 'pr2Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS),
+            new ProjectList('pr1', 'repoId', 'pr1Code', 'pr1Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS, $nastroikiHukaProektov),
+            new ProjectList('pr2', 'repoId', 'pr2Code', 'pr2Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS, $nastroikiHukaProektov),
         ]);
         self::$container->set(UmeetPoluchatSpisokProektovDlyPolzovatelya::class, $spisokProektovRepo);
 

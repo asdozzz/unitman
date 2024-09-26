@@ -3,6 +3,7 @@
 namespace App\Unitman\Business\ReadModel;
 
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
+use App\Unitman\Business\ReadModel\ProjectList\NastroikiHukaProekta;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListVariable;
 
@@ -30,11 +31,12 @@ final class ProjectList
         public string $mainBranch,
         public bool $isActive,
         public ProjectListStateType $state,
+        public NastroikiHukaProekta $nastroikiHukaProekta,
         array $buildInfo = [],
         array $removeInfo = [],
         public ?string $proxyHost = null,
         public array $users = [],
-        public array $variables = []
+        public array $variables = [],
     )
     {
         $this->buildInfo = $buildInfo;

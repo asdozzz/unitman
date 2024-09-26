@@ -7,7 +7,6 @@ use App\Unitman\Business\Model\SobitieIzHranilisha;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Infra\Jobs\SobitieIzHranilishaJobsHandler;
 use App\Unitman\Infra\Jobs\ZadachaDlyOcherediService;
-use App\Unitman\Infra\Repository\Project\SobitieIzHranilishaRepository;
 
 final class DobavitSobitieIzHranilishaUseCase
 {

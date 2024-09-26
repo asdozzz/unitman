@@ -34,9 +34,6 @@ final class ObnovitKodUnitaPosleZapuskaUseCase
     function handleSystem(ObnovitKodUnitaPosleZapuska $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
-        $project = $this->projectRepository->getById($unit->getProjectId());
-        $projectUser = $project->getProjectUserById($unit->getAuthorId());
-        $unit->proverkaPrav($projectUser);
         $jobId = $this->umeetObnovlyatKodUnitaPosleZapuska->obnovitKodUnita($unit->getId());
         $unit->nachatObnovlenieUnitaPosleZapuska($jobId);
         $this->unitRepository->save($unit);

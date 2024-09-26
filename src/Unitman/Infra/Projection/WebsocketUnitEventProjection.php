@@ -4,6 +4,7 @@ namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -75,6 +76,7 @@ final class WebsocketUnitEventProjection  extends AbstractProjection implements 
             UspehUdaleniyaUnitaUstanovlen::class => $this->udalen($event),
             SlomaniyUnitUdalen::class => $this->udalenSlomanii($event),
             UnitSozdan::class => $this->sozdan($event),
+            UnitSozdanSystemoi::class => $this->sozdan($event),
             default => $this->obnovlen($event)
         };
     }
@@ -94,7 +96,7 @@ final class WebsocketUnitEventProjection  extends AbstractProjection implements 
         $this->sozdatZadachu(new WebsocketUnitEventReadModel($id, WebsocketUnitEventReadModel::OBNOVLEN, $user->id, $user->email, $unit->getName()));
     }
 
-    public function sozdan(UnitSozdan $fact): void
+    public function sozdan(UnitSozdan|UnitSozdanSystemoi $fact): void
     {
         $id = $this->getIdFromEvent($fact);
         $unit = $this->unitRepository->getById($id);

@@ -86,6 +86,13 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $this->update($project);
     }
 
+    function updateNastroikiHuka(string $projectId,ProjectList\NastroikiHukaProekta $nastroikiHukaProekta): void
+    {
+        $project = $this->getById($projectId);
+        $project->nastroikiHukaProekta = $nastroikiHukaProekta;
+        $this->update($project);
+    }
+
     function handleProjectWasNotDeleted(ProjectWasNotDeleted $fact): void
     {
         $project = $this->getById($fact->id);

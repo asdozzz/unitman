@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnitPosleZapuska;
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\SobitieIzHranilisha;
 use App\Unitman\Business\Model\SobitieIzHranilisha\DannieSobitiya;
 use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
@@ -14,6 +15,7 @@ use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter\StorageTypeAdapterFactory;
@@ -22,6 +24,9 @@ use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 //TODO декомпозировать класс
 final class SobitiyaIzHranilishaActivity
 {
+    const OK = 'ok';
+    const EMPTY_IDS = 'empty ids';
+
     public function __construct(
         private StorageTypeAdapterFactory $storageTypeAdapterFactory,
         private ProjectRepository $projectRepository,
@@ -32,6 +37,7 @@ final class SobitiyaIzHranilishaActivity
         private UdalitUnitPosleZapuskaUseCase $udalitUnitPosleZapuskaUseCase,
         private ObnovitKodUnitaPosleZapuskaUseCase $obnovitKodUnitaPosleZapuskaUseCase,
         private ObnovitKodUnitaUseCase $obnovitKodUnitaUseCase,
+        private SozdatUnitSystemoiUseCase $sozdatUnitSystemoiUseCase
     )
     {
     }
@@ -49,19 +55,36 @@ final class SobitiyaIzHranilishaActivity
         $dannieSobitiya = $adapter->poluchitDannieSobitiya($model);
 
         $result = match ($dannieSobitiya->tipSobitiya) {
-            TipSobitiya::KOD_OBNOVLEN => $this->obnovitUnixtimePoslednegoIzmeneniya($model->projectId, $dannieSobitiya),
-            TipSobitiya::VETKA_UDALENA => $this->udalitUniti($model->projectId, $dannieSobitiya)
+            TipSobitiya::KOD_OBNOVLEN => $this->obnovitUnixtimePoslednegoIzmeneniya($project, $dannieSobitiya),
+            TipSobitiya::VETKA_UDALENA => $this->udalitUniti($project, $dannieSobitiya),
+            TipSobitiya::VETKA_SOZDANA => $this->sozdatUnit($project, $dannieSobitiya)
         };
 
         return $result;
     }
 
-    private function obnovitUnixtimePoslednegoIzmeneniya(string $projectId, DannieSobitiya $dannieSobitiya): string
+    private function sozdatUnit(Project $project, DannieSobitiya $dannieSobitiya): string
     {
-        $ids = $this->spisokUnitovRepository->findIdsByBranch($projectId, $dannieSobitiya->vetka);
+        if (!$project->poluchitNastroikiHuka()->avtosozdanie) {
+            return 'avtosozdanie_viklucheno';
+        }
+
+        try {
+            $this->sozdatUnitSystemoiUseCase->handle($project->getId(), $dannieSobitiya->vetka);
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+
+
+        return self::OK;
+    }
+
+    private function obnovitUnixtimePoslednegoIzmeneniya(Project $project, DannieSobitiya $dannieSobitiya): string
+    {
+        $ids = $this->spisokUnitovRepository->findIdsByBranch($project->getId(), $dannieSobitiya->vetka);
 
         if (empty($ids)) {
-            return 'empty ids';
+            return self::EMPTY_IDS;
         }
 
         $errs = [];
@@ -70,6 +93,10 @@ final class SobitiyaIzHranilishaActivity
                 $unit = $this->unitRepository->getById($id);
                 $unit->izmenitVremyaPoslednegoIzmeneniyaKodaVHranilishe($dannieSobitiya->unixtime);
                 $this->unitRepository->save($unit);
+
+                if (!$project->poluchitNastroikiHuka()->avtoobnovlenie) {
+                    continue;
+                }
 
                 if ($unit->esliNugnoObnovitKodUnita()) {
                     if ($unit->esliZapushen()) {
@@ -91,15 +118,18 @@ final class SobitiyaIzHranilishaActivity
             return join(",", $errs);
         }
 
-        return 'ok';
+        return self::OK;
     }
 
-    private function udalitUniti(string $projectId, DannieSobitiya $dannieSobitiya): string
+    private function udalitUniti(Project $project, DannieSobitiya $dannieSobitiya): string
     {
-        $ids = $this->spisokUnitovRepository->findIdsByBranch($projectId, $dannieSobitiya->vetka);
+        if (!$project->poluchitNastroikiHuka()->avtoudalenie) {
+            return self::OK;
+        }
+        $ids = $this->spisokUnitovRepository->findIdsByBranch($project->getId(), $dannieSobitiya->vetka);
 
         if (empty($ids)) {
-            return 'empty ids';
+            return self::EMPTY_IDS;
         }
 
         $errs = [];
@@ -121,6 +151,6 @@ final class SobitiyaIzHranilishaActivity
             return join(",", $errs);
         }
 
-        return 'ok';
+        return self::OK;
     }
 }

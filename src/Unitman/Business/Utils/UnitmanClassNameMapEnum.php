@@ -30,6 +30,7 @@ enum UnitmanClassNameMapEnum: string
     case PeremenayaDobavlenaVProekt = 'PeremenayaDobavlenaVProekt';
     case PeremenayaUdalenaIzProekta = 'PeremenayaUdalenaIzProekta';
     case ZnacheniePeremnoiProektaIzmeneno = 'ZnacheniePeremnoiProektaIzmeneno';
+    case NastroikiHukaProektaUstanovleni = 'NastroikiHukaProektaUstanovleni';
 
     case Unit = 'Unit';
     case UnitId = 'UnitId';
@@ -49,6 +50,7 @@ enum UnitmanClassNameMapEnum: string
     case SlomaniyUnitUdalen = 'SlomaniyUnitUdalen';
     case UdalenieUnitaNachalos = 'UdalenieUnitaNachalos';
     case UnitSozdan = 'UnitSozdan';
+    case UnitSozdanSystemoi = 'UnitSozdanSystemoi';
     case UspehObnovleniyaUnitaUstanovlen = 'UspehObnovleniyaUnitaUstanovlen';
     case UspehOstanovkiUnitaUstanovlen = 'UspehOstanovkiUnitaUstanovlen';
     case UspehPodgotovkiUnitaUstanovlen = 'UspehPodgotovkiUnitaUstanovlen';
@@ -67,5 +69,7 @@ enum UnitmanClassNameMapEnum: string
     case UdalenieUnitaPosleZapuskaNachalos = 'UdalenieUnitaPosleZapuskaNachalos';
     case OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena = 'OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena';
     case KodVetkiIzmenilsyaVHranilishe = 'KodVetkiIzmenilsyaVHranilishe';
+    case AvtosborkaUnitaNachalas = 'AvtosborkaUnitaNachalas';
+    case OshibkaAvtosborkiUstanovlena = 'OshibkaAvtosborkiUstanovlena';
 
 }

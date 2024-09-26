@@ -2,11 +2,13 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\AvtosborkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -26,6 +28,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -75,22 +78,19 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     protected function getExceptionEvents(): array
     {
         return [
+            UnitSozdan::class,
+            UnitSozdanSystemoi::class,
             UdalenieUnitaPosleZapuskaNachalos::class,
             OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class,
             ObnovlenieKodaUnitaPosleZapuskaNachalos::class,
             OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena::class,
             KonfigUnitaUstanovlen::class,
             PeremenieUnitaZapolneni::class,
-            KodVetkiIzmenilsyaVHranilishe::class
+            KodVetkiIzmenilsyaVHranilishe::class,
+            AvtosborkaUnitaNachalas::class,
+            OshibkaAvtosborkiUstanovlena::class,
         ];
     }
-
-
-    function handleUnitSozdan(UnitSozdan $fact): void
-    {
-
-    }
-
 
     function handleSborkaUnitNachalas(SborkaUnitNachalas $fact): void
     {

@@ -32,4 +32,13 @@ final class SobratUnitUseCase
         $unit->nachatSborkuUnita($jobId, $unixtime);
         $this->unitRepository->save($unit);
     }
+
+    function handleSystem(SobratUnit $command): void
+    {
+        $unit = $this->unitRepository->getById($command->id);
+        $jobId = $this->runnerService->nachatSborkuUnita($unit);
+        $unixtime = $this->clock->now()->getTimestamp();
+        $unit->nachatSborkuUnita($jobId, $unixtime);
+        $this->unitRepository->save($unit);
+    }
 }

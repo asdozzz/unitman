@@ -4,6 +4,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
+use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Project;
@@ -50,6 +51,7 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
         $project->postavitVOcheredNaSborku('stub');
         $project->successfullyBuild([new RunnerJobStep('command', 'response', true, 1231231)]);
         $project->enable();
+        $project->obnovitNastrokiHuka(new ObnovitNastroikiHuka($projectId, true, true, true));
         return $project;
     }
 

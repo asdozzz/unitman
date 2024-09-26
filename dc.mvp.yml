@@ -89,10 +89,10 @@ services:
     depends_on:
       - web
 
-  rabbit:
+  beanstalk:
     extends:
       file: common-services.yml
-      service: rabbit
+      service: beanstalk
 
   centrifugo:
     extends:

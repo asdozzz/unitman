@@ -12,10 +12,15 @@ final class GithubAdapter implements StorageTypeAdapter
     function poluchitDannieSobitiya(SobitieIzHranilisha $sobitieIzHranilisha): DannieSobitiya
     {
         $data = json_decode($sobitieIzHranilisha->eventPayload, true);
-        $type = !empty($data['deleted'])? TipSobitiya::VETKA_UDALENA : TipSobitiya::KOD_OBNOVLEN;
+        if (!empty($data['created'])) {
+            $type = TipSobitiya::VETKA_SOZDANA;
+        } else {
+            $type = !empty($data['deleted'])? TipSobitiya::VETKA_UDALENA : TipSobitiya::KOD_OBNOVLEN;
+        }
+
         $vetka = str_replace('refs/heads/', '', (string)$data['ref']);
         $vetka = str_replace('refs/', '', $vetka);
-        if ($type === TipSobitiya::VETKA_UDALENA) {
+        if ($type === TipSobitiya::VETKA_UDALENA || $type === TipSobitiya::VETKA_SOZDANA) {
             $unixtime = time();
         } else {
             if (empty($data['commits'])) {
@@ -37,6 +42,10 @@ final class GithubAdapter implements StorageTypeAdapter
     {
         $data = json_decode($sobitieIzHranilisha->eventPayload, true);
 
-        return !empty($data['ref']) && (!empty($data['commits']) || !empty($data['deleted']));
+        if (strpos((string)$data['ref'], 'refs/tags') !== false) {
+            return false;
+        }
+
+        return !empty($data['ref']) && (!empty($data['commits']) || !empty($data['deleted']) || !empty($data['created']));
     }
 }

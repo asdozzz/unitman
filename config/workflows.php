@@ -16,4 +16,5 @@ return [
     \App\Runner\Infra\Workflow\NachatIzmenenieVetkiUnitaWorkflow::class,
     App\Unitman\Infra\Temporal\Workflow\ProzesObnovlenieKodaPosleZapuskaWorkflow::class,
     \App\Unitman\Infra\Temporal\Workflow\ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class,
+    \App\Unitman\Infra\Temporal\Workflow\ProzesAvtosborkiUnitaSystemoiWorkflow::class
 ];

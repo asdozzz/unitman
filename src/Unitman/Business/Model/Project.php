@@ -6,9 +6,11 @@ use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Project\DobavitPeremenuyuVProekt;
 use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
+use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
+use App\Unitman\Business\Model\Project\Event\NastroikiHukaProektaUstanovleni;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
@@ -25,6 +27,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
+use App\Unitman\Business\Model\Project\NastroikiHuka;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
 use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
@@ -64,9 +67,12 @@ final class Project implements AggregateRoot
     private string $mainBranch;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private ProxyHost $proxyHost;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private NastroikiHuka $nastroikiHuka;
 
     private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
+
 
     /**
      * @var ProjectVariable[]
@@ -101,6 +107,17 @@ final class Project implements AggregateRoot
 
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
+        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie);
+    }
+
+    public function obnovitNastrokiHuka(ObnovitNastroikiHuka $command): void
+    {
+        $this->recordThat(new NastroikiHukaProektaUstanovleni($this->getId(), $command->avtosozdanie, $command->avtoobnovlenie, $command->avtoudalenie));
+    }
+
+    private function applyNastroikiHukaProektaUstanovleni(NastroikiHukaProektaUstanovleni $fact): void
+    {
+        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie);
     }
 
     private function findIndexUserById(string $userId): ?int
@@ -531,5 +548,10 @@ final class Project implements AggregateRoot
     public function poluchitPeremenieProekta(): array
     {
         return $this->variables;
+    }
+
+    public function poluchitNastroikiHuka(): NastroikiHuka
+    {
+        return $this->nastroikiHuka;
     }
 }

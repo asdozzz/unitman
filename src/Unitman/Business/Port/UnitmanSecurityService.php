@@ -12,4 +12,6 @@ interface UnitmanSecurityService
     public function getEmailByUserId(string $id): string;
 
     public function getUserById(string $userId): Account;
+
+    public function getSystemUser(): Account;
 }

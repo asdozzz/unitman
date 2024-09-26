@@ -40,4 +40,11 @@ final class AccountAdapter implements UnitmanSecurityService
     {
         return $this->accountApi->getEmailByUserId($id);
     }
+
+    public function getSystemUser(): Account
+    {
+        $user = $this->accountApi->getSystemUser();
+
+        return new Account($user->getId(), $user->getEmail(), true);
+    }
 }

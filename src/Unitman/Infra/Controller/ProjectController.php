@@ -14,6 +14,7 @@ use App\Unitman\Business\Command\Project\ForceRemoveProject;
 use App\Unitman\Business\Command\Project\GetActiveProjectList;
 use App\Unitman\Business\Command\Project\GetProjectList;
 use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
+use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPeremenihProekta;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
@@ -33,6 +34,7 @@ use App\Unitman\Business\UseCase\Project\EnableProjectUseCase;
 use App\Unitman\Business\UseCase\Project\ForceRemoveProjectUseCase;
 use App\Unitman\Business\UseCase\Project\GetActiveProjectListQuery;
 use App\Unitman\Business\UseCase\Project\GetProjectListQuery;
+use App\Unitman\Business\UseCase\Project\ObnovitNastroikiHukaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
@@ -173,6 +175,13 @@ final class ProjectController extends AbstractController
 
     #[Route('/build', methods: ['POST'])]
     public function build(PostavitVOcheredNaSborku $command, PostavitVOcheredNaSborkuUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/obnovitNastroikiHuka', methods: ['POST'])]
+    public function obnovitNastroikiHuka(ObnovitNastroikiHuka $command, ObnovitNastroikiHukaUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());

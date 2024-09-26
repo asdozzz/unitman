@@ -2,11 +2,13 @@
 
 namespace App\Unitman\Infra\Projection;
 
+use App\Unitman\Business\Model\Unit\Event\AvtosborkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
+use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -26,6 +28,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
+use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -98,6 +101,46 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         );
 
         $this->repository->insert($readModel);
+    }
+
+    function handleUnitSozdanSystemoi(UnitSozdanSystemoi $fact): void
+    {
+        $project = $this->projectRepository->getById($fact->projectId);
+        $authorName = $this->securityService->getEmailByUserId($fact->authorId);
+        $readModel = new SpisokUnitovReadModel(
+            $fact->id,
+            $fact->authorId,
+            $authorName,
+            $fact->name,
+            $fact->projectId,
+            $project->getName(),
+            $fact->branch,
+            $fact->stateAsArray['code'],
+            false,
+            $fact->stateAsArray['commands'],
+            unitSozdanSystemoi: true
+        );
+
+
+        $this->repository->insert($readModel);
+    }
+
+    function handleAvtosborkaUnitaNachalas(AvtosborkaUnitaNachalas $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'jdemAvtosborki' => true
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleOshibkaAvtosborkiUstanovlena(OshibkaAvtosborkiUstanovlena $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'jdemAvtosborki' => false
+        ]);
+        $this->repository->update($readModel);
     }
 
     function handleSborkaUnitNachalas(SborkaUnitNachalas $fact): void
@@ -351,6 +394,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
             'waitResultFromRunner' => true,
+            'jdemAvtosborki' => false
         ]);
         $this->repository->update($readModel);
     }
