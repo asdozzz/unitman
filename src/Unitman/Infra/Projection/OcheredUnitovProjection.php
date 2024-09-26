@@ -223,6 +223,6 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
 
     function isAllowedRebuild(): bool
     {
-        return false;
+        return true;
     }
 }
