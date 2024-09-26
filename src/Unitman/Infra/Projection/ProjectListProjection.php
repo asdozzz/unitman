@@ -24,6 +24,7 @@ use App\Unitman\Business\ReadModel\ProjectList;
 use App\Unitman\Business\ReadModel\ProjectUsersList;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 
@@ -31,6 +32,7 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
 {
     public function __construct(
         private SqlProjectListRepository $projectListRepository,
+        private StatistikaPoProektuRepository $statistikaPoProektuRepository
     )
     {
     }
@@ -114,6 +116,7 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
     function handleProjectWasDeleted(ProjectWasDeleted $fact): void
     {
         $this->projectListRepository->delete($fact->id);
+        $this->statistikaPoProektuRepository->removeById($fact->id);
     }
 
     function handleProjectWasNotDeleted(ProjectWasNotDeleted $fact): void
@@ -124,6 +127,7 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
     function handleProjectWasDeletedManually(ProjectWasDeletedManually $fact): void
     {
         $this->projectListRepository->delete($fact->id);
+        $this->statistikaPoProektuRepository->removeById($fact->id);
     }
 
     function handleProjectDataWasChanged(ProjectDataWasChanged $fact): void

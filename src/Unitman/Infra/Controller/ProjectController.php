@@ -47,6 +47,7 @@ use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
 use App\Unitman\Business\UseCase\Project\RemoveProjectUseCase;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
+use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -199,5 +200,11 @@ final class ProjectController extends AbstractController
     {
         $id = $useCase->handle(new DobavitSobitieIzHranilisha($id, $request->getContent()));
         return $this->json(\App\Utils\Model\Reponse\Response::success(['eventId' => $id]));
+    }
+
+    #[Route('/statistikaPoProektam', methods: ['POST'])]
+    public function statistikaPoProektam(StatistikaPoProektuRepository $statistikaPoProektuRepository): Response
+    {
+        return $this->json(\App\Utils\Model\Reponse\Response::success($statistikaPoProektuRepository->getList()));
     }
 }

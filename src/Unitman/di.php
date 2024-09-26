@@ -12,12 +12,14 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\BackgroundJob\StatistikaPoProektu\StatistikaPoProektuBackgroundJob;
 use App\Unitman\Infra\BackgroundJob\WebsocketUnitEvent\WebsocketUnitEventJob;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaObnovleniyaPosleZapuskaJobHandler;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaSozdaniyaUnitaSystemoiJobHandler;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler;
 use App\Unitman\Infra\Jobs\SobitieIzHranilishaJobsHandler;
 use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
+use App\Unitman\Infra\Projection\StatistikaPoProektuProjection;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
@@ -110,6 +112,11 @@ return function (ContainerConfigurator $configuration) {
         ]);
 
     $services->set(UnitRunnerJobs::class)
+        ->args([
+            service('unitman.projections_manager'),
+        ]);
+
+    $services->set(StatistikaPoProektuBackgroundJob::class)
         ->args([
             service('unitman.projections_manager'),
         ]);
