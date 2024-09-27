@@ -92,7 +92,7 @@ final class ProjectionsManager
                     $projection->init();
                 }
 
-                $this->handleEventsByCheckpoint($projection, $checkpoint);
+                $this->handleEventsByCheckpoint($projection, $checkpoint, 200);
             }
 
             $this->connection->commit();
@@ -114,7 +114,7 @@ final class ProjectionsManager
                 $projection->init();
             }
 
-            $this->handleEventsByCheckpoint($projection, $checkpoint);
+            $this->handleEventsByCheckpoint($projection, $checkpoint, 200);
 
             $this->connection->commit();
         } catch (\Exception $e) {
@@ -170,9 +170,9 @@ final class ProjectionsManager
      * @param int $checkpoint
      * @return void
      */
-    private function handleEventsByCheckpoint(CanProjectEvents $projection, int $checkpoint): void
+    private function handleEventsByCheckpoint(CanProjectEvents $projection, int $checkpoint, int $limit = 0): void
     {
-        $events = $this->eventsRepository->getStream($projection->getStreamName(), $checkpoint);
+        $events = $this->eventsRepository->getStream($projection->getStreamName(), $checkpoint, $limit);
 
         $oldCheckpoint = $checkpoint;
 

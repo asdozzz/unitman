@@ -113,7 +113,7 @@ final class DoctrineStreamRepository
             : 0;
     }
 
-    function getStream(StreamName $streamName, int $checkpoint): \Generator
+    function getStream(StreamName $streamName, int $checkpoint, int $limit = 0): \Generator
     {
         $aggregateType = $streamName->aggregateType;
 
@@ -122,7 +122,13 @@ final class DoctrineStreamRepository
             $where = "AND payload->'headers'->>'__event_type' in ('".join("','", $streamName->eventTypes)."')";
         }
 
-        $sql = "SELECT payload FROM $this->tableName WHERE payload->'headers'->>'__aggregate_root_type' = '$aggregateType' $where ORDER BY id asc OFFSET $checkpoint";
+        $limitStr = '';
+        if (!empty($limit)) {
+            $limitStr = 'LIMIT '.$limit;
+        }
+
+
+        $sql = "SELECT payload FROM $this->tableName WHERE payload->'headers'->>'__aggregate_root_type' = '$aggregateType' $where ORDER BY id asc $limitStr OFFSET $checkpoint";
         $rows = $this->connection
             ->fetchAllAssociative($sql);
         try {
