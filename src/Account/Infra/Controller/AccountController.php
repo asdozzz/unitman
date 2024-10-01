@@ -3,11 +3,13 @@
 namespace App\Account\Infra\Controller;
 use App\Account\Business\Command\BlockByAdmin;
 use App\Account\Business\Command\ChangeEmailByAdmin;
+use App\Account\Business\Command\ChangeMyLocale;
 use App\Account\Business\Command\ChangePasswordByAdmin;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
 use App\Account\Business\UseCase\ChangeEmailByAdminUseCase;
+use App\Account\Business\UseCase\ChangeMyLocaleUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiQuery;
@@ -67,5 +69,12 @@ final class AccountController extends AbstractController
     {
         $result = $useCase->handle();
         return $this->json(\App\Utils\Model\Reponse\Response::success($result));
+    }
+
+    #[Route('/changeMyLocale')]
+    function changeMyLocale(ChangeMyLocale $command, ChangeMyLocaleUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 }

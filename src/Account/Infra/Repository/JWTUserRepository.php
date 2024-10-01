@@ -45,6 +45,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
                         unique
                             deferrable,
                 password varchar      not null,
+                locale varchar,
                 roles    varchar,
                 is_blocked bit
             );
@@ -64,7 +65,8 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             'email' => $user->getEmail(),
             'password' => $user->getPassword(),
             'roles' => join(',', $user->getRoles()),
-            'is_blocked' => $user->isBlocked()?1:0
+            'is_blocked' => $user->isBlocked()?1:0,
+            'locale' => $user->getLocale()
         ]);
     }
 
@@ -75,7 +77,8 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             'email' => $user->getEmail(),
             'password' => $user->getPassword(),
             'roles' => join(',', $user->getRoles()),
-            'is_blocked' => $user->isBlocked()?1:0
+            'is_blocked' => $user->isBlocked()?1:0,
+            'locale' => $user->getLocale()
         ], ['id' => $user->getId()]);
     }
 
@@ -100,7 +103,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
      */
     private function makeUserByDbRow(array $row): JWTUser
     {
-        $JWTUser = new JWTUser($row['id'], $row['email'], $row['password'], explode(',', $row['roles']), (bool)$row['is_blocked']);
+        $JWTUser = new JWTUser($row['id'], $row['email'], $row['password'], explode(',', $row['roles']), (bool)$row['is_blocked'], $row['locale']);
         return $JWTUser;
     }
 

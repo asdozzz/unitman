@@ -8,6 +8,7 @@ use App\Account\Business\Model\Event\AccountWasBlockedByAdmin;
 use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
+use App\Account\Business\Model\Event\LocaleChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
@@ -25,6 +26,7 @@ final class EventTypeMapFactory
             AccountWasUnblockedByAdmin::class => AccountEventTypeEnum::AccountWasUnblockedByAdmin,
             EmailWasChangedByAdmin::class => AccountEventTypeEnum::EmailWasChangedByAdmin,
             PasswordWasChangedByAdmin::class => AccountEventTypeEnum::PasswordWasChangedByAdmin,
+            LocaleChanged::class => AccountEventTypeEnum::LocaleChanged,
         ];
 
         $map = [];

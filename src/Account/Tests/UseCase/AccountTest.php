@@ -37,7 +37,8 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $command = new RegisterAccount(
             $email,
             'asd',
-            Role::ROLE_USER->value
+            Role::ROLE_USER->value,
+            'ru'
         );
 
         $sut = self::$container->get(RegisterAccountUseCase::class);
@@ -54,6 +55,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertNotEquals('asd', $row['password']);
         $this->assertEquals(Role::ROLE_USER->value, $row['roles']);
         $this->assertEquals(0, $row['is_blocked']);
+        $this->assertEquals('ru', $row['locale']);
         return $row;
     }
 

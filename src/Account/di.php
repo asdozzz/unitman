@@ -33,7 +33,8 @@ return function (ContainerConfigurator $configuration) {
         ->defaults()
         ->autowire()
         ->autoconfigure()
-        ->bind('$appEnv','%env(APP_ENV)%');
+        ->bind('$appEnv','%env(APP_ENV)%')
+        ->bind('$defaultLocale','%env(DEFAULT_LOCALE)%');
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
         ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])

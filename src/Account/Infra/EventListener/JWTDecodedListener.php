@@ -22,6 +22,7 @@ final class JWTDecodedListener
         $payload['id'] = $user->getId();
         $payload['roles'] = $user->getRoles();
         $payload['password'] = $user->getPassword();
+        $payload['locale'] = $user->getLocale();
 
         $event->setPayload($payload);
     }

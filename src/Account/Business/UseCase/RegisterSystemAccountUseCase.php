@@ -15,7 +15,8 @@ final class RegisterSystemAccountUseCase
         private AccountRepository $accountRepository,
         private UuidGenerator $guidGenerator,
         private CanHashPassword $passwordHasher,
-        private UmeetPoluchatAccountDlySystemi $umeetPoluchatAccountDlySystemi
+        private UmeetPoluchatAccountDlySystemi $umeetPoluchatAccountDlySystemi,
+        private string $defaultLocale
     )
     {
     }
@@ -29,7 +30,7 @@ final class RegisterSystemAccountUseCase
 
         $password = $this->passwordHasher->hashPassword('system');
         $accountId = $this->guidGenerator->makeGuid();
-        $account = Account::registerSystemAccount($accountId, $password);
+        $account = Account::registerSystemAccount($accountId, $password, $this->defaultLocale);
         $this->accountRepository->save($account);
     }
 }

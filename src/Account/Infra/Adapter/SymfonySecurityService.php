@@ -5,6 +5,7 @@ namespace App\Account\Infra\Adapter;
 use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Port\SecurityService;
+use App\Utils\Exception\TranslatorKeyword;
 use Symfony\Bundle\SecurityBundle\Security;
 
 final class SymfonySecurityService implements SecurityService
@@ -25,7 +26,7 @@ final class SymfonySecurityService implements SecurityService
         $user = $this->security->getUser();
         /** @var JWTUser|null $user*/
         if (empty($user)) {
-            throw new \DomainException('security.need_auth');
+            throw new \DomainException(TranslatorKeyword::ACCOUNT_NOT_AUTHENTICATED->value);
         }
 
         return $user->getId();

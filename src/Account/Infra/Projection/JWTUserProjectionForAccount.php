@@ -6,6 +6,7 @@ use App\Account\Business\Model\Event\AccountWasBlockedByAdmin;
 use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
+use App\Account\Business\Model\Event\LocaleChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use App\Account\Business\Model\JWTUser;
@@ -48,13 +49,13 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
 
     public function handleAccountWasRegistered(AccountWasRegistered $event): void
     {
-        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role]);
+        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role], locale: $event->locale);
         $this->JWTUserRepository->save($user);
     }
 
     public function handleSystemAccountWasRegistered(SystemAccountWasRegistered $event): void
     {
-        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role]);
+        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role], locale: $event->locale);
         $this->JWTUserRepository->save($user);
     }
 
@@ -83,6 +84,13 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->unblock();
+        $this->JWTUserRepository->update($user);
+    }
+
+    public function handleLocaleChanged(LocaleChanged $event): void
+    {
+        $user = $this->JWTUserRepository->getById($event->accountId);
+        $user->setLocale($event->newLocale);
         $this->JWTUserRepository->update($user);
     }
 

@@ -253,6 +253,9 @@
       <path value="$PROJECT_DIR$/vendor/roadrunner-php/centrifugo" />
       <path value="$PROJECT_DIR$/vendor/fresh/centrifugo-bundle" />
       <path value="$PROJECT_DIR$/vendor/fresh/datetime" />
+      <path value="$PROJECT_DIR$/vendor/spiral/security" />
+      <path value="$PROJECT_DIR$/vendor/spiral/hmvc" />
+      <path value="$PROJECT_DIR$/vendor/spiral/interceptors" />
     </include_path>
   </component>
   <component name="PhpInterpreters">

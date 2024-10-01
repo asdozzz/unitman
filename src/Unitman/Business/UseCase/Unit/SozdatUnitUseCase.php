@@ -9,6 +9,7 @@ use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Utils\Exception\TranslatorKeyword;
 use Symfony\Component\Clock\Clock;
 use Symfony\Component\Clock\ClockInterface;
 
@@ -27,7 +28,7 @@ final class SozdatUnitUseCase
     function handle(SozdatUnit $command): string
     {
         if ($this->canFindUnitDouble->isExistsDoubleByName($command->projectId, $command->unitName)) {
-            throw new \DomainException('unit.double');
+            throw new \DomainException(TranslatorKeyword::UNIT_NAME_ALREADY_EXISTS->value);
         }
 
         $project = $this->projectRepository->getById($command->projectId);

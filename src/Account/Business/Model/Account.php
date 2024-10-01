@@ -2,6 +2,7 @@
 
 namespace App\Account\Business\Model;
 
+use App\Account\Business\Command\ChangeMyLocale;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Model\Account\AccountId;
 use App\Account\Business\Model\Account\Email;
@@ -11,8 +12,10 @@ use App\Account\Business\Model\Event\AccountWasBlockedByAdmin;
 use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
+use App\Account\Business\Model\Event\LocaleChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
+use App\Utils\Exception\TranslatorKeyword;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 use EventSauce\EventSourcing\AggregateRootId;
@@ -37,14 +40,16 @@ final class Account implements AggregateRoot
     private Role $role;
 
     private bool $isBlocked = false;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private string $locale;
 
     public static function registerAccount(string $accountId, RegisterAccount $command): static
     {
         if ($command->getRoles() === Account\Role::ROLE_SYSTEM->value) {
-            throw new \DomainException('account.as_system_not_allowed');
+            throw new \DomainException(TranslatorKeyword::SYSTEM_CANNOT_ADD_USERS->value);
         }
         $account = new static(AccountId::fromString($accountId));
-        $account->recordThat(new AccountWasRegistered($accountId, $command->getEmail(), $command->getPassword(), $command->getRoles()));
+        $account->recordThat(new AccountWasRegistered($accountId, $command->getEmail(), $command->getPassword(), $command->getRoles(), $command->getLocale()));
         return $account;
     }
 
@@ -54,12 +59,13 @@ final class Account implements AggregateRoot
         $this->email = new Email($fact->email);
         $this->password = new Password($fact->password);
         $this->role = Role::from($fact->role);
+        $this->locale = $fact->locale;
     }
 
-    public static function registerSystemAccount(string $accountId, string $password): static
+    public static function registerSystemAccount(string $accountId, string $password, string $locale): static
     {
         $account = new static(AccountId::fromString($accountId));
-        $account->recordThat(new SystemAccountWasRegistered($accountId, 'system@system.com', $password, Role::ROLE_SYSTEM->value));
+        $account->recordThat(new SystemAccountWasRegistered($accountId, 'system@system.com', $password, Role::ROLE_SYSTEM->value, $locale));
         return $account;
     }
 
@@ -69,12 +75,27 @@ final class Account implements AggregateRoot
         $this->email = new Email($fact->email);
         $this->password = new Password($fact->password);
         $this->role = Role::from($fact->role);
+        $this->locale = $fact->locale;
+    }
+
+    public function changeMyLocale(ChangeMyLocale $command): void
+    {
+        if ($this->locale === $command->locale) {
+            throw new \DomainException('account.old_locale_equal_new_locale');
+        }
+
+        $this->recordThat(new LocaleChanged($this->accountId->toString(), $command->locale));
+    }
+
+    private function applyLocaleChanged(LocaleChanged $fact): void
+    {
+        $this->locale = $fact->newLocale;
     }
 
     public function changePasswordByAdmin(string $newPassword): void
     {
         if ($this->password->__toString() === $newPassword) {
-            throw new \RuntimeException('account.old_password_equal_new_password');
+            throw new \DomainException('account.old_password_equal_new_password');
         }
 
         $this->checkSystemRole();
@@ -144,5 +165,10 @@ final class Account implements AggregateRoot
         if ($this->role === Account\Role::ROLE_SYSTEM) {
             throw new \DomainException('account.as_system_not_allowed');
         }
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
     }
 }

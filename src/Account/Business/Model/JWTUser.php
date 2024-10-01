@@ -7,7 +7,14 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterface
 {
-    public function __construct(private string $id, private string $email, private string $password, private array $roles, private bool $isBlocked = false)
+    public function __construct(
+        private string $id,
+        private string $email,
+        private string $password,
+        private array $roles,
+        private bool $isBlocked = false,
+        private string $locale = 'ru'
+    )
     {
     }
 
@@ -84,5 +91,15 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
     public function isBlocked(): bool
     {
         return $this->isBlocked;
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(string $newLocale): void
+    {
+        $this->locale = $newLocale;
     }
 }

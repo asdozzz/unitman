@@ -14,6 +14,7 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 
 /**
@@ -23,6 +24,9 @@ use Throwable;
 #[AsEventListener(event: ExceptionEvent::class, method: 'onKernelException')]
 class BaseExceptionListener
 {
+    public function __construct(private TranslatorInterface $translator)
+    {
+    }
 
     /**
      * @param ExceptionEvent $event
@@ -56,11 +60,15 @@ class BaseExceptionListener
 
     function makeFail(\Throwable $exception): JsonResponse
     {
-        return new JsonResponse(\App\Utils\Model\Reponse\Response::fail(['message' => $exception->getMessage()]));
+        $message = $exception->getMessage();
+        $this->translator->trans($message);
+        return new JsonResponse(\App\Utils\Model\Reponse\Response::fail(['message' => $message]));
     }
 
     function makeError(\Throwable $exception): JsonResponse
     {
-        return new JsonResponse(\App\Utils\Model\Reponse\Response::error($exception->getMessage()));
+        $message = $exception->getMessage();
+        $this->translator->trans($message);
+        return new JsonResponse(\App\Utils\Model\Reponse\Response::error($message));
     }
 }//end class

@@ -15,6 +15,7 @@ final class RegisterFirstAccountUseCase
         private AccountRepository $accountRepository,
         private UuidGenerator $guidGenerator,
         private CanHashPassword $passwordHasher,
+        private string $defaultLocale
     )
     {
     }
@@ -22,7 +23,7 @@ final class RegisterFirstAccountUseCase
     public function handle(RegisterFirstAccount $command): void
     {
         $password = $this->passwordHasher->hashPassword($command->password);
-        $registerAccount = new RegisterAccount($command->email, $password, Account\Role::ROLE_ADMIN->value);
+        $registerAccount = new RegisterAccount($command->email, $password, Account\Role::ROLE_ADMIN->value, $this->defaultLocale);
         $accountId = $this->guidGenerator->makeGuid();
         $account = Account::registerAccount($accountId, $registerAccount);
         $this->accountRepository->save($account);

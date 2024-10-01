@@ -28,6 +28,7 @@ final class AuthenticationSuccessListener
             'id' => $user->getId(),
             'email' => $user->getEmail(),
             'roles' => $user->getRoles(),
+            'locale' => $user->getLocale()
         );
 
         $event->setData($data);

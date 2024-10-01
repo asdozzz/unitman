@@ -3,6 +3,7 @@
 namespace App\Account\Business\Utils;
 
 use App\Account\Business\Model\Account\AccountId;
+use App\Account\Business\Model\Event\LocaleChanged;
 
 enum AccountEventTypeEnum: string
 {
@@ -16,5 +17,5 @@ enum AccountEventTypeEnum: string
     case AccountWasUnblockedByAdmin = 'AccountWasUnblockedByAdmin';
     case EmailWasChangedByAdmin = 'EmailWasChangedByAdmin';
     case PasswordWasChangedByAdmin = 'PasswordWasChangedByAdmin';
-
+    case LocaleChanged = 'LocaleChanged';
 }

@@ -9,7 +9,8 @@ final class RegisterAccount implements JsonBodySerializableInterface
     public function __construct(
         private string $email,
         private string $password,
-        private string $roles
+        private string $roles,
+        private string $locale
     )
     {
     }
@@ -47,7 +48,8 @@ final class RegisterAccount implements JsonBodySerializableInterface
         return $this->roles;
     }
 
-
-
-
+    public function getLocale(): string
+    {
+        return $this->locale;
+    }
 }

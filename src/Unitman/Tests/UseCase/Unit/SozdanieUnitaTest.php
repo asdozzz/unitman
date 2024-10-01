@@ -45,7 +45,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
                 'feature/222'
             ));
         } catch (\Exception $e) {
-            $this->assertEquals('unit.double', $e->getMessage());
+            $this->assertEquals('unit.name_already_exists', $e->getMessage());
         }
 
         try {
