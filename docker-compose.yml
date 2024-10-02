@@ -1,50 +1,23 @@
 services:
   postgresql:
-    container_name: temporal-postgresql
-    image: postgres:13
-    environment:
-      POSTGRES_PASSWORD: temporal
-      POSTGRES_USER: temporal
-    ports:
-      - 5433:5432
-    volumes:
-      - ./var/volume/pgdata_temporal:/var/lib/postgresql/data
+    extends:
+      file: common-services.yml
+      service: postgresql
 
   temporal:
-    container_name: temporal
-    image: temporalio/auto-setup:1.25.0
-    depends_on:
-      - postgresql
-    environment:
-      - DB=postgres12
-      - DB_PORT=5432
-      - POSTGRES_USER=temporal
-      - POSTGRES_PWD=temporal
-      - POSTGRES_SEEDS=postgresql
-    ports:
-      - 7233:7233
+    extends:
+      file: common-services.yml
+      service: temporal
 
   temporal-admin-tools:
-    container_name: temporal-admin-tools
-    image: temporalio/admin-tools:1.25.0-tctl-1.18.1-cli-1.0.0
-    depends_on:
-      - temporal
-    environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CLI_ADDRESS=temporal:7233
-    stdin_open: true
-    tty: true
+    extends:
+      file: common-services.yml
+      service: temporal-admin-tools
 
   temporal-ui:
-    container_name: temporal-ui
-    image: temporalio/ui:2.26.2
-    depends_on:
-      - temporal
-    environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_UI_ENABLED=true
-    ports:
-      - 8088:8080
+    extends:
+      file: common-services.yml
+      service: temporal-ui
 
   web:
     extends:
@@ -68,16 +41,6 @@ services:
       #- OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
       #- OTEL_PHP_TRACES_PROCESSOR=simple
 
-  #elasticsearch:
-  #  extends:
-  #    file: common-services.yml
-  #    service: elasticsearch
-
-  #kibana:
-  #  extends:
-  #    file: common-services.yml
-  #    service: kibana
-
   postgres:
     extends:
       file: common-services.yml
@@ -97,22 +60,6 @@ services:
     extends:
       file: common-services.yml
       service: centrifugo
-
-  #zipkin:
-  #  image: openzipkin/zipkin:3
-  #  restart: always
-  #  ports:
-  #    - 9411:9411
-  #
-  #collector:
-  #  container_name: collector
-  #  image: otel/opentelemetry-collector-contrib:0.106.1
-  #  command: [ "--config=/etc/otel-collector-config.yml" ]
-  #  volumes:
-  #    - ./.docker/otel/otel-collector-config.yml:/etc/otel-collector-config.yml
-  #  ports:
-  #    - "4318:4318"
-  #    - "4317:4317"
 
 networks:
   default:
