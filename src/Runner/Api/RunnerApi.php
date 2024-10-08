@@ -103,7 +103,7 @@ final class RunnerApi
             NachatOchistkuProektaWorkflow::class,
             WorkflowOptions::new()
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
-                ->withWorkflowExecutionTimeout(CarbonInterval::minute(15))
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(30))
         );
         $run = $this->workflowClient->start($workflow, $command);
         return $run->getExecution()->getID();
