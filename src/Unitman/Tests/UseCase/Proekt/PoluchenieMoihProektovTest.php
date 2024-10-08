@@ -8,6 +8,8 @@ use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
+use App\Unitman\Business\Model\Runner\JobId;
+use App\Unitman\Business\Model\Runner\ResultatSborkiProekta;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RunnerService;
@@ -19,6 +21,7 @@ use App\Unitman\Business\UseCase\Project\EnableProjectUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
+use App\Unitman\Business\UseCase\Project\UstanovitResultatSborkiProektaUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Adapter\MemoryRunnerService;
 use Ramsey\Uuid\Uuid;
@@ -53,9 +56,12 @@ final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
 
         $memoryRunner = new MemoryRunnerService();
         $steps = [new RunnerJobStep('command', 'response', true, 123123123)];
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, $steps));
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, $steps));
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new ProjectDataAboutBuilding('jobId', true, true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new JobId('jobId'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new ResultatSborkiProekta(true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new JobId('jobId'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new ResultatSborkiProekta(true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new JobId('jobId'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new ResultatSborkiProekta(true, $steps));
         self::$container->set(RunnerService::class, $memoryRunner);
 
         //Кинули в очередь на сборку
@@ -63,13 +69,22 @@ final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
         $queueUseCase = self::$container->get(PostavitVOcheredNaSborkuUseCase::class);
         $queueUseCase->handle($queueCommand);
 
+        $useCase = self::$container->get(UstanovitResultatSborkiProektaUseCase::class);
+        $useCase->handle($projectId);
+
         $queueCommand = new PostavitVOcheredNaSborku($projectId2);
         $queueUseCase = self::$container->get(PostavitVOcheredNaSborkuUseCase::class);
         $queueUseCase->handle($queueCommand);
 
+        $useCase = self::$container->get(UstanovitResultatSborkiProektaUseCase::class);
+        $useCase->handle($projectId2);
+
         $queueCommand = new PostavitVOcheredNaSborku($projectId3);
         $queueUseCase = self::$container->get(PostavitVOcheredNaSborkuUseCase::class);
         $queueUseCase->handle($queueCommand);
+
+        $useCase = self::$container->get(UstanovitResultatSborkiProektaUseCase::class);
+        $useCase->handle($projectId3);
 
         $enableUseCase = self::$container->get(EnableProjectUseCase::class);
         $enableUseCase->handle(new EnableProject($projectId));

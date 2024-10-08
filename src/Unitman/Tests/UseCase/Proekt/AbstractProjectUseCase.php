@@ -55,8 +55,6 @@ abstract class AbstractProjectUseCase extends AbstractTestCaseWithTransactionWra
         $this->assertEquals($project->mainBranch, $mainBranch);
         $this->assertEquals($project->isActive, false);
         $this->assertEquals($project->state, ProjectListStateType::NEW);
-        $this->assertEquals($project->buildInfo, []);
-        $this->assertEquals($project->removeInfo, []);
         $this->assertEquals($project->proxyHost, $proxyHost);
         $this->assertEquals($project->users, [new ProjectUsersList($userId, 'ADMIN')]);
 
