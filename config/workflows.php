@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    \App\Runner\Infra\Workflow\NachatOchistkuProektaWorkflow::class,
     \App\Runner\Infra\Workflow\InitProjectWorkflow::class,
     \App\Runner\Infra\Workflow\RemoveProjectWorkflow::class,
     \App\Runner\Infra\Workflow\NachatSborkuUnitaWorkflow::class,

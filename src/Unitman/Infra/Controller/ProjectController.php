@@ -13,7 +13,10 @@ use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\ForceRemoveProject;
 use App\Unitman\Business\Command\Project\GetActiveProjectList;
 use App\Unitman\Business\Command\Project\GetProjectList;
+use App\Unitman\Business\Command\Project\GetProjectRunnerJobs;
+use App\Unitman\Business\Command\Project\GetProjectRunnerJobSteps;
 use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
+use App\Unitman\Business\Command\Project\NachatOchistkuProekta;
 use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPeremenihProekta;
@@ -27,13 +30,15 @@ use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\UseCase\Project\AddProjectUseCase;
 use App\Unitman\Business\UseCase\Project\AddUserToProjectUseCase;
-use App\Unitman\Business\UseCase\Project\BuildProjectUseCase;
 use App\Unitman\Business\UseCase\Project\DisableProjectUseCase;
 use App\Unitman\Business\UseCase\Project\DobavitSobitieIzHranilishaUseCase;
 use App\Unitman\Business\UseCase\Project\EnableProjectUseCase;
 use App\Unitman\Business\UseCase\Project\ForceRemoveProjectUseCase;
 use App\Unitman\Business\UseCase\Project\GetActiveProjectListQuery;
 use App\Unitman\Business\UseCase\Project\GetProjectListQuery;
+use App\Unitman\Business\UseCase\Project\GetProjectRunnerJobsQuery;
+use App\Unitman\Business\UseCase\Project\GetProjectRunnerJobStepsQuery;
+use App\Unitman\Business\UseCase\Project\NachatOshistkuProektaUseCase;
 use App\Unitman\Business\UseCase\Project\ObnovitNastroikiHukaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
@@ -44,7 +49,6 @@ use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
 use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
 use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiProekta;
 use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
-use App\Unitman\Business\UseCase\Project\RemoveProjectUseCase;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
@@ -206,5 +210,38 @@ final class ProjectController extends AbstractController
     public function statistikaPoProektam(StatistikaPoProektuRepository $statistikaPoProektuRepository): Response
     {
         return $this->json(\App\Utils\Model\Reponse\Response::success($statistikaPoProektuRepository->getList()));
+    }
+
+    #[Route('/poluchitVipolnenieZadachiRunnera', methods: ['POST'])]
+    public function poluchitVipolnenieZadachiRunnera(GetProjectRunnerJobs $command, GetProjectRunnerJobsQuery $query): Response
+    {
+        try {
+            $data = $query->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/poluchitShagiZadachiRunnera', methods: ['POST'])]
+    public function poluchitShagiZadachiRunnera(GetProjectRunnerJobSteps $command, GetProjectRunnerJobStepsQuery $query): Response
+    {
+        try {
+            $data = $query->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/ochistit', methods: ['POST'])]
+    public function ochistit(NachatOchistkuProekta $command, NachatOshistkuProektaUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
     }
 }

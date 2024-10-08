@@ -26,7 +26,9 @@ final class ObnovitKodUnitaPosleZapuskaUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);
-        $jobId = $this->umeetObnovlyatKodUnitaPosleZapuska->obnovitKodUnita($unit->getId());
+        $zapushen = $unit->esliZapushen();
+        $podgotovlen = $unit->esliPodgotovlen();
+        $jobId = $this->umeetObnovlyatKodUnitaPosleZapuska->obnovitKodUnita($unit->getId(), $zapushen, $podgotovlen);
         $unit->nachatObnovlenieUnitaPosleZapuska($jobId);
         $this->unitRepository->save($unit);
     }
@@ -34,7 +36,9 @@ final class ObnovitKodUnitaPosleZapuskaUseCase
     function handleSystem(ObnovitKodUnitaPosleZapuska $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
-        $jobId = $this->umeetObnovlyatKodUnitaPosleZapuska->obnovitKodUnita($unit->getId());
+        $zapushen = $unit->esliZapushen();
+        $podgotovlen = $unit->esliPodgotovlen();
+        $jobId = $this->umeetObnovlyatKodUnitaPosleZapuska->obnovitKodUnita($unit->getId(), $zapushen, $podgotovlen);
         $unit->nachatObnovlenieUnitaPosleZapuska($jobId);
         $this->unitRepository->save($unit);
     }

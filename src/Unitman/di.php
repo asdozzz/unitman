@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace App\Unitman;
 
-use App\Account\Business\Model\Account;
 use App\App\Infra\EventStore\AuthorMessageDecorator;
-use App\Unitman\Business\Model\Project;
-use App\Unitman\Business\Model\Repo;
-use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
@@ -19,7 +15,6 @@ use App\Unitman\Infra\Jobs\OcheredDlyProzesaSozdaniyaUnitaSystemoiJobHandler;
 use App\Unitman\Infra\Jobs\OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler;
 use App\Unitman\Infra\Jobs\SobitieIzHranilishaJobsHandler;
 use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
-use App\Unitman\Infra\Projection\StatistikaPoProektuProjection;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
@@ -39,7 +34,6 @@ use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineMessageRepository;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use function _HumbugBoxd1ea71d4b9d8\Symfony\Component\DependencyInjection\Loader\Configurator\env;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -122,6 +116,11 @@ return function (ContainerConfigurator $configuration) {
         ]);
 
     $services->set(WebsocketUnitEventJob::class)
+        ->args([
+            service('unitman.projections_manager'),
+        ]);
+
+    $services->set(Infra\BackgroundJob\ProjectRunnerJobs\ProjectRunnerJobs::class)
         ->args([
             service('unitman.projections_manager'),
         ]);

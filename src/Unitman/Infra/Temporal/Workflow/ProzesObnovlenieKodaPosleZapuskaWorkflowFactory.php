@@ -14,7 +14,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflowFactory implements UmeetObno
     {
     }
 
-    function obnovitKodUnita(string $unitId): JobId
+    function obnovitKodUnita(string $unitId, bool $zapushen = true, bool $podgotovlen = true): JobId
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             ProzesObnovlenieKodaPosleZapuskaWorkflow::class,

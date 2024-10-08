@@ -144,6 +144,11 @@ final class Unit implements AggregateRoot
         return !empty($this->zapusk) && $this->zapusk->isSuccess();
     }
 
+    function esliSobran(): bool
+    {
+        return !empty($this->sborka) && $this->sborka->isSuccess();
+    }
+
     function esliPoluchenResultatSborki(): bool
     {
         return !empty($this->sborka) && $this->sborka->isFinish();
@@ -661,8 +666,8 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.wait_runner');
         }
 
-        if (!$this->esliZapushen()) {
-            throw new DomainException('unit.unit_ne_zapushen');
+        if (!$this->esliSobran()) {
+            throw new DomainException('unit.unit_ne_sobran');
         }
 
         $this->recordThat(new ObnovlenieKodaUnitaPosleZapuskaNachalos($this->getId(), (string) $jobId));

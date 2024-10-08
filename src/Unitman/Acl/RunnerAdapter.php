@@ -5,6 +5,7 @@ use App\Runner\Api\RunnerApi;
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
+use App\Runner\Business\Command\NachatOchistkuProekta;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Command\NachatSborkuUnita;
@@ -17,10 +18,13 @@ use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
+use App\Unitman\Business\Model\Runner\ResultatOshistkiProekta;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatSborkiProekta;
 use App\Unitman\Business\Model\Runner\ResultatSborkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatUdaleniyaProekta;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
 use App\Unitman\Business\Model\Unit;
@@ -50,20 +54,27 @@ final class RunnerAdapter implements RunnerService
         return array_map(fn(array $step) => new Unit\Runner\RunnerJobStep($step['Command'], $step['Response'], $step['Success'], $step['Unixtime']), $Steps);
     }
 
-    public function buildProject(Project $project): Project\ProjectDataAboutBuilding
+    public function nachatSborkuProekta(Project $project): JobId
     {
         $projectUrl = $this->getProjectUrl($project);
         $command = new InitProjectCommand($project->getId(), $project->getMainBranchName(), $projectUrl);
-        $initProjectResult = $this->runnerApi->initProject($command);
-        return new Project\ProjectDataAboutBuilding('stub', true, $initProjectResult->Success, $this->convertRunnerSteps($initProjectResult->Steps));
+        $workflowId = $this->runnerApi->initProject($command);
+        return new JobId($workflowId);
     }
 
-    public function removeProject(Project $project): Project\ProjectDataAboutRemoving
+    public function nachatUdalenieProekta(Project $project): JobId
     {
         $command = new RemoveProjectCommand($project->getId());
-        $removeResult = $this->runnerApi->removeProject($command);
+        $workflowId = $this->runnerApi->removeProject($command);
+        return new JobId($workflowId);
+    }
 
-        return new Project\ProjectDataAboutRemoving('stub', true, $removeResult->Success, $this->convertRunnerSteps($removeResult->Steps));
+    public function nachatOchistkuProekta(Project $project): JobId
+    {
+        $projectUrl = $this->getProjectUrl($project);
+        $command = new NachatOchistkuProekta($project->getId(), $project->getName(), $projectUrl);
+        $workflowId = $this->runnerApi->ochistitProekt($command);
+        return new JobId($workflowId);
     }
 
     public function nachatSborkuUnita(Unit $unit): JobId
@@ -254,5 +265,38 @@ final class RunnerAdapter implements RunnerService
         $command = new NachatIzmenenieVetkiUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $newBranch);
         $workflowId = $this->runnerApi->nachatIzmenenieVetkiUnita($command);
         return new JobId($workflowId);
+    }
+
+    public function poluchitResultatSborkiProekta(Project $project): ResultatSborkiProekta
+    {
+        $result = $this->runnerApi->poluchitResultatSborkiProekta($project->poluchitWorkflowIdDlySborki());
+
+        if (empty($result)) {
+            throw new \Exception('runner.sborka_proekta_eshe_ne_zakonchena');
+        }
+
+        return new ResultatSborkiProekta($result->Success, $this->convertRunnerSteps($result->Steps));
+    }
+
+    public function poluchitResultatUdaleniyaProekta(Project $project): ResultatUdaleniyaProekta
+    {
+        $result = $this->runnerApi->poluchitResultatUdaleniyaProekta($project->poluchitWorkflowIdDlyUdaleniya());
+
+        if (empty($result)) {
+            throw new \Exception('runner.udalenie_proekta_eshe_ne_zakonchena');
+        }
+
+        return new ResultatUdaleniyaProekta($result->Success, $this->convertRunnerSteps($result->Steps));
+    }
+
+    public function poluchitResultatOchistkiProekta(Project $project): ResultatOshistkiProekta
+    {
+        $result = $this->runnerApi->poluchitResultatOchistkiProekta($project->poluchitWorkflowIdDlyOchistki());
+
+        if (empty($result)) {
+            throw new \Exception('runner.ochistka_proekta_eshe_ne_zakonchena');
+        }
+
+        return new ResultatOshistkiProekta((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 }

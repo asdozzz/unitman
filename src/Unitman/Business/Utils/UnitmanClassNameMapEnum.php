@@ -32,6 +32,10 @@ enum UnitmanClassNameMapEnum: string
     case ZnacheniePeremnoiProektaIzmeneno = 'ZnacheniePeremnoiProektaIzmeneno';
     case NastroikiHukaProektaUstanovleni = 'NastroikiHukaProektaUstanovleni';
 
+    case OchistkaProektaNachalas = 'OchistkaProektaNachalas';
+    case OshibkaOchistkiProektaUstanovlena = 'OshibkaOchistkiProektaUstanovlena';
+    case UspehOchistkiProektaUstanovlen = 'UspehOchistkiProektaUstanovlen';
+
     case Unit = 'Unit';
     case UnitId = 'UnitId';
     case ObnovlenieUnitaNachalos = 'ObnovlenieUnitaNachalos';

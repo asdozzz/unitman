@@ -79,10 +79,6 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $project = $this->getById($projectId);
         $project->state = $state;
 
-        if (!empty($steps)) {
-            $project->buildInfo = $steps;
-        }
-
         $this->update($project);
     }
 
@@ -97,7 +93,6 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     {
         $project = $this->getById($fact->id);
         $project->state = ProjectList\ProjectListStateType::REMOVE_ERROR;
-        $project->removeInfo = $fact->steps;
         $project->isActive = $fact->isActive;
 
         $this->update($project);

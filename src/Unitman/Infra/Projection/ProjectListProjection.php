@@ -3,6 +3,8 @@
 namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Project\Event\NastroikiHukaProektaUstanovleni;
+use App\Unitman\Business\Model\Project\Event\OchistkaProektaNachalas;
+use App\Unitman\Business\Model\Project\Event\OshibkaOchistkiProektaUstanovlena;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
@@ -18,6 +20,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
+use App\Unitman\Business\Model\Project\Event\UspehOchistkiProektaUstanovlen;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\ReadModel\ProjectList;
@@ -71,8 +74,6 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             false,
             ProjectList\ProjectListStateType::NEW,
             new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie),
-            [],
-            [],
             $fact->proxyHost
         );
         $this->projectListRepository->insert($projectList);
@@ -191,6 +192,27 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             }
 
         }
+        $this->projectListRepository->update($project);
+    }
+
+    function handleOchistkaProektaNachalas(OchistkaProektaNachalas $fact): void
+    {
+        $project = $this->projectListRepository->getById($fact->id);
+        $project->waitResultRunner = true;
+        $this->projectListRepository->update($project);
+    }
+
+    function handleOshibkaOchistkiProektaUstanovlena(OshibkaOchistkiProektaUstanovlena $fact): void
+    {
+        $project = $this->projectListRepository->getById($fact->id);
+        $project->waitResultRunner = false;
+        $this->projectListRepository->update($project);
+    }
+
+    function handleUspehOchistkiProektaUstanovlen(UspehOchistkiProektaUstanovlen $fact): void
+    {
+        $project = $this->projectListRepository->getById($fact->id);
+        $project->waitResultRunner = false;
         $this->projectListRepository->update($project);
     }
 

@@ -6,10 +6,13 @@ use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
+use App\Unitman\Business\Model\Runner\ResultatOshistkiProekta;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatSborkiProekta;
 use App\Unitman\Business\Model\Runner\ResultatSborkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
+use App\Unitman\Business\Model\Runner\ResultatUdaleniyaProekta;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
 use App\Unitman\Business\Model\Unit;
@@ -20,7 +23,15 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 final class MemoryRunnerService implements RunnerService
 {
     const BUILD_PROJECT = 'BUILD_PROJECT';
+
+    const RESULTAT_SBORKI_PROEKTA = 'RESULTAT_SBORKI_PROEKTA';
     const REMOVE_PROJECT = 'REMOVE_PROJECT';
+
+    const RESULTAT_UDALENIYA_PROEKTA = 'RESULTAT_UDALENIYA_PROEKTA';
+
+    const OCHISTKA_PROEKTA = 'OCHISTKA_PROEKTA';
+    const RESULTAT_OCHISTKI_PROEKTA = 'RESULTAT_OCHISTKI_PROEKTA';
+
     const SBORKA_UNITA = 'SBORKA_UNITA';
     const RESULTAT_SBORKI = 'RESULTAT_SBORKI';
     const PODGOTOVKA_UNITA = 'PODGOTOVKA_UNITA';
@@ -56,14 +67,34 @@ final class MemoryRunnerService implements RunnerService
 
         return array_shift($this->responses[$type]);
     }
-    public function buildProject(Project $project): Project\ProjectDataAboutBuilding
+    public function nachatSborkuProekta(Project $project): JobId
     {
         return $this->getNextResponse(self::BUILD_PROJECT);
     }
 
-    public function removeProject(Project $project): Project\ProjectDataAboutRemoving
+    public function poluchitResultatSborkiProekta(Project $project): ResultatSborkiProekta
+    {
+        return $this->getNextResponse(self::RESULTAT_SBORKI_PROEKTA);
+    }
+
+    public function nachatUdalenieProekta(Project $project): JobId
     {
         return $this->getNextResponse(self::REMOVE_PROJECT);
+    }
+
+    public function poluchitResultatUdaleniyaProekta(Project $project): ResultatUdaleniyaProekta
+    {
+        return $this->getNextResponse(self::RESULTAT_UDALENIYA_PROEKTA);
+    }
+
+    public function nachatOchistkuProekta(Project $project): JobId
+    {
+        return $this->getNextResponse(self::OCHISTKA_PROEKTA);
+    }
+
+    public function poluchitResultatOchistkiProekta(Project $project): ResultatOshistkiProekta
+    {
+        return $this->getNextResponse(self::RESULTAT_OCHISTKI_PROEKTA);
     }
 
     public function nachatSborkuUnita(Unit $unit): JobId
@@ -144,4 +175,5 @@ final class MemoryRunnerService implements RunnerService
     {
         return $this->getNextResponse(self::RESULTAT_IZMENENIYA_VETKI);
     }
+
 }

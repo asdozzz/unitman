@@ -83,6 +83,9 @@ final class ClassNameMapFactory
             Project\Event\PeremenayaUdalenaIzProekta::class => UnitmanClassNameMapEnum::PeremenayaUdalenaIzProekta,
             Project\Event\ZnacheniePeremnoiProektaIzmeneno::class => UnitmanClassNameMapEnum::ZnacheniePeremnoiProektaIzmeneno,
             Project\Event\NastroikiHukaProektaUstanovleni::class => UnitmanClassNameMapEnum::NastroikiHukaProektaUstanovleni,
+            Project\Event\OchistkaProektaNachalas::class => UnitmanClassNameMapEnum::OchistkaProektaNachalas,
+            Project\Event\OshibkaOchistkiProektaUstanovlena::class => UnitmanClassNameMapEnum::OshibkaOchistkiProektaUstanovlena,
+            Project\Event\UspehOchistkiProektaUstanovlen::class => UnitmanClassNameMapEnum::UspehOchistkiProektaUstanovlen,
 
             Unit::class => UnitmanClassNameMapEnum::Unit,
             UnitId::class => UnitmanClassNameMapEnum::UnitId,

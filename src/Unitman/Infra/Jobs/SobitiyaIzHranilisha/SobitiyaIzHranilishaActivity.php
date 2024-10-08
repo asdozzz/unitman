@@ -99,10 +99,8 @@ final class SobitiyaIzHranilishaActivity
                 }
 
                 if ($unit->esliNugnoObnovitKodUnita()) {
-                    if ($unit->esliZapushen()) {
+                    if ($unit->esliSobran()) {
                         $this->obnovitKodUnitaPosleZapuskaUseCase->handleSystem(new ObnovitKodUnitaPosleZapuska($id));
-                    } else if ($unit->esliMognoObnovit()) {
-                        $this->obnovitKodUnitaUseCase->handleSystem(new ObnovitKodUnita($id));
                     } else {
                         $errs[] = 'invalid status';
                     }

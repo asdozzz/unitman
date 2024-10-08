@@ -31,13 +31,9 @@ final class PostavitVOcheredNaSborkuUseCase
             throw new \DomainException($errs[0]);
         }
 
-        $result = $this->runnerService->buildProject($project);
-        $project->postavitVOcheredNaSborku($result->jobId);
-        if ($result->success) {
-            $project->successfullyBuild($result->steps);
-        } else {
-            $project->errorWhenBuild($result->steps);
-        }
+        $jobId = $this->runnerService->nachatSborkuProekta($project);
+        $project->postavitVOcheredNaSborku((string)$jobId);
+
         $this->projectRepository->save($project);
     }
 }

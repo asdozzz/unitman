@@ -11,6 +11,8 @@ use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\Model\Project\Event\NastroikiHukaProektaUstanovleni;
+use App\Unitman\Business\Model\Project\Event\OchistkaProektaNachalas;
+use App\Unitman\Business\Model\Project\Event\OshibkaOchistkiProektaUstanovlena;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
@@ -26,6 +28,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
+use App\Unitman\Business\Model\Project\Event\UspehOchistkiProektaUstanovlen;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\NastroikiHuka;
 use App\Unitman\Business\Model\Project\ProjectCode;
@@ -38,6 +41,8 @@ use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Project\ProjectVariable;
 use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\Model\Project\ProxyHost;
+use App\Unitman\Business\Model\Runner\JobId;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
 use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
@@ -73,7 +78,7 @@ final class Project implements AggregateRoot
     private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
 
-
+    private ?RunnerJob $ochistka = null;
     /**
      * @var ProjectVariable[]
      * */
@@ -108,6 +113,75 @@ final class Project implements AggregateRoot
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
         $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie);
+    }
+
+    public function proverkaProektaDlyNachlaOchistki(): void
+    {
+        if ($this->dataAboutRemoving) {
+            throw new DomainException('project.removing');
+        }
+
+        if (!empty($this->ochistka) && !$this->ochistka->isFinish()) {
+            throw new DomainException('project.ochistka_uge_nachalas');
+        }
+
+        if ($this->dataAboutBuilding && !$this->dataAboutBuilding->isFinish) {
+            throw new DomainException('project.eshe_ne_sobran');
+        }
+    }
+
+    public function nachatOchistku(JobId $jobId): void
+    {
+        $this->proverkaProektaDlyNachlaOchistki();
+        $this->recordThat(new OchistkaProektaNachalas($this->getId(), (string) $jobId));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyOchistkaProektaNachalas(OchistkaProektaNachalas $fact): void
+    {
+        $this->ochistka = RunnerJob::start($fact->jobId);
+    }
+
+    public function ustanovitOshibkuOchistku(array $steps): void
+    {
+        if (empty($this->ochistka)) {
+            throw new DomainException('project.ochistka_ne_nachalas');
+        }
+
+        if ($this->ochistka->isFinish()) {
+            throw new DomainException('project.resultat_ochistki_uge_ustanovlen');
+        }
+
+        $this->recordThat(new OshibkaOchistkiProektaUstanovlena($this->getId(), $steps));
+    }
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    public function applyOshibkaOchistkiProektaUstanovlena(OshibkaOchistkiProektaUstanovlena $fact): void
+    {
+        $this->ochistka = $this->ochistka->ustanovitOshibku($fact->steps);
+    }
+
+    public function ustanovitUspehOchistku(array $steps): void
+    {
+        if (empty($this->ochistka)) {
+            throw new DomainException('project.ochistka_ne_nachalas');
+        }
+
+        if ($this->ochistka->isFinish()) {
+            throw new DomainException('project.resultat_ochistki_uge_ustanovlen');
+        }
+
+        $this->recordThat(new UspehOchistkiProektaUstanovlen($this->getId(), $steps));
+    }
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    public function applyUspehOchistkiProektaUstanovlen(UspehOchistkiProektaUstanovlen $fact): void
+    {
+        $this->ochistka = $this->ochistka->ustanovitUspeh($fact->steps);
     }
 
     public function obnovitNastrokiHuka(ObnovitNastroikiHuka $command): void
@@ -553,5 +627,29 @@ final class Project implements AggregateRoot
     public function poluchitNastroikiHuka(): NastroikiHuka
     {
         return $this->nastroikiHuka;
+    }
+
+    public function poluchitWorkflowIdDlySborki(): string
+    {
+        if (empty($this->dataAboutBuilding)) {
+            throw new DomainException('unit.prozes_sborki_ne_naiden');
+        }
+        return $this->dataAboutBuilding->jobId;
+    }
+
+    public function poluchitWorkflowIdDlyUdaleniya(): string
+    {
+        if (empty($this->dataAboutRemoving)) {
+            throw new DomainException('unit.prozes_udaleniya_ne_naiden');
+        }
+        return $this->dataAboutRemoving->jobId;
+    }
+
+    public function poluchitWorkflowIdDlyOchistki(): string
+    {
+        if (empty($this->ochistka)) {
+            throw new DomainException('unit.prozes_ochistki_ne_naiden');
+        }
+        return $this->ochistka->getJobId();
     }
 }

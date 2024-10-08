@@ -60,7 +60,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
      * @psalm-suppress MissingReturnType
      * */
     #[WorkflowMethod]
-    public function execute(string $unitId)
+    public function execute(string $unitId, bool $zapushen = true, bool $podgotovlen = true)
     {
         $activity  = Workflow::newActivityStub(
             ProzesObnovlenieKodaPosleZapuskaActivity::class,
@@ -70,20 +70,24 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
         );
 
         try {
-            yield $activity->ostanovit($unitId);
+            if ($zapushen) {
+                yield $activity->ostanovit($unitId);
 
-            yield Workflow::awaitWithTimeout(120, fn() => $this->esliOstanovlen || $this->esliOshibka);
+                yield Workflow::awaitWithTimeout(120, fn() => $this->esliOstanovlen || $this->esliOshibka);
 
-            if (!$this->esliOstanovlen || $this->esliOshibka) {
-                throw new \Exception('exit');
+                if (!$this->esliOstanovlen || $this->esliOshibka) {
+                    throw new \Exception('exit');
+                }
             }
 
-            yield $activity->sbrositPodgotovku($unitId);
+            if ($podgotovlen) {
+                yield $activity->sbrositPodgotovku($unitId);
 
-            yield Workflow::awaitWithTimeout(120, fn() => $this->esliPodgotovkaSbroshena || $this->esliOshibka);
+                yield Workflow::awaitWithTimeout(120, fn() => $this->esliPodgotovkaSbroshena || $this->esliOshibka);
 
-            if (!$this->esliPodgotovkaSbroshena || $this->esliOshibka) {
-                throw new \Exception('exit');
+                if (!$this->esliPodgotovkaSbroshena || $this->esliOshibka) {
+                    throw new \Exception('exit');
+                }
             }
 
             yield $activity->obnovitKod($unitId);

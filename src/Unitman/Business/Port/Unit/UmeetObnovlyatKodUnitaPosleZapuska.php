@@ -6,5 +6,5 @@ use App\Unitman\Business\Model\Runner\JobId;
 
 interface UmeetObnovlyatKodUnitaPosleZapuska
 {
-    function obnovitKodUnita(string $unitId): JobId;
+    function obnovitKodUnita(string $unitId, bool $zapushen = true, bool $podgotovlen = true): JobId;
 }

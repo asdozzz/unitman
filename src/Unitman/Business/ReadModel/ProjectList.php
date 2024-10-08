@@ -10,16 +10,6 @@ use App\Unitman\Business\ReadModel\ProjectList\ProjectListVariable;
 final class ProjectList
 {
     /**
-     * @var RunnerJobStep[]
-     * */
-    public array $buildInfo;
-
-    /**
-     * @var RunnerJobStep[]
-     * */
-    public array $removeInfo;
-
-    /**
      * @param ProjectUsersList[] $users
      * @param ProjectListVariable[] $variables
      * */
@@ -32,15 +22,12 @@ final class ProjectList
         public bool $isActive,
         public ProjectListStateType $state,
         public NastroikiHukaProekta $nastroikiHukaProekta,
-        array $buildInfo = [],
-        array $removeInfo = [],
         public ?string $proxyHost = null,
         public array $users = [],
         public array $variables = [],
+        public bool $waitResultRunner = false
     )
     {
-        $this->buildInfo = $buildInfo;
-        $this->removeInfo = $removeInfo;
     }
 
 }

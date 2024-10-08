@@ -5,6 +5,7 @@ namespace App\Runner\Api;
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
+use App\Runner\Business\Command\NachatOchistkuProekta;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Command\NachatSborkuUnita;
@@ -14,6 +15,7 @@ use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
+use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
@@ -26,6 +28,7 @@ use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatIzmenenieVetkiUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
+use App\Runner\Infra\Workflow\NachatOchistkuProektaWorkflow;
 use App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatSborkuUnitaWorkflow;
@@ -57,7 +60,7 @@ final class RunnerApi
         return $runnerState->getTaskQueue();
     }
 
-    public function initProject(InitProjectCommand $command): InitProjectResult
+    public function initProject(InitProjectCommand $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             InitProjectWorkflow::class,
@@ -65,12 +68,18 @@ final class RunnerApi
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute())
         );
-        $result = $workflow->initProject($command);
 
-        return $result;
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
     }
 
-    public function removeProject(RemoveProjectCommand $command): RemoveProjectResult
+    public function poluchitResultatSborkiProekta(string $workflowId): ?InitProjectResult
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, InitProjectResult::class);
+    }
+
+    public function removeProject(RemoveProjectCommand $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             RemoveProjectWorkflow::class,
@@ -78,9 +87,32 @@ final class RunnerApi
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::seconds(10))
         );
-        $result = $workflow->removeProject($command);
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
 
-        return $result;
+    public function poluchitResultatUdaleniyaProekta(string $workflowId): ?RemoveProjectResult
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, RemoveProjectResult::class);
+    }
+
+    public function ochistitProekt(NachatOchistkuProekta $command): string
+    {
+        $workflow = $this->workflowClient->newWorkflowStub(
+            NachatOchistkuProektaWorkflow::class,
+            WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(15))
+        );
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
+
+    public function poluchitResultatOchistkiProekta(string $workflowId): ?ResultatOchistkiProekta
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, ResultatOchistkiProekta::class);
     }
 
     public function nachatSborkuUnita(NachatSborkuUnita $command): string
