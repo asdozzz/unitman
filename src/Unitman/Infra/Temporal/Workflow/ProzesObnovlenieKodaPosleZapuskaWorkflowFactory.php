@@ -23,7 +23,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflowFactory implements UmeetObno
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $unitId);
+        $run = $this->workflowClient->start($workflow, $unitId, $zapushen, $podgotovlen);
         $jobId = $run->getExecution()->getID();
         return new JobId($jobId);
     }
