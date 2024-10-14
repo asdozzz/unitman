@@ -45,15 +45,15 @@ services:
       TZ: "Europe/Moscow"
 
   grafana:
-    image: grafana/grafana
+    build:
+      context: ./.docker/grafana/
     user: root
     depends_on:
       - prometheus
     ports:
       - 3000:3000
-    volumes:
-      - ./var/volume/grafana:/var/lib/grafana
-      - ./var/volume/grafana/provisioning/:/etc/grafana/provisioning/
+    #volumes:
+    #  - ./var/volume/grafana:/var/lib/grafana
     container_name: grafana
     hostname: grafana
     restart: unless-stopped
