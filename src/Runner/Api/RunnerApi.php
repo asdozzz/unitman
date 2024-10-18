@@ -45,7 +45,11 @@ use Temporal\Exception\WorkflowExecutionFailedException;
 
 final class RunnerApi
 {
-    public function __construct(private WorkflowClient $workflowClient, private RunnerRepository $runnerRepository)
+    public function __construct(
+        private WorkflowClient $workflowClient,
+        private RunnerRepository $runnerRepository,
+        private float $minFreeMemoryPercent
+    )
     {
     }
 
@@ -213,6 +217,12 @@ final class RunnerApi
 
     public function nachatZapuskUnita(NachatZapuskUnita $command): string
     {
+        $percentFree = $this->runnerRepository->getDefaultRunnerState()->getMemoryInfo()->getFreePercent();
+
+        if ($percentFree < $this->minFreeMemoryPercent) {
+            throw new \DomainException('runner.memory_free_is_to_small');
+        }
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatZapuskUnitaWorkflow::class,
             WorkflowOptions::new()

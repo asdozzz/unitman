@@ -17,8 +17,7 @@ final class ObnovitKodUnitaUseCase
         private ProjectRepository $projectRepository,
         private RunnerService $runnerService,
         private UnitmanSecurityService $securityService,
-        private ClockInterface         $clock,
-        private UmeetObnovlyatKodUnitaPosleZapuska $umeetObnovlyatKodUnitaPosleZapuska
+        private ClockInterface         $clock
     )
     {
     }
@@ -29,17 +28,9 @@ final class ObnovitKodUnitaUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);
-        $zapushen = $unit->esliZapushen();
-        $podgotovlen = $unit->esliPodgotovlen();
-        if ($zapushen || $podgotovlen) {
-            $jobId = $this->umeetObnovlyatKodUnitaPosleZapuska->obnovitKodUnita($unit->getId(), $zapushen, $podgotovlen);
-            $unit->nachatObnovlenieUnitaPosleZapuska($jobId);
-        } else {
-            $jobId = $this->runnerService->nachatObnovlenieUnita($unit);
-            $unixtime = $this->clock->now()->getTimestamp();
-            $unit->nachatObnovlenieUnita($jobId, $unixtime);
-        }
-
+        $jobId = $this->runnerService->nachatObnovlenieUnita($unit);
+        $unixtime = $this->clock->now()->getTimestamp();
+        $unit->nachatObnovlenieUnita($jobId, $unixtime);
         $this->unitRepository->save($unit);
     }
 

@@ -4,6 +4,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
+use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Command\Unit\SbrositPodgotovkuUnita;
@@ -33,9 +34,11 @@ use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
+use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\IzmenitVetkuUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\ObnovitStatistikuPoKonteineruUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
 use App\Unitman\Business\UseCase\Unit\SbrositPodgotovkuUnitaUseCase;
@@ -216,6 +219,23 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
+
+        $useCase = self::$container->get(ObnovitStatistikuPoKonteineruUnitaUseCase::class);
+        $useCase->handle(new ObnovitStatistikuPoKontaineruUnita(
+            id: $unitId,
+            cpuPercent: "0.32%",
+            memoryPercent: "0.07%",
+            memoryUsage: "355.8MiB / 1GiB",
+            netIO: "16.9kB / 543kB"
+        ));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->statistikaKonteinera, new ProjectListContainerStats(
+            cpuPercent: "0.32%",
+            memoryPercent: "0.07%",
+            memoryUsage: "355.8MiB / 1GiB",
+            netIO: "16.9kB / 543kB"
+        ));
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [

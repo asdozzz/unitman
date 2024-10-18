@@ -24,6 +24,7 @@ final class SpisokUnitovReadModel
         public readonly array $peremenie = [],
         public readonly bool $unitSozdanSystemoi = false,
         public readonly bool $jdemAvtosborki = false,
+        public readonly ?ProjectListContainerStats $statistikaKonteinera = null
     )
     {
     }
@@ -49,6 +50,7 @@ final class SpisokUnitovReadModel
         $peremenie = !empty($props['peremenie'])?$props['peremenie']:$this->peremenie;
         $unitSozdanSystemoi = isset($props['unitSozdanSystemoi'])?$props['unitSozdanSystemoi']:$this->unitSozdanSystemoi;
         $jdemAvtosborki = isset($props['jdemAvtosborki'])?$props['jdemAvtosborki']:$this->jdemAvtosborki;
+        $statistikaKonteinera = isset($props['statistikaKonteinera'])?$props['statistikaKonteinera']:$this->statistikaKonteinera;
 
         return new static(
             $id,
@@ -69,7 +71,8 @@ final class SpisokUnitovReadModel
             $unixtimePoslednegoObnovleniyaVHranilishe,
             $peremenie,
             $unitSozdanSystemoi,
-            $jdemAvtosborki
+            $jdemAvtosborki,
+            statistikaKonteinera: $statistikaKonteinera
         );
     }
 }

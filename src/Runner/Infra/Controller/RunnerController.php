@@ -16,4 +16,11 @@ final class RunnerController extends AbstractController
         $runnerState = $runnerStateRepository->getDefaultRunnerState();
         return new JsonResponse(['active' => $runnerState->isActive()]);
     }
+
+    #[Route('/test', methods: ['GET'])]
+    function test(SqlRunnerStateRepository $runnerStateRepository): JsonResponse
+    {
+        $runners = $runnerStateRepository->getDefaultRunnerState();
+        return new JsonResponse($runners);
+    }
 }

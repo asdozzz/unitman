@@ -7,6 +7,8 @@ final class WebsocketUnitEventReadModel
     const SOZDAN = 'SOZDAN';
     const UDALEN = 'UDALEN';
     const OBNOVLEN = 'OBNOVLEN';
+
+    const OBNOVLENA_STATA = 'OBNOVLENA_STATA';
     public function __construct(
         public readonly string $id,
         public readonly string $eventType,

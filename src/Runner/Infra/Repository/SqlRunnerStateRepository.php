@@ -5,6 +5,7 @@ namespace App\Runner\Infra\Repository;
 use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\Port\RunnerRepository;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 final class SqlRunnerStateRepository implements RunnerRepository

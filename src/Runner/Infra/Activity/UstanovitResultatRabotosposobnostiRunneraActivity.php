@@ -3,6 +3,7 @@
 namespace App\Runner\Infra\Activity;
 
 use App\Runner\Business\Command\UstanovitResultatProverkiRabotosposobnosti;
+use App\Runner\Business\Model\GolangRunner\Runner\RunnerHealthCheckResult;
 use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\UseCase\UstanovitResultatProverkiRabotosposobnostiRunneraUseCase;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
@@ -25,10 +26,17 @@ final class UstanovitResultatRabotosposobnostiRunneraActivity
         return $this->sqlRunnerStateRepository->getAll();
     }
 
-    #[ActivityMethod(name: "UstanovitResultat")]
-    function updateState(string $runnerId, bool $active): bool
+    #[ActivityMethod(name: "setErrorState")]
+    function setErrorState(string $runnerId): bool
     {
-        $this->useCase->handle(new UstanovitResultatProverkiRabotosposobnosti($runnerId, $active));
+        $this->useCase->handle(new UstanovitResultatProverkiRabotosposobnosti($runnerId, false));
+        return true;
+    }
+
+    #[ActivityMethod(name: "setSuccessState")]
+    function setSuccessState(string $runnerId, RunnerHealthCheckResult $result): bool
+    {
+        $this->useCase->handle(new UstanovitResultatProverkiRabotosposobnosti($runnerId, true, $result->DockerStats, $result->MemInfo));
         return true;
     }
 }
