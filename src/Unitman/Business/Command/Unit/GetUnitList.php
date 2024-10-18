@@ -9,7 +9,7 @@ final class GetUnitList implements JsonBodySerializableInterface
 {
     public function __construct(
         public readonly GetUnitListFilter $filter = new GetUnitListFilter(),
-        public readonly int $limit = 10,
+        public readonly int $limit = 100,
         public readonly int $offset = 0
     )
     {
