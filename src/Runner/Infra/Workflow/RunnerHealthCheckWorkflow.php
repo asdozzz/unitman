@@ -55,6 +55,7 @@ final class RunnerHealthCheckWorkflow
                 );
                 /** @var RunnerHealthCheckResult $result*/
                 yield $this->activity->setSuccessState($runner['id'], $result);
+                yield $this->activity->obnovitStatistikuPoUnitam($runner['id']);
                 $results[] = $result;
             } catch (\Throwable $e) {
                 yield $this->activity->setErrorState($runner['id']);

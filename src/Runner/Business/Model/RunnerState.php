@@ -8,7 +8,7 @@ use App\Runner\Business\Model\RunnerState\MemoryInfo;
 final class RunnerState implements \JsonSerializable
 {
     /**
-     * @param DockerContainerStats[]
+     * @param DockerContainerStats[] $dockerStats
      * */
     public function __construct(
         private string $id,

@@ -27,33 +27,6 @@ final class UstanovitResultatProverkiRabotosposobnostiRunneraUseCase
 
     /**
      * @param UstanovitResultatProverkiRabotosposobnosti $command
-     * @return int[]
-     */
-    private function parseMemInfo(UstanovitResultatProverkiRabotosposobnosti $command): array
-    {
-        $memInfoArr = explode("\n", $command->memInfo);
-
-        $total = 0;
-        $free = 0;
-
-        foreach ($memInfoArr as $memInfoItem) {
-            $item = explode(':', $memInfoItem);
-            if (empty($item) || empty($item[1])) continue;
-            $code = trim($item[0]);
-            $value = trim($item[1]);
-
-            if ($code == 'MemTotal') {
-                $total = (int)$value;
-            }
-            if ($code == 'MemAvailable') {
-                $free = (int)$value;
-            }
-        }
-        return array($total, $free);
-    }
-
-    /**
-     * @param UstanovitResultatProverkiRabotosposobnosti $command
      * @return MemoryInfo
      */
     private function makeMemInfo(UstanovitResultatProverkiRabotosposobnosti $command): MemoryInfo
@@ -61,7 +34,24 @@ final class UstanovitResultatProverkiRabotosposobnostiRunneraUseCase
         if (empty($command->memInfo)) {
             $memInfo = new MemoryInfo(0, 0);
         } else {
-            list($total, $free) = $this->parseMemInfo($command);
+            $memInfoArr = explode("\n", $command->memInfo);
+
+            $total = 0;
+            $free = 0;
+
+            foreach ($memInfoArr as $memInfoItem) {
+                $item = explode(':', $memInfoItem);
+                if (empty($item[1])) continue;
+                $code = trim($item[0]);
+                $value = trim($item[1]);
+
+                if ($code == 'MemTotal') {
+                    $total = (int)$value;
+                }
+                if ($code == 'MemAvailable') {
+                    $free = (int)$value;
+                }
+            }
 
             $memInfo = new MemoryInfo($total, $free);
         }

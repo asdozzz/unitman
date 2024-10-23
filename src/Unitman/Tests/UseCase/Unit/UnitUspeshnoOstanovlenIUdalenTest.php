@@ -65,7 +65,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
     function test()
     {
         $unitId = Uuid::uuid7()->toString();
-        $this->sozdatUnit($unitId);
+        $unitName = 'task-123';
+        $projectName = 'uwin';
+        $this->sozdatUnit($unitId, $unitName, $projectName);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, new JobId('SBORKA_UNITA'));
@@ -222,7 +224,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $useCase = self::$container->get(ObnovitStatistikuPoKonteineruUnitaUseCase::class);
         $useCase->handle(new ObnovitStatistikuPoKontaineruUnita(
-            id: $unitId,
+            containerName: $unitName.'.'.$projectName,
             cpuPercent: "0.32%",
             memoryPercent: "0.07%",
             memoryUsage: "355.8MiB / 1GiB",
