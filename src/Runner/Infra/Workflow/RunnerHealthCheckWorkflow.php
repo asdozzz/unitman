@@ -38,7 +38,7 @@ final class RunnerHealthCheckWorkflow
     public function run(): \Generator
     {
         $runners = yield $this->activity->getAll();
-
+        $results = [];
         foreach ($runners as $runner) {
             try {
                 $result = yield Workflow::executeActivity(
@@ -54,13 +54,15 @@ final class RunnerHealthCheckWorkflow
                         ->withTaskQueue($runner['taskQueue'])
                 );
                 /** @var RunnerHealthCheckResult $result*/
-                yield $this->activity->updateState($runner['id'], $result->Success);
+                yield $this->activity->setSuccessState($runner['id'], $result);
+                yield $this->activity->obnovitStatistikuPoUnitam($runner['id']);
+                $results[] = $result;
             } catch (\Throwable $e) {
-                yield $this->activity->updateState($runner['id'], false);
+                yield $this->activity->setErrorState($runner['id']);
             }
 
         }
 
-        return "<pre>" . print_r($runners, true) . "</pre>";
+        return $results;
     }
 }

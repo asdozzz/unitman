@@ -29,7 +29,7 @@ final class Podgotovlen extends AbstractState
     {
         return [
             //StateUserCommand::nachatUdalenie,
-            StateUserCommand::nachatObnovlenie,
+            StateUserCommand::nachatObnovleniePosleZapuska,
             StateUserCommand::zapolnitPeremenie,
             StateUserCommand::nachatSbrosPodgotovki,
             StateUserCommand::nachatZapusk,

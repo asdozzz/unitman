@@ -25,6 +25,7 @@ use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
+use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
@@ -40,6 +41,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -82,6 +84,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     {
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);
     }
+
 
     function handleUnitSozdan(UnitSozdan $fact): void
     {
@@ -139,6 +142,16 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'jdemAvtosborki' => false
+        ]);
+        $this->repository->update($readModel);
+    }
+
+
+    function handleStatistikaPoKonteineruObnovlena(StatistikaPoKonteineruObnovlena $fact): void
+    {
+        $readModel = $this->repository->getById($fact->id);
+        $readModel = $readModel->copyAndUpdateData([
+            'statistikaKonteinera' => new ProjectListContainerStats($fact->cpuPercent, $fact->memoryPercent, $fact->memoryUsage, $fact->netIO)
         ]);
         $this->repository->update($readModel);
     }

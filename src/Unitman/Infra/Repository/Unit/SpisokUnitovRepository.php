@@ -5,6 +5,7 @@ namespace App\Unitman\Infra\Repository\Unit;
 use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
+use App\Unitman\Business\Port\Unit\CanFindUnitIdByContainerName;
 use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
@@ -12,7 +13,7 @@ use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
 
-final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById
+final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById, CanFindUnitIdByContainerName
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection, private Serializer $serializer)
@@ -169,5 +170,19 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         }
 
         return $result;
+    }
+
+    function findIdByNameAndProjectName(string $containerName): ?string
+    {
+        $segments = explode('.', $containerName);
+        if (count($segments) !== 2) {
+            return null;
+        }
+
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative("SELECT id FROM $table where payload->>'projectName' = :projectName and payload->>'name' = :name",
+            ['name' => $segments[0], 'projectName' => $segments[1]]);
+
+        return $row['id'] ?? null;
     }
 }

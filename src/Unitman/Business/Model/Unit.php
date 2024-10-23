@@ -3,6 +3,7 @@
 namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
+use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UstanovitOshibkuObnovleniyaUnitaPosleZapuska;
 use App\Unitman\Business\Model\Project\ProjectUser;
@@ -32,6 +33,7 @@ use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
+use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
@@ -69,6 +71,7 @@ use App\Unitman\Business\Model\Unit\State\VOcherediNaUdalenie;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaZapusk;
 use App\Unitman\Business\Model\Unit\State\VOcheredNaIzmenenieVetki;
 use App\Unitman\Business\Model\Unit\State\Zapushen;
+use App\Unitman\Business\Model\Unit\StatistikaKonteinera;
 use App\Unitman\Business\Model\Unit\UnitBranch;
 use App\Unitman\Business\Model\Unit\UnitId;
 use App\Unitman\Business\Model\Unit\UnitName;
@@ -128,6 +131,8 @@ final class Unit implements AggregateRoot
     private ?int $unixtimePoslednegoObnovleniyaKodaVHranilishe = null;
 
     private bool $unitSozdanSystemoi = false;
+
+    private ?StatistikaKonteinera $statistikaKonteinera = null;
 
     /**
      * @template-use AggregateRootBehaviour<UnitId>
@@ -219,6 +224,7 @@ final class Unit implements AggregateRoot
     {
         return $this->authorId === $projectUser->userId || $projectUser->userRole === ProjectUserRole::ADMIN || $this->unitSozdanSystemoi;
     }
+
     public static function sozdatUnit(string $id, string $authorId, SozdatUnit $command): self
     {
         if (empty($command->projectId)) {
@@ -620,6 +626,31 @@ final class Unit implements AggregateRoot
     {
         $this->podgotovka = $this->podgotovka->ustanovitUspeh($fact->steps);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    //-----Стата
+
+    public function onbovitStatistikuKonteinera(ObnovitStatistikuPoKontaineruUnita $command): void
+    {
+        $this->recordThat(
+            new StatistikaPoKonteineruObnovlena(
+                id: $this->getId(),
+                cpuPercent: $command->cpuPercent,
+                memoryPercent: $command->memoryPercent,
+                memoryUsage: $command->memoryUsage,
+                netIO: $command->netIO
+            )
+        );
+    }
+
+    private function applyStatistikaPoKonteineruObnovlena(StatistikaPoKonteineruObnovlena $fact): void
+    {
+        $this->statistikaKonteinera = new StatistikaKonteinera(
+            cpuPercent: $fact->cpuPercent,
+            memoryPercent: $fact->memoryPercent,
+            memoryUsage: $fact->memoryUsage,
+            netIO: $fact->netIO
+        );
     }
 
     //---------Обновление

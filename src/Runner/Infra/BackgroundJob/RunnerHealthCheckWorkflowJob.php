@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Runner\Infra\Workflow;
+namespace App\Runner\Infra\BackgroundJob;
 
 use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
+use App\Runner\Infra\Workflow\RunnerHealthCheckWorkflow;
 use PharIo\Version\Exception;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;

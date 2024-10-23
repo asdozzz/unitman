@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
+use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
@@ -77,6 +78,7 @@ final class WebsocketUnitEventProjection  extends AbstractProjection implements 
             SlomaniyUnitUdalen::class => $this->udalenSlomanii($event),
             UnitSozdan::class => $this->sozdan($event),
             UnitSozdanSystemoi::class => $this->sozdan($event),
+            StatistikaPoKonteineruObnovlena::class => $this->obnovlenaStata($event),
             default => $this->obnovlen($event)
         };
     }
@@ -85,6 +87,13 @@ final class WebsocketUnitEventProjection  extends AbstractProjection implements 
     {
         $this->zadachaDlyOcherediService
             ->dobavitZadachuVOchered(WebsocketUnitEventReadModelJobHandler::QUEUE_NAME, $model, 2, 2);
+    }
+
+    public function obnovlenaStata(StatistikaPoKonteineruObnovlena $fact): void
+    {
+        $unit = $this->unitRepository->getById($fact->id);
+        $user = $this->accountAdapter->getUserById($unit->getAuthorId());
+        $this->sozdatZadachu(new WebsocketUnitEventReadModel($fact->id, WebsocketUnitEventReadModel::OBNOVLENA_STATA, $user->id, $user->email, $unit->getName()));
     }
 
     public function obnovlen(object $fact): void

@@ -25,6 +25,7 @@ use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
+use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
@@ -106,6 +107,7 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
             KodVetkiIzmenilsyaVHranilishe::class,
             AvtosborkaUnitaNachalas::class,
             OshibkaAvtosborkiUstanovlena::class,
+            StatistikaPoKonteineruObnovlena::class,
         ];
     }
 

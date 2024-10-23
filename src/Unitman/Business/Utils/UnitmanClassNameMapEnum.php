@@ -76,4 +76,6 @@ enum UnitmanClassNameMapEnum: string
     case AvtosborkaUnitaNachalas = 'AvtosborkaUnitaNachalas';
     case OshibkaAvtosborkiUstanovlena = 'OshibkaAvtosborkiUstanovlena';
 
+    case StatistikaPoKonteineruObnovlena = 'StatistikaPoKonteineruObnovlena';
+
 }
