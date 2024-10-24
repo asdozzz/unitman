@@ -49,7 +49,7 @@ final class RunnerHealthCheckWorkflow
                             RetryOptions::new()
                                 ->withMaximumAttempts(1)
                         )
-                        ->withStartToCloseTimeout(10)
+                        ->withStartToCloseTimeout(20)
                         ->withScheduleToStartTimeout(10)
                         ->withTaskQueue($runner['taskQueue'])
                 );
