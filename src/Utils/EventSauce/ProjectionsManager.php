@@ -164,9 +164,6 @@ final class ProjectionsManager
             $this->connection->beginTransaction();
             try {
                 $this->handleEventsByCheckpoint($projection, $oldCheckpoint, 100);
-                if ($cnt >= 1) {
-                    throw new \DomainException('FUCK');
-                }
                 $this->connection->commit();
             } catch (\Exception $e) {
                 $this->connection->rollBack();
