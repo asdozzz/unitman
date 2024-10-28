@@ -3,8 +3,10 @@
 namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Model\Account;
+use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Unit\UmeetSobiratUnit;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
@@ -18,8 +20,13 @@ final class AvtosborkaUnitaTest extends AbstractUnitUseCase
      * */
     function unit_sobran_systemoi()
     {
+        $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
+        /** @var SpisokUnitovRepository $spisokUnitovRepo */
+        $spisokUnitovRepo->truncate();
+
         $unitId = Uuid::uuid7()->toString();
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId]));
+
         $userId = Uuid::uuid7()->toString();
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru'));
@@ -31,11 +38,15 @@ final class AvtosborkaUnitaTest extends AbstractUnitUseCase
         /** @var $projectRepository ProjectRepository*/
         $projectRepository->save($project);
 
+        $umeetSobiratUnit = $this->getMockBuilder(UmeetSobiratUnit::class)->getMock();
+        $jobId = '123';
+        $umeetSobiratUnit->expects($this->any())->method('sobratUnitOtLizaSystemi')->willReturn(new JobId($jobId));
+        self::$container->set(UmeetSobiratUnit::class, $umeetSobiratUnit);
+
         $useCase = self::$container->get(SozdatUnitSystemoiUseCase::class);
         /** @var $useCase SozdatUnitSystemoiUseCase*/
         $useCase->handle($projectId, 'feature/123');
 
-        $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->unitSozdanSystemoi, true);

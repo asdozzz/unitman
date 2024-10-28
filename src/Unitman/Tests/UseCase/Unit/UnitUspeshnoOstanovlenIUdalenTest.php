@@ -133,7 +133,11 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         ]);
 
         $this->assertEquals($spisokUnitovReadModel->links,
-            ['https://80.task-123.uwin.testcase.ru', 'https://8080.task-123.uwin.testcase.ru', 'tcp://task-123.uwin:5043'],
+            [
+                ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru'],
+                ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru'],
+                ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043']
+            ],
         );
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
@@ -199,7 +203,11 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
         $this->assertEquals($spisokUnitovReadModel->links,
-            ['https://80.task-123.uwin.testcase.ru', 'https://8080.task-123.uwin.testcase.ru', 'tcp://task-123.uwin:5043'],
+           [
+               ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru'],
+               ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru'],
+               ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043']
+           ]
         );
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
@@ -221,23 +229,6 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
-
-        $useCase = self::$container->get(ObnovitStatistikuPoKonteineruUnitaUseCase::class);
-        $useCase->handle(new ObnovitStatistikuPoKontaineruUnita(
-            containerName: $unitName.'.'.$projectName,
-            cpuPercent: "0.32%",
-            memoryPercent: "0.07%",
-            memoryUsage: "355.8MiB / 1GiB",
-            netIO: "16.9kB / 543kB"
-        ));
-
-        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals($spisokUnitovReadModel->statistikaKonteinera, new ProjectListContainerStats(
-            cpuPercent: "0.32%",
-            memoryPercent: "0.07%",
-            memoryUsage: "355.8MiB / 1GiB",
-            netIO: "16.9kB / 543kB"
-        ));
 
         $useCase = self::$container->get(ZapolnitPeremenieUnitaUseCase::class);
         $useCase->handle(new ZapolnitPeremenieUnita($unitId, [
@@ -273,7 +264,11 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
         $this->assertEquals($spisokUnitovReadModel->links,
-            ['https://80.task-123.uwin.testcase.ru', 'https://8080.task-123.uwin.testcase.ru', 'tcp://task-123.uwin:5043'],
+            [
+                ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru'],
+                ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru'],
+                ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043']
+            ]
         );
 
         $useCase = self::$container->get(SbrositPodgotovkuUnitaUseCase::class);

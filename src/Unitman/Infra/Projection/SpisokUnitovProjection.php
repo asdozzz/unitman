@@ -85,6 +85,13 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);
     }
 
+    protected function getExceptionEvents(): array
+    {
+        return [
+            StatistikaPoKonteineruObnovlena::class,
+        ];
+    }
+
 
     function handleUnitSozdan(UnitSozdan $fact): void
     {
@@ -142,16 +149,6 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'jdemAvtosborki' => false
-        ]);
-        $this->repository->update($readModel);
-    }
-
-
-    function handleStatistikaPoKonteineruObnovlena(StatistikaPoKonteineruObnovlena $fact): void
-    {
-        $readModel = $this->repository->getById($fact->id);
-        $readModel = $readModel->copyAndUpdateData([
-            'statistikaKonteinera' => new ProjectListContainerStats($fact->cpuPercent, $fact->memoryPercent, $fact->memoryUsage, $fact->netIO)
         ]);
         $this->repository->update($readModel);
     }

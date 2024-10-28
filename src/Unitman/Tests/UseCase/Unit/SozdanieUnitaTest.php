@@ -38,24 +38,25 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
             'feature/123'
         ));
 
-        try {
-            $useCase2->handle(new SozdatUnit(
-                $projectId,
-                'unit-1',
-                'feature/222'
-            ));
-        } catch (\Exception $e) {
-            $this->assertEquals('unit.name_already_exists', $e->getMessage());
-        }
+        $this->expectExceptionMessage('unit.name_already_exists');
+        $useCase2->handle(new SozdatUnit(
+            $projectId,
+            'unit-1',
+            'feature/222'
+        ));
 
-        try {
-            $useCase2->handle(new SozdatUnit(
-                $projectId,
-                'unit 1',
-                'feature/123'
-            ));
-        } catch (\Exception $e) {
-            $this->assertEquals('unit.name_invalid', $e->getMessage());
-        }
+        $this->expectExceptionMessage('unit.name_invalid');
+        $useCase2->handle(new SozdatUnit(
+            $projectId,
+            'unit 1',
+            'feature/123'
+        ));
+
+        $this->expectExceptionMessage('unit.name_invalid');
+        $useCase2->handle(new SozdatUnit(
+            $projectId,
+            'мультирасчет 23',
+            'feature/123'
+        ));
     }
 }

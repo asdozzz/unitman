@@ -16,7 +16,7 @@ final class UnitName
             throw new \DomainException('unit.length_name_invalid');
         }
 
-        if (!preg_match('/[a-zA-Z0-9_]+/mu', $name)) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/mu', $name)) {
             throw new \DomainException('unit.name_invalid');
         }
 

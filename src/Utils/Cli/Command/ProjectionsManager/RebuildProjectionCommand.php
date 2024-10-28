@@ -69,7 +69,7 @@ final class RebuildProjectionCommand extends Command
 
     /**
      * @param mixed $projectionName
-     * @param int $projectionName
+     * @param int $disableReset
      * @return void
      * @throws \Exception
      */
