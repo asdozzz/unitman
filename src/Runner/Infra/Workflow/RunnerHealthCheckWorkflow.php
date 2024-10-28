@@ -26,7 +26,7 @@ final class RunnerHealthCheckWorkflow
         $this->activity = Workflow::newActivityStub(
             UstanovitResultatRabotosposobnostiRunneraActivity::class,
             ActivityOptions::new()
-                ->withScheduleToCloseTimeout(CarbonInterval::seconds(20))
+                ->withScheduleToCloseTimeout(CarbonInterval::seconds(30))
                 ->withTaskQueue(WorkflowClientFactory::monoQueueName)
         );
     }

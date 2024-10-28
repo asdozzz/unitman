@@ -48,6 +48,6 @@ final class RunnerHealthCheckWorkflowJob implements BackgroundJobInterface
 
     function getDelay(): int
     {
-        return 25;
+        return 30;
     }
 }
