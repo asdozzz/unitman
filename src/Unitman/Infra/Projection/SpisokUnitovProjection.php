@@ -250,7 +250,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
                 throw new \DomainException('unit.invalid_proxy_host');
             }
 
-            foreach ($fact->configUnita['services'] as $service) {
+            foreach ($fact->configUnita['services'] as $name => $service) {
                 foreach ($service['ports'] as $portData) {
                     if ($portData['type'] == 'http') {
                         $link = $pathinfo['scheme'].'://'.$portData['port'].'.'.$readModel->name.'.'.$projectName.'.'.$pathinfo['host'];
@@ -260,7 +260,12 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
                     } else {
                         $link = $portData['type'].'://'.$readModel->name.'.'.$projectName.':'.$portData['port'];
                     }
-                    $links[] = $link;
+                    $links[] = [
+                        'service' => $name,
+                        'path' => $link,
+                        'port' => $portData['port'],
+                        'protocol' => $portData['type'],
+                    ];
                 }
             }
         }
