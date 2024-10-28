@@ -142,42 +142,49 @@ final class ProjectionsManager
         }
     }
 
-    public function rebuild(string $projectionName): void
+    public function rebuild(string $projectionName, int $disableReset = 0): void
     {
-        $this->connection->beginTransaction();
-        try {
-            $projection = $this->getProjectionByName($projectionName);
+        $projection = $this->getProjectionByName($projectionName);
 
-            if (!$projection->isAllowedRebuild()) {
-                throw new \DomainException('projections_manager.rebuild_not_allowed');
-            }
+        if (!$projection->isAllowedRebuild()) {
+            throw new \DomainException('projections_manager.rebuild_not_allowed');
+        }
 
+        if ($disableReset !== 1) {
             $this->checkpointStore->resetCheckpoint($projectionName);
             $projection->init();
             $projection->reset();
+        }
 
-            $deep = 100;
-            $cnt = 0;
-            while (true) {
-                $oldCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
-                $this->handleEventsByCheckpoint($projection, $oldCheckpoint, 20000);
-                $newCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
+        $deep = 100;
+        $cnt = 0;
+        while (true) {
+            $oldCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
 
-                if ($newCheckpoint === $oldCheckpoint || $cnt >= $deep) {
-                    break;
+            $this->connection->beginTransaction();
+            try {
+                $this->handleEventsByCheckpoint($projection, $oldCheckpoint, 100);
+                if ($cnt >= 1) {
+                    throw new \DomainException('FUCK');
                 }
-
-                sleep(3);
-                $cnt++;
+                $this->connection->commit();
+            } catch (\Exception $e) {
+                $this->connection->rollBack();
+                throw $e;
             }
 
+            $newCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
 
+            if ($newCheckpoint === $oldCheckpoint || $cnt >= $deep) {
+                break;
+            }
 
-            $this->connection->commit();
-        } catch (\Exception $e) {
-            $this->connection->rollBack();
-            throw $e;
+            sleep(3);
+            $cnt++;
         }
+
+
+
     }
 
     /**

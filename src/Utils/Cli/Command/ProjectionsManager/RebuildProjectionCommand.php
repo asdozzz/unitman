@@ -27,7 +27,8 @@ final class RebuildProjectionCommand extends Command
         $this
             ->setDescription('Rebuild projection')
             ->setHelp('This command allows you to rebuild a projection')
-            ->addArgument('projectionName', InputArgument::REQUIRED, 'projectionName');
+            ->addArgument('projectionName', InputArgument::REQUIRED, 'projectionName')
+            ->addArgument('disableReset', InputArgument::OPTIONAL, 'disableReset')
         ;
     }
 
@@ -47,12 +48,14 @@ final class RebuildProjectionCommand extends Command
                 throw new \Exception('Projection Name not defined');
             }
 
+            $disableReset = $input->getArgument('disableReset');
+
             if ($projectionName == 'all') {
                 foreach ($this->managers as $manager) {
                     $manager->rebuildAll();
                 }
             } else {
-                $this->rebuildSingle($projectionName);
+                $this->rebuildSingle($projectionName, (int) $disableReset);
             }
 
             return Command::SUCCESS;
@@ -66,10 +69,11 @@ final class RebuildProjectionCommand extends Command
 
     /**
      * @param mixed $projectionName
+     * @param int $projectionName
      * @return void
      * @throws \Exception
      */
-    private function rebuildSingle(mixed $projectionName): void
+    private function rebuildSingle(mixed $projectionName, int $disableReset = 0): void
     {
         $result = null;
         foreach ($this->managers as $manager) {
@@ -82,6 +86,6 @@ final class RebuildProjectionCommand extends Command
             throw new \Exception('Projections manager not found for projection with name=' . $projectionName);
         }
 
-        $result->rebuild($projectionName);
+        $result->rebuild($projectionName, $disableReset);
     }
 }
