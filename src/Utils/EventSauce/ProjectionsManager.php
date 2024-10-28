@@ -160,7 +160,7 @@ final class ProjectionsManager
             $cnt = 0;
             while (true) {
                 $oldCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
-                $this->handleEventsByCheckpoint($projection, 0, 20000);
+                $this->handleEventsByCheckpoint($projection, $oldCheckpoint, 20000);
                 $newCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
 
                 if ($newCheckpoint === $oldCheckpoint || $cnt >= $deep) {
