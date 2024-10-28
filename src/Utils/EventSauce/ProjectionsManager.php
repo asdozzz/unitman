@@ -163,7 +163,7 @@ final class ProjectionsManager
 
             $this->connection->beginTransaction();
             try {
-                $this->handleEventsByCheckpoint($projection, $oldCheckpoint, 100);
+                $this->handleEventsByCheckpoint($projection, $oldCheckpoint, 5000);
                 $this->connection->commit();
             } catch (\Exception $e) {
                 $this->connection->rollBack();
