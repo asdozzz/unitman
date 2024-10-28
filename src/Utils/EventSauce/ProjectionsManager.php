@@ -156,7 +156,7 @@ final class ProjectionsManager
             $projection->init();
             $projection->reset();
 
-            $this->handleEventsByCheckpoint($projection, 0);
+            $this->handleEventsByCheckpoint($projection, 0, 20000);
 
             $this->connection->commit();
         } catch (\Exception $e) {
