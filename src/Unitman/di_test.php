@@ -16,5 +16,5 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UnitmanSecurityService::class)->public();
     $services->set(CanGeneateGuid::class)->public();
     $services->set(CanCheckAccessToRepo::class)->public();
-    $services->set(RunnerService::class)->public();
+    //$services->set(RunnerService::class)->public();
 };

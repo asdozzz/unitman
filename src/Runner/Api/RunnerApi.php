@@ -43,7 +43,7 @@ use Temporal\Exception\Client\WorkflowFailedException;
 use Temporal\Exception\Client\WorkflowServiceException;
 use Temporal\Exception\WorkflowExecutionFailedException;
 
-final class RunnerApi
+final class RunnerApi implements RunnerApiInterface
 {
     public function __construct(
         private WorkflowClient $workflowClient,

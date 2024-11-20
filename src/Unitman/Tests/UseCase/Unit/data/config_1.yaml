@@ -32,6 +32,11 @@ services:
         type: 'http'
       - port: 5043
         type: 'tcp'
+    cache:
+        files:
+          - composer.lock
+        paths:
+          - vendor
 
 prepare:
   - cp -f .env.runner .env

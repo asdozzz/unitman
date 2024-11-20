@@ -29,12 +29,14 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 USER containeruser
 WORKDIR /home/containeruser/www
 
-COPY --chown=containeruser:groupcontainer . .
-
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN composer install && \
-    composer dump-autoload --optimize && \
+COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
+RUN composer install --no-scripts --no-autoloader
+
+COPY --chown=containeruser:groupcontainer . .
+RUN composer dump-autoload --optimize && \
+    composer run-script post-install-cmd && \
     composer check-platform-reqs && \
     php bin/console cache:warmup
 

@@ -5,22 +5,27 @@ namespace App\Unitman\Tests\UseCase\Unit;
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
+use App\Unitman\Business\Command\Repo\AddRepo;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Project;
+use App\Unitman\Business\Model\Repo;
+use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
+use App\Unitman\Tests\UseCase\AbstractUnitmanUseCase;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Clock\ClockInterface;
 
-abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper
+abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
 {
 
     /**
@@ -44,9 +49,13 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
      * @param string $userId
      * @return Project
      */
-    public function stubProekta(string $projectId, string $userId, string $projectName = 'uwin'): Project
+    public function stubProekta(string $projectId, string $userId, string $projectName = 'uwin', ?string $repoId = null): Project
     {
-        $repoId = Uuid::uuid7()->toString();
+        //$this->addRepoRaw(RepoType::GITLAB, 'repoName', 'http://repoUrl');
+        if (empty($repoId)) {
+            $repoId = Uuid::uuid7()->toString();
+        }
+
         $project = Project::addProject($projectId, new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru'), $userId);
         $project->postavitVOcheredNaSborku('stub');
         $project->successfullyBuild([new RunnerJobStep('command', 'response', true, 1231231)]);
@@ -55,19 +64,38 @@ abstract class AbstractUnitUseCase extends \App\Utils\EventSauce\AbstractTestCas
         return $project;
     }
 
+    public function stubRepo(string $repoId, RepoType $repoType, string $repoName, string $repoUrl): Repo
+    {
+        $repo = Repo::addRepo($repoId, new AddRepo($repoType->value, $repoName, 'tok', $repoUrl), $repoUrl);
+        return $repo;
+    }
+
 
     /**
      * @param string $unitId
      * @return void
      * @throws \Exception
      */
-    public function sozdatUnit(string $unitId, string $unitName = 'task-123', $projectName = 'uwin'): void
+    public function sozdatUnit(string $unitId, string $unitName = 'task-123', $projectName = 'uwin', string $projectId = null): void
     {
+        $repoId = Uuid::uuid7()->toString();
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId]));
+
         $userId = Uuid::uuid7()->toString();
         $securityService = $this->mokaemUspehSecurity($userId);
-        $projectId = Uuid::uuid7()->toString();
-        $project = $this->stubProekta($projectId, $userId, $projectName);
+
+        $repo = $this->stubRepo($repoId, RepoType::GITLAB, 'repoName', 'http://repoUrl');
+        $repo->accessConfirm();
+
+        $repoRepository = self::$container->get(RepoRepository::class);
+        /** @var $repoRepository RepoRepository*/
+        $repoRepository->save($repo);
+
+        if (empty($projectId)) {
+            $projectId = Uuid::uuid7()->toString();
+        }
+
+        $project = $this->stubProekta($projectId, $userId, $projectName, $repoId);
         $projectRepository = self::$container->get(ProjectRepository::class);
         /** @var $projectRepository ProjectRepository*/
         $projectRepository->save($project);

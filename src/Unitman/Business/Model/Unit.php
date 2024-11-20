@@ -10,6 +10,7 @@ use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
+use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
 use App\Unitman\Business\Model\Unit\Event\AvtosborkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
@@ -1334,6 +1335,14 @@ final class Unit implements AggregateRoot
     public function poluchitZnacheniyaPeremenih(): array
     {
         return $this->variableValues;
+    }
+
+    /**
+     * @return KonfigServisa[]
+     * */
+    public function poluchitKonfigServisov(): array
+    {
+        return $this->configUnita?->getServices() ?? [];
     }
 
     /**

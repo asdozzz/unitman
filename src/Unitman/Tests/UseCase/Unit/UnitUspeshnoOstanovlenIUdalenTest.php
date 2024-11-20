@@ -2,6 +2,17 @@
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
+use App\Runner\Api\RunnerApiInterface;
+use App\Runner\Business\Command\NachatPodgotovkuUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
@@ -22,15 +33,6 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
 use App\Unitman\Business\Model\Runner\JobId;
-use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
-use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
-use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
-use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
-use App\Unitman\Business\Model\Runner\ResultatSborkiUnita;
-use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
-use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
-use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
-use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
@@ -56,7 +58,7 @@ use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
-use App\Unitman\Infra\Adapter\MemoryRunnerService;
+use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
 
@@ -67,44 +69,82 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $unitId = Uuid::uuid7()->toString();
         $unitName = 'task-123';
         $projectName = 'uwin';
-        $this->sozdatUnit($unitId, $unitName, $projectName);
+        $projectId = Uuid::uuid7()->toString();
+        $this->sozdatUnit($unitId, $unitName, $projectName, $projectId);
 
         $memoryRunner = new MemoryRunnerService();
-        $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, new JobId('SBORKA_UNITA'));
-        $stepsFail = [new RunnerJobStep('command', 'response', false, 123123123)];
-        $stepsSuccess = [new RunnerJobStep('command', 'response', true, 123123123)];
+        $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');
+        $stepsFail = [[
+            'Command' => 'command',
+            'Response' => 'response',
+            'Success' => false,
+            'Unixtime' => 123123123
+        ]];
+        $stepsSuccess = [[
+            'Command' => 'command',
+            'Response' => 'response',
+            'Success' => true,
+            'Unixtime' => 123123123
+        ]];
         $configText = file_get_contents(__DIR__.'/data/config_1.yaml');
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSborkiUnita(true, $stepsSuccess ,$configText));
-        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSbrokiUnita(true, $stepsSuccess ,$configText));
+        $commands = [
+            'cp -f .env.runner .env',
+            'mkdir -p config/jwt',
+            'openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:my_password',
+            'openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:my_password',
+        ];
+        $variables = [
+            ['Id' => 'AUTH_TOKEN', 'Value' => 'token_access'],
+            ['Id' => 'ORDER_SERVICE', 'Value' => 'master'],
+            ['Id' => 'DICTIONARY_SERVICE', 'Value' => 'http://v2.dict.ru'],
+        ];
+        $caches = [
+            ['ServiceName' => 'web', 'Keys' => ['composer.lock'], 'Paths' => ['vendor']]
+        ];
+        $expectedParams = new NachatPodgotovkuUnita(
+            $projectId,
+            $projectName,
+            $unitId,
+            $unitName,
+            'http://oauth2:tok@repoUrl/projectCode.git',
+            $commands,
+            $variables,
+            $caches
+        );
+        $callback = fn(array $args) => $this->assertEquals([$expectedParams], $args);
+
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA', $callback);
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(false,$stepsFail));
-        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, new JobId('OBNOVLENIE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, 'OBNOVLENIE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(false, $stepsFail));
-        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, new JobId('OBNOVLENIE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, 'OBNOVLENIE_UNITA');
         $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(true, $stepsSuccess, $configText2));
-        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
+
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true,$stepsSuccess));
-        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, new JobId('SBROS_PODGOTOVKI_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(false,$stepsFail));
-        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, new JobId('OBNOVLENIE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::OBNOVLENIE_UNITA, 'OBNOVLENIE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OBNOVLENIYA, new ResultatObnovleniyaUnita(true, $stepsSuccess, $configText2));
-        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, new JobId('SBROS_PODGOTOVKI_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(true,$stepsSuccess));
-        $memoryRunner->addResponse(MemoryRunnerService::IZMENENIYE_UNITA, new JobId('IZMENENIYE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::IZMENENIYE_UNITA, 'IZMENENIYE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_IZMENENIYA_VETKI, new ResultatIzmeneniyaVetkiUnita(false,$stepsFail));
-        $memoryRunner->addResponse(MemoryRunnerService::IZMENENIYE_UNITA, new JobId('IZMENENIYE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::IZMENENIYE_UNITA, 'IZMENENIYE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_IZMENENIYA_VETKI, new ResultatIzmeneniyaVetkiUnita(true,$stepsSuccess));
-        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, new JobId('PODGOTOVKA_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true,$stepsSuccess));
-        $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, new JobId('ZAPUSK_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, 'ZAPUSK_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_ZAPUSKA, new ResultatZapuskaUnita(true,$stepsSuccess));
-        $memoryRunner->addResponse(MemoryRunnerService::OSTANOVKA_UNITA, new JobId('OSTANOVKA_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::OSTANOVKA_UNITA, 'OSTANOVKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OSTANOVKI, new ResultatOstanovkiUnita(true,$stepsSuccess));
-        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, new JobId('SBROS_PODGOTOVKI_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(true,$stepsSuccess));
-        $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, new JobId('UDALENIE_UNITA'));
+        $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, 'UDALENIE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(false,$stepsFail));
-        self::$container->set(RunnerService::class, $memoryRunner);
+        self::$container->set(RunnerApiInterface::class, $memoryRunner);
 
 
         $useCase = self::$container->get(SobratUnitUseCase::class);

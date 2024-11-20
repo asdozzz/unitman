@@ -2,15 +2,16 @@
 
 namespace App\Unitman\Tests\UseCase\Proekt;
 
+use App\Runner\Api\RunnerApiInterface;
+use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
+use App\Runner\Business\Model\GolangRunner\Unit\Step;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
-use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
-use App\Unitman\Business\Model\Runner\JobId;
-use App\Unitman\Business\Model\Runner\ResultatSborkiProekta;
-use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
+use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -23,7 +24,7 @@ use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\UstanovitResultatSborkiProektaUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
-use App\Unitman\Infra\Adapter\MemoryRunnerService;
+use App\Unitman\Acl\MemoryRunnerService;
 use Ramsey\Uuid\Uuid;
 
 final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
@@ -37,6 +38,10 @@ final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
         $adminId = Uuid::uuid7()->toString();
         $userId = Uuid::uuid7()->toString();
         $userId2 = Uuid::uuid7()->toString();
+        $projectId = Uuid::uuid7()->toString();
+        $projectId2 = Uuid::uuid7()->toString();
+        $projectId3 = Uuid::uuid7()->toString();
+        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId, $projectId, $projectId2, $projectId3]));
 
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
@@ -45,24 +50,27 @@ final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
         );
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = Uuid::uuid7()->toString();
-        $projectId2 = Uuid::uuid7()->toString();
-        $projectId3 = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$projectId, $projectId2, $projectId3]));
-
+        $this->addRepoRaw(RepoType::GITLAB, 'repoName', 'http://repoUrl');
         $this->addProjectRaw($repoId, 'test', 'name', 'main', 'http://test.ru');
         $this->addProjectRaw($repoId, 'test2', 'name2', 'main', 'http://test.ru');
         $this->addProjectRaw($repoId, 'test3', 'name3', 'main', 'http://test.ru');
 
         $memoryRunner = new MemoryRunnerService();
-        $steps = [new RunnerJobStep('command', 'response', true, 123123123)];
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new JobId('jobId'));
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new ResultatSborkiProekta(true, $steps));
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new JobId('jobId'));
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new ResultatSborkiProekta(true, $steps));
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, new JobId('jobId'));
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new ResultatSborkiProekta(true, $steps));
-        self::$container->set(RunnerService::class, $memoryRunner);
+        $steps = [
+            [
+                'Command' => 'command',
+                'Response' => 'response',
+                'Success' => true,
+                'Unixtime' => 123123123
+            ]
+        ];
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new InitProjectResult(true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new InitProjectResult(true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new InitProjectResult(true, $steps));
+        self::$container->set(RunnerApiInterface::class, $memoryRunner);
 
         //Кинули в очередь на сборку
         $queueCommand = new PostavitVOcheredNaSborku($projectId);

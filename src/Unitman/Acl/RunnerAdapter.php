@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Unitman\Acl;
-use App\Runner\Api\RunnerApi;
+use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
@@ -36,7 +36,7 @@ use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 final class RunnerAdapter implements RunnerService
 {
     public function __construct(
-        private readonly RunnerApi $runnerApi,
+        private readonly RunnerApiInterface $runnerApi,
         private readonly RepoRepository $repoRepository,
         private SqlProjectEventsRepository $projectEventsRepository,
         private StorageApiAdapterFactory $storageApiAdapterFactory
@@ -90,7 +90,8 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables);
+        $caches = $this->makeCachesListFromUnit($unit);
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches);
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($command);
         return new JobId($workflowId);
     }
@@ -119,7 +120,8 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
-        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables);
+        $caches = $this->makeCachesListFromUnit($unit);
+        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables, $caches);
         $workflowId = $this->runnerApi->nachatZapuskUnita($command);
         return new JobId($workflowId);
     }
@@ -227,13 +229,35 @@ final class RunnerAdapter implements RunnerService
      */
     private function makeVariablesListFromUnit(Unit $unit, Project $project): array
     {
-        $variables = array_map(fn(Unit\VariableValue $variableValue) => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue()), $unit->poluchitZnacheniyaPeremenih());
+        $closure = fn(Unit\VariableValue $variableValue): array => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue());
+        $variables = array_map($closure, $unit->poluchitZnacheniyaPeremenih());
 
         foreach ($project->poluchitPeremenieProekta() as $projectVariable) {
             $variables[] = array('Id' => 'PV_'.$projectVariable->code, 'Value' => $projectVariable->value);
         }
 
         return $variables;
+    }
+
+    private function makeCachesListFromUnit(Unit $unit): array
+    {
+        $poluchitKonfigServisov = $unit->poluchitKonfigServisov();
+
+        $result = [];
+
+        foreach ($poluchitKonfigServisov as $konfigServisa) {
+            if (empty($konfigServisa->cache)) {
+                continue;
+            }
+
+            $result[] = array(
+                'ServiceName' => $konfigServisa->name,
+                'Keys' => $konfigServisa->cache->files,
+                'Paths' => $konfigServisa->cache->paths
+            );
+        }
+
+        return $result;
     }
 
     /**
