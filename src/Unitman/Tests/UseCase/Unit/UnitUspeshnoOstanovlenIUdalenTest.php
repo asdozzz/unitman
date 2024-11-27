@@ -100,7 +100,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             ['Id' => 'DICTIONARY_SERVICE', 'Value' => 'http://v2.dict.ru'],
         ];
         $caches = [
-            ['ServiceName' => 'web', 'Keys' => ['composer.lock'], 'Paths' => ['vendor']]
+            ['ServiceName' => 'php', 'Keys' => ['composer.lock'], 'Paths' => ['vendor']]
         ];
         $expectedParams = new NachatPodgotovkuUnita(
             $projectId,
@@ -174,9 +174,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $this->assertEquals($spisokUnitovReadModel->links,
             [
-                ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru'],
-                ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru'],
-                ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043']
+                ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru/test', 'startUri' => '/test'],
+                ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru', 'startUri' => null],
+                ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043', 'startUri' => null]
             ],
         );
 
@@ -244,9 +244,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_SOBRAN');
         $this->assertEquals($spisokUnitovReadModel->links,
            [
-               ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru'],
-               ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru'],
-               ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043']
+               ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru', 'startUri'=>null],
+               ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru/asd', 'startUri'=>'/asd'],
+               ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043', 'startUri'=>null]
            ]
         );
 
@@ -305,9 +305,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_PODGOTOVLEN_K_ZAPUSKU');
         $this->assertEquals($spisokUnitovReadModel->links,
             [
-                ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru'],
-                ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru'],
-                ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043']
+                ['service' => 'web', 'protocol' => 'http', 'port' => 80,'path' => 'https://80.task-123.uwin.testcase.ru', 'startUri'=>null],
+                ['service' => 'web', 'protocol' => 'http', 'port' => 8080,'path' => 'https://8080.task-123.uwin.testcase.ru/asd', 'startUri'=>'/asd'],
+                ['service' => 'web', 'protocol' => 'tcp', 'port' => 5043,'path' => 'tcp://task-123.uwin:5043', 'startUri'=>null]
             ]
         );
 

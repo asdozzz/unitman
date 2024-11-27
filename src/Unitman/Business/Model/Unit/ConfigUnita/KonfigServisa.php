@@ -15,17 +15,14 @@ final class KonfigServisa
 
     public ?CacheServisa $cache = null;
 
-    public function __construct(?string $name, ?array $ports, ?array $cache)
+    public function __construct(?string $name, ?array $ports = [], ?array $cache = null)
     {
         if (empty($name)) {
             throw new \DomainException('unit.konfigServisa.name_is_empty');
         }
 
-        if (empty($ports)) {
-            throw new \DomainException('unit.konfigServisa.ports_is_empty');
-        }
         $this->name = $name;
-        $this->ports = array_map(fn(array $port) => PortServisa::fromArray($port), $ports);
+        $this->ports = array_map(fn(array $port) => PortServisa::fromArray($port), $ports ?? []);
 
         if (!empty($cache)) {
             $this->cache = CacheServisa::fromArray($cache);
@@ -37,13 +34,13 @@ final class KonfigServisa
     static function fromServiceData(string $name, array $serviceData): self
     {
         $ports = [];
-        if (!empty($serviceData['ports'])) {
+        if (isset($serviceData['ports'])) {
             $ports = $serviceData['ports'];
         }
 
         $cache = [];
 
-        if (!empty($serviceData['cache'])) {
+        if (isset($serviceData['cache'])) {
             $cache = $serviceData['cache'];
         }
 

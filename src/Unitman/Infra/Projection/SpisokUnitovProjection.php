@@ -248,6 +248,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             }
 
             foreach ($fact->configUnita['services'] as $name => $service) {
+                if (!isset($service['ports'])) continue;
                 foreach ($service['ports'] as $portData) {
                     if ($portData['type'] == 'http') {
                         $link = $pathinfo['scheme'].'://'.$portData['port'].'.'.$readModel->name.'.'.$projectName.'.'.$pathinfo['host'];
@@ -257,11 +258,15 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
                     } else {
                         $link = $portData['type'].'://'.$readModel->name.'.'.$projectName.':'.$portData['port'];
                     }
+                    if (!empty($portData['startUri'])) {
+                        $link .= $portData['startUri'];
+                    }
                     $links[] = [
                         'service' => $name,
                         'path' => $link,
                         'port' => $portData['port'],
                         'protocol' => $portData['type'],
+                        'startUri' => $portData['startUri'] ?? null
                     ];
                 }
             }
