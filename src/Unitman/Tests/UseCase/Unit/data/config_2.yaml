@@ -23,6 +23,7 @@ services:
         type: 'http'
       - port: 8080
         type: 'http'
+        startUri: '/asd'
       - port: 5043
         type: 'tcp'
     cache:

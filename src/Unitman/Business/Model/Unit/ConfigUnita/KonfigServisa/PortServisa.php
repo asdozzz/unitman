@@ -7,8 +7,9 @@ final class PortServisa
     /**/
     public readonly int $port;
     public readonly string $type;
+    public readonly string $startUri;
 
-    public function __construct(?string $type, ?int $port)
+    public function __construct(?string $type, ?int $port, ?string $startUri)
     {
         if (empty($type)) {
             throw new \Exception('unit.config.port.type.is_empty');
@@ -19,11 +20,12 @@ final class PortServisa
         }
         $this->port = $port;
         $this->type = $type;
+        $this->startUri = $startUri ?? "";
     }
 
     static function fromArray(array $portData): self
     {
-        return new self($portData['type'] ?? null, $portData['port'] ?? null);
+        return new self($portData['type'] ?? null, $portData['port'] ?? null, $portData['startUri'] ?? null);
     }
 
     function toArray(): array
@@ -31,6 +33,7 @@ final class PortServisa
         return [
             'type' => $this->type,
             'port' => $this->port,
+            'startUri' => $this->startUri,
         ];
     }
 }
