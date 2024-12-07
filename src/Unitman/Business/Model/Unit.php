@@ -286,8 +286,12 @@ final class Unit implements AggregateRoot
     private function makeVariableCollectionByArray(array $values): array
     {
         $tmpVariables = [];
+        $typeMap = $this->configUnita->getVariableTypeMap();
         foreach ($values as $id => $value) {
-            $tmpVariables[] = new VariableValue($id, $value);
+            if (empty($typeMap[$id])) {
+                throw new \DomainException('unit.config.type_for_variable_not_found');
+            }
+            $tmpVariables[] = new VariableValue($id, $value, $typeMap[$id]);
         }
         return $tmpVariables;
     }
