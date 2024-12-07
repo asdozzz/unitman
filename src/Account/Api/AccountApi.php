@@ -22,10 +22,11 @@ final class AccountApi
         return $this->securityService->getCurrentUserId();
     }
 
-    public function getEmailByUserId(string $id): string
+    public function getEmailOrNicknameByUserId(string $id): string
     {
         $user = $this->userRepository->getById($id);
-        return $user->getEmail();
+        $nickname = $user->getNickname();
+        return $nickname ?? $user->getEmail();
     }
 
     public function getCurrentUser(): JWTUser

@@ -10,7 +10,8 @@ final class RegisterAccount implements JsonBodySerializableInterface
         private string $email,
         private string $password,
         private string $roles,
-        private string $locale
+        private string $locale,
+        public readonly ?string $nickname = null,
     )
     {
     }
@@ -52,4 +53,6 @@ final class RegisterAccount implements JsonBodySerializableInterface
     {
         return $this->locale;
     }
+
+
 }

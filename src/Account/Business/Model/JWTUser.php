@@ -13,7 +13,8 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
         private string $password,
         private array $roles,
         private bool $isBlocked = false,
-        private string $locale = 'ru'
+        private string $locale = 'ru',
+        private ?string $nickname = null
     )
     {
     }
@@ -25,7 +26,8 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
             $username,
             $payload['password'],
             $payload['roles'],
-            $payload['isBlocked']
+            $payload['isBlocked'],
+            $payload['nickname'] ?? ""
         );
     }
 
@@ -101,5 +103,15 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
     public function setLocale(string $newLocale): void
     {
         $this->locale = $newLocale;
+    }
+
+    public function getNickname(): ?string
+    {
+        return $this->nickname;
+    }
+
+    public function setNickname(?string $nickname): void
+    {
+        $this->nickname = $nickname;
     }
 }

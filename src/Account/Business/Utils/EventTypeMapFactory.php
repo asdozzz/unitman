@@ -9,6 +9,9 @@ use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\LocaleChanged;
+use App\Account\Business\Model\Event\NicknameWasChanged;
+use App\Account\Business\Model\Event\NicknameWasChangedByAdmin;
+use App\Account\Business\Model\Event\PasswordWasChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
@@ -25,7 +28,10 @@ final class EventTypeMapFactory
             SystemAccountWasRegistered::class => AccountEventTypeEnum::SystemAccountWasRegistered,
             AccountWasUnblockedByAdmin::class => AccountEventTypeEnum::AccountWasUnblockedByAdmin,
             EmailWasChangedByAdmin::class => AccountEventTypeEnum::EmailWasChangedByAdmin,
+            NicknameWasChangedByAdmin::class => AccountEventTypeEnum::NicknameWasChangedByAdmin,
             PasswordWasChangedByAdmin::class => AccountEventTypeEnum::PasswordWasChangedByAdmin,
+            PasswordWasChanged::class => AccountEventTypeEnum::PasswordWasChanged,
+            NicknameWasChanged::class => AccountEventTypeEnum::NicknameWasChanged,
             LocaleChanged::class => AccountEventTypeEnum::LocaleChanged,
         ];
 

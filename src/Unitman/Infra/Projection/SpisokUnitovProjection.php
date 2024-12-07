@@ -96,7 +96,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleUnitSozdan(UnitSozdan $fact): void
     {
         $project = $this->projectRepository->getById($fact->projectId);
-        $authorName = $this->securityService->getEmailByUserId($fact->authorId);
+        $authorName = $this->securityService->getEmailOrNicknameByUserId($fact->authorId);
         $readModel = new SpisokUnitovReadModel(
             $fact->id,
             $fact->authorId,
@@ -116,7 +116,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleUnitSozdanSystemoi(UnitSozdanSystemoi $fact): void
     {
         $project = $this->projectRepository->getById($fact->projectId);
-        $authorName = $this->securityService->getEmailByUserId($fact->authorId);
+        $authorName = $this->securityService->getEmailOrNicknameByUserId($fact->authorId);
         $readModel = new SpisokUnitovReadModel(
             $fact->id,
             $fact->authorId,

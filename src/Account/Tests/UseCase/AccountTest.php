@@ -4,13 +4,20 @@ namespace App\Account\Tests\UseCase;
 
 use App\Account\Business\Command\BlockByAdmin;
 use App\Account\Business\Command\ChangeEmailByAdmin;
+use App\Account\Business\Command\ChangeMyNickname;
+use App\Account\Business\Command\ChangeMyPassword;
+use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Command\ChangePasswordByAdmin;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Port\SecurityService;
+use App\Account\Business\Port\UuidGenerator;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
 use App\Account\Business\UseCase\ChangeEmailByAdminUseCase;
+use App\Account\Business\UseCase\ChangeMyNicknameUseCase;
+use App\Account\Business\UseCase\ChangeMyPasswordUseCase;
+use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
 use App\Account\Business\UseCase\RegisterAccountUseCase;
 use App\Account\Business\UseCase\RegisterSystemAccountUseCase;
@@ -18,6 +25,7 @@ use App\Account\Business\UseCase\UnblockByAdminUseCase;
 use App\Account\Infra\Adapter\SymfonySecurityService;
 use App\Account\Infra\Repository\JWTUserRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
+use Ramsey\Uuid\Uuid;
 
 final class AccountTest extends AbstractTestCaseWithTransactionWrapper
 {
@@ -27,7 +35,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
      * @return array|false|mixed[]
      * @throws \Doctrine\DBAL\Exception
      */
-    public function registerAccount(string $email): array|false
+    public function registerAccount(string $email, string $nickname = ""): array|false
     {
         $securityService = $this->getMockBuilder(SecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
@@ -38,7 +46,8 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
             $email,
             'asd',
             Role::ROLE_USER->value,
-            'ru'
+            'ru',
+            $nickname
         );
 
         $sut = self::$container->get(RegisterAccountUseCase::class);
@@ -82,7 +91,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
     /**
      * @test
      * */
-    function password_was_changed()
+    function password_was_changed_by_admin()
     {
         $row = $this->registerAccount('asd123@asd.ru');
 
@@ -101,6 +110,115 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
 
         $this->assertNotEquals($password, $jwtUser->getPassword());
     }
+
+    /**
+     * @test
+     * */
+    function password_was_changed()
+    {
+        $userId = Uuid::uuid7()->toString();
+        $securityService = $this->getMockBuilder(SecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
+
+
+        $uuidGenerator = $this->getMockBuilder(UuidGenerator::class)->getMock();
+        $uuidGenerator->expects($this->any())->method('makeGuid')->willReturn($userId);
+        self::$container->set(UuidGenerator::class, $uuidGenerator);
+
+        self::$container->set(SecurityService::class, $securityService);
+
+        $email = 'asd123123123@asd.ru';
+        $command = new RegisterAccount(
+            $email,
+            'asd',
+            Role::ROLE_USER->value,
+            'ru'
+        );
+
+        $sut = self::$container->get(RegisterAccountUseCase::class);
+        /** @var RegisterAccountUseCase $sut */
+        $sut->handle($command);
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        /** @var JWTUserRepository $jwtRepository */
+        $row = $jwtRepository->findUserByEmail($email);
+
+        $id = $row['id'];
+        $password = $row['password'];
+
+        $command = new ChangeMyPassword( 'www');
+
+        $sut = self::$container->get(ChangeMyPasswordUseCase::class);
+        /** @var ChangeMyPasswordUseCase $sut */
+        $sut->handle($command);
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        /** @var JWTUserRepository $jwtRepository */
+        $jwtUser = $jwtRepository->getActiveById($id);
+
+        $this->assertNotEquals($password, $jwtUser->getPassword());
+    }
+
+    /**
+     * @test
+     * */
+    function nickname_was_changed_by_admin()
+    {
+        $row = $this->registerAccount('asd123@asd.ru', 'first');
+        $this->assertEquals($row['nickname'], 'first');
+
+        $command = new ChangeNicknameByAdmin($row['id'], 'second');
+
+        $sut = self::$container->get(ChangeNicknameByAdminUseCase::class);
+        /** @var ChangeNicknameByAdminUseCase $sut */
+        $sut->handle($command);
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        /** @var JWTUserRepository $jwtRepository */
+        $jwtUser = $jwtRepository->getActiveById($row['id']);
+        $this->assertEquals('second', $jwtUser->getNickname());
+    }
+
+    function nickname_was_changed()
+    {
+        $userId = Uuid::uuid7()->toString();
+        $securityService = $this->getMockBuilder(SecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
+
+        $uuidGenerator = $this->getMockBuilder(UuidGenerator::class)->getMock();
+        $uuidGenerator->expects($this->any())->method('makeGuid')->willReturn($userId);
+        self::$container->set(UuidGenerator::class, $uuidGenerator);
+
+        self::$container->set(SecurityService::class, $securityService);
+
+        $email = 'asd123123123@asd.ru';
+        $command = new RegisterAccount(
+            $email,
+            'asd',
+            Role::ROLE_USER->value,
+            'ru',
+            'first'
+        );
+
+        $sut = self::$container->get(RegisterAccountUseCase::class);
+        /** @var RegisterAccountUseCase $sut */
+        $sut->handle($command);
+
+        $command = new ChangeMyNickname( 'second');
+
+        $sut = self::$container->get(ChangeMyNicknameUseCase::class);
+        /** @var ChangeMyNicknameUseCase $sut */
+        $sut->handle($command);
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        /** @var JWTUserRepository $jwtRepository */
+        $jwtUser = $jwtRepository->getActiveById($userId);
+
+        $this->assertEquals('second', $jwtUser->getNickname());
+    }
+
     /**
      * @test
      * */
