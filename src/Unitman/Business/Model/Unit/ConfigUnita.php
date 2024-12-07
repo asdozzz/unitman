@@ -91,8 +91,8 @@ final class ConfigUnita
         foreach ($values as $value) {
             $formatValues[$value->getId()] = $value->getValue();
         }
-
         $errs = [];
+
         foreach ($this->variables as $variable) {
             if (!isset($formatValues[$variable->getId()])) {
                 $errs[] = sprintf('value for variable with id=%s not defined', $variable->getId());
@@ -105,6 +105,17 @@ final class ConfigUnita
         }
 
         return $errs;
+    }
+
+    public function getVariableTypeMap(): array
+    {
+        $map = [];
+
+        foreach ($this->variables as $variable) {
+            $map[$variable->getId()] = $variable->getType();
+        }
+
+        return $map;
     }
 
     /**

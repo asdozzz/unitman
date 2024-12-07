@@ -3,6 +3,7 @@
 namespace App\Unitman\Tests\Unit\Unit;
 
 use App\Unitman\Business\Model\Unit\ConfigUnita;
+use App\Unitman\Business\Model\Unit\VariableValue;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigUnitTest extends TestCase
@@ -13,6 +14,11 @@ final class ConfigUnitTest extends TestCase
     function validnii_config()
     {
         $configAsArray = [
+            'variables' => [
+                ['id' => 'INTEGER', 'label' => 'INTEGER', 'type' => 'integer', 'defaultValue' => "10"],
+                ['id' => 'FLOAT', 'label' => 'FLOAT', 'type' => 'float', 'defaultValue' => "10.5"],
+                ['id' => 'STRING', 'label' => 'STRING', 'type' => 'string', 'defaultValue' => "asd"],
+            ],
             'prepare' => [
                 'ls -la'
             ],
@@ -45,6 +51,13 @@ final class ConfigUnitTest extends TestCase
         ];
 
         $config = ConfigUnita::fromArray($configAsArray);
+        $errs = $config->validateValues([
+            new VariableValue('INTEGER',"10"),
+            new VariableValue('FLOAT', "10.5"),
+            new VariableValue('STRING', "123123"),
+        ]);
+
+        $this->assertEquals([], $errs);
 
         $this->assertEquals('/test', $config->getServices()[0]->ports[0]->startUri);
     }

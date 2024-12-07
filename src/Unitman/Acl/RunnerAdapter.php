@@ -229,11 +229,11 @@ final class RunnerAdapter implements RunnerService
      */
     private function makeVariablesListFromUnit(Unit $unit, Project $project): array
     {
-        $closure = fn(Unit\VariableValue $variableValue): array => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue());
+        $closure = fn(Unit\VariableValue $variableValue): array => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue(), 'Type' => $variableValue->getType());
         $variables = array_map($closure, $unit->poluchitZnacheniyaPeremenih());
 
         foreach ($project->poluchitPeremenieProekta() as $projectVariable) {
-            $variables[] = array('Id' => 'PV_'.$projectVariable->code, 'Value' => $projectVariable->value);
+            $variables[] = array('Id' => 'PV_'.$projectVariable->code, 'Value' => $projectVariable->value, 'Type' => 'string');
         }
 
         return $variables;
