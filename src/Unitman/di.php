@@ -45,7 +45,7 @@ return function (ContainerConfigurator $configuration) {
         ->bind('$appEnv','%env(APP_ENV)%');
 
     $services->load('App\\Unitman\\', './{Business,Infra,Acl,Api}')
-        ->exclude(['./{di.php,di_test.php, routing.php, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
+        ->exclude(['./{di.php,di_test.php, routing.php, Migrations, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
         ->public();
 
     $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class);

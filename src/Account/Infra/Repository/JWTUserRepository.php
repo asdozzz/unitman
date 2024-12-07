@@ -6,8 +6,10 @@ use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Port\CanFindDouble;
 use App\Account\Business\Port\UmeetPoluchatAccountDlySystemi;
+use App\Account\Business\Port\UmeetPoluchatNastroikiAccounta;
 use App\Account\Business\Port\UmeetPoluchatSpisokVsehPolzovatelei;
 use App\Account\Business\ReadModel\AccountForManaging;
+use App\Account\Business\ReadModel\AccountSettingsReadModel;
 use App\Account\Business\ReadModel\UserList;
 use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Doctrine\Security\User\UserLoaderInterface;
@@ -19,7 +21,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 /**
  * @implements UserProviderInterface<JWTUser>
  * */
-final class JWTUserRepository implements UserProviderInterface, CanFindDouble, UmeetPoluchatSpisokVsehPolzovatelei, UmeetPoluchatAccountDlySystemi
+final class JWTUserRepository implements UserProviderInterface, CanFindDouble, UmeetPoluchatSpisokVsehPolzovatelei, UmeetPoluchatAccountDlySystemi, UmeetPoluchatNastroikiAccounta
 {
     const TABLE = 'jwt_user';
     public function __construct(private Connection $connection)
@@ -47,7 +49,8 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
                 password varchar      not null,
                 locale varchar,
                 roles    varchar,
-                is_blocked bit
+                is_blocked bit,
+                nickname varchar
             );
         ");
     }
@@ -66,7 +69,8 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             'password' => $user->getPassword(),
             'roles' => join(',', $user->getRoles()),
             'is_blocked' => $user->isBlocked()?1:0,
-            'locale' => $user->getLocale()
+            'locale' => $user->getLocale(),
+            'nickname' => $user->getNickname()
         ]);
     }
 
@@ -78,7 +82,8 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             'password' => $user->getPassword(),
             'roles' => join(',', $user->getRoles()),
             'is_blocked' => $user->isBlocked()?1:0,
-            'locale' => $user->getLocale()
+            'locale' => $user->getLocale(),
+            'nickname' => $user->getNickname()
         ], ['id' => $user->getId()]);
     }
 
@@ -103,7 +108,7 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
      */
     private function makeUserByDbRow(array $row): JWTUser
     {
-        $JWTUser = new JWTUser($row['id'], $row['email'], $row['password'], explode(',', $row['roles']), (bool)$row['is_blocked'], $row['locale']);
+        $JWTUser = new JWTUser($row['id'], $row['email'], $row['password'], explode(',', $row['roles']), (bool)$row['is_blocked'], $row['locale'], $row['nickname']);
         return $JWTUser;
     }
 
@@ -131,6 +136,13 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         return !empty($row);
     }
 
+    public function isExistDoubleByNickname(string $id, string $nickname): bool
+    {
+        $row = $this->findUserByNickname($nickname, $id);
+
+        return !empty($row);
+    }
+
     /**
      * @param string $identifier
      * @return false|mixed[]
@@ -140,6 +152,13 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
     {
         $table = self::TABLE;
         $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE email = :email", ['email' => $identifier]);
+        return $row;
+    }
+
+    public function findUserByNickname(string $nickname, string $id): array|false
+    {
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE nickname = :nickname and id != :id", ['nickname' => $nickname, 'id' => $id]);
         return $row;
     }
 
@@ -185,12 +204,12 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
 
     private function makeUserListModel(array $row): UserList
     {
-        return new UserList($row['id'], $row['email'], $row['is_blocked']);
+        return new UserList($row['id'], $row['email'], $row['is_blocked'], $row['nickname']);
     }
 
     private function makeAccountForManaging(array $row): AccountForManaging
     {
-        return new AccountForManaging($row['id'], $row['email'], $row['is_blocked'], $row['roles'], $row['password']);
+        return new AccountForManaging($row['id'], $row['email'], $row['is_blocked'], $row['roles'], $row['password'], $row['nickname']);
     }
 
     function poluchitSpisokVsehPolzovatelei(): array
@@ -241,5 +260,16 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         }
 
         return $this->makeUserByDbRow($row);
+    }
+
+    function poluchitNastroikiAccounta(string $accountId): AccountSettingsReadModel
+    {
+        $row = $this->findRowById($accountId);
+
+        if (empty($row)) {
+            throw new \DomainException('account.settings_not_found');
+        }
+
+        return new AccountSettingsReadModel($row['nickname']);
     }
 }

@@ -9,7 +9,8 @@ class AccountWasRegistered
         public readonly string $email,
         public readonly string $password,
         public readonly string $role,
-        public readonly string $locale = 'ru'
+        public readonly string $locale = 'ru',
+        public readonly string $nickname = '',
     )
     {
     }

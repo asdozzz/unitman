@@ -7,6 +7,9 @@ use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\LocaleChanged;
+use App\Account\Business\Model\Event\NicknameWasChanged;
+use App\Account\Business\Model\Event\NicknameWasChangedByAdmin;
+use App\Account\Business\Model\Event\PasswordWasChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use App\Account\Business\Model\JWTUser;
@@ -49,7 +52,7 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
 
     public function handleAccountWasRegistered(AccountWasRegistered $event): void
     {
-        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role], locale: $event->locale);
+        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role], locale: $event->locale, nickname: $event->nickname);
         $this->JWTUserRepository->save($user);
     }
 
@@ -60,6 +63,13 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
     }
 
     public function handlePasswordWasChangedByAdmin(PasswordWasChangedByAdmin $event): void
+    {
+        $user = $this->JWTUserRepository->getById($event->accountId);
+        $user->updatePassword($event->newPassword);
+        $this->JWTUserRepository->update($user);
+    }
+
+    public function handlePasswordWasChanged(PasswordWasChanged $event): void
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->updatePassword($event->newPassword);
@@ -91,6 +101,20 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->setLocale($event->newLocale);
+        $this->JWTUserRepository->update($user);
+    }
+
+    public function handleNicknameWasChangedByAdmin(NicknameWasChangedByAdmin $event): void
+    {
+        $user = $this->JWTUserRepository->getById($event->accountId);
+        $user->setNickname($event->newNickname);
+        $this->JWTUserRepository->update($user);
+    }
+
+    public function handleNicknameWasChanged(NicknameWasChanged $event): void
+    {
+        $user = $this->JWTUserRepository->getById($event->accountId);
+        $user->setNickname($event->newNickname);
         $this->JWTUserRepository->update($user);
     }
 

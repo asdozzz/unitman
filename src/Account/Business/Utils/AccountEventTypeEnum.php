@@ -16,6 +16,9 @@ enum AccountEventTypeEnum: string
     case AccountWasBlockedByAdmin = 'AccountWasBlockedByAdmin';
     case AccountWasUnblockedByAdmin = 'AccountWasUnblockedByAdmin';
     case EmailWasChangedByAdmin = 'EmailWasChangedByAdmin';
+    case NicknameWasChangedByAdmin = 'NicknameWasChangedByAdmin';
     case PasswordWasChangedByAdmin = 'PasswordWasChangedByAdmin';
+    case PasswordWasChanged = 'PasswordWasChanged';
+    case NicknameWasChanged = 'NicknameWasChanged';
     case LocaleChanged = 'LocaleChanged';
 }

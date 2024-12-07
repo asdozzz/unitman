@@ -37,7 +37,7 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
-        $securityService->expects($this->any())->method('getEmailByUserId')->willReturn('asd@asd.ru');
+        $securityService->expects($this->any())->method('getEmailOrNicknameByUserId')->willReturn('asd@asd.ru');
         $securityService->expects($this->any())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru'));
         self::$container->set(UnitmanSecurityService::class, $securityService);
         return $securityService;

@@ -6,6 +6,7 @@ use App\Account\Business\Command\ChangeMyLocale;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Model\Account\AccountId;
 use App\Account\Business\Model\Account\Email;
+use App\Account\Business\Model\Account\Nickname;
 use App\Account\Business\Model\Account\Password;
 use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\Event\AccountWasBlockedByAdmin;
@@ -13,6 +14,9 @@ use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\LocaleChanged;
+use App\Account\Business\Model\Event\NicknameWasChanged;
+use App\Account\Business\Model\Event\NicknameWasChangedByAdmin;
+use App\Account\Business\Model\Event\PasswordWasChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use App\Utils\Exception\TranslatorKeyword;
@@ -42,6 +46,8 @@ final class Account implements AggregateRoot
     private bool $isBlocked = false;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private string $locale;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private Nickname $nickname;
 
     public static function registerAccount(string $accountId, RegisterAccount $command): static
     {
@@ -49,7 +55,7 @@ final class Account implements AggregateRoot
             throw new \DomainException(TranslatorKeyword::SYSTEM_CANNOT_ADD_USERS->value);
         }
         $account = new static(AccountId::fromString($accountId));
-        $account->recordThat(new AccountWasRegistered($accountId, $command->getEmail(), $command->getPassword(), $command->getRoles(), $command->getLocale()));
+        $account->recordThat(new AccountWasRegistered($accountId, $command->getEmail(), $command->getPassword(), $command->getRoles(), $command->getLocale(), $command->nickname ?? ""));
         return $account;
     }
 
@@ -60,6 +66,7 @@ final class Account implements AggregateRoot
         $this->password = new Password($fact->password);
         $this->role = Role::from($fact->role);
         $this->locale = $fact->locale;
+        $this->nickname = new Nickname($fact->nickname);
     }
 
     public static function registerSystemAccount(string $accountId, string $password, string $locale): static
@@ -108,6 +115,33 @@ final class Account implements AggregateRoot
         $this->password = new Password($fact->newPassword);
     }
 
+
+    public function changeMyPassword(string $newPassword): void
+    {
+        $this->recordThat(new PasswordWasChanged($this->accountId->toString(), $newPassword));
+    }
+
+    private function applyPasswordWasChanged(PasswordWasChanged $fact): void
+    {
+        $this->password = new Password($fact->newPassword);
+    }
+
+    public function changeMyNickname(string $newNickname): void
+    {
+        Nickname::validateNewNickname($newNickname);
+
+        if ($this->nickname->__toString() === $newNickname) {
+            throw new \DomainException('account.old_nickname_equal_new_nickname');
+        }
+
+        $this->recordThat(new NicknameWasChanged($this->accountId->toString(), $newNickname));
+    }
+
+    private function applyNicknameWasChanged(NicknameWasChanged $fact): void
+    {
+        $this->nickname = new Nickname($fact->newNickname);
+    }
+
     public function changeEmailByAdmin(string $newEmail): void
     {
         if ($this->getEmail() === $newEmail) {
@@ -122,6 +156,24 @@ final class Account implements AggregateRoot
     private function applyEmailWasChangedByAdmin(EmailWasChangedByAdmin $fact): void
     {
         $this->email = new Email($fact->newEmail);
+    }
+
+    public function changeNicknameByAdmin(string $newNickname): void
+    {
+        $this->checkSystemRole();
+
+        Nickname::validateNewNickname($newNickname);
+
+        if ((string)$this->nickname === $newNickname) {
+            throw new \RuntimeException('account.old_nickname_equal_new_nickname');
+        }
+
+        $this->recordThat(new NicknameWasChangedByAdmin($this->accountId->toString(), $newNickname));
+    }
+
+    private function applyNicknameWasChangedByAdmin(NicknameWasChangedByAdmin $fact): void
+    {
+        $this->nickname = new Nickname($fact->newNickname);
     }
 
     public function blockByAdmin(?string $reason): void

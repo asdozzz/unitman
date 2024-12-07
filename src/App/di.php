@@ -28,7 +28,7 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure();
 
     $services->load('App\\App\\', './{Business,Infra,Acl}')
-        ->exclude(['./{di.php, Tests}','./Business/Command','./Business/Model'])
+        ->exclude(['./{di.php, Migrations, Tests}','./Business/Command','./Business/Model'])
         ->public();
 
     $services->set(PayloadSerializerSupportingObjectMapperAndSerializablePayload::class, PayloadSerializerSupportingObjectMapperAndSerializablePayload::class);

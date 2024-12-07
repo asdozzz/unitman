@@ -4,13 +4,20 @@ namespace App\Account\Infra\Controller;
 use App\Account\Business\Command\BlockByAdmin;
 use App\Account\Business\Command\ChangeEmailByAdmin;
 use App\Account\Business\Command\ChangeMyLocale;
+use App\Account\Business\Command\ChangeMyNickname;
+use App\Account\Business\Command\ChangeMyPassword;
+use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Command\ChangePasswordByAdmin;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
 use App\Account\Business\UseCase\ChangeEmailByAdminUseCase;
 use App\Account\Business\UseCase\ChangeMyLocaleUseCase;
+use App\Account\Business\UseCase\ChangeMyNicknameUseCase;
+use App\Account\Business\UseCase\ChangeMyPasswordUseCase;
+use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
+use App\Account\Business\UseCase\PoluchitNastroikiAccountaUseCase;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiQuery;
 use App\Account\Business\UseCase\RegisterAccountUseCase;
@@ -30,7 +37,28 @@ final class AccountController extends AbstractController
     }
 
     #[Route('/changePasswordByAdmin')]
-    function changePassword(ChangePasswordByAdmin $command, ChangePasswordByAdminUseCase $useCase): Response
+    function changePasswordByAdmin(ChangePasswordByAdmin $command, ChangePasswordByAdminUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/changeMyPassword')]
+    function changeMyPassword(ChangeMyPassword $command, ChangeMyPasswordUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/changeNicknameByAdmin')]
+    function changeNicknameByAdmin(ChangeNicknameByAdmin $command, ChangeNicknameByAdminUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/changeMyNickname')]
+    function changeMyNickname(ChangeMyNickname $command, ChangeMyNicknameUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
@@ -76,5 +104,11 @@ final class AccountController extends AbstractController
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/poluchitNastroikiPolzovatelya')]
+    function poluchitNastroikiPolzovatelya(PoluchitNastroikiAccountaUseCase $useCase): Response
+    {
+        return $this->json(\App\Utils\Model\Reponse\Response::success($useCase->handle()));
     }
 }
