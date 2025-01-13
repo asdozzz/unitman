@@ -18,7 +18,8 @@ final class Zapushen extends AbstractState
     public function getNextStates(): array
     {
         return [
-            new VOcherediNaOstanovku()
+            new VOcherediNaOstanovku(),
+            new VOcherediNaVipolnenieDeistviya()
         ];
     }
 
@@ -28,6 +29,7 @@ final class Zapushen extends AbstractState
             StateUserCommand::nachatOstanovku,
             StateUserCommand::nachatObnovleniePosleZapuska,
             StateUserCommand::nachatUdaleniePosleZapuska,
+            StateUserCommand::vipolnitDeistvie,
         ];
     }
 }

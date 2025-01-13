@@ -21,6 +21,9 @@ final class IntegerConfigVariable extends AbstractConfigVariable implements Conf
         return (string)$this->id;
     }
 
+    /**
+     * @psalm-suppress TypeDoesNotContainType
+     * */
     function validateValue(string $value): ?string
     {
         if (empty($value)) {

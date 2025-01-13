@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\BackgroundJob\OcheredUnitov;
 
+use App\Unitman\Business\Command\Unit\UstanovitResultatDeistviya;
 use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
@@ -12,6 +13,7 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatSbrosaPodgotovkiOtRunnera
 use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
 use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatDeistviyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatIzmeneniyaVetkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatOstanovkiUnitaUseCase;
@@ -34,7 +36,8 @@ final class OcheredUnitovActivity
         private UstanovitResultatZapuskaUseCase $ustanovitResultatZapuskaUseCase,
         private UstanovitResultatOstanovkiUnitaUseCase $ustanovitResultatOstanovkiUnitaUseCase,
         private UstanovitResultatUdaleniyaUseCase $ustanovitResultatUdaleniyaUseCase,
-        private UstanovitResultatIzmeneniyaVetkiUnitaUseCase $ustanovitResultatIzmeneniyaVetkiUnitaUseCase
+        private UstanovitResultatIzmeneniyaVetkiUnitaUseCase $ustanovitResultatIzmeneniyaVetkiUnitaUseCase,
+        private UstanovitResultatDeistviyaUseCase $ustanovitResultatDeistviyaUseCase
     )
     {
     }
@@ -59,6 +62,7 @@ final class OcheredUnitovActivity
             OcheredUnitovReadModel::OSTANOVKA => $this->ostanovka($model),
             OcheredUnitovReadModel::UDALENIE => $this->udalenie($model),
             OcheredUnitovReadModel::IZMENENIYE_VETKI => $this->izmenitVetku($model),
+            OcheredUnitovReadModel::DEISTVIE => $this->deistvie($model),
         };
 
         return $result;
@@ -109,6 +113,12 @@ final class OcheredUnitovActivity
     private function izmenitVetku(OcheredUnitovReadModel $model): bool
     {
         $this->ustanovitResultatIzmeneniyaVetkiUnitaUseCase->handle(new UstanovitResultatIzmenenniyaVetkiUnita($model->unitId));
+        return true;
+    }
+
+    private function deistvie(OcheredUnitovReadModel $model): bool
+    {
+        $this->ustanovitResultatDeistviyaUseCase->handle(new UstanovitResultatDeistviya($model->unitId));
         return true;
     }
 }

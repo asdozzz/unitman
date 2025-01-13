@@ -3,6 +3,7 @@
 namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOchistkuProekta;
@@ -16,6 +17,7 @@ use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
@@ -26,6 +28,7 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
 use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
+use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatIzmenenieVetkiUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatOchistkuProektaWorkflow;
@@ -247,6 +250,20 @@ final class RunnerApi implements RunnerApiInterface
         return $run->getExecution()->getID();
     }
 
+
+    public function nachatDeistvieUnita(NachatDeistvieUnita $command): string
+    {
+        $workflow = $this->workflowClient->newWorkflowStub(
+            NachatDeistvieUnitaWorkflow::class,
+            WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
+        );
+
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
+
     public function poluchitResultatPodgotovki(string $workflowId): ?ResultatPodgotovkiUnita
     {
         $workflow = $this->getWorkflowById($workflowId);
@@ -344,5 +361,11 @@ final class RunnerApi implements RunnerApiInterface
     private function stepAsArray(string $command, string $response, bool $success, int $unixtime): array
     {
         return ['Command' => $command, 'Response' => $response, 'Success'=>$success, 'Unixtime' => $unixtime];
+    }
+
+    public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, ResultatDeistviyaUnita::class);
     }
 }

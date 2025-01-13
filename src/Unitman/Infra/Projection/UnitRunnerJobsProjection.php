@@ -9,6 +9,7 @@ use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaDeistviyaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -30,6 +31,7 @@ use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
+use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -38,6 +40,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSborkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
+use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
 use App\Unitman\Business\ReadModel\Unit\UnitRunnerJob;
@@ -108,6 +111,7 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
             AvtosborkaUnitaNachalas::class,
             OshibkaAvtosborkiUstanovlena::class,
             StatistikaPoKonteineruObnovlena::class,
+            VipolnenieDeistviyaNachalos::class
         ];
     }
 
@@ -204,6 +208,18 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
     function handleUspehUdaleniyaUnitaUstanovlen(UspehUdaleniyaUnitaUstanovlen $fact): void
     {
         $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::UDALENIE, true, $fact->steps);
+        $this->repository->insert($job);
+    }
+
+    function handleOshibkaDeistviyaUstanovlena(OshibkaDeistviyaUstanovlena $fact): void
+    {
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::VIPOLNENIE_DEISTVIYA, false, $fact->steps);
+        $this->repository->insert($job);
+    }
+
+    function handleUspehDeistviyaUstanovlen(UspehDeistviyaUstanovlen $fact): void
+    {
+        $job = new UnitRunnerJob('stub', $fact->unitId, UnitRunnerJob::VIPOLNENIE_DEISTVIYA, true, $fact->steps);
         $this->repository->insert($job);
     }
 }

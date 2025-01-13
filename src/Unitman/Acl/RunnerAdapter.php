@@ -3,6 +3,7 @@
 namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOchistkuProekta;
@@ -16,6 +17,7 @@ use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
+use App\Unitman\Business\Model\Runner\ResultatDeistviyaiUnita;
 use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatOshistkiProekta;
@@ -125,6 +127,23 @@ final class RunnerAdapter implements RunnerService
         $workflowId = $this->runnerApi->nachatZapuskUnita($command);
         return new JobId($workflowId);
     }
+
+
+    public function nachatVipolnenieDeistviya(Unit $unit, Project $project, string $actionId, array $values): JobId
+    {
+        $project = $this->projectEventsRepository->getById($unit->getProjectId());
+        $konfigDeistviya = $unit->poluchitKonfigDeistviya($actionId);
+        $variables = [];
+        foreach ($values as $key => $value) {
+            $konfigVariable = $konfigDeistviya->getConfigVariableById($key);
+            $variables[] = array('Id' => $key, 'Value' => $value, 'Type' => $konfigVariable->getType());
+        }
+
+        $command = new NachatDeistvieUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $konfigDeistviya->commands, $variables);
+        $workflowId = $this->runnerApi->nachatDeistvieUnita($command);
+        return new JobId($workflowId);
+    }
+
 
     public function nachatOstanovkuUnita(Unit $unit, Project $project): JobId
     {
@@ -322,5 +341,16 @@ final class RunnerAdapter implements RunnerService
         }
 
         return new ResultatOshistkiProekta((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
+    }
+
+    public function poluchitResultatDeistviya(Unit $unit): ResultatDeistviyaiUnita
+    {
+        $result = $this->runnerApi->poluchitResultatDeistviya($unit->poluchitWorkflowIdDlyDeistviya());
+
+        if (empty($result)) {
+            throw new \Exception('runner.deistvie_ne_zakonchena');
+        }
+
+        return new ResultatDeistviyaiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 }

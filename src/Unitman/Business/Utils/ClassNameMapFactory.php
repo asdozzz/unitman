@@ -126,6 +126,9 @@ final class ClassNameMapFactory
             Unit\Event\OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena::class => UnitmanClassNameMapEnum::OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena,
             Unit\Event\KodVetkiIzmenilsyaVHranilishe::class => UnitmanClassNameMapEnum::KodVetkiIzmenilsyaVHranilishe,
             Unit\Event\StatistikaPoKonteineruObnovlena::class => UnitmanClassNameMapEnum::StatistikaPoKonteineruObnovlena,
+            Unit\Event\VipolnenieDeistviyaNachalos::class => UnitmanClassNameMapEnum::VipolnenieDeistviyaNachalos,
+            Unit\Event\UspehDeistviyaUstanovlen::class => UnitmanClassNameMapEnum::UspehDeistviyaUstanovlen,
+            Unit\Event\OshibkaDeistviyaUstanovlena::class => UnitmanClassNameMapEnum::OshibkaDeistviyaUstanovlena,
         ];
         $map = [];
 

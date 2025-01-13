@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Business\Model\Unit;
 
+use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigDeistviya;
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
 use App\Unitman\Business\Model\Unit\ConfigVariable\ConfigVariableFactory;
 
@@ -20,13 +21,19 @@ final class ConfigUnita
      * */
     private array $services;
 
+    /**
+     * @var KonfigDeistviya[]
+     * */
+    private array $actions;
+
     public function __construct(
         array $variables,
         array $prepare,
         array $resetPrepare,
         array $up,
         array $down,
-        array $services
+        array $services,
+        array $actions = []
     )
     {
         //TODO вынести вызов фабрики в тест кейс и использовать DI
@@ -55,6 +62,12 @@ final class ConfigUnita
         foreach ($services as $serviceName => $serviceData) {
             $this->services[] = KonfigServisa::fromServiceData($serviceName, $serviceData);
         }
+
+        $this->actions = [];
+
+        foreach ($actions as $action) {
+            $this->actions[] = KonfigDeistviya::fromArray($action);
+        }
     }
 
     function toArray(): array
@@ -66,6 +79,7 @@ final class ConfigUnita
             'up' => $this->up,
             'down' => $this->down,
             'services' => array_map(fn(KonfigServisa $service): array => $service->toArray(), $this->services),
+            'actions' => array_map(fn(KonfigDeistviya $action): array => $action->toArray(), $this->actions),
         ];
     }
 
@@ -78,6 +92,7 @@ final class ConfigUnita
             isset($cfg['up']) && is_array($cfg['up'])?$cfg['up']:[],
             isset($cfg['down']) && is_array($cfg['down'])?$cfg['down']:[],
             isset($cfg['services']) && is_array($cfg['services'])?$cfg['services']:[],
+            isset($cfg['actions']) && is_array($cfg['actions'])?$cfg['actions']:[],
         );
     }
 
@@ -98,6 +113,29 @@ final class ConfigUnita
                 $errs[] = sprintf('value for variable with id=%s not defined', $variable->getId());
             } else {
                 $err = $variable->validateValue($formatValues[$variable->getId()]);
+                if (!empty($err)) {
+                    $errs[] = $err;
+                }
+            }
+        }
+
+        return $errs;
+    }
+
+    function validateActionValues(string $actionId, array $values): array
+    {
+        $errs = [];
+        $action = $this->findActionById($actionId);
+
+        if (empty($action)) {
+            return ['unit.konfig.actions.not_found_by_id'];
+        }
+
+        foreach ($action->variables as $variable) {
+            if (!isset($values[$variable->getId()])) {
+                $errs[] = sprintf('value for variable with id=%s not defined', $variable->getId());
+            } else {
+                $err = $variable->validateValue($values[$variable->getId()]);
                 if (!empty($err)) {
                     $errs[] = $err;
                 }
@@ -164,5 +202,31 @@ final class ConfigUnita
     public function getServices(): array
     {
         return $this->services;
+    }
+
+    public function getActionById(string $id): KonfigDeistviya
+    {
+        $action = $this->findActionById($id);
+
+        if ($action === null) {
+            throw new \DomainException('unit.konfig.actions');
+        }
+
+        return $action;
+    }
+
+    /**
+     * @param string $actionId
+     * @return KonfigDeistviya|null
+     */
+    private function findActionById(string $actionId): KonfigDeistviya|null
+    {
+        $action = null;
+        foreach ($this->actions as $konfigDeistviya) {
+            if ($konfigDeistviya->id === $actionId) {
+                $action = $konfigDeistviya;
+            }
+        }
+        return $action;
     }
 }

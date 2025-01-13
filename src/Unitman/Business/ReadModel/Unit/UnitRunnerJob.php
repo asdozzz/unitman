@@ -15,6 +15,8 @@ final class UnitRunnerJob extends UnitRunnerJobWithoutSteps
     const UDALENIE = 'UDALENIE';
 
     const IZMENENIYE_VETKI = 'IZMENENIYE_VETKI';
+
+    const VIPOLNENIE_DEISTVIYA = 'VIPOLNENIE_DEISTVIYA';
     /**
      * @var RunnerJobStep[]
      */

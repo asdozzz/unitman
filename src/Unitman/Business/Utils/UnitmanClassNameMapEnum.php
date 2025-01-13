@@ -78,4 +78,7 @@ enum UnitmanClassNameMapEnum: string
 
     case StatistikaPoKonteineruObnovlena = 'StatistikaPoKonteineruObnovlena';
 
+    case VipolnenieDeistviyaNachalos = 'VipolnenieDeistviyaNachalos';
+    case UspehDeistviyaUstanovlen = 'UspehDeistviyaUstanovlen';
+    case OshibkaDeistviyaUstanovlena = 'OshibkaDeistviyaUstanovlena';
 }

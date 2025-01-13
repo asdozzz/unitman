@@ -20,6 +20,7 @@ use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnitPosleZapuska;
+use App\Unitman\Business\Command\Unit\UstanovitResultatDeistviya;
 use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
@@ -28,6 +29,7 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatSborkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatSbrosaPodgotovki;
 use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
 use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
+use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
 use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
@@ -48,6 +50,7 @@ use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatDeistviyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatIzmeneniyaVetkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatOstanovkiUnitaUseCase;
@@ -56,6 +59,7 @@ use App\Unitman\Business\UseCase\Unit\UstanovitResultatSborkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatSbrosaPodgotovkiUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
+use App\Unitman\Business\UseCase\Unit\VipolnitDeistviyeUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -258,6 +262,17 @@ final class UnitConroller extends AbstractController
         }
     }
 
+    #[Route('/ustanovitResultatDeistviya', methods: ['POST'])]
+    public function ustanovitResultatDeistviya(UstanovitResultatDeistviya $command, UstanovitResultatDeistviyaUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
     #[Route('/ostanovit', methods: ['POST'])]
     public function ostanovit(OstanovitUnit $command, OstanovitUnitUseCase $useCase): Response
     {
@@ -363,6 +378,17 @@ final class UnitConroller extends AbstractController
         try {
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/vipolnitDeistviye', methods: ['POST'])]
+    public function vipolnitDeistviye(VipolnitDeistviye $command, VipolnitDeistviyeUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
         }
