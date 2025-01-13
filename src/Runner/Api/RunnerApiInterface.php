@@ -3,6 +3,7 @@
 namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOchistkuProekta;
@@ -16,6 +17,7 @@ use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
@@ -44,9 +46,12 @@ interface RunnerApiInterface
     public function nachatSbrosPodgotovkiUnita(NachatSbrosPodgotovkiUnita $command): string;
     public function nachatZapuskUnita(NachatZapuskUnita $command): string;
     public function nachatOstanovkuUnita(NachatOstanovkuUnita $command): string;
+    public function nachatDeistvieUnita(NachatDeistvieUnita $command): string;
     public function poluchitResultatPodgotovki(string $workflowId): ?ResultatPodgotovkiUnita;
     public function poluchitResultatObnovleniyaUnita(string $workflowId): ?ResultatObnovleniyaUnita;
     public function poluchitResultatSbrosaPodgotovkiUnita(string $workflowId): ?ResultatSbrosaPodgotovkiUnita;
     public function poluchitResultatZapuskaUnita(string $workflowId): ?ResultatZapuskaUnita;
     public function poluchitResultatOstanovkiUnita(string $workflowId): ?ResultatOstanovkiUnita;
+
+    public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita;
 }

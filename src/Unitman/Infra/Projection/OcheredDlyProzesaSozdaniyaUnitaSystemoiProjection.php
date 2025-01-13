@@ -9,6 +9,7 @@ use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaDeistviyaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -30,6 +31,7 @@ use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
+use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -38,6 +40,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSborkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
+use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaSozdaniyaUnitaSystemoi;
@@ -137,6 +140,9 @@ final class OcheredDlyProzesaSozdaniyaUnitaSystemoiProjection extends AbstractPr
             UspehZapuskaUnitaUstanovlen::class,
             OshibkaAvtosborkiUstanovlena::class,
             StatistikaPoKonteineruObnovlena::class,
+            VipolnenieDeistviyaNachalos::class,
+            UspehDeistviyaUstanovlen::class,
+            OshibkaDeistviyaUstanovlena::class,
         ];
     }
 

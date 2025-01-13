@@ -4,6 +4,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
@@ -22,6 +23,7 @@ use App\Unitman\Business\Command\Unit\SbrositPodgotovkuUnita;
 use App\Unitman\Business\Command\Unit\SobratUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
+use App\Unitman\Business\Command\Unit\UstanovitResultatDeistviya;
 use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
@@ -30,6 +32,7 @@ use App\Unitman\Business\Command\Unit\UstanovitResultatSborkiUnita;
 use App\Unitman\Business\Command\Unit\UstanovitResultatSbrosaPodgotovki;
 use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
 use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
+use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
 use App\Unitman\Business\Model\Runner\JobId;
@@ -48,6 +51,7 @@ use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
+use App\Unitman\Business\UseCase\Unit\UstanovitResultatDeistviyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatIzmeneniyaVetkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatOstanovkiUnitaUseCase;
@@ -56,6 +60,7 @@ use App\Unitman\Business\UseCase\Unit\UstanovitResultatSborkiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatSbrosaPodgotovkiUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
+use App\Unitman\Business\UseCase\Unit\VipolnitDeistviyeUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
 use App\Unitman\Acl\MemoryRunnerService;
@@ -95,9 +100,9 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:my_password',
         ];
         $variables = [
-            ['Id' => 'AUTH_TOKEN', 'Value' => 'token_access'],
-            ['Id' => 'ORDER_SERVICE', 'Value' => 'master'],
-            ['Id' => 'DICTIONARY_SERVICE', 'Value' => 'http://v2.dict.ru'],
+            ['Id' => 'AUTH_TOKEN', 'Value' => 'token_access', 'Type' => 'string'],
+            ['Id' => 'ORDER_SERVICE', 'Value' => 'master', 'Type' => 'unit'],
+            ['Id' => 'DICTIONARY_SERVICE', 'Value' => 'http://v2.dict.ru', 'Type' => 'collection'],
         ];
         $caches = [
             ['ServiceName' => 'php', 'Keys' => ['composer.lock'], 'Paths' => ['vendor']]
@@ -138,6 +143,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, 'ZAPUSK_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_ZAPUSKA, new ResultatZapuskaUnita(true,$stepsSuccess));
+        $memoryRunner->addResponse(MemoryRunnerService::DEISTVIE_UNITA, 'DEISTVIE_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_DEISTVIYA, new ResultatDeistviyaUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::OSTANOVKA_UNITA, 'OSTANOVKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_OSTANOVKI, new ResultatOstanovkiUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
@@ -389,6 +396,18 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
         $this->assertEquals($spisokUnitovReadModel->state, 'USPESHNO_ZAPUSHEN');
+
+        $useCase = self::$container->get(VipolnitDeistviyeUseCase::class);
+        $useCase->handle(new VipolnitDeistviye($unitId, 'php-console',['BIN_CONSOLE' => 'test']));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, true);
+
+        $useCase = self::$container->get(UstanovitResultatDeistviyaUseCase::class);
+        $useCase->handle(new UstanovitResultatDeistviya($unitId));
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
 
         $useCase = self::$container->get(OstanovitUnitUseCase::class);
         $useCase->handle(new OstanovitUnit($unitId));

@@ -9,6 +9,7 @@ use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaDeistviyaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -30,6 +31,7 @@ use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
+use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -38,6 +40,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSborkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
+use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -272,8 +275,14 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             }
         }
 
+        $deistviya = [];
+        if (!empty($fact->configUnita['actions'])) {
+            $deistviya = $fact->configUnita['actions'];
+        }
+
         $readModel = $readModel->copyAndUpdateData([
             'links' => $links,
+            'deistviya' => $deistviya
         ]);
         $this->repository->update($readModel);
 
@@ -557,6 +566,40 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'unixtimePoslednegoObnovleniyaVHranilishe' => $fact->unixtime,
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleVipolnenieDeistviyaNachalos(VipolnenieDeistviyaNachalos $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'waitResultFromRunner' => true,
+            'commands' => $fact->stateAsArray['commands'],
+            'state' => $fact->stateAsArray['code'],
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleUspehDeistviyaUstanovlen(UspehDeistviyaUstanovlen $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'waitResultFromRunner' => false,
+            'commands' => $fact->stateAsArray['commands'],
+            'state' => $fact->stateAsArray['code'],
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleOshibkaDeistviyaUstanovlena(OshibkaDeistviyaUstanovlena $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'waitResultFromRunner' => false,
+            'error' => true,
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
         ]);
         $this->repository->update($readModel);
     }

@@ -20,7 +20,9 @@ final class FloatConfigVariable extends AbstractConfigVariable implements Config
     {
         return (string)$this->id;
     }
-
+    /**
+     * @psalm-suppress TypeDoesNotContainType
+     * */
     function validateValue(string $value): ?string
     {
         if (empty($value)) {

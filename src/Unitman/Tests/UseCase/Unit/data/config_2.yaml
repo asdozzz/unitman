@@ -16,6 +16,17 @@ variables:
     type: string
     defaultValue: qweqwe
 
+actions:
+  - id: php-console
+    name: "php bin/console"
+    variables:
+      - id: BIN_CONSOLE
+        label: BIN_CONSOLE
+        type: string
+        defaultValue: "debug:router"
+    commands:
+      - podman-compose exec php php bin/console ${UNITMAN_ACTION_BIN_CONSOLE}
+
 services:
   web:
     ports:

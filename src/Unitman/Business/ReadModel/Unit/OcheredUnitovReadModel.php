@@ -13,6 +13,7 @@ final class OcheredUnitovReadModel
     const UDALENIE = 'UDALENIE';
 
     const IZMENENIYE_VETKI = 'IZMENENIYE_VETKI';
+    const DEISTVIE = 'DEISTVIE';
 
     public function __construct(
         public readonly int $id,

@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UstanovitOshibkuObnovleniyaUnitaPosleZapuska;
+use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
@@ -18,6 +19,7 @@ use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
+use App\Unitman\Business\Model\Unit\Event\OshibkaDeistviyaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
@@ -39,6 +41,7 @@ use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
+use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
@@ -47,6 +50,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSborkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
+use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
 use App\Unitman\Business\Model\Unit\State\AbstractState;
@@ -69,6 +73,7 @@ use App\Unitman\Business\Model\Unit\State\VOcherediNaPodgotovku;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaSborku;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaSbrosPodgotovki;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaUdalenie;
+use App\Unitman\Business\Model\Unit\State\VOcherediNaVipolnenieDeistviya;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaZapusk;
 use App\Unitman\Business\Model\Unit\State\VOcheredNaIzmenenieVetki;
 use App\Unitman\Business\Model\Unit\State\Zapushen;
@@ -114,6 +119,8 @@ final class Unit implements AggregateRoot
     private ?RunnerJob $zapusk = null;
     private ?RunnerJob $ostanovka = null;
     private ?RunnerJob $udalenie = null;
+
+    private ?RunnerJob $vipolnenieDeistviya = null;
 
     private ?RunnerJob $izmenenieVetki = null;
 
@@ -210,6 +217,7 @@ final class Unit implements AggregateRoot
             'ostanovka',
             'udalenie',
             'izmenenieVetki',
+            'vipolnenieDeistviya',
         ];
 
         foreach ($props as $prop) {
@@ -224,6 +232,93 @@ final class Unit implements AggregateRoot
     public function esliRazreshenoUpravlyatUnitom(ProjectUser $projectUser): bool
     {
         return $this->authorId === $projectUser->userId || $projectUser->userRole === ProjectUserRole::ADMIN || $this->unitSozdanSystemoi;
+    }
+
+    public function proveritZnacheniePeremenihDeistviya(string $actionId, array $values): void
+    {
+        $config = $this->checkIssetConfig();
+
+        $errs = $config->validateActionValues($actionId, $values);
+
+        if (!empty($errs)) {
+            throw new \DomainException(join(',', $errs));
+        }
+    }
+
+    public function vipolnitDeistvie(JobId $jobId,VipolnitDeistviye $command,int $unixtime): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if (!$this->esliZapushen()) {
+            throw new DomainException('unit.unit_ne_zapushen');
+        }
+
+        $this->proveritZnacheniePeremenihDeistviya($command->actionId, $command->values);
+
+
+        $state = $this->newState(new VOcherediNaVipolnenieDeistviya());
+        $this->recordThat(new VipolnenieDeistviyaNachalos($this->getId(), (string) $jobId, $command->actionId, $command->values, $state->toArray($this), $unixtime));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyVipolnenieDeistviyaNachalos(VipolnenieDeistviyaNachalos $fact): void
+    {
+        $this->vipolnenieDeistviya = new RunnerJob($fact->jobId);
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    public function ustanovitUspehDeistviya(array $steps): void
+    {
+        if (empty($this->vipolnenieDeistviya)) {
+            throw new DomainException('unit.vipolnenieDeistviya_ne_nachalas');
+        }
+
+        if ($this->vipolnenieDeistviya->isFinish()) {
+            throw new DomainException('unit.resultat_deistviya_uge_ustanovlen');
+        }
+
+        $this->state = $this->newState(new Zapushen());
+        $this->recordThat(new UspehDeistviyaUstanovlen($this->getId(), $steps, $this->state->toArray($this)));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyUspehDeistviyaUstanovlen(UspehDeistviyaUstanovlen $fact): void
+    {
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->vipolnenieDeistviya = $this->vipolnenieDeistviya->ustanovitUspeh($fact->steps);
+    }
+
+    public function ustanovitOshibkuDeistviya(array $steps): void
+    {
+        if (empty($this->vipolnenieDeistviya)) {
+            throw new DomainException('unit.vipolnenieDeistviya_ne_nachalas');
+        }
+
+        if ($this->vipolnenieDeistviya->isFinish()) {
+            throw new DomainException('unit.resultat_deistviya_uge_ustanovlen');
+        }
+
+        $this->state = $this->newState(new Zapushen());
+        $this->recordThat(new OshibkaDeistviyaUstanovlena($this->getId(), $steps, $this->state->toArray($this)));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyOshibkaDeistviyaUstanovlena(OshibkaDeistviyaUstanovlena $fact): void
+    {
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->vipolnenieDeistviya = $this->vipolnenieDeistviya->ustanovitOshibku($fact->steps);
     }
 
     public static function sozdatUnit(string $id, string $authorId, SozdatUnit $command): self
@@ -285,8 +380,9 @@ final class Unit implements AggregateRoot
      */
     private function makeVariableCollectionByArray(array $values): array
     {
+        $config = $this->checkIssetConfig();
         $tmpVariables = [];
-        $typeMap = $this->configUnita->getVariableTypeMap();
+        $typeMap = $config->getVariableTypeMap();
         foreach ($values as $id => $value) {
             if (empty($typeMap[$id])) {
                 throw new \DomainException('unit.config.type_for_variable_not_found');
@@ -507,13 +603,11 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.wait_runner');
         }
 
-        if (empty($this->configUnita)) {
-            throw new DomainException('unit.config_unita_ne_opredelen');
-        }
+        $config = $this->checkIssetConfig();
 
         $tmpVariables = $this->makeVariableCollectionByArray($values);
 
-        $errs = $this->configUnita->validateValues($tmpVariables);
+        $errs = $config->validateValues($tmpVariables);
         if (!empty($errs)) {
             throw new DomainException(join(', ', $errs));
         }
@@ -1312,6 +1406,13 @@ final class Unit implements AggregateRoot
         return $this->izmenenieVetki->getJobId();
     }
 
+    public function poluchitWorkflowIdDlyDeistviya(): string
+    {
+        if (empty($this->vipolnenieDeistviya)) {
+            throw new DomainException('unit.vipolnenieDeistviya_not_found');
+        }
+        return $this->vipolnenieDeistviya->getJobId();
+    }
 
     public function poluchitKomandiPodgotovki(): array
     {
@@ -1354,11 +1455,9 @@ final class Unit implements AggregateRoot
      */
     private function validateConfigValues(): void
     {
-        if (empty($this->configUnita)) {
-            throw new DomainException('unit.config_unita_ne_opredelen');
-        }
+        $config = $this->checkIssetConfig();
 
-        $errs = $this->configUnita->validateValues($this->variableValues);
+        $errs = $config->validateValues($this->variableValues);
 
         if (!empty($errs)) {
             throw new DomainException(join(', ', $errs));
@@ -1414,5 +1513,20 @@ final class Unit implements AggregateRoot
     function esliNugnoObnovitKodUnita(): bool
     {
         return $this->unixtimePoslednegoObnovleniyaKodaVHranilishe > $this->unixtimePoslednegoObnovleniyaKodaUnita;
+    }
+
+    function poluchitKonfigDeistviya(string $actionId): ConfigUnita\KonfigDeistviya
+    {
+        $config = $this->checkIssetConfig();
+        return $config->getActionById($actionId);
+    }
+
+    private function checkIssetConfig(): ConfigUnita
+    {
+        if (empty($this->configUnita)) {
+            throw new DomainException('unit.config_unita_ne_opredelen');
+        }
+
+        return $this->configUnita;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Unitman\Acl;
 
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOchistkuProekta;
@@ -17,6 +18,7 @@ use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use Symfony\Component\DependencyInjection\Attribute\When;
 
@@ -49,7 +51,11 @@ final class MemoryRunnerService implements RunnerApiInterface
     const RESULTAT_UDALENIYA = 'RESULTAT_UDALENIYA';
 
     const IZMENENIYE_UNITA = 'IZMENENIYE_UNITA';
+
+    const DEISTVIE_UNITA = 'DEISTVIE_UNITA';
     const RESULTAT_IZMENENIYA_VETKI = 'RESULTAT_IZMENENIYA_VETKI';
+
+    const RESULTAT_DEISTVIYA = 'RESULTAT_DEISTVIYA';
     private array $responses = [];
     public function __construct()
     {
@@ -262,6 +268,24 @@ final class MemoryRunnerService implements RunnerApiInterface
     public function poluchitResultatOstanovkiUnita(string $workflowId): ?\App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita
     {
         $response = $this->getNextResponse(self::RESULTAT_OSTANOVKI);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+        return $response['response'];
+    }
+
+    public function nachatDeistvieUnita(NachatDeistvieUnita $command): string
+    {
+        $response = $this->getNextResponse(self::DEISTVIE_UNITA);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+        return $response['response'];
+    }
+
+    public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita
+    {
+        $response = $this->getNextResponse(self::RESULTAT_DEISTVIYA);
         if (!empty($response['expectedParams'])) {
             $response['expectedParams'](func_get_args());
         }
