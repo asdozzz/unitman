@@ -13,6 +13,7 @@ use App\Runner\Business\Command\NachatSborkuUnita;
 use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
+use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
@@ -22,6 +23,7 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatProverkiKonteineraUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
@@ -54,4 +56,6 @@ interface RunnerApiInterface
     public function poluchitResultatOstanovkiUnita(string $workflowId): ?ResultatOstanovkiUnita;
 
     public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita;
+
+    public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ?ResultatProverkiKonteineraUnita;
 }

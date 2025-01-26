@@ -39,6 +39,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
+use App\Unitman\Business\Model\Unit\Event\UnitSbroshenDoSostoyaniyaSborki;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
@@ -1528,5 +1529,27 @@ final class Unit implements AggregateRoot
         }
 
         return $this->configUnita;
+    }
+
+    public function koneinerUnitaNeZapushen(): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        $state = new Sobran();
+
+        $this->recordThat(new UnitSbroshenDoSostoyaniyaSborki($this->getId(), $state->toArray($this)));
+    }
+
+    private function applyUnitSbroshenDoSostoyaniyaSborki(UnitSbroshenDoSostoyaniyaSborki $fact): void
+    {
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        $this->zapusk = null;
+        $this->podgotovka = null;
     }
 }

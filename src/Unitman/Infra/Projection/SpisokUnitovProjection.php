@@ -29,6 +29,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
+use App\Unitman\Business\Model\Unit\Event\UnitSbroshenDoSostoyaniyaSborki;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
@@ -598,6 +599,18 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'waitResultFromRunner' => false,
             'error' => true,
+            'state' => $fact->stateAsArray['code'],
+            'commands' => $fact->stateAsArray['commands'],
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleUnitSbroshenDoSostoyaniyaSborki(UnitSbroshenDoSostoyaniyaSborki $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'waitResultFromRunner' => false,
+            'error' => false,
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
         ]);

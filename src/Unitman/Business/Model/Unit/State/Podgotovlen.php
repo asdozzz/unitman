@@ -33,6 +33,7 @@ final class Podgotovlen extends AbstractState
             StateUserCommand::zapolnitPeremenie,
             StateUserCommand::nachatSbrosPodgotovki,
             StateUserCommand::nachatZapusk,
+            StateUserCommand::proveritKonteinerUnita
         ];
     }
 }

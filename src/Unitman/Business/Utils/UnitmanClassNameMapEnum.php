@@ -81,4 +81,6 @@ enum UnitmanClassNameMapEnum: string
     case VipolnenieDeistviyaNachalos = 'VipolnenieDeistviyaNachalos';
     case UspehDeistviyaUstanovlen = 'UspehDeistviyaUstanovlen';
     case OshibkaDeistviyaUstanovlena = 'OshibkaDeistviyaUstanovlena';
+
+    case UnitSbroshenDoSostoyaniyaSborki = 'UnitSbroshenDoSostoyaniyaSborki';
 }

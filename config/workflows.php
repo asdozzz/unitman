@@ -18,5 +18,6 @@ return [
     App\Unitman\Infra\Temporal\Workflow\ProzesObnovlenieKodaPosleZapuskaWorkflow::class,
     \App\Unitman\Infra\Temporal\Workflow\ProzesUdaleniyaUnitaPosleZapuskaWorkflow::class,
     \App\Unitman\Infra\Temporal\Workflow\ProzesAvtosborkiUnitaSystemoiWorkflow::class,
-    \App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow::class
+    \App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow::class,
+    \App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow::class,
 ];

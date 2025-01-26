@@ -68,4 +68,6 @@ interface RunnerService
     public function poluchitResultatIzmeneniyaVetki(Unit $unit): ResultatIzmeneniyaVetkiUnita;
 
     public function poluchitResultatDeistviya(Unit $unit): ResultatDeistviyaiUnita;
+
+    public function proveritKonteinerUnita(Unit $unit, Project $project): bool;
 }

@@ -29,6 +29,7 @@ use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
+use App\Unitman\Business\Model\Unit\Event\UnitSbroshenDoSostoyaniyaSborki;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
@@ -233,6 +234,11 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     }
 
     function handleSlomaniyUnitUdalen(SlomaniyUnitUdalen $fact): void
+    {
+        $this->repository->removeByUnitId($fact->unitId);
+    }
+
+    function handleUnitSbroshenDoSostoyaniyaSborki(UnitSbroshenDoSostoyaniyaSborki $fact): void
     {
         $this->repository->removeByUnitId($fact->unitId);
     }

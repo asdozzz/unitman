@@ -14,6 +14,7 @@ use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigUnita;
 use App\Unitman\Business\Command\Unit\PoluchitPeremenieUnita;
+use App\Unitman\Business\Command\Unit\ProveritKonteinerUnita;
 use App\Unitman\Business\Command\Unit\SbrositPodgotovkuUnita;
 use App\Unitman\Business\Command\Unit\SobratUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
@@ -44,6 +45,7 @@ use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitPeremenieUnitaQuery;
+use App\Unitman\Business\UseCase\Unit\ProveritKonteinerUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\SbrositPodgotovkuUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
@@ -393,4 +395,17 @@ final class UnitConroller extends AbstractController
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
         }
     }
+
+    #[Route('/proveritKonteinerUnita', methods: ['POST'])]
+    public function proveritKonteinerUnita(ProveritKonteinerUnita $command, ProveritKonteinerUnitaUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+
 }
