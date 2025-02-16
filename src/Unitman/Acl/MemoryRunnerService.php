@@ -14,11 +14,13 @@ use App\Runner\Business\Command\NachatSborkuUnita;
 use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
+use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatProverkiKonteineraUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use Symfony\Component\DependencyInjection\Attribute\When;
 
@@ -56,6 +58,8 @@ final class MemoryRunnerService implements RunnerApiInterface
     const RESULTAT_IZMENENIYA_VETKI = 'RESULTAT_IZMENENIYA_VETKI';
 
     const RESULTAT_DEISTVIYA = 'RESULTAT_DEISTVIYA';
+
+    const PROVERKA_UNITA = 'PROVERKA_UNITA';
     private array $responses = [];
     public function __construct()
     {
@@ -286,6 +290,15 @@ final class MemoryRunnerService implements RunnerApiInterface
     public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita
     {
         $response = $this->getNextResponse(self::RESULTAT_DEISTVIYA);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+        return $response['response'];
+    }
+
+    public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ?ResultatProverkiKonteineraUnita
+    {
+        $response = $this->getNextResponse(self::PROVERKA_UNITA);
         if (!empty($response['expectedParams'])) {
             $response['expectedParams'](func_get_args());
         }

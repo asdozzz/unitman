@@ -129,6 +129,7 @@ final class ClassNameMapFactory
             Unit\Event\VipolnenieDeistviyaNachalos::class => UnitmanClassNameMapEnum::VipolnenieDeistviyaNachalos,
             Unit\Event\UspehDeistviyaUstanovlen::class => UnitmanClassNameMapEnum::UspehDeistviyaUstanovlen,
             Unit\Event\OshibkaDeistviyaUstanovlena::class => UnitmanClassNameMapEnum::OshibkaDeistviyaUstanovlena,
+            Unit\Event\UnitSbroshenDoSostoyaniyaSborki::class => UnitmanClassNameMapEnum::UnitSbroshenDoSostoyaniyaSborki,
         ];
         $map = [];
 

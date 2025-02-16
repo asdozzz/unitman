@@ -13,6 +13,7 @@ use App\Runner\Business\Command\NachatSborkuUnita;
 use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
+use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Unitman\Business\Model\Project;
@@ -352,5 +353,17 @@ final class RunnerAdapter implements RunnerService
         }
 
         return new ResultatDeistviyaiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
+    }
+
+    public function proveritKonteinerUnita(Unit $unit, Project $project): bool
+    {
+        $command = new ProveritKonteinerUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName());
+        $result = $this->runnerApi->proveritKonteinerUnita($command);
+
+        if (empty($result)) {
+            throw new \Exception('runner.oshibka_proverki_unita');
+        }
+
+        return (bool) $result->Success;
     }
 }

@@ -29,4 +29,6 @@ enum StateUserCommand: string
 
     case vipolnitDeistvie = 'vipolnitDeistvie';
     case ustanovitResultatDeistviya = 'ustanovitResultatDeistviya';
+
+    case proveritKonteinerUnita = 'proveritKonteinerUnita';
 }
