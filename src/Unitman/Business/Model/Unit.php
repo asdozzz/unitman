@@ -1223,7 +1223,7 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.udalen');
         }
 
-        $state = $this->newState(new VOcherediNaUdalenie());
+        $state = new VOcherediNaUdalenie();
         $this->recordThat(new UdalenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this)));
     }
     /**

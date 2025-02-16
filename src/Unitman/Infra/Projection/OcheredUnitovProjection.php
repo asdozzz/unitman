@@ -205,6 +205,7 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
 
     function handleUdalenieUnitaNachalos(UdalenieUnitaNachalos $fact): void
     {
+        $this->repository->removeByUnitId($fact->unitId);
         $this->repository->insert($fact->unitId, OcheredUnitovReadModel::UDALENIE);
     }
 
