@@ -60,7 +60,7 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $project->postavitVOcheredNaSborku('stub');
         $project->successfullyBuild([new RunnerJobStep('command', 'response', true, 1231231)]);
         $project->enable();
-        $project->obnovitNastrokiHuka(new ObnovitNastroikiHuka($projectId, true, true, true));
+        $project->obnovitNastrokiHuka(new ObnovitNastroikiHuka($projectId, true, true, true, false));
         return $project;
     }
 

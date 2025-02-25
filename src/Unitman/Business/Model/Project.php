@@ -112,7 +112,7 @@ final class Project implements AggregateRoot
 
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
-        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie);
+        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie, $fact->obnovlenieBezSbrosaPodgotovki);
     }
 
     public function proverkaProektaDlyNachlaOchistki(): void
@@ -186,12 +186,18 @@ final class Project implements AggregateRoot
 
     public function obnovitNastrokiHuka(ObnovitNastroikiHuka $command): void
     {
-        $this->recordThat(new NastroikiHukaProektaUstanovleni($this->getId(), $command->avtosozdanie, $command->avtoobnovlenie, $command->avtoudalenie));
+        $this->recordThat(new NastroikiHukaProektaUstanovleni(
+            $this->getId(),
+            $command->avtosozdanie,
+            $command->avtoobnovlenie,
+            $command->avtoudalenie,
+            $command->obnovlenieBezSbrosaPodgotovki
+        ));
     }
 
     private function applyNastroikiHukaProektaUstanovleni(NastroikiHukaProektaUstanovleni $fact): void
     {
-        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie);
+        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie, $fact->obnovlenieBezSbrosaPodgotovki);
     }
 
     private function findIndexUserById(string $userId): ?int

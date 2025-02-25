@@ -13,7 +13,8 @@ final class ProjectWasAdded
         public readonly string $proxyHost = "",
         public readonly bool $avtosozdanie = false,
         public readonly bool $avtoobnovlenie = true,
-        public readonly bool $avtoudalenie = true
+        public readonly bool $avtoudalenie = true,
+        public readonly bool $obnovlenieBezSbrosaPodgotovki = false,
     )
     {
     }

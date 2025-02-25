@@ -29,7 +29,7 @@ final class ZapolnitPeremenieUnitaUseCase
         $this->unitRepository->save($unit);
 
         if ($unit->esliZapushen()) {
-            $this->obnovitKodUnitaPosleZapuskaUseCase->handle(new ObnovitKodUnitaPosleZapuska($command->id));
+            $this->obnovitKodUnitaPosleZapuskaUseCase->handle(new ObnovitKodUnitaPosleZapuska($command->id), true);
         }
     }
 }
