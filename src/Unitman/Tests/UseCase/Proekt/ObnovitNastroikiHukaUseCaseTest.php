@@ -23,14 +23,14 @@ final class ObnovitNastroikiHukaUseCaseTest extends AbstractProjectUseCase
         /** @var $projectListRepo SqlProjectListRepository*/
         $project = $projectListRepo->getById($projectId);
 
-        $this->assertEquals($project->nastroikiHukaProekta, new NastroikiHukaProekta(false, true, true));
+        $this->assertEquals($project->nastroikiHukaProekta, new NastroikiHukaProekta(false, true, true, false));
 
         $useCase = self::$container->get(ObnovitNastroikiHukaUseCase::class);
         /** @var $useCase ObnovitNastroikiHukaUseCase*/
-        $useCase->handle(new ObnovitNastroikiHuka($projectId, true, false, false));
+        $useCase->handle(new ObnovitNastroikiHuka($projectId, true, false, false, true));
 
         $project = $projectListRepo->getById($projectId);
 
-        $this->assertEquals(new NastroikiHukaProekta(true, false, false), $project->nastroikiHukaProekta);
+        $this->assertEquals(new NastroikiHukaProekta(true, false, false, true), $project->nastroikiHukaProekta);
     }
 }

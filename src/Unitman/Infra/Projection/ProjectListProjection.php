@@ -81,7 +81,12 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
 
     function handleNastroikiHukaProektaUstanovleni(NastroikiHukaProektaUstanovleni $fact): void
     {
-        $this->projectListRepository->updateNastroikiHuka($fact->id,new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie));
+        $this->projectListRepository->updateNastroikiHuka($fact->id,new ProjectList\NastroikiHukaProekta(
+            $fact->avtosozdanie,
+            $fact->avtoobnovlenie,
+            $fact->avtoudalenie,
+            $fact->obnovlenieBezSbrosaPodgotovki
+        ));
     }
 
     function handleProektPostavlenVOcheredNaSborku(ProektPostavlenVOcheredNaSborku $fact): void
