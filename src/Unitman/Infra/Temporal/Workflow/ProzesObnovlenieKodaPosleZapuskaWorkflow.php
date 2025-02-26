@@ -70,6 +70,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
         );
 
         try {
+            yield Workflow::timer(CarbonInterval::seconds(2));
             if ($zapushen) {
                 yield $activity->ostanovit($unitId);
 

@@ -875,10 +875,6 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.udalenie_uge_zapusheno');
         }
 
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
         if (!$this->esliZapushen()) {
             throw new DomainException('unit.unit_ne_zapushen');
         }
