@@ -12,7 +12,6 @@
   <component name="PhpIncludePathManager">
     <include_path>
       <path value="$PROJECT_DIR$/vendor/doctrine/event-manager" />
-      <path value="$PROJECT_DIR$/vendor/highcore/temporal-bundle" />
       <path value="$PROJECT_DIR$/vendor/doctrine/migrations" />
       <path value="$PROJECT_DIR$/vendor/doctrine/dbal" />
       <path value="$PROJECT_DIR$/vendor/doctrine/cache" />
@@ -256,6 +255,7 @@
       <path value="$PROJECT_DIR$/vendor/spiral/security" />
       <path value="$PROJECT_DIR$/vendor/spiral/hmvc" />
       <path value="$PROJECT_DIR$/vendor/spiral/interceptors" />
+      <path value="$PROJECT_DIR$/vendor/highcore/temporal-bundle" />
     </include_path>
   </component>
   <component name="PhpInterpreters">
