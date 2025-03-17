@@ -26,6 +26,23 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
     /** @psalm-suppress TypeDoesNotContainType */
     private bool $esliOshibka = false;
 
+    /**
+     * @var ProzesObnovlenieKodaPosleZapuskaActivity
+     * @psalm-suppress MissingPropertyType
+     * */
+    private $activity;
+
+    public function __construct()
+    {
+        $this->activity  = Workflow::newActivityStub(
+            ProzesObnovlenieKodaPosleZapuskaActivity::class,
+            ActivityOptions::new()
+                ->withScheduleToCloseTimeout(CarbonInterval::seconds(10))
+                ->withTaskQueue(WorkflowClientFactory::monoQueueName)
+        );
+    }
+
+
     #[Workflow\SignalMethod]
     public function ostanovlen(): void
     {
@@ -62,17 +79,10 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
     #[WorkflowMethod]
     public function execute(string $unitId, bool $zapushen = true, bool $podgotovlen = true)
     {
-        $activity  = Workflow::newActivityStub(
-            ProzesObnovlenieKodaPosleZapuskaActivity::class,
-            ActivityOptions::new()
-                ->withScheduleToCloseTimeout(CarbonInterval::seconds(10))
-                ->withTaskQueue(WorkflowClientFactory::monoQueueName)
-        );
-
         try {
             yield Workflow::timer(CarbonInterval::seconds(2));
             if ($zapushen) {
-                yield $activity->ostanovit($unitId);
+                yield $this->activity->ostanovit($unitId);
 
                 yield Workflow::awaitWithTimeout(120, fn() => $this->esliOstanovlen || $this->esliOshibka);
 
@@ -82,7 +92,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
             }
 
             if ($podgotovlen) {
-                yield $activity->sbrositPodgotovku($unitId);
+                yield $this->activity->sbrositPodgotovku($unitId);
 
                 yield Workflow::awaitWithTimeout(120, fn() => $this->esliPodgotovkaSbroshena || $this->esliOshibka);
 
@@ -91,7 +101,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
                 }
             }
 
-            yield $activity->obnovitKod($unitId);
+            yield $this->activity->obnovitKod($unitId);
 
             yield Workflow::awaitWithTimeout(120, fn() => $this->esliKodObnovlen || $this->esliOshibka);
 
@@ -99,7 +109,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
                 throw new \Exception('exit');
             }
 
-            yield $activity->podgotovit($unitId);
+            yield $this->activity->podgotovit($unitId);
 
             yield Workflow::awaitWithTimeout(600, fn() => $this->esliPodgotovlen || $this->esliOshibka);
 
@@ -107,10 +117,10 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
                 throw new \Exception('exit');
             }
 
-            yield $activity->zapustit($unitId);
+            yield $this->activity->zapustit($unitId);
 
         } catch (\Exception $e) {
-            yield $activity->oshibkaProzesaObnovleniya($unitId, $e->getMessage());
+            yield $this->activity->oshibkaProzesaObnovleniya($unitId, $e->getMessage());
         }
     }
 

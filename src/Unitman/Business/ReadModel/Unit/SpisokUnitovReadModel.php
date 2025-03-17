@@ -24,7 +24,8 @@ final class SpisokUnitovReadModel
         public readonly array $peremenie = [],
         public readonly bool $unitSozdanSystemoi = false,
         public readonly bool $jdemAvtosborki = false,
-        public readonly array $deistviya = []
+        public readonly array $deistviya = [],
+        public readonly ?ProjectListContainerStats $statistikaKonteinera = null
     )
     {
     }
@@ -51,6 +52,7 @@ final class SpisokUnitovReadModel
         $unitSozdanSystemoi = isset($props['unitSozdanSystemoi'])?$props['unitSozdanSystemoi']:$this->unitSozdanSystemoi;
         $jdemAvtosborki = isset($props['jdemAvtosborki'])?$props['jdemAvtosborki']:$this->jdemAvtosborki;
         $deistviya = isset($props['deistviya'])?$props['deistviya']:$this->deistviya;
+        $statistikaKonteinera = isset($props['statistikaKonteinera'])?$props['statistikaKonteinera']:$this->statistikaKonteinera;
 
         return new static(
             $id,
@@ -72,7 +74,8 @@ final class SpisokUnitovReadModel
             $peremenie,
             $unitSozdanSystemoi,
             $jdemAvtosborki,
-            $deistviya
+            $deistviya,
+            $statistikaKonteinera
         );
     }
 }

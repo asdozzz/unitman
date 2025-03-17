@@ -59,7 +59,7 @@ jobs:
   timeout: 5
   pool:
     max_jobs: 200
-    num_workers: 4
+    num_workers: 6
     allocate_timeout: 60s
     destroy_timeout: 60s
   consume: [
