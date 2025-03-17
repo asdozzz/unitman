@@ -17,7 +17,7 @@ use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
 use Temporal\Activity\ActivityInterface;
 use Temporal\Activity\ActivityMethod as Am;
 
-#[ActivityInterface(prefix:"")]
+#[ActivityInterface(prefix:"ProzesObnovlenieKodaPosleZapuskaBezSbrosaPodgotovkiActivity")]
 final class ProzesObnovlenieKodaPosleZapuskaBezSbrosaPodgotovkiActivity
 {
     public function __construct(

@@ -1135,8 +1135,7 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    //---------Остановка
-    public function nachatOstanovkuUnita(JobId $jobId): void
+    public function validaziyaPeredOstanovkoi(): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
@@ -1149,7 +1148,11 @@ final class Unit implements AggregateRoot
         if (!$this->zapusk || !$this->zapusk->isSuccess()) {
             throw new DomainException('unit.ne_zapushen');
         }
-
+    }
+    //---------Остановка
+    public function nachatOstanovkuUnita(JobId $jobId): void
+    {
+        $this->validaziyaPeredOstanovkoi();
 
         $this->validateConfigValues();
 

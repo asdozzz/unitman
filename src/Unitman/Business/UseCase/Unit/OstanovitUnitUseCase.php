@@ -22,6 +22,7 @@ final class OstanovitUnitUseCase
     function handle(OstanovitUnit $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
+        $unit->validaziyaPeredOstanovkoi();
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);
@@ -35,6 +36,7 @@ final class OstanovitUnitUseCase
     {
         $unit = $this->unitRepository->getById($command->id);
         $project = $this->projectRepository->getById($unit->getProjectId());
+        $unit->validaziyaPeredOstanovkoi();
         $jobId = $this->runnerService->nachatOstanovkuUnita($unit, $project);
         $unit->nachatOstanovkuUnita($jobId);
         $this->unitRepository->save($unit);
