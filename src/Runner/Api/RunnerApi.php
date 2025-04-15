@@ -233,6 +233,7 @@ final class RunnerApi implements RunnerApiInterface
             NachatZapuskUnitaWorkflow::class,
             WorkflowOptions::new()
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowTaskTimeout(CarbonInterval::minute(1))
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(60))
         );
 
