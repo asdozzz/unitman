@@ -332,7 +332,15 @@ final class Unit implements AggregateRoot
         }
         $unit = new self(UnitId::fromString($id));
         $state = new Sozdan();
-        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit)));
+        $peremenie = [];
+        foreach ($command->znacheniePeremenoi as $peremenaya) {
+            try {
+                $variable = new VariableValue($peremenaya->id, $peremenaya->value, $peremenaya->type);
+                $peremenie[] = $variable->toArray();
+            } catch (\Exception) {
+            }
+        }
+        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $peremenie));
         return $unit;
     }
 
@@ -346,6 +354,9 @@ final class Unit implements AggregateRoot
         $this->name = new UnitName($fact->name);
         $this->branch = new UnitBranch($fact->branch);
         $this->authorId = $fact->authorId;
+        $this->variableValues = array_map(function (array $item) {
+            return new VariableValue($item['id'], $item['value'], $item['type']);
+        }, $fact->values);
     }
 
     public static function sozdatUnitSystemoi(string $id, Account $account, SozdatUnit $command): self

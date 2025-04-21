@@ -11,10 +11,12 @@ use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
+use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Repo\RepoRepository;
+use App\Unitman\Business\Port\Unit\UmeetSobiratUnit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
@@ -104,7 +106,10 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
 
         $unitRepo = self::$container->get(UnitRepository::class);
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId]), $unitRepo);
+        $umeetSobiratUnit = $this->getMockBuilder(UmeetSobiratUnit::class)->getMock();
+        $jobId = '123';
+        $umeetSobiratUnit->expects($this->any())->method('sobratUnitOtLizaSystemi')->willReturn(new JobId($jobId));
+        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId]), $unitRepo, $umeetSobiratUnit);
         $useCase2->handle(new SozdatUnit(
             $projectId,
             $unitName,

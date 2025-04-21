@@ -9,6 +9,7 @@ use App\Unitman\Business\Port\Unit\CanFindUnitIdByContainerName;
 use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
+use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
@@ -178,11 +179,18 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         if (count($segments) !== 2) {
             return null;
         }
-
         $table = self::TABLE;
+
         $row = $this->connection->fetchAssociative("SELECT id FROM $table where payload->>'projectName' = :projectName and payload->>'name' = :name",
             ['name' => $segments[0], 'projectName' => $segments[1]]);
 
         return $row['id'] ?? null;
+    }
+
+    function obnovitStatistikuContainer(string $id, ProjectListContainerStats $containerStats): void
+    {
+        $table = self::TABLE;
+        $json = $this->serializer->serialize($containerStats, 'json');
+        $this->connection->executeQuery("update $table set payload = jsonb_set(payload, '{statistikaKonteinera}', :val) where id=:id", ['id' => $id, 'val' =>$json]);
     }
 }

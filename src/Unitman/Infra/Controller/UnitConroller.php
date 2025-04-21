@@ -12,6 +12,7 @@ use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
+use App\Unitman\Business\Command\Unit\PoluchitKonfigIzHranilisha;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigUnita;
 use App\Unitman\Business\Command\Unit\PoluchitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ProveritKonteinerUnita;
@@ -43,6 +44,7 @@ use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaPosleZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
+use App\Unitman\Business\UseCase\Unit\PoluchitKonfigIzHranilishaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitPeremenieUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\ProveritKonteinerUnitaUseCase;
@@ -73,12 +75,10 @@ use Symfony\Component\Routing\Attribute\Route;
 final class UnitConroller extends AbstractController
 {
     #[Route('/sozdat', methods: ['POST'])]
-    public function sozdat(SozdatUnit $command, SozdatUnitUseCase $useCase, SobratUnitUseCase $sobratUnitUseCase): Response
+    public function sozdat(SozdatUnit $command, SozdatUnitUseCase $useCase): Response
     {
         try {
-            $unitId = $useCase->handle($command);
-            //TODO плохо, переделать на process manager
-            $sobratUnitUseCase->handle(new SobratUnit($unitId));
+            $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -407,5 +407,14 @@ final class UnitConroller extends AbstractController
         }
     }
 
-
+    #[Route('/poluchitKonfigIzHranilisha', methods: ['POST'])]
+    public function poluchitKonfigIzHranilisha(PoluchitKonfigIzHranilisha $command, PoluchitKonfigIzHranilishaUseCase $useCase): Response
+    {
+        try {
+            $data = $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
 }

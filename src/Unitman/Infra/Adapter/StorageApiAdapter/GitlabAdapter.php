@@ -72,4 +72,10 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';
         return $projectUrl;
     }
+
+    public function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string
+    {
+        $client = $this->clientFactory->makeClient($repo);
+        return $client->repositoryFiles()->getRawFile($projectCode, 'unitman.yaml', $branchName);
+    }
 }

@@ -19,13 +19,15 @@ final class UstanovitDefoltniiKonfigUseCase
             throw new \Exception('unit.konfig_not_found');
         }
 
-        $values = [];
+        if (empty($unit->poluchitZnacheniyaPeremenih())) {
+            $values = [];
 
-        foreach ($configVariables as $variable) {
-            $values[$variable->getId()] = $variable->getDefaultValue();
+            foreach ($configVariables as $variable) {
+                $values[$variable->getId()] = $variable->getDefaultValue();
+            }
+
+            $unit->zapolnitPeremenie($values);
+            $this->unitRepository->save($unit);
         }
-
-        $unit->zapolnitPeremenie($values);
-        $this->unitRepository->save($unit);
     }
 }
