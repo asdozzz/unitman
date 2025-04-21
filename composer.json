@@ -12,7 +12,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "eventsauce/eventsauce": "*",
         "eventsauce/message-repository-for-doctrine": "*",
-        "fluffydiscord/roadrunner-symfony-bundle": "dev-jobs-worker",
+        "fluffydiscord/roadrunner-symfony-bundle": "dev-jobs-worker-2",
         "fresh/centrifugo-bundle": "^5.3",
         "grpc/grpc": "^1.42",
         "highcore/temporal-bundle": "*",

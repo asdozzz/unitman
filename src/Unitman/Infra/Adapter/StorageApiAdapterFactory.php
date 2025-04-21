@@ -8,13 +8,14 @@ use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
+use App\Unitman\Business\Port\Project\UmeetPoluchatKonfigProekta;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokVetokProekta;
 use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\Repo\CanGetRepoTypeList;
 use App\Unitman\Business\Port\Repo\UmeetPoluchatUrlHranilisha;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 
-final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluchatUrlHranilisha, CanGetRepoTypeList, UmeetPoluchatSpisokVetokProekta
+final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluchatUrlHranilisha, CanGetRepoTypeList, UmeetPoluchatSpisokVetokProekta, UmeetPoluchatKonfigProekta
 {
     /**
      * @var iterable<StorageApiAdapter>
@@ -74,5 +75,11 @@ final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluc
     {
         $adapter = $this->getAdapterByRepo($repo->getType());
         return $adapter->getUrlForInitProject($repo, $project);
+    }
+
+    function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string
+    {
+        $adapter = $this->getAdapterByRepo($repo->getType());
+        return $adapter->poluchitKonfigIzHranilisha($repo, $projectCode, $branchName);
     }
 }

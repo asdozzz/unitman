@@ -71,4 +71,21 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';
         return $projectUrl;
     }
+
+
+    /**
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
+     * @param Repo $repo
+     * @param string $projectCode
+     * @param string $branchName
+     * @return string
+     */
+    public function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string
+    {
+        $client = $this->githubClientFactory->makeClient($repo);
+        list($login, $code) = explode('/', $projectCode);
+        $config = $client->repository()->contents()->rawDownload($login, $code, 'unitman.yaml', $branchName);
+        return $config;
+    }
 }

@@ -54,7 +54,10 @@ use App\Utils\EventSauce\Model\StreamName;
 
 final class OcheredDlyProzesaSozdaniyaUnitaSystemoiProjection extends AbstractProjection implements UnitmanProjection
 {
-    public function __construct(private ZadachaDlyOcherediService $zadachaDlyOcherediService, private ZadachaDlyOcherediRepository $repository, private UnitRepository $unitRepository)
+    public function __construct(
+        private ZadachaDlyOcherediService $zadachaDlyOcherediService,
+        private ZadachaDlyOcherediRepository $repository,
+        private UnitRepository $unitRepository)
     {
     }
 

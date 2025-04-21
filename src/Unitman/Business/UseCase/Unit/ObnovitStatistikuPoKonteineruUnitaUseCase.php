@@ -26,21 +26,11 @@ final class ObnovitStatistikuPoKonteineruUnitaUseCase
             return;
         }
 
-        $readModel = $this->spisokUnitovRepository->findById($id);
-
-        if (empty($readModel)) {
-            return;
-        }
-
-        $readModel = $readModel->copyAndUpdateData([
-            'statistikaKonteinera' => new ProjectListContainerStats(
-                $command->cpuPercent,
-                $command->memoryPercent,
-                $command->memoryUsage,
-                $command->netIO
-            ),
-        ]);
-
-        $this->spisokUnitovRepository->update($readModel);
+        $this->spisokUnitovRepository->obnovitStatistikuContainer($id, new ProjectListContainerStats(
+            $command->cpuPercent,
+            $command->memoryPercent,
+            $command->memoryUsage,
+            $command->netIO
+        ));
     }
 }
