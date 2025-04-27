@@ -18,6 +18,7 @@ use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
+use App\Unitman\Infra\Service\RebuildService;
 use App\Unitman\Infra\Temporal\Activity\ProzesAvtosborkiUnitaSystemoiActivity;
 use App\Unitman\Infra\Temporal\Activity\ProzesObnovlenieKodaPosleZapuskaActivity;
 use App\Unitman\Infra\BackgroundJob\UnitRunnerJobs\UnitRunnerJobs;
@@ -89,6 +90,11 @@ return function (ContainerConfigurator $configuration) {
         ->arg('$projections', tagged_iterator('unitman.projection'))
         ->arg('$checkpointStore', service('app.checkpoint_store'))
         ->arg('$eventsRepository', service('unitman.stream_repository'));
+
+    $services->set(RebuildService::class)
+        ->args([
+            service('unitman.projections_manager'),
+        ]);
 
     $services->set(SqlRepoEvensRepository::class)
         ->args([

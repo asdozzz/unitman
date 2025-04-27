@@ -39,6 +39,11 @@ final class ProjectRunnerJobRepository implements CanGetProjectRunnerJobs
         $this->connection->executeQuery("TRUNCATE $table");
     }
 
+    function resetById(string $id): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("DELETE FROM $table where id = '$id'");
+    }
     function insert(ProjectRunnerJob $readModel): void
     {
         $data = [

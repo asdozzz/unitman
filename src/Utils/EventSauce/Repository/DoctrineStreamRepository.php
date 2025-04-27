@@ -137,4 +137,18 @@ final class DoctrineStreamRepository
             throw UnableToRetrieveMessages::dueTo('', $exception);
         }
     }
+
+    function getStreamById(StreamName $streamName, string $id): \Generator
+    {
+        $aggregateType = $streamName->aggregateType;
+
+        $sql = "SELECT payload FROM $this->tableName WHERE payload->'headers'->>'__aggregate_root_type' = '$aggregateType' and aggregate_root_id='$id' ORDER BY id asc";
+        $rows = $this->connection
+            ->fetchAllAssociative($sql);
+        try {
+            return $this->yieldMessagesFromPayloads(array_map(fn(array $row): string => $row['payload'],$rows));
+        } catch (\Throwable $exception) {
+            throw UnableToRetrieveMessages::dueTo('', $exception);
+        }
+    }
 }

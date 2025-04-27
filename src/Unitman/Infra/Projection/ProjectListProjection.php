@@ -58,6 +58,11 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
         $this->projectListRepository->truncate();
     }
 
+    function resetById(string $id): void
+    {
+        $this->projectListRepository->resetById($id);
+    }
+
     function getStreamName(): StreamName
     {
         return new StreamName(UnitmanClassNameMapEnum::Project->value);

@@ -40,6 +40,11 @@ final class StatistikaPoProektuProjection extends AbstractProjection implements 
         $this->statistikaPoProektuRepository->truncate();
     }
 
+    function resetById(string $id): void
+    {
+        $this->statistikaPoProektuRepository->removeById($id);
+    }
+
     function init(): void
     {
         $this->statistikaPoProektuRepository->init();

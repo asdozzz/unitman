@@ -43,6 +43,12 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $this->connection->executeQuery("TRUNCATE $table");
     }
 
+    function resetById(string $id): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("DELETE FROM $table where id = '$id'");
+    }
+
     public function findById(string $id): ?SpisokUnitovReadModel
     {
         $table = self::TABLE;

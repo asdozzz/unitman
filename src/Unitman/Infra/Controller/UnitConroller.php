@@ -11,6 +11,7 @@ use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
+use App\Unitman\Business\Command\Unit\PeresobratModelSpisokUnitov;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigIzHranilisha;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigUnita;
@@ -66,6 +67,9 @@ use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\VipolnitDeistviyeUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
+use App\Unitman\Infra\Projection\SpisokUnitovProjection;
+use App\Unitman\Infra\Service\RebuildService;
+use App\Utils\EventSauce\ProjectionsManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -414,6 +418,17 @@ final class UnitConroller extends AbstractController
             $data = $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/rebuildSpisokUnitov', methods: ['POST'])]
+    public function rebuildSpisokUnitov(PeresobratModelSpisokUnitov $command, RebuildService $service): Response
+    {
+        try {
+            $service->handle(SpisokUnitovProjection::CODE, $command->id);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Throwable $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
         }
     }
