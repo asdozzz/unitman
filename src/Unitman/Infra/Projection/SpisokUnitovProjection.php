@@ -56,6 +56,8 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 final class SpisokUnitovProjection extends AbstractProjection implements UnitmanProjection
 {
+    const CODE = 'spisok_unitov';
+
     public function __construct(
         private SpisokUnitovRepository $repository,
         private ProjectRepository $projectRepository,
@@ -76,12 +78,17 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     }
     function getProjectionName(): string
     {
-        return 'spisok_unitov';
+        return self::CODE;
     }
 
     function reset(): void
     {
         $this->repository->truncate();
+    }
+
+    function resetById(string $id): void
+    {
+        $this->repository->resetById($id);
     }
 
     function getStreamName(): StreamName

@@ -44,6 +44,11 @@ final class RepoListProjection extends AbstractProjection implements UnitmanProj
         $this->repoListRepository->truncate();
     }
 
+    function resetById(string $id): void
+    {
+        $this->repoListRepository->resetById($id);
+    }
+
     function getStreamName(): StreamName
     {
         return new StreamName(UnitmanClassNameMapEnum::Repo->value);

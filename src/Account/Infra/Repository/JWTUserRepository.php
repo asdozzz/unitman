@@ -272,4 +272,10 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
 
         return new AccountSettingsReadModel($row['nickname']);
     }
+
+    function resetById(string $id): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("DELETE FROM $table where id = '$id'");
+    }
 }

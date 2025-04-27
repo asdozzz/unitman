@@ -51,6 +51,11 @@ final class WebsocketUnitEventProjection  extends AbstractProjection implements 
         $this->repository->truncate();
     }
 
+    function resetById(string $id): void
+    {
+
+    }
+
     function getStreamName(): StreamName
     {
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);

@@ -41,6 +41,12 @@ final class ZadachaDlyOcherediRepository
         $this->connection->executeQuery("TRUNCATE $table");
     }
 
+    function resetById(string $id): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("DELETE FROM $table where id = '$id'");
+    }
+
     public function insert(ZadachaDlyOcheredi $model): void
     {
         $this->connection->insert(self::TABLE, [

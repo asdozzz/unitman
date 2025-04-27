@@ -63,6 +63,11 @@ final class OcheredDlyProzesaUdaleniyaPosleZapuskaProjection extends AbstractPro
         return false;
     }
 
+    function resetById(string $id): void
+    {
+
+    }
+
     function isSyncProjection(): bool
     {
         return true;

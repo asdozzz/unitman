@@ -75,6 +75,11 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
         $this->repository->truncate();
     }
 
+    function resetById(string $id): void
+    {
+        $this->repository->removeByUnitId($id);
+    }
+
     function getStreamName(): StreamName
     {
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);

@@ -142,6 +142,29 @@ final class ProjectionsManager
         }
     }
 
+    public function rebuildById(string $projectionName, string $id): void
+    {
+        $projection = $this->getProjectionByName($projectionName);
+
+        if (!$projection->isAllowedRebuild()) {
+            throw new \DomainException('projections_manager.rebuild_not_allowed');
+        }
+
+        $this->connection->beginTransaction();
+        try {
+            $projection->resetById($id);
+            $events = $this->eventsRepository->getStreamById($projection->getStreamName(), $id);
+
+            foreach ($events as $event) {
+                $projection->handle($event);
+            }
+            $this->connection->commit();
+        } catch (\Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
+    }
+
     public function rebuild(string $projectionName, int $disableReset = 0): void
     {
         $projection = $this->getProjectionByName($projectionName);

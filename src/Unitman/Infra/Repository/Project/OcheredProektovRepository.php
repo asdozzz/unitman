@@ -35,6 +35,12 @@ final class OcheredProektovRepository
         $this->connection->executeQuery("TRUNCATE $table");
     }
 
+    function resetById(string $id): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("DELETE FROM $table where id = '$id'");
+    }
+
     function findByProjectIdAndQueueName(string $projectId, string $queueName): ?OcheredProektovReadModel
     {
         $table = self::TABLE;

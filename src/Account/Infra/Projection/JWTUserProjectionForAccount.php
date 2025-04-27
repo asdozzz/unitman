@@ -35,6 +35,11 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
         $this->JWTUserRepository->truncate();
     }
 
+    function resetById(string $id): void
+    {
+        $this->JWTUserRepository->resetById($id);
+    }
+
     function init(): void
     {
         $this->JWTUserRepository->init();

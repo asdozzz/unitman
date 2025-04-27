@@ -14,6 +14,8 @@ interface CanProjectEvents extends MessageConsumer
 
     function reset(): void;
 
+    function resetById(string $id): void;
+
     function init(): void;
 
     function destroy(): void;

@@ -83,6 +83,11 @@ final class UnitRunnerJobsProjection extends AbstractProjection implements Unitm
         $this->repository->truncate();
     }
 
+    function resetById(string $id): void
+    {
+        $this->repository->resetById($id);
+    }
+
     function getStreamName(): StreamName
     {
         return new StreamName(UnitmanClassNameMapEnum::Unit->value);

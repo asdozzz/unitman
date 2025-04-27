@@ -47,6 +47,12 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $this->connection->executeQuery("TRUNCATE $table");
     }
 
+    function resetById(string $id): void
+    {
+        $table = self::TABLE;
+        $this->connection->executeQuery("DELETE FROM $table where id = '$id'");
+    }
+
     function insert(ProjectList $projectList): void
     {
         $data = [
