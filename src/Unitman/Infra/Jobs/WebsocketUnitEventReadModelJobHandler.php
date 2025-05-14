@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\Jobs;
 
 use App\Unitman\Business\ReadModel\Unit\WebsocketUnitEventReadModel;
+use App\Utils\Service\LockService;
 use FluffyDiscord\RoadRunnerBundle\Worker\JobsWorker\JobsHandlerInterface;
 use Fresh\CentrifugoBundle\Service\CentrifugoInterface;
 use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
@@ -12,7 +13,10 @@ final class WebsocketUnitEventReadModelJobHandler implements JobsHandlerInterfac
 {
     const QUEUE_NAME = 'websocket_unit_event';
 
-    public function __construct(private CentrifugoInterface $centrifugo)
+    public function __construct(
+        private CentrifugoInterface $centrifugo,
+        private LockService $lockService
+    )
     {
     }
 
@@ -24,8 +28,20 @@ final class WebsocketUnitEventReadModelJobHandler implements JobsHandlerInterfac
 
     public function handle(ReceivedTaskInterface $task): void
     {
-        $arr = json_decode($task->getPayload(), true);
-        /** @var WebsocketUnitEventReadModel $model*/
-        $this->centrifugo->publish($arr, 'spisok_unitov');
+        $lockFactory = $this->lockService->makeLockFactory();
+        $lock = $lockFactory->createLock(self::QUEUE_NAME.'.'.$task->getId());
+
+        if (!$lock->acquire()) {
+            return;
+        }
+
+        try {
+            $arr = json_decode($task->getPayload(), true);
+            /** @var WebsocketUnitEventReadModel $model*/
+            $this->centrifugo->publish($arr, 'spisok_unitov');
+        } finally {
+            $lock->release();
+        }
+
     }
 }

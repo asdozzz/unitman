@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "df078b1ec1aad9d581c724971c81e24e",
+    "content-hash": "ed4f98266f6b0072e4825edaf0bf540b",
     "packages": [
         {
             "name": "amphp/amp",
@@ -5061,6 +5061,85 @@
             "time": "2024-07-22T07:42:16+00:00"
         },
         {
+            "name": "roadrunner-php/lock",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/roadrunner-php/lock.git",
+                "reference": "bea3761b2cabce86cdca3b6013d024135fdf9138"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/roadrunner-php/lock/zipball/bea3761b2cabce86cdca3b6013d024135fdf9138",
+                "reference": "bea3761b2cabce86cdca3b6013d024135fdf9138",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1",
+                "ramsey/uuid": "^4.7",
+                "roadrunner-php/roadrunner-api-dto": "^1.0",
+                "spiral/goridge": "^4.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.5",
+                "phpunit/phpunit": "^10.0",
+                "vimeo/psalm": "^5.9"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "RoadRunner\\Lock\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anton Titov (wolfy-j)",
+                    "email": "wolfy-j@spiralscout.com"
+                },
+                {
+                    "name": "Pavel Buchnev (butschster)",
+                    "email": "pavel.buchnev@spiralscout.com"
+                },
+                {
+                    "name": "Aleksei Gagarin (roxblnfk)",
+                    "email": "alexey.gagarin@spiralscout.com"
+                },
+                {
+                    "name": "Maksim Smakouz (msmakouz)",
+                    "email": "maksim.smakouz@spiralscout.com"
+                },
+                {
+                    "name": "RoadRunner Community",
+                    "homepage": "https://github.com/spiral/roadrunner/graphs/contributors"
+                }
+            ],
+            "description": "This package provides a PHP integration package for the RoadRunner Lock plugin, which allows for easy management of distributed locks in PHP applications. The plugin provides a fast, lightweight, and reliable way to acquire, release, and manage locks in a distributed environment, making it ideal for use in high-traffic web applications and microservices.",
+            "homepage": "https://roadrunner.dev/",
+            "keywords": [
+                "lock",
+                "roadrunner-php",
+                "spiral"
+            ],
+            "support": {
+                "chat": "https://discord.gg/V6EK4he",
+                "docs": "https://roadrunner.dev/docs",
+                "forum": "https://forum.roadrunner.dev/",
+                "issues": "https://github.com/roadrunner-server/roadrunner/issues",
+                "source": "https://github.com/roadrunner-php/lock/tree/1.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/roadrunner-server",
+                    "type": "github"
+                }
+            ],
+            "time": "2023-11-10T10:09:31+00:00"
+        },
+        {
             "name": "roadrunner-php/roadrunner-api-dto",
             "version": "v1.10.0",
             "source": {
@@ -5126,6 +5205,78 @@
                 }
             ],
             "time": "2025-01-14T10:10:32+00:00"
+        },
+        {
+            "name": "roadrunner-php/symfony-lock-driver",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/roadrunner-php/symfony-lock-driver.git",
+                "reference": "77296324263f855c65709df75eb921d61e453f61"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/roadrunner-php/symfony-lock-driver/zipball/77296324263f855c65709df75eb921d61e453f61",
+                "reference": "77296324263f855c65709df75eb921d61e453f61",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "roadrunner-php/lock": "^1.0",
+                "symfony/lock": "^6.0 || ^7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.0",
+                "vimeo/psalm": "^5.9"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Spiral\\RoadRunner\\Symfony\\Lock\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Pavel Buchnev (butschster)",
+                    "email": "pavel.buchnev@spiralscout.com"
+                },
+                {
+                    "name": "Alexander Strizhak",
+                    "email": "gam6itko@gmail.com"
+                }
+            ],
+            "description": "RoadRunner: symfony/lock bridge",
+            "homepage": "https://spiral.dev/",
+            "keywords": [
+                "lock",
+                "roadrunner",
+                "roadrunner-php",
+                "spiral",
+                "symfony"
+            ],
+            "support": {
+                "chat": "https://discord.gg/V6EK4he",
+                "docs": "https://roadrunner.dev/docs",
+                "forum": "https://forum.roadrunner.dev/",
+                "issues": "https://github.com/roadrunner-server/roadrunner/issues",
+                "source": "https://github.com/roadrunner-php/symfony-lock-driver/tree/v1.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/roadrunner-server",
+                    "type": "github"
+                }
+            ],
+            "time": "2023-12-18T12:07:28+00:00"
         },
         {
             "name": "roadrunner-php/version-checker",
@@ -8571,6 +8722,84 @@
             ],
             "support": {
                 "source": "https://github.com/symfony/intl/tree/v7.0.8"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2024-05-31T14:55:39+00:00"
+        },
+        {
+            "name": "symfony/lock",
+            "version": "v7.0.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/lock.git",
+                "reference": "665e2f4c14690d4b974ed59313e50efe18e8bce6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/lock/zipball/665e2f4c14690d4b974ed59313e50efe18e8bce6",
+                "reference": "665e2f4c14690d4b974ed59313e50efe18e8bce6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "psr/log": "^1|^2|^3"
+            },
+            "conflict": {
+                "doctrine/dbal": "<3.6",
+                "symfony/cache": "<6.4"
+            },
+            "require-dev": {
+                "doctrine/dbal": "^3.6|^4",
+                "predis/predis": "^1.1|^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Lock\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jérémy Derussé",
+                    "email": "jeremy@derusse.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Creates and manages locks, a mechanism to provide exclusive access to a shared resource",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "cas",
+                "flock",
+                "locking",
+                "mutex",
+                "redlock",
+                "semaphore"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/lock/tree/v7.0.8"
             },
             "funding": [
                 {

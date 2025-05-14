@@ -26,6 +26,7 @@
         "psalm/plugin-symfony": "^5.1",
         "ramsey/uuid": "^4.6",
         "roadrunner-php/centrifugo": "^2.2",
+        "roadrunner-php/symfony-lock-driver": "^1.0",
         "spiral/roadrunner-http": "^3.5",
         "spiral/roadrunner-jobs": "4.6.0",
         "spiral/roadrunner-metrics": "^3.2",

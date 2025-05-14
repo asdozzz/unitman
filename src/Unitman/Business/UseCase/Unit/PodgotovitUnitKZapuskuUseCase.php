@@ -25,6 +25,7 @@ final class PodgotovitUnitKZapuskuUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);
+        $unit->validaziyaPeredPodgotovkoi();
         $jobId = $this->runnerService->nachatPodgotovkuUnita($unit);
         $unit->nachatPodgotovkuUnita($jobId);
         $this->unitRepository->save($unit);
@@ -33,6 +34,7 @@ final class PodgotovitUnitKZapuskuUseCase
     function handleTemporal(PodgotovitUnitKZapusku $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
+        $unit->validaziyaPeredPodgotovkoi();
         $jobId = $this->runnerService->nachatPodgotovkuUnita($unit);
         $unit->nachatPodgotovkuUnita($jobId);
         $this->unitRepository->save($unit);

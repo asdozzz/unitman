@@ -5,6 +5,7 @@ namespace App\Unitman\Infra\Jobs;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\OcheredDlyProzesaUdaleniyaUnitaPosleZapuska;
 use App\Unitman\Infra\Temporal\Workflow\ProzesUdaleniyaUnitaPosleZapuskaWorkflow;
+use App\Utils\Service\LockService;
 use FluffyDiscord\RoadRunnerBundle\Worker\JobsWorker\JobsHandlerInterface;
 use Psr\Log\LoggerInterface;
 use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
@@ -18,7 +19,8 @@ final class OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler implements Job
     public function __construct(
         protected WorkflowClient $workflowClient,
         private UnitRepository $unitRepository,
-        private SerializerInterface $serializer
+        private SerializerInterface $serializer,
+        private LockService $lockService
     )
     {
     }
@@ -30,13 +32,25 @@ final class OcheredDlyProzesaUdaleniyaUnitaPosleZapuskaJobHandler implements Job
 
     public function handle(ReceivedTaskInterface $task): void
     {
-        $model = $this->serializer->deserialize($task->getPayload(), $task->getName(), 'json');
-        /** @var OcheredDlyProzesaUdaleniyaUnitaPosleZapuska $model*/
-        match ($model->state) {
-            OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::OSTANOVLEN => $this->ostanovlen($model->unitId),
-            OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::SBROSHENA_PODGOTOVKA => $this->podgotovkaSbroshena($model->unitId),
-            OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR => $this->setError($model->unitId),
-        };
+        $lockFactory = $this->lockService->makeLockFactory();
+        $lock = $lockFactory->createLock(self::QUEUE_NAME.'.'.$task->getId());
+
+        if (!$lock->acquire()) {
+            return;
+        }
+
+        try {
+            $model = $this->serializer->deserialize($task->getPayload(), $task->getName(), 'json');
+            /** @var OcheredDlyProzesaUdaleniyaUnitaPosleZapuska $model*/
+            match ($model->state) {
+                OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::OSTANOVLEN => $this->ostanovlen($model->unitId),
+                OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::SBROSHENA_PODGOTOVKA => $this->podgotovkaSbroshena($model->unitId),
+                OcheredDlyProzesaUdaleniyaUnitaPosleZapuska::ERROR => $this->setError($model->unitId),
+            };
+        } finally {
+            $lock->release();
+        }
+
     }
 
     /**
