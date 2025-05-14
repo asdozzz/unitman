@@ -28,6 +28,7 @@ final class ObnovitKodUnitaUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);
+        $unit->proverkaVozmognostiObnovleniyaUnita();
         $jobId = $this->runnerService->nachatObnovlenieUnita($unit);
         $unixtime = $this->clock->now()->getTimestamp();
         $unit->nachatObnovlenieUnita($jobId, $unixtime);
@@ -37,6 +38,7 @@ final class ObnovitKodUnitaUseCase
     function handleSystem(ObnovitKodUnita $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
+        $unit->proverkaVozmognostiObnovleniyaUnita();
         $jobId = $this->runnerService->nachatObnovlenieUnita($unit);
         $unixtime = $this->clock->now()->getTimestamp();
         $unit->nachatObnovlenieUnita($jobId, $unixtime);

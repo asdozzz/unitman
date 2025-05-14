@@ -22,6 +22,7 @@ final class ZapustitUnitUseCase
     function handle(ZapustitUnit $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
+        $unit->validaziyaPeredZapuskom();
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);

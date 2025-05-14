@@ -28,6 +28,7 @@ final class ObnovitKodUnitaPosleZapuskaUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);
+        $unit->proverkaVozmognostiObnovleniyaPosleZapuska();
 
         if (!$project->poluchitNastroikiHuka()->obnovlenieBezSbrosaPodgotovki || $prinuditenlniiSbrosPodgotovki) {
             $zapushen = $unit->esliZapushen();
@@ -45,6 +46,7 @@ final class ObnovitKodUnitaPosleZapuskaUseCase
     {
         $unit = $this->unitRepository->getById($command->id);
         $project = $this->projectRepository->getById($unit->getProjectId());
+        $unit->proverkaVozmognostiObnovleniyaPosleZapuska();
         if (!$project->poluchitNastroikiHuka()->obnovlenieBezSbrosaPodgotovki) {
             $zapushen = $unit->esliZapushen();
             $podgotovlen = $unit->esliPodgotovlen();

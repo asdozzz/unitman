@@ -2,52 +2,19 @@
 
 namespace App\Utils\Service;
 
+use RoadRunner\Lock\Lock;
+use Spiral\Goridge\RPC\RPC;
+use Spiral\RoadRunner\Symfony\Lock\RoadRunnerStore;
+use Symfony\Component\Lock\LockFactory;
+
 final class LockService
 {
-    public function __construct(private string $projectDir)
+    function makeLockFactory(): LockFactory
     {
-    }
-
-    function lock(string $message = 'The application locked'): void
-    {
-        file_put_contents($this->getFilePath(), $message);
-    }
-
-    function isLock(): bool
-    {
-        return file_exists($this->getFilePath());
-    }
-
-    function getLockContent(): string
-    {
-        if (!$this->isLock()) {
-            return "";
-        }
-
-        return file_get_contents($this->getFilePath());
-    }
-
-    function unlock(): void
-    {
-        if (file_exists($this->getFilePath())) {
-            unlink($this->getFilePath());
-        }
-    }
-
-    /**
-     * @return string
-     */
-    private function getLockFileName(): string
-    {
-        $filename = 'lock.json';
-        return $filename;
-    }
-
-    /**
-     * @return string
-     */
-    private function getFilePath(): string
-    {
-        return $this->projectDir . '/' . $this->getLockFileName();
+        $lock = new Lock(RPC::create('tcp://127.0.0.1:6001'));
+        $factory = new LockFactory(
+            new RoadRunnerStore($lock)
+        );
+        return $factory;
     }
 }
