@@ -61,7 +61,11 @@ services:
     volumes:
       - ./.docker/postgres/custom.conf:/etc/postgresql.conf
       - ./var/volume/pgdata:/var/lib/postgresql/data
-
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/etc/postgresql.conf"
+      
   unitman-proxy:
     image: nginx
     restart: always
