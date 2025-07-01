@@ -75,6 +75,11 @@ services:
       file: common-services.yml
       service: centrifugo
 
+  redis:
+    extends:
+      file: common-services.yml
+      service: redis
+
 networks:
   default:
     external: true

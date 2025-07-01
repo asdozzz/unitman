@@ -28,7 +28,9 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Runner\Business\Port\RunnerRepository;
+use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatIzmenenieVetkiUnitaWorkflow;
@@ -43,6 +45,8 @@ use App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow;
 use App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow;
 use App\Runner\Infra\Workflow\RemoveProjectWorkflow;
 use Carbon\CarbonInterval;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
 use Temporal\Exception\Client\WorkflowFailedException;
@@ -54,7 +58,9 @@ final class RunnerApi implements RunnerApiInterface
     public function __construct(
         private WorkflowClient $workflowClient,
         private RunnerRepository $runnerRepository,
-        private float $minFreeMemoryPercent
+        private float $minFreeMemoryPercent,
+        private RedisService $redisService,
+        private SerializerInterface $serializer
     )
     {
     }
@@ -271,7 +277,18 @@ final class RunnerApi implements RunnerApiInterface
     public function poluchitResultatPodgotovki(string $workflowId): ?ResultatPodgotovkiUnita
     {
         $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResult($workflow, ResultatPodgotovkiUnita::class);
+        $result = $this->makeResult($workflow, ResultatPodgotovkiUnita::class);
+
+        if (!empty($result->ResponseId)) {
+            $responseContent = $this->redisService->get($result->ResponseId);
+
+            if (!empty($responseContent)) {
+                $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
+                $result->Steps = json_decode(json_encode($Steps), 1);
+            }
+        }
+
+        return $result;
     }
 
     public function poluchitResultatObnovleniyaUnita(string $workflowId): ?ResultatObnovleniyaUnita
@@ -283,19 +300,52 @@ final class RunnerApi implements RunnerApiInterface
     public function poluchitResultatSbrosaPodgotovkiUnita(string $workflowId): ?ResultatSbrosaPodgotovkiUnita
     {
         $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResult($workflow, ResultatSbrosaPodgotovkiUnita::class);
+        $result = $this->makeResult($workflow, ResultatSbrosaPodgotovkiUnita::class);
+
+        if (!empty($result->ResponseId)) {
+            $responseContent = $this->redisService->get($result->ResponseId);
+
+            if (!empty($responseContent)) {
+                $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
+                $result->Steps = json_decode(json_encode($Steps), 1);
+            }
+        }
+
+        return $result;
     }
 
     public function poluchitResultatZapuskaUnita(string $workflowId): ?ResultatZapuskaUnita
     {
         $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResult($workflow, ResultatZapuskaUnita::class);
+        $result = $this->makeResult($workflow, ResultatZapuskaUnita::class);
+
+        if (!empty($result->ResponseId)) {
+            $responseContent = $this->redisService->get($result->ResponseId);
+
+            if (!empty($responseContent)) {
+                $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
+                $result->Steps = json_decode(json_encode($Steps), 1);
+            }
+        }
+
+        return $result;
     }
 
     public function poluchitResultatOstanovkiUnita(string $workflowId): ?ResultatOstanovkiUnita
     {
         $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResult($workflow, ResultatOstanovkiUnita::class);
+        $result = $this->makeResult($workflow, ResultatOstanovkiUnita::class);
+
+        if (!empty($result->ResponseId)) {
+            $responseContent = $this->redisService->get($result->ResponseId);
+
+            if (!empty($responseContent)) {
+                $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
+                $result->Steps = json_decode(json_encode($Steps), 1);
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -370,7 +420,18 @@ final class RunnerApi implements RunnerApiInterface
     public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita
     {
         $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResult($workflow, ResultatDeistviyaUnita::class);
+        $result = $this->makeResult($workflow, ResultatDeistviyaUnita::class);
+
+        if (!empty($result->ResponseId)) {
+            $responseContent = $this->redisService->get($result->ResponseId);
+
+            if (!empty($responseContent)) {
+                $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
+                $result->Steps = json_decode(json_encode($Steps), 1);
+            }
+        }
+
+        return $result;
     }
 
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ResultatProverkiKonteineraUnita

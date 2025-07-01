@@ -91,3 +91,12 @@ jobs:
       config:
         priority: 10
 
+kv:
+  redis:
+    driver: redis
+    config:
+      addrs:
+        - "redis:6379"
+      username: ${REDIS_USER}
+      password: ${REDIS_PASSWORD}
+
