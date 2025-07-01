@@ -33,6 +33,7 @@ final class SbrositPodgotovkuUnitaUseCase
     function handleTemporal(SbrositPodgotovkuUnita $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
+        $unit->validaziyaPeredSbrosomPodgotovkoi();
         $jobId = $this->runnerService->nachatSbrosPodgotovkiUnita($unit);
         $unit->nachatSbrosPodgotovkiUnita($jobId);
         $this->unitRepository->save($unit);

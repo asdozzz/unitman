@@ -5,11 +5,16 @@ namespace App\Unitman\Infra\Jobs;
 use App\Unitman\Business\Model\ZadachaDlyOcheredi;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Repository\ZadachaDlyOcherediRepository;
+use App\Utils\Service\LockService;
 use Symfony\Component\Serializer\SerializerInterface;
 
 final class ZadachaDlyOcherediService
 {
-    public function __construct(private ZadachaDlyOcherediRepository $repository, private RamseyGuidGenerator $canGeneateGuid, private SerializerInterface $serializer)
+    public function __construct(
+        private ZadachaDlyOcherediRepository $repository,
+        private RamseyGuidGenerator $canGeneateGuid,
+        private SerializerInterface $serializer
+    )
     {
     }
 

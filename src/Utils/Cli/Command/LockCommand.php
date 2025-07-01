@@ -2,7 +2,7 @@
 
 namespace App\Utils\Cli\Command;
 
-use App\Utils\Service\LockService;
+use App\Utils\Service\BlockerService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'app:lock')]
 final class LockCommand extends Command
 {
-    public function __construct(private LockService $lockService)
+    public function __construct(private BlockerService $lockService)
     {
         parent::__construct();
     }

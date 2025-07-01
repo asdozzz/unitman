@@ -661,23 +661,7 @@ final class Unit implements AggregateRoot
 
     public function nachatPodgotovkuUnita(JobId $jobId): void
     {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if (!empty($this->podgotovka) && $this->podgotovka->isSuccess()) {
-            throw new DomainException('unit.podgotovka_uge_bila');
-        }
-
-        if (empty($this->sborka)) {
-            throw new DomainException('unit.sborka_ne_nachalas');
-        }
-
-        $this->validateConfigValues();
+        $this->validaziyaPeredPodgotovkoi();
         $state = $this->newState(new VOcherediNaPodgotovku());
         $this->recordThat(new PodgotovkaUnitaNachalas($this->getId(), (string) $jobId, $state->toArray($this)));
     }
@@ -767,17 +751,7 @@ final class Unit implements AggregateRoot
     //---------Обновление
     public function nachatObnovlenieUnita(JobId $jobId, int $unixtime): void
     {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if (empty($this->sborka)) {
-            throw new DomainException('unit.sborka_ne_nachalas');
-        }
+        $this->proverkaVozmognostiObnovleniyaUnita();
 
         $state = $this->newState(new VOcherediNaObnovlenie());
         $this->recordThat(new ObnovlenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this), $unixtime));
@@ -796,21 +770,7 @@ final class Unit implements AggregateRoot
 
     public function nachatObnovlenieUnitaPosleZapuska(JobId $jobId): void
     {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if (!empty($this->obnovleniePosleZapuska)) {
-            throw new DomainException('unit.obnovlenie_uge_zapusheno');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if (!$this->esliSobran()) {
-            throw new DomainException('unit.unit_ne_sobran');
-        }
+        $this->proverkaVozmognostiObnovleniyaPosleZapuska();
 
         $this->recordThat(new ObnovlenieKodaUnitaPosleZapuskaNachalos($this->getId(), (string) $jobId));
     }
@@ -983,29 +943,7 @@ final class Unit implements AggregateRoot
     //----------Сброс подготовки
     public function nachatSbrosPodgotovkiUnita(JobId $jobId): void
     {
-        $errors = [];
-
-        if ($this->isDeleted) {
-            $errors[] = 'unit.udalen';
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            $errors[] = 'unit.wait_runner';
-        }
-
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
-            $errors[] = 'unit.zapushen';
-        }
-
-        if (empty($this->podgotovka)) {
-            $errors[] = 'unit.podgotovka_ne_nachalas';
-        }
-
-        if (!empty($errors)) {
-            throw new Exception($errors[0]);
-        }
-
-        $this->validateConfigValues();
+        $this->validaziyaPeredSbrosomPodgotovkoi();
 
         $state = $this->newState(new VOcherediNaSbrosPodgotovki());
         $this->recordThat(new SbrosPodgotovkiNachalsya($this->getId(), (string) $jobId, $state->toArray($this)));
@@ -1070,23 +1008,7 @@ final class Unit implements AggregateRoot
     //---------Запуск
     public function nachatZapuskUnita(JobId $jobId): void
     {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
-            throw new DomainException('unit.zapushen');
-        }
-
-        if (empty($this->podgotovka)) {
-            throw new DomainException('unit.podgotovka_ne_nachalas');
-        }
-
-        $this->validateConfigValues();
+        $this->validaziyaPeredZapuskom();
 
         $state = $this->newState(new VOcherediNaZapusk());
         $this->recordThat(new ZapuskUnitNachalsya($this->getId(), (string) $jobId, $state->toArray($this)));
@@ -1561,5 +1483,124 @@ final class Unit implements AggregateRoot
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
         $this->zapusk = null;
         $this->podgotovka = null;
+    }
+
+    /**
+     * @return void
+     */
+    public function proverkaVozmognostiObnovleniyaPosleZapuska(): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if (!empty($this->obnovleniePosleZapuska)) {
+            throw new DomainException('unit.obnovlenie_uge_zapusheno');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if (!$this->esliSobran()) {
+            throw new DomainException('unit.unit_ne_sobran');
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function proverkaVozmognostiObnovleniyaUnita(): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if (empty($this->sborka)) {
+            throw new DomainException('unit.sborka_ne_nachalas');
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function validaziyaPeredPodgotovkoi(): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if (!empty($this->podgotovka) && $this->podgotovka->isSuccess()) {
+            throw new DomainException('unit.podgotovka_uge_bila');
+        }
+
+        if (empty($this->sborka)) {
+            throw new DomainException('unit.sborka_ne_nachalas');
+        }
+
+        $this->validateConfigValues();
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    public function validaziyaPeredSbrosomPodgotovkoi(): void
+    {
+        $errors = [];
+
+        if ($this->isDeleted) {
+            $errors[] = 'unit.udalen';
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            $errors[] = 'unit.wait_runner';
+        }
+
+        if ($this->zapusk && $this->zapusk->isSuccess()) {
+            $errors[] = 'unit.zapushen';
+        }
+
+        if (empty($this->podgotovka)) {
+            $errors[] = 'unit.podgotovka_ne_nachalas';
+        }
+
+        if (!empty($errors)) {
+            throw new Exception($errors[0]);
+        }
+
+        $this->validateConfigValues();
+    }
+
+    /**
+     * @return void
+     */
+    public function validaziyaPeredZapuskom(): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if ($this->isWaitResultFromRunner()) {
+            throw new DomainException('unit.wait_runner');
+        }
+
+        if ($this->zapusk && $this->zapusk->isSuccess()) {
+            throw new DomainException('unit.zapushen');
+        }
+
+        if (empty($this->podgotovka)) {
+            throw new DomainException('unit.podgotovka_ne_nachalas');
+        }
+
+        $this->validateConfigValues();
     }
 }

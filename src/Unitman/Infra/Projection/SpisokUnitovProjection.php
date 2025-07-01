@@ -108,6 +108,13 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     {
         $project = $this->projectRepository->getById($fact->projectId);
         $authorName = $this->securityService->getEmailOrNicknameByUserId($fact->authorId);
+
+        $peremenie = [];
+
+        foreach ($fact->values as $v) {
+            $peremenie[] = ['id' => $v['id'], 'value' => $v['value']];
+        }
+
         $readModel = new SpisokUnitovReadModel(
             $fact->id,
             $fact->authorId,
@@ -119,6 +126,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             $fact->stateAsArray['code'],
             false,
             $fact->stateAsArray['commands'],
+            peremenie: $peremenie
         );
 
         $this->repository->insert($readModel);
@@ -298,17 +306,17 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
 
     function handlePeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
     {
-        $peremie = [];
+        $peremenie = [];
 
         foreach ($fact->values as $k => $v) {
-            $peremie[] = ['id' => $k, 'value' => $v];
+            $peremenie[] = ['id' => $k, 'value' => $v];
         }
 
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'state' => $fact->stateAsArray['code'],
             'commands' => $fact->stateAsArray['commands'],
-            'peremenie' => $peremie
+            'peremenie' => $peremenie
         ]);
         $this->repository->update($readModel);
     }

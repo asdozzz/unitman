@@ -37,7 +37,7 @@ final class ProzesObnovlenieKodaPosleZapuskaWorkflow
         $this->activity  = Workflow::newActivityStub(
             ProzesObnovlenieKodaPosleZapuskaActivity::class,
             ActivityOptions::new()
-                ->withScheduleToCloseTimeout(CarbonInterval::seconds(10))
+                ->withScheduleToCloseTimeout(CarbonInterval::seconds(20))
                 ->withTaskQueue(WorkflowClientFactory::monoQueueName)
         );
     }

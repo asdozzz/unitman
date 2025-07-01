@@ -4,7 +4,7 @@ namespace App\Utils\Converter;
 
 use App\Utils\Model\Reponse\ErrorResponse\ErrorCodeEnum;
 use App\Utils\Service\DoctrineReconnectHelper;
-use App\Utils\Service\LockService;
+use App\Utils\Service\BlockerService;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 #[AsEventListener(event: RequestEvent::class, method: 'onKernelRequest')]
 final class BaseRequestListener
 {
-    public function __construct(private LockService $lockService, private DoctrineReconnectHelper $doctrineReconnectHelper)
+    public function __construct(private BlockerService $lockService, private DoctrineReconnectHelper $doctrineReconnectHelper)
     {
     }
 

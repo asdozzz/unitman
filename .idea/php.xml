@@ -256,6 +256,9 @@
       <path value="$PROJECT_DIR$/vendor/spiral/hmvc" />
       <path value="$PROJECT_DIR$/vendor/spiral/interceptors" />
       <path value="$PROJECT_DIR$/vendor/highcore/temporal-bundle" />
+      <path value="$PROJECT_DIR$/vendor/symfony/lock" />
+      <path value="$PROJECT_DIR$/vendor/roadrunner-php/symfony-lock-driver" />
+      <path value="$PROJECT_DIR$/vendor/roadrunner-php/lock" />
     </include_path>
   </component>
   <component name="PhpInterpreters">

@@ -16,7 +16,7 @@ final class UstanovitDefoltniiKonfigUseCase
         $configVariables = $unit->getConfig()?->getVariables();
 
         if (empty($configVariables)) {
-            throw new \Exception('unit.konfig_not_found');
+            return;
         }
 
         if (empty($unit->poluchitZnacheniyaPeremenih())) {
