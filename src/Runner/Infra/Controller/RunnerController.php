@@ -2,7 +2,11 @@
 
 namespace App\Runner\Infra\Controller;
 
+use App\Runner\Business\Command\GetResponseCommand;
+use App\Runner\Business\Command\SaveStepsCommand;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
+use App\Runner\Infra\Service\RedisService;
+use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,5 +26,12 @@ final class RunnerController extends AbstractController
     {
         $runners = $runnerStateRepository->getDefaultRunnerState();
         return new JsonResponse($runners);
+    }
+
+    #[Route('/saveSteps', methods: ['POST'])]
+    function saveSteps(SaveStepsCommand $command, RedisService $redisService): JsonResponse
+    {
+        $redisService->set($command->responseId, $command->stepsContent);
+        return new JsonResponse(true);
     }
 }
