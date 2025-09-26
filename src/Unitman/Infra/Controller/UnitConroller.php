@@ -243,7 +243,7 @@ final class UnitConroller extends AbstractController
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command, ProveritKonteinerUnitaUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));

@@ -19,9 +19,9 @@ final class ProveritKonteinerUnitaUseCase
     {
     }
 
-    function handle(ProveritKonteinerUnita $command): void
+    function handle(string $unitId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
+        $unit = $this->unitRepository->getById($unitId);
         $project = $this->projectRepository->getById($unit->getProjectId());
         $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
         $unit->proverkaPrav($projectUser);
