@@ -11,7 +11,7 @@ final class UnitId implements AggregateRootId
     public function __construct(string $id)
     {
         if (empty($id)) {
-            throw new \DomainException('repo.id_is_empty');
+            throw new \DomainException('unit.id_is_empty');
         }
         $this->id = $id;
     }

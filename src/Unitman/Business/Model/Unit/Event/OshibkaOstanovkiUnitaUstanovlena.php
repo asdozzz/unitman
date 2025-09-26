@@ -6,8 +6,9 @@ final class OshibkaOstanovkiUnitaUstanovlena
 {
     public function __construct(
         public readonly string $unitId,
-        public readonly array $steps,
-        public readonly array $stateAsArray
+        public readonly string $jobId,
+        public readonly array $stateAsArray,
+        public readonly array $prozess,
     )
     {
     }

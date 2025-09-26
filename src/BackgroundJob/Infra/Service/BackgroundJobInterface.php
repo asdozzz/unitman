@@ -15,4 +15,9 @@ interface BackgroundJobInterface
      * @return int<0, max>
      * */
     function getDelay(): int;
+
+    /**
+     * @return int<1, 20>
+     * */
+    function getProcessNum(): int;
 }

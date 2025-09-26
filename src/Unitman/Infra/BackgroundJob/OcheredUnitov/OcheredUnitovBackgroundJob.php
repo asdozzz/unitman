@@ -3,7 +3,6 @@
 namespace App\Unitman\Infra\BackgroundJob\OcheredUnitov;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
-use App\Unitman\Infra\BackgroundJob\OcheredUnitov\OcheredUnitovActivity;
 
 final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
 {
@@ -30,6 +29,11 @@ final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
         }
 
         return true;
+    }
+
+    function getDelay(): int
+    {
+        return 10;
     }
 
 

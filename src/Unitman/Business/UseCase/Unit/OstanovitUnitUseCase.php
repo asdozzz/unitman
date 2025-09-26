@@ -14,31 +14,16 @@ final class OstanovitUnitUseCase
         private UnitRepository $unitRepository,
         private RunnerService $runnerService,
         private ProjectRepository $projectRepository,
-        private UnitmanSecurityService $securityService
     )
     {
     }
 
-    function handle(OstanovitUnit $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $unit->validaziyaPeredOstanovkoi();
+        $unit = $this->unitRepository->getById($unitId);
         $project = $this->projectRepository->getById($unit->getProjectId());
-        $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
-        $unit->proverkaPrav($projectUser);
-        $project = $this->projectRepository->getById($unit->getProjectId());
-        $jobId = $this->runnerService->nachatOstanovkuUnita($unit, $project);
         $unit->nachatOstanovkuUnita($jobId);
-        $this->unitRepository->save($unit);
-    }
-
-    function handleTemporal(OstanovitUnit $command): void
-    {
-        $unit = $this->unitRepository->getById($command->id);
-        $project = $this->projectRepository->getById($unit->getProjectId());
-        $unit->validaziyaPeredOstanovkoi();
-        $jobId = $this->runnerService->nachatOstanovkuUnita($unit, $project);
-        $unit->nachatOstanovkuUnita($jobId);
+        $this->runnerService->nachatOstanovkuUnita($jobId, $unit, $project);
         $this->unitRepository->save($unit);
     }
 }

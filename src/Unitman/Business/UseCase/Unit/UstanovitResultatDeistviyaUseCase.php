@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Unitman\Business\Command\Unit\UstanovitResultatDeistviya;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 
@@ -15,15 +14,15 @@ final class UstanovitResultatDeistviyaUseCase
     {
     }
 
-    function handle(UstanovitResultatDeistviya $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $resultatObnovleniya = $this->runnerService->poluchitResultatDeistviya($unit);
+        $unit = $this->unitRepository->getById($unitId);
+        $resultatObnovleniya = $this->runnerService->poluchitResultatDeistviya($unitId);
 
         if ($resultatObnovleniya->success) {
-            $unit->ustanovitUspehDeistviya($resultatObnovleniya->steps);
+            $unit->ustanovitUspehDeistviya($jobId, $resultatObnovleniya->steps);
         } else {
-            $unit->ustanovitOshibkuDeistviya($resultatObnovleniya->steps);
+            $unit->ustanovitOshibkuDeistviya($jobId, $resultatObnovleniya->steps);
         }
 
         $this->unitRepository->save($unit);

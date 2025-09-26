@@ -13,30 +13,17 @@ final class ZapustitUnitUseCase
     public function __construct(
         private UnitRepository $unitRepository,
         private RunnerService $runnerService,
-        private UnitmanSecurityService $securityService,
         private ProjectRepository $projectRepository
     )
     {
     }
 
-    function handle(ZapustitUnit $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $unit->validaziyaPeredZapuskom();
+        $unit = $this->unitRepository->getById($unitId);
         $project = $this->projectRepository->getById($unit->getProjectId());
-        $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
-        $unit->proverkaPrav($projectUser);
-        $jobId = $this->runnerService->nachatZapuskUnita($unit, $project);
         $unit->nachatZapuskUnita($jobId);
-        $this->unitRepository->save($unit);
-    }
-
-    function handleTemporal(ZapustitUnit $command): void
-    {
-        $unit = $this->unitRepository->getById($command->id);
-        $project = $this->projectRepository->getById($unit->getProjectId());
-        $jobId = $this->runnerService->nachatZapuskUnita($unit, $project);
-        $unit->nachatZapuskUnita($jobId);
+        $this->runnerService->nachatZapuskUnita($jobId, $unit, $project);
         $this->unitRepository->save($unit);
     }
 }

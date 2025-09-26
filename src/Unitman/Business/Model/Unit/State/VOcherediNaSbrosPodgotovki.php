@@ -30,7 +30,6 @@ final class VOcherediNaSbrosPodgotovki extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatSbrosaPodgotovki
         ];
     }
 }

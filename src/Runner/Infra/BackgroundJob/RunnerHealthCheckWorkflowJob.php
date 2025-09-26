@@ -50,4 +50,9 @@ final class RunnerHealthCheckWorkflowJob implements BackgroundJobInterface
     {
         return 30;
     }
+
+    function getProcessNum(): int
+    {
+        return 1;
+    }
 }

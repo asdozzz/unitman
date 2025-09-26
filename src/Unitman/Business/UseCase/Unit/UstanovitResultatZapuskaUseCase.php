@@ -16,14 +16,14 @@ final class UstanovitResultatZapuskaUseCase
     {
     }
 
-    function handle(UstanovitResultatZapuska $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $resultatZapuska = $this->runnerService->poluchitResultatZapuskaUnita($unit);
+        $unit = $this->unitRepository->getById($unitId);
+        $resultatZapuska = $this->runnerService->poluchitResultatZapuskaUnita($unitId);
         if ($resultatZapuska->success) {
-            $unit->ustanovitUspehZapuska($resultatZapuska->steps);
+            $unit->ustanovitUspehZapuska($jobId,$resultatZapuska->steps);
         } else {
-            $unit->ustanovitOshibkuZapuska($resultatZapuska->steps);
+            $unit->ustanovitOshibkuZapuska($jobId,$resultatZapuska->steps);
         }
         $this->unitRepository->save($unit);
     }

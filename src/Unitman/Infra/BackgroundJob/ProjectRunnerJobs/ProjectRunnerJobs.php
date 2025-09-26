@@ -5,7 +5,7 @@ namespace App\Unitman\Infra\BackgroundJob\ProjectRunnerJobs;
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
 use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
 use App\Unitman\Infra\Projection\ProjectRunnerJobsProjection;
-use App\Unitman\Infra\Projection\UnitRunnerJobsProjection;
+use App\Unitman\Infra\Projection\ProzesUnitaProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
 final class ProjectRunnerJobs extends AbstractBackgroundJob

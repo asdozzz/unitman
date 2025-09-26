@@ -34,4 +34,5 @@ abstract class AbstractProjection implements CanProjectEvents
     {
         return 1;
     }
+
 }

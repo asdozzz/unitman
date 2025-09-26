@@ -43,6 +43,7 @@ use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\Model\Project\ProxyHost;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
@@ -141,7 +142,9 @@ final class Project implements AggregateRoot
      */
     private function applyOchistkaProektaNachalas(OchistkaProektaNachalas $fact): void
     {
-        $this->ochistka = RunnerJob::start($fact->jobId);
+        $runnerJob = RunnerJob::make($fact->jobId, RunnerJobType::SBORKA);
+        $runnerJob->start();
+        $this->ochistka = $runnerJob;
     }
 
     public function ustanovitOshibkuOchistku(array $steps): void
@@ -161,7 +164,7 @@ final class Project implements AggregateRoot
      */
     public function applyOshibkaOchistkiProektaUstanovlena(OshibkaOchistkiProektaUstanovlena $fact): void
     {
-        $this->ochistka = $this->ochistka->ustanovitOshibku($fact->steps);
+        $this->ochistka->ustanovitResultat(false,$fact->steps);
     }
 
     public function ustanovitUspehOchistku(array $steps): void
@@ -181,7 +184,7 @@ final class Project implements AggregateRoot
      */
     public function applyUspehOchistkiProektaUstanovlen(UspehOchistkiProektaUstanovlen $fact): void
     {
-        $this->ochistka = $this->ochistka->ustanovitUspeh($fact->steps);
+        $this->ochistka->ustanovitResultat(true, $fact->steps);
     }
 
     public function obnovitNastrokiHuka(ObnovitNastroikiHuka $command): void

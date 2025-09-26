@@ -15,14 +15,14 @@ final class UstanovitResultatPodgotovkiUnitaUseCase
     {
     }
 
-    function handle(UstanovitResultatPodgotovkiUnita $command): bool
+    function handle(string $unitId, string $jobId): bool
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $resultatPodgotovki = $this->runnerService->poluchitResultatPodgotovki($unit);
+        $unit = $this->unitRepository->getById($unitId);
+        $resultatPodgotovki = $this->runnerService->poluchitResultatPodgotovki($unitId);
         if ($resultatPodgotovki->success) {
-            $unit->ustanovitUspehPodgotovki($resultatPodgotovki->steps);
+            $unit->ustanovitUspehPodgotovki($jobId, $resultatPodgotovki->steps);
         } else {
-            $unit->ustanovitOshibkuPodgotovki($resultatPodgotovki->steps);
+            $unit->ustanovitOshibkuPodgotovki($jobId, $resultatPodgotovki->steps);
         }
         $this->unitRepository->save($unit);
 

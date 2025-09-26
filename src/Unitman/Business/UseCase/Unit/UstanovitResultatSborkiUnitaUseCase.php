@@ -17,16 +17,16 @@ final class UstanovitResultatSborkiUnitaUseCase
     {
     }
 
-    function handle(UstanovitResultatSborkiUnita $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $resultatSborki = $this->runnerService->poluchitResultatSborki($unit);
+        $unit = $this->unitRepository->getById($unitId);
+        $resultatSborki = $this->runnerService->poluchitResultatSborki($jobId);
 
         if ($resultatSborki->success) {
             $config = $this->canParseYaml->parse($resultatSborki->config ?? '');
-            $unit->ustanovitUspehSborki($resultatSborki->steps, $config);
+            $unit->ustanovitUspehSborki($jobId, $resultatSborki->steps, $config);
         } else {
-            $unit->ustanovitOshibkuSborki($resultatSborki->steps);
+            $unit->ustanovitOshibkuSborki($jobId, $resultatSborki->steps);
         }
         $this->unitRepository->save($unit);
     }

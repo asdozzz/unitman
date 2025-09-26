@@ -17,16 +17,16 @@ final class UstanovitResultatObnovleniyaUnitaUseCase
     {
     }
 
-    function handle(UstanovitResultatObnovleniyaUnita $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $resultatObnovleniya = $this->runnerService->poluchitResultatObnovleniyaUnita($unit);
+        $unit = $this->unitRepository->getById($unitId);
+        $resultatObnovleniya = $this->runnerService->poluchitResultatObnovleniyaUnita($unitId);
 
         if ($resultatObnovleniya->success) {
             $config = $this->canParseYaml->parse($resultatObnovleniya->config ?? '');
-            $unit->ustanovitUspehObnovleniya($resultatObnovleniya->steps, $config);
+            $unit->ustanovitUspehObnovleniya($jobId, $resultatObnovleniya->steps, $config);
         } else {
-            $unit->ustanovitOshibkuObnovleniya($resultatObnovleniya->steps);
+            $unit->ustanovitOshibkuObnovleniya($jobId, $resultatObnovleniya->steps);
         }
 
         $this->unitRepository->save($unit);

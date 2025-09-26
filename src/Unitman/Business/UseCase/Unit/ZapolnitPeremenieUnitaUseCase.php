@@ -13,8 +13,7 @@ final class ZapolnitPeremenieUnitaUseCase
     public function __construct(
         private UnitRepository $unitRepository,
         private ProjectRepository $projectRepository,
-        private UnitmanSecurityService $securityService,
-        private ObnovitKodUnitaPosleZapuskaUseCase $obnovitKodUnitaPosleZapuskaUseCase
+        private UnitmanSecurityService $securityService
     )
     {
     }
@@ -27,9 +26,5 @@ final class ZapolnitPeremenieUnitaUseCase
         $unit->proverkaPrav($projectUser);
         $unit->zapolnitPeremenie($command->values);
         $this->unitRepository->save($unit);
-
-        if ($unit->esliZapushen()) {
-            $this->obnovitKodUnitaPosleZapuskaUseCase->handle(new ObnovitKodUnitaPosleZapuska($command->id), true);
-        }
     }
 }

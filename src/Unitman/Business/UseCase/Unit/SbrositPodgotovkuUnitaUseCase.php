@@ -12,30 +12,16 @@ final class SbrositPodgotovkuUnitaUseCase
 {
     public function __construct(
         private UnitRepository $unitRepository,
-        private ProjectRepository $projectRepository,
         private RunnerService $runnerService,
-        private UnitmanSecurityService $securityService
     )
     {
     }
 
-    function handle(SbrositPodgotovkuUnita $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $project = $this->projectRepository->getById($unit->getProjectId());
-        $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
-        $unit->proverkaPrav($projectUser);
-        $jobId = $this->runnerService->nachatSbrosPodgotovkiUnita($unit);
+        $unit = $this->unitRepository->getById($unitId);
         $unit->nachatSbrosPodgotovkiUnita($jobId);
-        $this->unitRepository->save($unit);
-    }
-
-    function handleTemporal(SbrositPodgotovkuUnita $command): void
-    {
-        $unit = $this->unitRepository->getById($command->id);
-        $unit->validaziyaPeredSbrosomPodgotovkoi();
-        $jobId = $this->runnerService->nachatSbrosPodgotovkiUnita($unit);
-        $unit->nachatSbrosPodgotovkiUnita($jobId);
+        $this->runnerService->nachatSbrosPodgotovkiUnita($unitId, $unit);
         $this->unitRepository->save($unit);
     }
 }

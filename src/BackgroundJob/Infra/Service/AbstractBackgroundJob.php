@@ -8,4 +8,9 @@ abstract class AbstractBackgroundJob implements BackgroundJobInterface
     {
         return 1;
     }
+
+    function getProcessNum(): int
+    {
+        return 1;
+    }
 }

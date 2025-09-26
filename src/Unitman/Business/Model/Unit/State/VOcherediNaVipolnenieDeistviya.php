@@ -29,7 +29,6 @@ final class VOcherediNaVipolnenieDeistviya extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatDeistviya
         ];
     }
 }

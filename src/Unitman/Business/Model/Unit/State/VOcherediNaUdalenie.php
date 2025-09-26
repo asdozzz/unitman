@@ -25,7 +25,6 @@ final class VOcherediNaUdalenie extends AbstractState
     public function getCommands(Unit $unit): array
     {
         return [
-            StateUserCommand::ustanovitResultatUdaleniya
         ];
     }
 }

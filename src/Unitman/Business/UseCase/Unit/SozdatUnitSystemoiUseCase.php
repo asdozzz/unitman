@@ -7,7 +7,6 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
-use App\Unitman\Business\Port\Unit\UmeetSobiratUnit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
@@ -19,7 +18,6 @@ final class SozdatUnitSystemoiUseCase
         private UnitmanSecurityService $securityService,
         private CanGeneateGuid         $uuidGenerator,
         private UnitRepository         $unitRepository,
-        private UmeetSobiratUnit $umeetSobiratUnit
     )
     {
     }
@@ -48,13 +46,6 @@ final class SozdatUnitSystemoiUseCase
 
         $unit = Unit::sozdatUnitSystemoi($this->uuidGenerator->makeGuid(), $systemUser, $command);
         $this->unitRepository->save($unit);
-
-        $jobId = $this->umeetSobiratUnit->sobratUnitOtLizaSystemi($unit->getId());
-
-        $unit = $this->unitRepository->getById($unit->getId());
-        $unit->nachatAvtosborku($jobId);
-        $this->unitRepository->save($unit);
-
         return $unit->getId();
     }
 }

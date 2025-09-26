@@ -2,7 +2,6 @@
 
 namespace App\Runner\Infra\Controller;
 
-use App\Runner\Business\Command\GetResponseCommand;
 use App\Runner\Business\Command\SaveStepsCommand;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
 use App\Runner\Infra\Service\RedisService;
