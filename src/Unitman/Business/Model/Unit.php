@@ -160,6 +160,17 @@ final class Unit implements AggregateRoot
         return !empty($this->podgotovka) && $this->podgotovka->isSuccess();
     }
 
+    public function esliEstNeobrabotanieProzesi(): bool
+    {
+        foreach ($this->prozesi as $process) {
+            if (!$process->isFinish()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function isWaitResultFromRunner(): bool
     {
         foreach ($this->prozesi as $process) {
@@ -284,11 +295,20 @@ final class Unit implements AggregateRoot
         }
     }
 
+    private function provrkaNeobrabotanihProzesov(): void
+    {
+        if ($this->esliEstNeobrabotanieProzesi()) {
+            throw new DomainException('unit.wait_another_proccess');
+        }
+    }
+
     public function dobavitProzesVipolneniyaDeistviya(string $userId, string $prozesId, VipolnitDeistviye $command): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
         }
+
+        $this->provrkaNeobrabotanihProzesov();
 
         $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::DEISTVIE);
         $jobId = Uuid::uuid7()->toString();
@@ -488,6 +508,8 @@ final class Unit implements AggregateRoot
 
     public function dobavitProzesSborki(string $userId, string $prozesId): void
     {
+        $this->provrkaNeobrabotanihProzesov();
+
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
         }
@@ -649,6 +671,7 @@ final class Unit implements AggregateRoot
 
     public function dobavitProzesPodgotovki(string $userId, string $prozesId): void
     {
+        $this->provrkaNeobrabotanihProzesov();
         $this->validaziyaPeredPodgotovkoi();
         $prozes = UnitProcess::make($prozesId, $userId,UnitProcess\UnitProcessType::PODGOTOVKA);
         $prozes->dobavitZadachiVProzess([
@@ -719,8 +742,12 @@ final class Unit implements AggregateRoot
     }
 
     //---------Обновление
-    public function dobavitProzesObnovleniya(string $userId, string $prozesId): void
+    public function dobavitProzesObnovleniya(string $userId, string $prozesId, bool $neproveryatProzesi = false): void
     {
+        if (!$neproveryatProzesi) {
+            $this->provrkaNeobrabotanihProzesov();
+        }
+
         $this->proverkaVozmognostiObnovleniyaUnita();
         $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::OBNOVLENIE);
         $zadachi = [];
@@ -819,6 +846,7 @@ final class Unit implements AggregateRoot
     //----------Сброс подготовки
     public function dobavitProzesSbrosaPodgotovki(string $userId, string $prozesId): void
     {
+        $this->provrkaNeobrabotanihProzesov();
         $this->validaziyaPeredSbrosomPodgotovkoi();
         $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::SBROS_PODGOTOVKI);
         $zadachi = [];
@@ -889,6 +917,7 @@ final class Unit implements AggregateRoot
     //---------Запуск
     public function dobavitProzesZapuska(string $userId, string $prozesId): void
     {
+        $this->provrkaNeobrabotanihProzesov();
         $this->validaziyaPeredZapuskom();
         $prozes = UnitProcess::make($prozesId, $userId,UnitProcess\UnitProcessType::ZAPUSK);
         $zadachi = [];
@@ -972,6 +1001,7 @@ final class Unit implements AggregateRoot
     //---------Остановка
     public function dobavitProzesOstanovki(string $userId, string $prozesId): void
     {
+        $this->provrkaNeobrabotanihProzesov();
         $this->validaziyaPeredOstanovkoi();
         $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::OSTANOVKA);
         $zadachi = [];
@@ -1041,8 +1071,12 @@ final class Unit implements AggregateRoot
     }
 
     //---------Удаление
-    public function dobavitProzesUdaleniya(string $userId, string $prozesId): void
+    public function dobavitProzesUdaleniya(string $userId, string $prozesId, bool $neproveryatProzesi = false): void
     {
+        if (!$neproveryatProzesi) {
+            $this->provrkaNeobrabotanihProzesov();
+        }
+
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
         }

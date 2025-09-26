@@ -30,7 +30,7 @@ final class DobavitProzesUdaleniyaUseCase
         $systemUser = $this->securityService->getSystemUser();
         $prozesId = $this->uuidGenerator->makeGuid();
         $unit = $this->unitRepository->getById($unitId);
-        $unit->dobavitProzesUdaleniya($systemUser->id, $prozesId);
+        $unit->dobavitProzesUdaleniya($systemUser->id, $prozesId, true);
         $this->unitRepository->save($unit);
     }
 }

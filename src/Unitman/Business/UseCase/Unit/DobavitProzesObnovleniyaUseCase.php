@@ -30,7 +30,7 @@ final class DobavitProzesObnovleniyaUseCase
         $systemUser = $this->securityService->getSystemUser();
         $prozesId = $this->uuidGenerator->makeGuid();
         $unit = $this->unitRepository->getById($unitId);
-        $unit->dobavitProzesObnovleniya($systemUser->id, $prozesId);
+        $unit->dobavitProzesObnovleniya($systemUser->id, $prozesId, true);
         $this->unitRepository->save($unit);
     }
 }
