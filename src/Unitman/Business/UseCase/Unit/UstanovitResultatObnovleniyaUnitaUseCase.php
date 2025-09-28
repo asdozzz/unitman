@@ -20,7 +20,7 @@ final class UstanovitResultatObnovleniyaUnitaUseCase
     function handle(string $unitId, string $jobId): void
     {
         $unit = $this->unitRepository->getById($unitId);
-        $resultatObnovleniya = $this->runnerService->poluchitResultatObnovleniyaUnita($unitId);
+        $resultatObnovleniya = $this->runnerService->poluchitResultatObnovleniyaUnita($jobId);
 
         if ($resultatObnovleniya->success) {
             $config = $this->canParseYaml->parse($resultatObnovleniya->config ?? '');

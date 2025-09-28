@@ -19,7 +19,7 @@ final class UstanovitResultatZapuskaUseCase
     function handle(string $unitId, string $jobId): void
     {
         $unit = $this->unitRepository->getById($unitId);
-        $resultatZapuska = $this->runnerService->poluchitResultatZapuskaUnita($unitId);
+        $resultatZapuska = $this->runnerService->poluchitResultatZapuskaUnita($jobId);
         if ($resultatZapuska->success) {
             $unit->ustanovitUspehZapuska($jobId,$resultatZapuska->steps);
         } else {

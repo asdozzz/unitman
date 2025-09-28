@@ -99,7 +99,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleDobavlenProzesVUnit(DobavlenProzesVUnit $fact): void
     {
         $readModel =$this->repository->getById($fact->unitId);
-        $prozesi = array_merge($readModel->prozesi, [$fact->prozes]);
+        $prozesi = $readModel->prozesi;
+        $prozesi[] = $fact->prozes;
         $readModel = $readModel->copyAndUpdateData([
             'prozesi' => $prozesi
         ]);

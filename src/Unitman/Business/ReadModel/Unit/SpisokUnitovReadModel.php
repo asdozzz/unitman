@@ -15,7 +15,7 @@ final class SpisokUnitovReadModel
         public readonly string $projectName,
         public readonly string $branch,
         public readonly array $commands = [],
-        public readonly array $prozesi = [],
+        public array $prozesi = [],
         public readonly bool $error = false,
         public readonly array $links = [],
         public readonly ?int $unixtimePoslednegoObnovleniyaUnita = null,
@@ -78,11 +78,7 @@ final class SpisokUnitovReadModel
         if (isset($props['prozesi'])) {
             $prozesi = $props['prozesi'];
         } else if (isset($props['prozes'])) {
-            if ($props['prozes']['state'] == UnitProcessState::SUCCESS->value || $props['prozes']['state'] == UnitProcessState::ERROR->value) {
-                $prozesi = $this->udalitProzess($props['prozes']);
-            } else {
-                $prozesi = $this->obnovitProzess($props['prozes']);
-            }
+            $prozesi = $this->obnovitProzess($props['prozes']);
         } else {
             $prozesi = $this->prozesi;
         }

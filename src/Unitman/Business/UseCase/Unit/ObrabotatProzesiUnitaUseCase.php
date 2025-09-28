@@ -29,8 +29,7 @@ final class ObrabotatProzesiUnitaUseCase
         private UstanovitResultatUdaleniyaUseCase $ustanovitResultatUdaleniyaUseCase,
         private VipolnitDeistviyeUseCase $vipolnitDeistviyeUseCase,
         private UstanovitResultatDeistviyaUseCase $ustanovitResultatDeistviyaUseCase,
-        private UstanovitDefoltniiKonfigUseCase $ustanovitDefoltniiKonfigUseCase,
-        private ProveritKonteinerUnitaUseCase $proveritKonteinerUnitaUseCase
+        private UstanovitDefoltniiKonfigUseCase $ustanovitDefoltniiKonfigUseCase
     )
     {
     }
@@ -40,7 +39,7 @@ final class ObrabotatProzesiUnitaUseCase
         $job = $unit->poluchitJobuDlyObravotki();
 
         if (empty($job)) {
-            $this->proveritKonteinerUnitaUseCase->handle($unitId);
+            //$this->proveritKonteinerUnitaUseCase->handle($unitId);
             return;
         }
 

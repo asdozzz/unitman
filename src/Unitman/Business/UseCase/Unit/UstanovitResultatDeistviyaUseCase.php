@@ -17,7 +17,7 @@ final class UstanovitResultatDeistviyaUseCase
     function handle(string $unitId, string $jobId): void
     {
         $unit = $this->unitRepository->getById($unitId);
-        $resultatObnovleniya = $this->runnerService->poluchitResultatDeistviya($unitId);
+        $resultatObnovleniya = $this->runnerService->poluchitResultatDeistviya($jobId);
 
         if ($resultatObnovleniya->success) {
             $unit->ustanovitUspehDeistviya($jobId, $resultatObnovleniya->steps);

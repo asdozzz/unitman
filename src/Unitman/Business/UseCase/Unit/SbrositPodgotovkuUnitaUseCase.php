@@ -21,7 +21,7 @@ final class SbrositPodgotovkuUnitaUseCase
     {
         $unit = $this->unitRepository->getById($unitId);
         $unit->nachatSbrosPodgotovkiUnita($jobId);
-        $this->runnerService->nachatSbrosPodgotovkiUnita($unitId, $unit);
+        $this->runnerService->nachatSbrosPodgotovkiUnita($jobId, $unit);
         $this->unitRepository->save($unit);
     }
 }

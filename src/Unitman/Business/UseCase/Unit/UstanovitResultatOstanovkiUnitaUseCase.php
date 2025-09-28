@@ -18,7 +18,7 @@ final class UstanovitResultatOstanovkiUnitaUseCase
     function handle(string $unitId, string $jobId): void
     {
         $unit = $this->unitRepository->getById($unitId);
-        $resultatOstanovki = $this->runnerService->poluchitResultatOstanovkiUnita($unitId);
+        $resultatOstanovki = $this->runnerService->poluchitResultatOstanovkiUnita($jobId);
         if ($resultatOstanovki->success) {
             $unit->ustanovitUspehOstanovki($jobId, $resultatOstanovki->steps);
         } else {

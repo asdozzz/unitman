@@ -18,7 +18,7 @@ final class UstanovitResultatPodgotovkiUnitaUseCase
     function handle(string $unitId, string $jobId): bool
     {
         $unit = $this->unitRepository->getById($unitId);
-        $resultatPodgotovki = $this->runnerService->poluchitResultatPodgotovki($unitId);
+        $resultatPodgotovki = $this->runnerService->poluchitResultatPodgotovki($jobId);
         if ($resultatPodgotovki->success) {
             $unit->ustanovitUspehPodgotovki($jobId, $resultatPodgotovki->steps);
         } else {

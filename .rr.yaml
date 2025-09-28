@@ -59,9 +59,9 @@ jobs:
   timeout: 5
   pool:
     max_jobs: 200
-    num_workers: 6
-    allocate_timeout: 60s
-    destroy_timeout: 60s
+    num_workers: 10
+    allocate_timeout: 10s
+    destroy_timeout: 10s
   consume: [
     "prozess_sozdaniya_unita_systemoi",
     "prozess_obnovlenie_koda_posle_zapuska",
