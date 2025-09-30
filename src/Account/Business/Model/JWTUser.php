@@ -49,6 +49,11 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
         $this->password = $newPassword;
     }
 
+    public function updateRole(string $newRole): void
+    {
+        $this->roles = [$newRole];
+    }
+
     public function updateEmail(string $newEmail): void
     {
         $this->email = $newEmail;

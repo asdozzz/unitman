@@ -70,7 +70,6 @@ final class ProzesUnitaRepository implements UmeetPoluchatProzesiUnitaPoId
         if (empty($rows)) {
             return [];
         }
-
         return array_map(fn(array $row) => $this->makeReadModelByRowWithoutSteps($row), $rows);
     }
 
@@ -95,7 +94,6 @@ final class ProzesUnitaRepository implements UmeetPoluchatProzesiUnitaPoId
         }
 
         $prozess = $this->makeReadModelByRow($row);
-
         $shagi = [];
 
         foreach ($prozess->jobs as $zadacha) {

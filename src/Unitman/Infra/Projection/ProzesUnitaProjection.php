@@ -77,10 +77,10 @@ final class ProzesUnitaProjection extends AbstractProjection implements UnitmanP
 
     private function obnovlen(object $event): void
     {
-        if (isset($event->prozes)) {
+        if (isset($event->prozess)) {
             $jobs = [];
 
-            foreach ($event->prozes['jobs'] as $jobData) {
+            foreach ($event->prozess['jobs'] as $jobData) {
                 $steps = [];
                 foreach ($jobData['steps'] as $stepData) {
                     $steps[] = new ProzesUnita\ShagZadachiUnita(
@@ -100,11 +100,11 @@ final class ProzesUnitaProjection extends AbstractProjection implements UnitmanP
             }
 
             $model = new ProzesUnita(
-                $event->prozes['id'],
+                $event->prozess['id'],
                 $event->unitId,
-                $event->prozes['userId'],
-                $event->prozes['type'],
-                $event->prozes['state'],
+                $event->prozess['userId'],
+                $event->prozess['type'],
+                $event->prozess['state'],
                 $jobs
             );
 

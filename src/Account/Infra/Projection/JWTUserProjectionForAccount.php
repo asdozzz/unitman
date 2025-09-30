@@ -11,6 +11,7 @@ use App\Account\Business\Model\Event\NicknameWasChanged;
 use App\Account\Business\Model\Event\NicknameWasChangedByAdmin;
 use App\Account\Business\Model\Event\PasswordWasChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
+use App\Account\Business\Model\Event\RoleWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Utils\AccountEventTypeEnum;
@@ -71,6 +72,12 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
     {
         $user = $this->JWTUserRepository->getById($event->accountId);
         $user->updatePassword($event->newPassword);
+        $this->JWTUserRepository->update($user);
+    }
+
+    public function handleRoleWasChangedByAdmin(RoleWasChangedByAdmin $event): void {
+        $user = $this->JWTUserRepository->getById($event->accountId);
+        $user->updateRole($event->newRole);
         $this->JWTUserRepository->update($user);
     }
 

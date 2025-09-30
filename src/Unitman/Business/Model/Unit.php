@@ -742,7 +742,7 @@ final class Unit implements AggregateRoot
     }
 
     //---------Обновление
-    public function dobavitProzesObnovleniya(string $userId, string $prozesId, bool $neproveryatProzesi = false): void
+    public function dobavitProzesObnovleniya(string $userId, string $prozesId, bool $neproveryatProzesi = false, bool $bistrayaProverka = false): void
     {
         if (!$neproveryatProzesi) {
             $this->provrkaNeobrabotanihProzesov();
@@ -754,11 +754,15 @@ final class Unit implements AggregateRoot
         if ($this->sborka && $this->sborka->isFinish()) {
             $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::OSTANOVKA);
         }
-        if ($this->podgotovka && $this->podgotovka->isFinish()) {
+        if ($this->podgotovka && $this->podgotovka->isFinish() && !$bistrayaProverka) {
             $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::SBROS_PODGOTOVKI);
         }
         $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::OBNOVLENIE);
-        $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::PODGOTOVKA);
+
+        if (!$bistrayaProverka) {
+            $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::PODGOTOVKA);
+        }
+
         $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::ZAPUSK);
 
         $prozes->dobavitZadachiVProzess($zadachi);

@@ -8,6 +8,7 @@ use App\Account\Business\Command\ChangeMyNickname;
 use App\Account\Business\Command\ChangeMyPassword;
 use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Command\ChangePasswordByAdmin;
+use App\Account\Business\Command\ChangeRoleByAdmin;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
@@ -17,6 +18,7 @@ use App\Account\Business\UseCase\ChangeMyNicknameUseCase;
 use App\Account\Business\UseCase\ChangeMyPasswordUseCase;
 use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
+use App\Account\Business\UseCase\ChangeRoleByAdminUseCase;
 use App\Account\Business\UseCase\PoluchitNastroikiAccountaUseCase;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiQuery;
@@ -52,6 +54,13 @@ final class AccountController extends AbstractController
 
     #[Route('/changeNicknameByAdmin')]
     function changeNicknameByAdmin(ChangeNicknameByAdmin $command, ChangeNicknameByAdminUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[Route('/changeRoleByAdmin')]
+    function changeRoleByAdmin(ChangeRoleByAdmin $command, ChangeRoleByAdminUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
