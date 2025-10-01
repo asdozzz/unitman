@@ -25,7 +25,9 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
         $prozesUdaleniyaId = Uuid::uuid7()->toString();
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSborkiId, $prozesUdaleniyaId]));
 
-        $this->sozdatUnit($unitId,'task-123', 'uwin', null, $prozesSborkiId);
+        $userId = Uuid::uuid7()->toString();
+        $this->mokaemUspehSecurity($userId);
+        $this->sozdatUnit($userId, $unitId);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');

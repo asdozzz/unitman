@@ -77,12 +77,9 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
      * @return void
      * @throws \Exception
      */
-    public function sozdatUnit(string $unitId, string $unitName = 'task-123', $projectName = 'uwin', string $projectId = null, string $prozesId = null): void
+    public function sozdatUnit(string $userId, string $unitId, string $unitName = 'task-123', $projectName = 'uwin', string $projectId = null): void
     {
         $repoId = Uuid::uuid7()->toString();
-
-        $userId = Uuid::uuid7()->toString();
-        $securityService = $this->mokaemUspehSecurity($userId);
 
         $repo = $this->stubRepo($repoId, RepoType::GITLAB, 'repoName', 'http://repoUrl');
         $repo->accessConfirm();
@@ -103,15 +100,8 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
 
-        $unitRepo = self::$container->get(UnitRepository::class);
-
-        $prozesId = Uuid::uuid7()->toString();
-
-        if (empty($prozesId)) {
-            $prozesId = Uuid::uuid7()->toString();
-        }
-        $guidGenerator = self::$container->get(CanGeneateGuid::class);
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, $guidGenerator, $unitRepo);
+        $useCase2 = self::$container->get(SozdatUnitUseCase::class);
+        //new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, $guidGenerator, $unitRepo);
         $useCase2->handle(new SozdatUnit(
             $projectId,
             $unitName,

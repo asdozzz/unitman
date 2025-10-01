@@ -54,7 +54,10 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $unitName = 'task-123';
         $projectName = 'uwin';
         $projectId = Uuid::uuid7()->toString();
-        $this->sozdatUnit($unitId, $unitName, $projectName, $projectId, $prozesSbrokiId);
+
+        $userId = Uuid::uuid7()->toString();
+        $this->mokaemUspehSecurity($userId);
+        $this->sozdatUnit($userId, $unitId, $unitName, $projectName, $projectId);
 
         $ocheredUnitovRepository = self::$container->get(OcheredUnitovRepository::class);
         /** @var OcheredUnitovRepository $ocheredUnitovRepository */

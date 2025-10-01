@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
 use App\Unitman\Business\Command\Unit\GetUnitRunnerJobs;
+use App\Unitman\Business\Command\Unit\NaitiDubliUnita;
 use App\Unitman\Business\Command\Unit\PoluchitShagiZadachiUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
@@ -36,6 +37,7 @@ use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobStepsQuery;
+use App\Unitman\Business\UseCase\Unit\NaitiDubliUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigIzHranilishaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitPeremenieUnitaQuery;
@@ -66,6 +68,13 @@ final class UnitConroller extends AbstractController
 
     #[Route('/list', methods: ['POST'])]
     public function list(GetUnitList $command, GetUnitListQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/naitiDubliUnita', methods: ['POST'])]
+    public function naitiDubliUnita(NaitiDubliUnita $command, NaitiDubliUnitaUseCase $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));

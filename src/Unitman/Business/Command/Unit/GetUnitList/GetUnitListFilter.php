@@ -8,7 +8,8 @@ final class GetUnitListFilter
         public readonly bool $onlyMine = false,
         public readonly ?string $name = null,
         public readonly ?string $branch = null,
-        public readonly ?string $projectId = null
+        public readonly ?string $projectId = null,
+        public readonly ?string $unitId = null,
     )
     {
     }

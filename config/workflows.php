@@ -16,4 +16,5 @@ return [
     \App\Runner\Infra\Workflow\RunnerHealthCheckWorkflow::class,
     \App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow::class,
+    \App\Runner\Infra\Workflow\OchistkaDockeraWorkflow::class
 ];
