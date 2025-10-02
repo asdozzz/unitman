@@ -9,6 +9,7 @@ use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
+use App\Unitman\Business\Model\Unit\ContainerSettings;
 use App\Unitman\Business\Model\Unit\Event\DeistviePrikreplenoKJobe;
 use App\Unitman\Business\Model\Unit\Event\DobavlenProzesVUnit;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
@@ -95,6 +96,8 @@ final class Unit implements AggregateRoot
     private ?UnitProject $project;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?string $authorId;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ?ContainerSettings $containerSettings;
 
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?AbstractState $state;
@@ -433,7 +436,8 @@ final class Unit implements AggregateRoot
             } catch (\Exception) {
             }
         }
-        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $peremenie));
+        ContainerSettings::validateMemory($command->memoryLimit);
+        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $peremenie, $command->memoryLimit));
         $unit->dobavitProzesSborki($authorId, $prozesId);
         return $unit;
     }
@@ -451,6 +455,8 @@ final class Unit implements AggregateRoot
         $this->variableValues = array_map(function (array $item) {
             return new VariableValue($item['id'], $item['value'], $item['type']);
         }, $fact->values);
+        $this->containerSettings = new ContainerSettings($fact->memoryLimit);
+
     }
 
     public static function sozdatUnitSystemoi(string $id, Account $account, SozdatUnit $command): self
@@ -461,9 +467,10 @@ final class Unit implements AggregateRoot
         if (!$account->isSystemRole) {
             throw new DomainException('unit.author_must_have_system_role');
         }
+        ContainerSettings::validateMemory($command->memoryLimit);
         $unit = new self(UnitId::fromString($id));
         $state = new Sozdan();
-        $unit->recordThat(new UnitSozdanSystemoi($id, $account->id, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit)));
+        $unit->recordThat(new UnitSozdanSystemoi($id, $account->id, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $command->memoryLimit));
         return $unit;
     }
 
@@ -478,6 +485,7 @@ final class Unit implements AggregateRoot
         $this->branch = new UnitBranch($fact->branch);
         $this->authorId = $fact->authorId;
         $this->unitSozdanSystemoi = true;
+        $this->containerSettings = new ContainerSettings($fact->memoryLimit);
     }
 
     /**
@@ -1482,5 +1490,10 @@ final class Unit implements AggregateRoot
         }
 
         return $result;
+    }
+
+    function poluchitNastroikiContaineraUnita(): ContainerSettings
+    {
+        return $this->containerSettings;
     }
 }

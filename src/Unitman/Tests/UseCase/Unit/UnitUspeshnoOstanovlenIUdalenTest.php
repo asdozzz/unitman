@@ -99,7 +99,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'http://oauth2:tok@repoUrl/projectCode.git',
             $commands,
             $variables,
-            $caches
+            $caches,
+            new NachatPodgotovkuUnita\ContainerSettings()
         );
         $callback = fn(array $args) => $this->assertEquals($expectedParams, $args[1]);
         $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
