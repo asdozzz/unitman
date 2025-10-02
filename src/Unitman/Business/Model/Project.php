@@ -216,19 +216,23 @@ final class Project implements AggregateRoot
         return $index;
     }
 
-    public function addUser(AddUserToProject $command): void
+    public function addUser(Account $account): void
     {
         if ($this->dataAboutRemoving) {
             throw new DomainException('project.removing');
         }
 
-        $userIndex = $this->findIndexUserById($command->userId);
+        if (!$account->isSystemRole) {
+            throw new DomainException('project.user_has_system_role');
+        }
+
+        $userIndex = $this->findIndexUserById($account->id);
 
         if (isset($userIndex)) {
             throw new DomainException('project.user_already_exist');
         }
 
-        $this->recordThat(new UserAddedToProject($this->getId(), $command->userId, ProjectUserRole::USER->name));
+        $this->recordThat(new UserAddedToProject($this->getId(), $account->id, ProjectUserRole::USER->name));
     }
 
     private function applyUserAddedToProject(UserAddedToProject $fact): void
