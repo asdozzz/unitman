@@ -49,7 +49,7 @@ final class OchistkaDockerJob implements BackgroundJobInterface
 
     function getDelay(): int
     {
-        return 10;
+        return 60*60*24;
     }
 
     function getProcessNum(): int

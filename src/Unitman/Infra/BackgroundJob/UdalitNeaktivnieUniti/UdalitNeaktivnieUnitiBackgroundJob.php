@@ -18,7 +18,7 @@ final class UdalitNeaktivnieUnitiBackgroundJob  implements BackgroundJobInterfac
 
     function run(): bool
     {
-        $this->useCase->handle(60*60*24);
+        $this->useCase->handle(60*60*24*14);
         return true;
     }
 
