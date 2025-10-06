@@ -192,7 +192,8 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
     {
         $table = self::TABLE;
 
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE payload->>'isActive'= 'true' LIMIT :limit OFFSET :offset ORDER BY id desc",
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE payload->>'isActive'= 'true' 
+            ORDER BY id desc LIMIT :limit OFFSET :offset ",
             ['limit' => $query->limit, 'offset' => $query->offset]);
 
         $result = [];

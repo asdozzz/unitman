@@ -202,6 +202,9 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/roadrunner-php/lock" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/roadrunner-php/symfony-lock-driver" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/lock" />
+      <excludeFolder url="file://$MODULE_DIR$/.composer" />
+      <excludeFolder url="file://$MODULE_DIR$/var" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

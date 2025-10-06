@@ -34,8 +34,8 @@ final class AccountController extends AbstractController
     #[Route('/register')]
     function register(RegisterAccount $command, RegisterAccountUseCase $useCase): Response
     {
-        $useCase->handle($command);
-        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        $id = $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success(['id' => $id]));
     }
 
     #[Route('/changePasswordByAdmin')]

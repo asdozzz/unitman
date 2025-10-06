@@ -43,6 +43,7 @@ use App\Unitman\Business\UseCase\Project\ObnovitNastroikiHukaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitSpisokProektovPolzovatelyaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokVetokProektaQuery;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
@@ -79,6 +80,13 @@ final class ProjectController extends AbstractController
     public function my(PoluchitMoiProekti $command, PoluchitMoiProektiQuery $query): Response
     {
         $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/user/{id}', methods: ['POST'])]
+    public function byUserId(string $id, PoluchitSpisokProektovPolzovatelyaUseCase $query): Response
+    {
+        $data = $query->handle($id);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 

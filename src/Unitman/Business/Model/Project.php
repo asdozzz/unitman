@@ -222,7 +222,7 @@ final class Project implements AggregateRoot
             throw new DomainException('project.removing');
         }
 
-        if (!$account->isSystemRole) {
+        if ($account->isSystemRole) {
             throw new DomainException('project.user_has_system_role');
         }
 
