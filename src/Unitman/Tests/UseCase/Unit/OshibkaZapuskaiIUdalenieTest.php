@@ -3,8 +3,12 @@
 namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Runner\Api\RunnerApiInterface;
+
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
@@ -17,7 +21,7 @@ use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
 
-final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
+final class OshibkaZapuskaiIUdalenieTest extends AbstractUnitUseCase
 {
     function test()
     {
@@ -44,7 +48,14 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
             'Success' => true,
             'Unixtime' => 123123123
         ]];
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSbrokiUnita(false, $stepsFail));
+        $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSbrokiUnita(true, $stepsSuccess, $configText2));
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true, $stepsSuccess));
+        $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, 'ZAPUSK_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_ZAPUSKA, new ResultatZapuskaUnita(false, $stepsFail));
+        $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(true, $stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, 'UDALENIE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(true, $stepsSuccess));
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
@@ -54,13 +65,15 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
 
         $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
         $useCase->handle($unitId);
-
-        $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
+        $useCase->handle($unitId);
+        $useCase->handle($unitId);
+        $useCase->handle($unitId);
+        $useCase->handle($unitId);
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals(UnitProcessState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['state']);
-        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
+        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
         $this->assertEquals(true, $spisokUnitovReadModel->error);
 
         $useCase = self::$container->get(DobavitProzesUdaleniyaUseCase::class);
@@ -69,7 +82,8 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[1]['state']);
         $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
-        $this->assertEquals(RunnerJobType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['type']);
+        $this->assertEquals(RunnerJobType::SBROS_PODGOTOVKI->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['type']);
+        $this->assertEquals(RunnerJobType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['jobs'][1]['type']);
 
         $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
         $useCase->handle($unitId);
@@ -78,6 +92,8 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
         $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['state']);
         $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
 
+        $useCase->handle($unitId);
+        $useCase->handle($unitId);
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->findById($unitId);

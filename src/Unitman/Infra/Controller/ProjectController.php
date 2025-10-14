@@ -52,6 +52,7 @@ use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiPro
 use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
+use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -66,6 +67,13 @@ final class ProjectController extends AbstractController
     public function list(GetProjectList $command, GetProjectListQuery $query): Response
     {
         $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/read/{id}', methods: ['POST'])]
+    public function byId(string $id, SqlProjectListRepository $repository): Response
+    {
+        $data = $repository->getById($id);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
@@ -91,9 +99,10 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/add', methods: ['POST'])]
-    public function add(AddProject $command, AddProjectUseCase $useCase): Response
+    public function add(AddProject $command, AddProjectUseCase $useCase, PostavitVOcheredNaSborkuUseCase $postavitVOcheredNaSborkuUseCase): Response
     {
-        $useCase->handle($command);
+        $id = $useCase->handle($command);
+        $postavitVOcheredNaSborkuUseCase->handle(new PostavitVOcheredNaSborku($id));
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 

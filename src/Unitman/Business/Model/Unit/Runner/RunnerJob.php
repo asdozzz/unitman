@@ -47,9 +47,10 @@ final class RunnerJob
         $this->state = RunnerJobState::PENDING;
     }
 
-    function cancel(): void
+    function cancel(string $message = 'CANCEL'): void
     {
         $this->state = RunnerJobState::CANCLED;
+        $this->steps = [(new RunnerJobStep('CANCEL', $message, false, time()))];
     }
 
     function ustanovitResultat(bool $success, array $steps): void

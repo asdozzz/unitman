@@ -40,7 +40,8 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
             [
                 new SozdatUnit\ZnacheniePeremenoi('VARIABLE_1', 'VALUE_1', 'string'),
                 new SozdatUnit\ZnacheniePeremenoi('VARIABLE_2', 'VALUE_2', 'integer')
-            ]
+            ],
+            500
         ));
 
         $unit = $unitRepo->getById($unitId);

@@ -11,6 +11,7 @@ use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
+use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\RunnerService;
@@ -47,6 +48,12 @@ final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturnOnConsecutiveCalls(
             $adminId,$adminId,$adminId, $userId
+        );
+        $securityService->expects($this->any())->method('getUserById')->willReturnOnConsecutiveCalls(
+            new Account($userId, 'asd@asd.ru', false),
+            new Account($userId2, 'asd2@asd.ru', false),
+            new Account($userId, 'asd@asd.ru', false),
+            new Account($userId2, 'asd2@asd.ru', false),
         );
         self::$container->set(UnitmanSecurityService::class, $securityService);
 

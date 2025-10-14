@@ -511,7 +511,7 @@ final class Project implements AggregateRoot
 
     public function esliProektBilSobran(): bool
     {
-        return isset($this->dataAboutBuilding);
+        return isset($this->dataAboutBuilding) && $this->dataAboutBuilding->isFinish;
     }
 
     /**

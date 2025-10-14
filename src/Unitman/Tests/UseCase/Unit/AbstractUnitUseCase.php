@@ -105,7 +105,9 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $useCase2->handle(new SozdatUnit(
             $projectId,
             $unitName,
-            'feature/123'
+            'feature/123',
+            [],
+            3000
         ));
 
         $spisokUnitovReadModel2 = $spisokUnitovRepo->getById($unitId);
@@ -114,6 +116,6 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $this->assertEquals($spisokUnitovReadModel2->name, $unitName);
         $this->assertEquals($spisokUnitovReadModel2->branch, 'feature/123');
         $this->assertEquals($spisokUnitovReadModel2->projectId, $projectId);
-        $this->assertEquals($spisokUnitovReadModel2->commands, ['nachatSborku','nachatUdalenie']);
+        $this->assertEquals($spisokUnitovReadModel2->commands, ['nachatUdalenie']);
     }
 }

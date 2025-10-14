@@ -3,6 +3,7 @@
 namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Runner\Api\RunnerApiInterface;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
@@ -17,7 +18,7 @@ use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
 
-final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
+final class OshibkaPodgotovkiIUdalenieTest extends AbstractUnitUseCase
 {
     function test()
     {
@@ -44,7 +45,10 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
             'Success' => true,
             'Unixtime' => 123123123
         ]];
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSbrokiUnita(false, $stepsFail));
+        $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSbrokiUnita(true, $stepsSuccess, $configText2));
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(false, $stepsFail));
         $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, 'UDALENIE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(true, $stepsSuccess));
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
@@ -54,13 +58,13 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
 
         $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
         $useCase->handle($unitId);
-
-        $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
+        $useCase->handle($unitId);
+        $useCase->handle($unitId);
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals(UnitProcessState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['state']);
-        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
+        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['jobs'][1]['state']);
         $this->assertEquals(true, $spisokUnitovReadModel->error);
 
         $useCase = self::$container->get(DobavitProzesUdaleniyaUseCase::class);

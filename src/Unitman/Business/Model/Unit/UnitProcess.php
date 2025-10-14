@@ -68,6 +68,22 @@ final class UnitProcess
         $this->state = UnitProcessState::PENDING;
     }
 
+    function cancelJob(string $jobId, string $message): void
+    {
+        foreach ($this->jobs as $job) {
+            if ($job->getJobId() === $jobId) {
+                $job->cancel($message);
+            }
+        }
+
+        foreach ($this->jobs as $job) {
+            if (!$job->isFinish()) {
+                $job->cancel();
+            }
+        }
+        $this->state = UnitProcessState::CANCLED;
+    }
+
     function isFinish(): bool
     {
         return in_array($this->state,[UnitProcessState::ERROR, UnitProcessState::SUCCESS, UnitProcessState::CANCLED]);

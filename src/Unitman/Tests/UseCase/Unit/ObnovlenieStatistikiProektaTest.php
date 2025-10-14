@@ -42,7 +42,9 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
         $id = $useCase2->handle(new SozdatUnit(
             $projectId,
             'unit-1',
-            'feature/123'
+            'feature/123',
+            [],
+            500
         ));
 
         $this->assertEquals($id, $unitId);

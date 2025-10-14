@@ -17,6 +17,7 @@ final class SpisokUnitovReadModel
         public readonly array $commands = [],
         public array $prozesi = [],
         public readonly bool $error = false,
+        public readonly bool $zapushen = false,
         public readonly array $links = [],
         public readonly ?int $unixtimePoslednegoObnovleniyaUnita = null,
         public readonly ?int $unixtimePoslednegoObnovleniyaVHranilishe = null,
@@ -67,6 +68,7 @@ final class SpisokUnitovReadModel
         $commands = isset($props['commands'])?$props['commands']:$this->commands;
         $links = array_key_exists('links', $props)?$props['links']:$this->links;
         $error = array_key_exists('error', $props)?$props['error']:$this->error;
+        $zapushen = array_key_exists('zapushen', $props)?$props['zapushen']:$this->zapushen;
         $branch = array_key_exists('branch', $props)?$props['branch']:$this->branch;
         $unixtimePoslednegoObnovleniyaUnita = isset($props['unixtimePoslednegoObnovleniyaUnita'])?$props['unixtimePoslednegoObnovleniyaUnita']:$this->unixtimePoslednegoObnovleniyaUnita;
         $unixtimePoslednegoObnovleniyaVHranilishe = isset($props['unixtimePoslednegoObnovleniyaVHranilishe'])?$props['unixtimePoslednegoObnovleniyaVHranilishe']:$this->unixtimePoslednegoObnovleniyaVHranilishe;
@@ -94,6 +96,7 @@ final class SpisokUnitovReadModel
             $commands,
             $prozesi,
             $error,
+            $zapushen,
             $links,
             $unixtimePoslednegoObnovleniyaUnita,
             $unixtimePoslednegoObnovleniyaVHranilishe,

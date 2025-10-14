@@ -100,7 +100,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             $commands,
             $variables,
             $caches,
-            new NachatPodgotovkuUnita\ContainerSettings()
+            new NachatPodgotovkuUnita\ContainerSettings('3000m')
         );
         $callback = fn(array $args) => $this->assertEquals($expectedParams, $args[1]);
         $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
@@ -234,7 +234,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals(UnitProcessState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['state']);
         $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][1]['state']);
         $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
-
+        $this->assertEquals(true, $spisokUnitovReadModel->zapushen);
 
         $useCase = self::$container->get(DobavitProzesVipolneniyaDeistviyaUseCase::class);
         $useCase->handle(new VipolnitDeistviye($unitId, 'php-console',['BIN_CONSOLE' => 'test']));
@@ -271,6 +271,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $this->assertEquals(UnitProcessState::SUCCESS->value, $spisokUnitovReadModel->prozesi[1]['state']);
         $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
+        $this->assertEquals(true, $spisokUnitovReadModel->zapushen);
 
         $useCase = self::$container->get(DobavitProzesUdaleniyaUseCase::class);
         $useCase->handle($unitId);
@@ -304,6 +305,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $this->assertEquals(RunnerJobType::OSTANOVKA->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['type']);
         $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['state']);
         $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(false, $spisokUnitovReadModel->zapushen);
 
         $useCase->handle($unitId);
 

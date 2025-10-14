@@ -35,6 +35,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
+use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -389,7 +390,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => false,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'zapushen' => true
         ]);
         $this->repository->update($readModel);
     }
@@ -421,7 +423,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => false,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'zapushen' => false
         ]);
         $this->repository->update($readModel);
     }
@@ -503,6 +506,17 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'error' => false,
             'commands' => $fact->stateAsArray['commands'],
+            'zapushen' => false
+        ]);
+        $this->repository->update($readModel);
+    }
+
+    function handleZadachaUnitaOtmenena(ZadachaUnitaOtmenena $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $readModel = $readModel->copyAndUpdateData([
+            'error' => true,
+            'prozes' => $fact->prozess
         ]);
         $this->repository->update($readModel);
     }

@@ -5,6 +5,7 @@ namespace App\Unitman\Tests\UseCase\Proekt;
 use App\Unitman\Business\Command\Project\DobavitPeremenuyuVProekt;
 use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListVariable;
 use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
 use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiProekta;
@@ -22,6 +23,12 @@ final class ProzessDobavleniyaPeremenoiVProektTest extends AbstractProjectUseCas
 
         $repoId = Uuid::uuid7()->toString();
         $adminId = Uuid::uuid7()->toString();
+
+        $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
+        self::$container->set(UnitmanSecurityService::class, $securityService);
+
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
         $command = new DobavitPeremenuyuVProekt($projectId, 'hidden', 'secretKey', '1231231');

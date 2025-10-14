@@ -26,6 +26,7 @@ services:
     volumes:
       - '.:/home/containeruser/www'
     depends_on:
+      - buggregator
       - temporal
       - beanstalk
       - centrifugo

@@ -42,6 +42,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
+use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
 use App\Unitman\Business\Model\Unit\Event\ZadachiDobavleniVProzesUnita;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
@@ -759,10 +760,10 @@ final class Unit implements AggregateRoot
         $this->proverkaVozmognostiObnovleniyaUnita();
         $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::OBNOVLENIE);
         $zadachi = [];
-        if ($this->sborka && $this->sborka->isFinish()) {
+        if ($this->esliZapushen()) {
             $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::OSTANOVKA);
         }
-        if ($this->podgotovka && $this->podgotovka->isFinish() && !$bistrayaProverka) {
+        if ($this->esliPodgotovlen() && !$bistrayaProverka) {
             $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::SBROS_PODGOTOVKI);
         }
         $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::OBNOVLENIE);
@@ -1006,7 +1007,7 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.wait_runner');
         }
 
-        if (!$this->zapusk || !$this->zapusk->isSuccess()) {
+        if (!$this->esliZapushen()) {
             throw new DomainException('unit.ne_zapushen');
         }
     }
@@ -1041,6 +1042,22 @@ final class Unit implements AggregateRoot
         $this->obnovitProzes($prozess);
         $this->ostanovka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    public function otmenitZadachu(\Throwable $e, string $jobId, int $unixtime): void
+    {
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->cancelJob($jobId, $e->getMessage());
+        $this->recordThat(new ZadachaUnitaOtmenena($this->getId(), $jobId, $unixtime, $prozes->toArray()));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyZadachaUnitaOtmenena(ZadachaUnitaOtmenena $fact): void
+    {
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
     }
 
     public function ustanovitOshibkuOstanovki(string $jobId, array $steps): void
@@ -1095,10 +1112,10 @@ final class Unit implements AggregateRoot
 
         $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::UDALENIE);
         $zadachi = [];
-        if ($this->zapusk && $this->zapusk->isFinish()) {
+        if ($this->esliZapushen()) {
             $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::OSTANOVKA);
         }
-        if ($this->podgotovka && $this->podgotovka->isFinish()) {
+        if ($this->esliPodgotovlen()) {
             $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::SBROS_PODGOTOVKI);
         }
         $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::UDALENIE);
@@ -1340,7 +1357,6 @@ final class Unit implements AggregateRoot
         }
 
         $state = new Sobran();
-
         $this->recordThat(new UnitSbroshenDoSostoyaniyaSborki($this->getId(), $state->toArray($this)));
     }
 
@@ -1405,7 +1421,7 @@ final class Unit implements AggregateRoot
             $errors[] = 'unit.wait_runner';
         }
 
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
+        if ($this->esliZapushen()) {
             $errors[] = 'unit.zapushen';
         }
 
@@ -1433,7 +1449,7 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.wait_runner');
         }
 
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
+        if ($this->esliZapushen()) {
             throw new DomainException('unit.zapushen');
         }
 

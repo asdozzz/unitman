@@ -18,6 +18,19 @@ services:
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
 
+  web-mvp:
+    image: asdozzz/unitman:latest
+    restart: always
+    ports:
+      - '${UNITMAN_API_PORT}:8080'
+      - 2112:2112
+      - 30000:30000
+    user: root
+    environment:
+      - "TEMPORAL_CLI_ADDRESS=temporal:7233"
+    volumes:
+      - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
+
   elasticsearch:
     container_name: elasticsearch
     image: elasticsearch:7.14.0

@@ -1,0 +1,35 @@
+# syntax=docker/dockerfile:1
+FROM ghcr.io/roadrunner-server/roadrunner:2024.3.4 as roadrunner
+
+FROM spiralscout/php-grpc:8.2-xdebug
+
+# https://github.com/mlocati/docker-php-extension-installer
+# https://github.com/docker-library/docs/tree/0fbef0e8b8c403f581b794030f9180a68935af9d/php#how-to-install-more-php-extensions
+RUN --mount=type=bind,from=mlocati/php-extension-installer:2,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
+     install-php-extensions @composer-2 pdo_pgsql pgsql && \
+     apk del --no-cache ${PHPIZE_DEPS} ${BUILD_DEPENDS}
+
+COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
+
+
+ARG CURRENT_USER_ID=1000
+ARG CURRENT_USER_GROUP=1000
+
+RUN addgroup --gid ${CURRENT_USER_GROUP} groupcontainer
+RUN adduser --uid ${CURRENT_USER_ID} -G groupcontainer -h /home/containeruser -D containeruser
+RUN adduser containeruser root
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=temporalio/admin-tools:1.23.0 /usr/local/bin/tctl /usr/local/bin/tctl
+
+COPY wait-for-temporal.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/wait-for-temporal.sh
+COPY entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+USER containeruser
+WORKDIR /home/containeruser/www
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+

@@ -44,6 +44,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
+use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
@@ -246,6 +247,11 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
     }
 
     function handleUnitSbroshenDoSostoyaniyaSborki(UnitSbroshenDoSostoyaniyaSborki $fact): void
+    {
+        $this->repository->update($fact->unitId, $this->clock->now());
+    }
+
+    function handleZadachaUnitaOtmenena(ZadachaUnitaOtmenena $fact): void
     {
         $this->repository->update($fact->unitId, $this->clock->now());
     }

@@ -80,4 +80,6 @@ enum UnitmanClassNameMapEnum: string
     case DeistviePrikreplenoKJobe = 'DeistviePrikreplenoKJobe';
     case ZadachiDobavleniVProzesUnita = 'ZadachiDobavleniVProzesUnita';
 
+    case ZadachaUnitaOtmenena = 'ZadachaUnitaOtmenena';
+
 }

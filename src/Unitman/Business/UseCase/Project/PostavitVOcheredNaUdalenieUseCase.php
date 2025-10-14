@@ -33,7 +33,6 @@ final class PostavitVOcheredNaUdalenieUseCase
             $project->successfullyRemoving([]);
         }
 
-
         $this->projectRepository->save($project);
     }
 }

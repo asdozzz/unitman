@@ -2,9 +2,9 @@
 
 namespace App\Unitman\Business\Model;
 
-readonly class Account
+class Account
 {
-    public function __construct(public string $id, public string $email, public bool $isSystemRole)
+    public function __construct(public readonly string $id, public readonly string $email, public readonly bool $isSystemRole)
     {
     }
 

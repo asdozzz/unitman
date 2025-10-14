@@ -4,10 +4,12 @@ namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use Psr\Clock\ClockInterface;
 
 final class ObrabotatProzesiUnitaUseCase
 {
@@ -29,7 +31,8 @@ final class ObrabotatProzesiUnitaUseCase
         private UstanovitResultatUdaleniyaUseCase $ustanovitResultatUdaleniyaUseCase,
         private VipolnitDeistviyeUseCase $vipolnitDeistviyeUseCase,
         private UstanovitResultatDeistviyaUseCase $ustanovitResultatDeistviyaUseCase,
-        private UstanovitDefoltniiKonfigUseCase $ustanovitDefoltniiKonfigUseCase
+        private UstanovitDefoltniiKonfigUseCase $ustanovitDefoltniiKonfigUseCase,
+        private ClockInterface $clock
     )
     {
     }
@@ -44,98 +47,143 @@ final class ObrabotatProzesiUnitaUseCase
         }
 
         match ($job->getType()) {
-            RunnerJobType::SBORKA => $this->sborka($unitId, $job),
-            RunnerJobType::OBNOVLENIE => $this->obnovlenie($unitId, $job),
-            RunnerJobType::PODGOTOVKA => $this->podgotovka($unitId, $job),
-            RunnerJobType::ZAPUSK => $this->zapusk($unitId, $job),
-            RunnerJobType::OSTANOVKA => $this->ostanovka($unitId, $job),
-            RunnerJobType::SBROS_PODGOTOVKI => $this->sbrosPodgotovki($unitId, $job),
-            RunnerJobType::UDALENIE => $this->udalenie($unitId, $job),
-            RunnerJobType::DEISTVIE => $this->deistvie($unitId, $job),
+            RunnerJobType::SBORKA => $this->sborka($unit, $job),
+            RunnerJobType::OBNOVLENIE => $this->obnovlenie($unit, $job),
+            RunnerJobType::PODGOTOVKA => $this->podgotovka($unit, $job),
+            RunnerJobType::ZAPUSK => $this->zapusk($unit, $job),
+            RunnerJobType::OSTANOVKA => $this->ostanovka($unit, $job),
+            RunnerJobType::SBROS_PODGOTOVKI => $this->sbrosPodgotovki($unit, $job),
+            RunnerJobType::UDALENIE => $this->udalenie($unit, $job),
+            RunnerJobType::DEISTVIE => $this->deistvie($unit, $job),
             default => throw new \DomainException('unit.obrabotka_prozesa.tip_ne_opredelen.'.$job->getType()->value),
         };
     }
 
-    private function sborka(string $unitId, RunnerJob $runnerJob): void
+    private function sborka(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->sobratUnitUseCase->handleSystem($unitId, $runnerJob->getJobId());
+            try {
+                $this->sobratUnitUseCase->handleSystem($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
+
         } else if ($runnerJob->isStart()) {
-            $this->resultatSborkiUnitaUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->resultatSborkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
 
-    private function obnovlenie(string $unitId, RunnerJob $runnerJob): void
+    private function obnovlenie(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->obnovitKodUnitaUseCase->handleSystem($unitId, $runnerJob->getJobId());
+            try {
+                $this->obnovitKodUnitaUseCase->handleSystem($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
+
         } else if ($runnerJob->isStart()) {
-            $this->resultatObnovleniyaUnitaUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->resultatObnovleniyaUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
 
-    private function podgotovka(string $unitId, RunnerJob $runnerJob): void
+    private function podgotovka(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->ustanovitDefoltniiKonfigUseCase->handleSystem($unitId);
-            $this->podgotovitUnitKZapuskuUseCase->handle($unitId, $runnerJob->getJobId());
+            try {
+                $this->ustanovitDefoltniiKonfigUseCase->handleSystem($unit->getId());
+                $this->podgotovitUnitKZapuskuUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
+
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatPodgotovkiUnitaUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->ustanovitResultatPodgotovkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
 
-    private function zapusk(string $unitId, RunnerJob $runnerJob): void
+    private function zapusk(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->zapustitUnitUseCase->handle($unitId, $runnerJob->getJobId());
+            try {
+                $this->zapustitUnitUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
+
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatZapuskaUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->ustanovitResultatZapuskaUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
 
-    private function ostanovka(string $unitId, RunnerJob $runnerJob): void
+    private function ostanovka(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->ostanovitUnitUseCase->handle($unitId, $runnerJob->getJobId());
+            try {
+                $this->ostanovitUnitUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
+
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatOstanovkiUnitaUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->ustanovitResultatOstanovkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
 
-    private function sbrosPodgotovki(string $unitId, RunnerJob $runnerJob): void
+    private function sbrosPodgotovki(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->sbrositPodgotovkuUnitaUseCase->handle($unitId, $runnerJob->getJobId());
+            try {
+                $this->sbrositPodgotovkuUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
+
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatSbrosaPodgotovkiUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->ustanovitResultatSbrosaPodgotovkiUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
 
-    private function udalenie(string $unitId, RunnerJob $runnerJob): void
+    private function udalenie(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->udalitUnitUseCase->handle($unitId, $runnerJob->getJobId());
+            try {
+                $this->udalitUnitUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatUdaleniyaUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->ustanovitResultatUdaleniyaUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
 
-    private function deistvie(string $unitId, RunnerJob $runnerJob): void
+    private function deistvie(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
         if ($runnerJob->isNew()) {
-            $this->vipolnitDeistviyeUseCase->handle($unitId, $runnerJob->getJobId());
+            try {
+                $this->vipolnitDeistviyeUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $this->unitRepository->save($unit);
+            }
+
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatDeistviyaUseCase->handle($unitId, $runnerJob->getJobId());
+            $this->ustanovitResultatDeistviyaUseCase->handle($unit->getId(), $runnerJob->getJobId());
         }
     }
-
-
 }

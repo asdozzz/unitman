@@ -7,6 +7,7 @@ use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use Psr\Clock\ClockInterface;
 
 final class ProveritKonteinerUnitaUseCase
 {
@@ -24,10 +25,10 @@ final class ProveritKonteinerUnitaUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
 
         $konteinerZapushen = $this->runnerService->proveritKonteinerUnita($unit, $project);
+
         if (!$konteinerZapushen) {
             $unit->koneinerUnitaNeZapushen();
+            $this->unitRepository->save($unit);
         }
-
-        $this->unitRepository->save($unit);
     }
 }
