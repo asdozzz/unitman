@@ -9,8 +9,10 @@ use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\BackgroundJob\StatistikaPoProektu\StatistikaPoProektuBackgroundJob;
+use App\Unitman\Infra\BackgroundJob\WebhookEvent\WebhookEventProjectionPuller;
 use App\Unitman\Infra\BackgroundJob\WebsocketUnitEvent\WebsocketUnitEventJob;
 use App\Unitman\Infra\Jobs\SobitieIzHranilishaJobsHandler;
+use App\Unitman\Infra\Jobs\WebhookEventJobHandler;
 use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
@@ -120,6 +122,11 @@ return function (ContainerConfigurator $configuration) {
             service('unitman.projections_manager'),
         ]);
 
+    $services->set(WebhookEventProjectionPuller::class)
+        ->args([
+            service('unitman.projections_manager'),
+        ]);
+
     $services->set(Infra\BackgroundJob\ProjectRunnerJobs\ProjectRunnerJobs::class)
         ->args([
             service('unitman.projections_manager'),
@@ -129,5 +136,8 @@ return function (ContainerConfigurator $configuration) {
         ->tag('roadrunner_jobs.handler');
 
     $services->set(WebsocketUnitEventReadModelJobHandler::class)
+        ->tag('roadrunner_jobs.handler');
+
+    $services->set(WebhookEventJobHandler::class)
         ->tag('roadrunner_jobs.handler');
 };

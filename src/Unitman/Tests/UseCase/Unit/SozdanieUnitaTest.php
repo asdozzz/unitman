@@ -4,6 +4,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Unit\VariableValue;
+use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
@@ -21,6 +22,10 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $userId = Uuid::uuid7()->toString();
         $securityService = $this->mokaemUspehSecurity($userId);
         $projectId = Uuid::uuid7()->toString();
+
+        $guidGenerator = new MemoryGuidGenerator([$projectId]);
+        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+
         $project = $this->stubProekta($projectId, $userId);
         $projectRepository = self::$container->get(ProjectRepository::class);
         /** @var $projectRepository ProjectRepository*/

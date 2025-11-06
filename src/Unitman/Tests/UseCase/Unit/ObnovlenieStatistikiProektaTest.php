@@ -27,16 +27,22 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
         $userId = Uuid::uuid7()->toString();
         $securityService = $this->mokaemUspehSecurity($userId);
         $projectId = Uuid::uuid7()->toString();
+
+        $prozesId = Uuid::uuid7()->toString();
+        $guidGeneratorArr = [$unitId, $prozesId];
+        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator($guidGeneratorArr));
+
         $project = $this->stubProekta($projectId, $userId, 'uwin');
         $projectRepository = self::$container->get(ProjectRepository::class);
         /** @var $projectRepository ProjectRepository*/
         $projectRepository->save($project);
 
+
+
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
 
-        $prozesId = Uuid::uuid7()->toString();
-        $guidGeneratorArr = [$unitId, $prozesId];
+
         $unitRepo = self::$container->get(UnitRepository::class);
         $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator($guidGeneratorArr), $unitRepo);
         $id = $useCase2->handle(new SozdatUnit(
@@ -49,7 +55,7 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
 
         $this->assertEquals($id, $unitId);
 
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator($guidGeneratorArr));
+
 
         $sut = self::$container->get(ObnovitStatistikuPoKonteineruUnitaUseCase::class);
         /** @var $sut ObnovitStatistikuPoKonteineruUnitaUseCase*/
