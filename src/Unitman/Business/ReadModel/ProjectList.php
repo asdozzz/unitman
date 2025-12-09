@@ -25,7 +25,8 @@ final class ProjectList
         public ?string $proxyHost = null,
         public array $users = [],
         public array $variables = [],
-        public bool $waitResultRunner = false
+        public bool $waitResultRunner = false,
+        public int $memoryLimit = 3072
     )
     {
     }

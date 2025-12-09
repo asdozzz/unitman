@@ -32,6 +32,7 @@ use App\Unitman\Business\Model\Project\Event\UspehOchistkiProektaUstanovlen;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\NastroikiHuka;
 use App\Unitman\Business\Model\Project\ProjectCode;
+use App\Unitman\Business\Model\Project\ProjectContainerSettings;
 use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
 use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
 use App\Unitman\Business\Model\Project\ProjectId;
@@ -75,6 +76,8 @@ final class Project implements AggregateRoot
     private ProxyHost $proxyHost;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private NastroikiHuka $nastroikiHuka;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ProjectContainerSettings $projectContainerSettings;
 
     private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
@@ -100,7 +103,8 @@ final class Project implements AggregateRoot
         $projectId = ProjectId::fromString($id);
         $project = new self($projectId);
         ProjectName::validate($command->projectName);
-        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost));
+        ProjectContainerSettings::validateMemory($command->memoryLimit);
+        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost, $command->memoryLimit));
         $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
     }
@@ -110,6 +114,7 @@ final class Project implements AggregateRoot
         $this->code = new ProjectCode($fact->projectCode);
         $this->name = new ProjectName($fact->projectName);
         $this->proxyHost = new ProxyHost($fact->proxyHost);
+        $this->projectContainerSettings = new ProjectContainerSettings($fact->memoryLimit);
 
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
@@ -277,13 +282,15 @@ final class Project implements AggregateRoot
             throw new \DomainException('project.old_name_equal_new_name');
         }*/
         ProjectName::validate($command->newProjectName);
-        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->newProxyHost));
+        ProjectContainerSettings::validateMemory($command->memoryLimit);
+        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->newProxyHost, $command->memoryLimit));
     }
 
     private function applyProjectDataWasChanged(ProjectDataWasChanged $fact): void
     {
         $this->name = new ProjectName($fact->newName);
         $this->proxyHost = new ProxyHost($fact->newProxyHost);
+        $this->projectContainerSettings = new ProjectContainerSettings($fact->memoryLimit);
     }
 
     public function postavitVOcheredNaUdanlenie(string $jobId): void

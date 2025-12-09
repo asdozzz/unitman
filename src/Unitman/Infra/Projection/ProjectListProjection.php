@@ -79,7 +79,8 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             false,
             ProjectList\ProjectListStateType::NEW,
             new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie),
-            $fact->proxyHost
+            $fact->proxyHost,
+            memoryLimit: $fact->memoryLimit
         );
         $this->projectListRepository->insert($projectList);
     }

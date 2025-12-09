@@ -110,6 +110,7 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $project = $this->getById($fact->id);
         $project->name = $fact->newName;
         $project->proxyHost = $fact->newProxyHost;
+        $project->memoryLimit = $fact->memoryLimit;
 
         $this->update($project);
     }
