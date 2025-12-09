@@ -59,34 +59,28 @@ jobs:
   timeout: 5
   pool:
     max_jobs: 200
-    num_workers: 6
-    allocate_timeout: 60s
-    destroy_timeout: 60s
+    num_workers: 20
+    allocate_timeout: 10s
+    destroy_timeout: 10s
+    dynamic_allocator:
+      max_workers: 40
+      spawn_rate: 10
+      idle_timeout: 10s
   consume: [
-    "prozess_sozdaniya_unita_systemoi",
-    "prozess_obnovlenie_koda_posle_zapuska",
-    "prozess_udaleniya_unita_posle_zapuska",
     "sobitiya_iz_hranilisha",
-    "websocket_unit_event"
+    "websocket_unit_event",
+    "webhook_event"
   ]
   pipelines:
-    prozess_sozdaniya_unita_systemoi:
-      driver: beanstalk
-      config:
-        priority: 10
-    prozess_obnovlenie_koda_posle_zapuska:
-      driver: beanstalk
-      config:
-        priority: 10
-    prozess_udaleniya_unita_posle_zapuska:
-      driver: beanstalk
-      config:
-        priority: 10
     sobitiya_iz_hranilisha:
       driver: beanstalk
       config:
         priority: 10
     websocket_unit_event:
+      driver: beanstalk
+      config:
+        priority: 10
+    webhook_event:
       driver: beanstalk
       config:
         priority: 10

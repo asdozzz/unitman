@@ -32,6 +32,7 @@ use App\Unitman\Business\Model\Project\Event\UspehOchistkiProektaUstanovlen;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\NastroikiHuka;
 use App\Unitman\Business\Model\Project\ProjectCode;
+use App\Unitman\Business\Model\Project\ProjectContainerSettings;
 use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
 use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
 use App\Unitman\Business\Model\Project\ProjectId;
@@ -43,6 +44,7 @@ use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\Model\Project\ProxyHost;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
@@ -74,6 +76,8 @@ final class Project implements AggregateRoot
     private ProxyHost $proxyHost;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private NastroikiHuka $nastroikiHuka;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ProjectContainerSettings $projectContainerSettings;
 
     private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
@@ -99,7 +103,8 @@ final class Project implements AggregateRoot
         $projectId = ProjectId::fromString($id);
         $project = new self($projectId);
         ProjectName::validate($command->projectName);
-        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost));
+        ProjectContainerSettings::validateMemory($command->memoryLimit);
+        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost, $command->memoryLimit));
         $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
     }
@@ -109,6 +114,7 @@ final class Project implements AggregateRoot
         $this->code = new ProjectCode($fact->projectCode);
         $this->name = new ProjectName($fact->projectName);
         $this->proxyHost = new ProxyHost($fact->proxyHost);
+        $this->projectContainerSettings = new ProjectContainerSettings($fact->memoryLimit);
 
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
@@ -141,7 +147,9 @@ final class Project implements AggregateRoot
      */
     private function applyOchistkaProektaNachalas(OchistkaProektaNachalas $fact): void
     {
-        $this->ochistka = RunnerJob::start($fact->jobId);
+        $runnerJob = RunnerJob::make($fact->jobId, RunnerJobType::SBORKA);
+        $runnerJob->start();
+        $this->ochistka = $runnerJob;
     }
 
     public function ustanovitOshibkuOchistku(array $steps): void
@@ -161,7 +169,7 @@ final class Project implements AggregateRoot
      */
     public function applyOshibkaOchistkiProektaUstanovlena(OshibkaOchistkiProektaUstanovlena $fact): void
     {
-        $this->ochistka = $this->ochistka->ustanovitOshibku($fact->steps);
+        $this->ochistka->ustanovitResultat(false,$fact->steps);
     }
 
     public function ustanovitUspehOchistku(array $steps): void
@@ -181,7 +189,7 @@ final class Project implements AggregateRoot
      */
     public function applyUspehOchistkiProektaUstanovlen(UspehOchistkiProektaUstanovlen $fact): void
     {
-        $this->ochistka = $this->ochistka->ustanovitUspeh($fact->steps);
+        $this->ochistka->ustanovitResultat(true, $fact->steps);
     }
 
     public function obnovitNastrokiHuka(ObnovitNastroikiHuka $command): void
@@ -213,19 +221,23 @@ final class Project implements AggregateRoot
         return $index;
     }
 
-    public function addUser(AddUserToProject $command): void
+    public function addUser(Account $account): void
     {
         if ($this->dataAboutRemoving) {
             throw new DomainException('project.removing');
         }
 
-        $userIndex = $this->findIndexUserById($command->userId);
+        if ($account->isSystemRole) {
+            throw new DomainException('project.user_has_system_role');
+        }
+
+        $userIndex = $this->findIndexUserById($account->id);
 
         if (isset($userIndex)) {
             throw new DomainException('project.user_already_exist');
         }
 
-        $this->recordThat(new UserAddedToProject($this->getId(), $command->userId, ProjectUserRole::USER->name));
+        $this->recordThat(new UserAddedToProject($this->getId(), $account->id, ProjectUserRole::USER->name));
     }
 
     private function applyUserAddedToProject(UserAddedToProject $fact): void
@@ -270,13 +282,15 @@ final class Project implements AggregateRoot
             throw new \DomainException('project.old_name_equal_new_name');
         }*/
         ProjectName::validate($command->newProjectName);
-        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->newProxyHost));
+        ProjectContainerSettings::validateMemory($command->memoryLimit);
+        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->newProxyHost, $command->memoryLimit));
     }
 
     private function applyProjectDataWasChanged(ProjectDataWasChanged $fact): void
     {
         $this->name = new ProjectName($fact->newName);
         $this->proxyHost = new ProxyHost($fact->newProxyHost);
+        $this->projectContainerSettings = new ProjectContainerSettings($fact->memoryLimit);
     }
 
     public function postavitVOcheredNaUdanlenie(string $jobId): void
@@ -504,7 +518,7 @@ final class Project implements AggregateRoot
 
     public function esliProektBilSobran(): bool
     {
-        return isset($this->dataAboutBuilding);
+        return isset($this->dataAboutBuilding) && $this->dataAboutBuilding->isFinish;
     }
 
     /**

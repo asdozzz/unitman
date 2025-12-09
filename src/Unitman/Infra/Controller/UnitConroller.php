@@ -6,10 +6,9 @@ use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
 use App\Unitman\Business\Command\Unit\GetUnitRunnerJobs;
-use App\Unitman\Business\Command\Unit\GetUnitRunnerJobSteps;
-use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
+use App\Unitman\Business\Command\Unit\NaitiDubliUnita;
+use App\Unitman\Business\Command\Unit\PoluchitShagiZadachiUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
-use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
 use App\Unitman\Business\Command\Unit\PeresobratModelSpisokUnitov;
 use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
@@ -22,54 +21,32 @@ use App\Unitman\Business\Command\Unit\SobratUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
 use App\Unitman\Business\Command\Unit\UdalitUnit;
-use App\Unitman\Business\Command\Unit\UdalitUnitPosleZapuska;
-use App\Unitman\Business\Command\Unit\UstanovitResultatDeistviya;
-use App\Unitman\Business\Command\Unit\UstanovitResultatIzmenenniyaVetkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitResultatObnovleniyaUnita;
-use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitResultatPodgotovkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitResultatSborkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitResultatSbrosaPodgotovki;
-use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
-use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
 use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapustitUnit;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesObnovleniyaUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesOstanovkiUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesPodgotovkiUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesSborkiUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesSbrosaPodgotovkiUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesVipolneniyaDeistviyaUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobStepsQuery;
-use App\Unitman\Business\UseCase\Unit\IzmenitVetkuUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaPosleZapuskaUseCase;
-use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\OstanovitUnitUseCase;
-use App\Unitman\Business\UseCase\Unit\PodgotovitUnitKZapuskuUseCase;
+use App\Unitman\Business\UseCase\Unit\NaitiDubliUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigIzHranilishaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitPeremenieUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\ProveritKonteinerUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\SbrositPodgotovkuUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
-use App\Unitman\Business\UseCase\Unit\UdalitUnitPosleZapuskaUseCase;
-use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatDeistviyaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatIzmeneniyaVetkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatObnovleniyaUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatOstanovkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatPodgotovkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatSborkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatSbrosaPodgotovkiUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatZapuskaUseCase;
-use App\Unitman\Business\UseCase\Unit\VipolnitDeistviyeUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\ZapustitUnitUseCase;
 use App\Unitman\Infra\Projection\SpisokUnitovProjection;
 use App\Unitman\Infra\Service\RebuildService;
-use App\Utils\EventSauce\ProjectionsManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -96,6 +73,13 @@ final class UnitConroller extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
+    #[Route('/naitiDubliUnita', methods: ['POST'])]
+    public function naitiDubliUnita(NaitiDubliUnita $command, NaitiDubliUnitaUseCase $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
     #[Route('/obnovit', methods: ['POST'])]
     public function read(GetUnitReadModelById $command, GetUnitByIdQuery $query): Response
     {
@@ -111,43 +95,10 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/sobrat', methods: ['POST'])]
-    public function sobrat(SobratUnit $command, SobratUnitUseCase $useCase): Response
+    public function sobrat(SobratUnit $command, DobavitProzesSborkiUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatSborki', methods: ['POST'])]
-    public function ustanovitResultatSborki(UstanovitResultatSborkiUnita $command, UstanovitResultatSborkiUnitaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/izmenitVetkuUnita', methods: ['POST'])]
-    public function izmenitVetkuUnita(IzmenitVetkuUnita $command, IzmenitVetkuUnitaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatIzmenenniyaVetki', methods: ['POST'])]
-    public function ustanovitResultatIzmenenniyaVetki(UstanovitResultatIzmenenniyaVetkiUnita $command, UstanovitResultatIzmeneniyaVetkiUnitaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -155,21 +106,10 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/obnovitKodUnita', methods: ['POST'])]
-    public function obnovitKodUnita(ObnovitKodUnita $command, ObnovitKodUnitaUseCase $useCase): Response
+    public function obnovitKodUnita(ObnovitKodUnita $command, DobavitProzesObnovleniyaUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/obnovitKodUnitaPosleZapuska', methods: ['POST'])]
-    public function obnovitKodUnitaPosleZapuska(ObnovitKodUnitaPosleZapuska $command, ObnovitKodUnitaPosleZapuskaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -187,37 +127,11 @@ final class UnitConroller extends AbstractController
         }
     }
 
-    #[Route('/ustanovitResultatObnovleniya', methods: ['POST'])]
-    public function ustanovitResultatObnovleniya(UstanovitResultatObnovleniyaUnita $command, UstanovitResultatObnovleniyaUnitaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
     #[Route('/podgotovit', methods: ['POST'])]
-    public function podgotovit(PodgotovitUnitKZapusku $command, PodgotovitUnitKZapuskuUseCase $useCase): Response
+    public function podgotovit(PodgotovitUnitKZapusku $command, DobavitProzesPodgotovkiUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatPodgotovki', methods: ['POST'])]
-    public function ustanovitResultatPodgotovki(UstanovitResultatPodgotovkiUnita $command, UstanovitResultatPodgotovkiUnitaUseCase $useCase, ZapustitUnitUseCase $zapustitUnitUseCase): Response
-    {
-        try {
-            $isSuccess = $useCase->handle($command);
-            //TODO плохо, переделать на process manager
-            if ($isSuccess) {
-                $zapustitUnitUseCase->handle(new ZapustitUnit($command->id));
-            }
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -225,21 +139,10 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/sbrositPodgotovku', methods: ['POST'])]
-    public function sbrositPodgotovku(SbrositPodgotovkuUnita $command, SbrositPodgotovkuUnitaUseCase $useCase): Response
+    public function sbrositPodgotovku(SbrositPodgotovkuUnita $command, DobavitProzesSbrosaPodgotovkiUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatSbrosaPodgotovki', methods: ['POST'])]
-    public function ustanovitResultatSbrosaPodgotovki(UstanovitResultatSbrosaPodgotovki $command, UstanovitResultatSbrosaPodgotovkiUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -247,32 +150,10 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/zapustit', methods: ['POST'])]
-    public function zapustit(ZapustitUnit $command, ZapustitUnitUseCase $useCase): Response
+    public function zapustit(ZapustitUnit $command, DobavitProzesZapuskaUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatZapuska', methods: ['POST'])]
-    public function ustanovitResultatZapuska(UstanovitResultatZapuska $command, UstanovitResultatZapuskaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatDeistviya', methods: ['POST'])]
-    public function ustanovitResultatDeistviya(UstanovitResultatDeistviya $command, UstanovitResultatDeistviyaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -280,21 +161,10 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/ostanovit', methods: ['POST'])]
-    public function ostanovit(OstanovitUnit $command, OstanovitUnitUseCase $useCase): Response
+    public function ostanovit(OstanovitUnit $command, DobavitProzesOstanovkiUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatOstanovki', methods: ['POST'])]
-    public function ustanovitResultatOstanovki(UstanovitResultatOstanovkiUnita $command, UstanovitResultatOstanovkiUnitaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -302,32 +172,10 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/udalit', methods: ['POST'])]
-    public function udalit(UdalitUnit $command, UdalitUnitUseCase $useCase): Response
+    public function udalit(UdalitUnit $command, DobavitProzesUdaleniyaUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ustanovitResultatUdaleniya', methods: ['POST'])]
-    public function ustanovitResultatUdaleniya(UstanovitResultatUdaleniya $command, UstanovitResultatUdaleniyaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/udalitUnitPosleZapuska', methods: ['POST'])]
-    public function udalitUnitPosleZapuska(UdalitUnitPosleZapuska $command, UdalitUnitPosleZapuskaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
@@ -379,7 +227,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/poluchitShagiZadachiRunnera', methods: ['POST'])]
-    public function poluchitShagiZadachiRunnera(GetUnitRunnerJobSteps $command, GetUnitRunnerJobStepsQuery $query): Response
+    public function poluchitShagiZadachiRunnera(PoluchitShagiZadachiUnita $command, GetUnitRunnerJobStepsQuery $query): Response
     {
         try {
             $data = $query->handle($command);
@@ -390,7 +238,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/vipolnitDeistviye', methods: ['POST'])]
-    public function vipolnitDeistviye(VipolnitDeistviye $command, VipolnitDeistviyeUseCase $useCase): Response
+    public function vipolnitDeistviye(VipolnitDeistviye $command, DobavitProzesVipolneniyaDeistviyaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -404,7 +252,7 @@ final class UnitConroller extends AbstractController
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command, ProveritKonteinerUnitaUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
+            $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));

@@ -21,8 +21,10 @@ final class AddUserToProjectUseCase
             throw new \Exception('security.access_denied');
         }
 
+        $user = $this->securityService->getUserById($command->userId);
+
         $project = $this->projectRepository->getById($command->id);
-        $project->addUser($command);
+        $project->addUser($user);
         $this->projectRepository->save($project);
     }
 }

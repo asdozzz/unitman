@@ -10,6 +10,7 @@ final class UpdateProjectData implements JsonBodySerializableInterface
         public readonly string $id,
         public readonly string $newProjectName,
         public readonly string $newProxyHost,
+        public readonly int $memoryLimit
     )
     {
     }

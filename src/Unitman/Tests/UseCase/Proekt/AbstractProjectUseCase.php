@@ -21,11 +21,6 @@ abstract class AbstractProjectUseCase extends AbstractUnitmanUseCase
 {
     function addProject(string $repoId,string $projectCode, string $projectName, string $mainBranch, string $proxyHost, string $userId): string
     {
-        $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
-        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
-        $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
-        self::$container->set(UnitmanSecurityService::class, $securityService);
-
         $projectId = Uuid::uuid7()->toString();
         self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$projectId]));
 

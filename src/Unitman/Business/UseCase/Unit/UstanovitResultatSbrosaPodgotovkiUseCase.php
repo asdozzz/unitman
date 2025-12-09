@@ -15,14 +15,14 @@ final class UstanovitResultatSbrosaPodgotovkiUseCase
     {
     }
 
-    function handle(UstanovitResultatSbrosaPodgotovki $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $resultatSbrosaPodgotovki = $this->runnerService->poluchitResultatSbrosaPodgotovkiUnita($unit);
+        $unit = $this->unitRepository->getById($unitId);
+        $resultatSbrosaPodgotovki = $this->runnerService->poluchitResultatSbrosaPodgotovkiUnita($jobId);
         if ($resultatSbrosaPodgotovki->success) {
-            $unit->ustanovitUspehSbrosaPodgotovki($resultatSbrosaPodgotovki->steps);
+            $unit->ustanovitUspehSbrosaPodgotovki($jobId, $resultatSbrosaPodgotovki->steps);
         } else {
-            $unit->ustanovitOshibkuSbrosaPodgotovki($resultatSbrosaPodgotovki->steps);
+            $unit->ustanovitOshibkuSbrosaPodgotovki($jobId, $resultatSbrosaPodgotovki->steps);
         }
         $this->unitRepository->save($unit);
     }

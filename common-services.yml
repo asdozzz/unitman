@@ -13,6 +13,21 @@ services:
     user: root
     environment:
       - "TEMPORAL_CLI_ADDRESS=temporal:7233"
+    depends_on:
+      - buggregator
+    volumes:
+      - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
+
+  web-mvp:
+    image: asdozzz/unitman:latest
+    restart: always
+    ports:
+      - '${UNITMAN_API_PORT}:8080'
+      - 2112:2112
+      - 30000:30000
+    user: root
+    environment:
+      - "TEMPORAL_CLI_ADDRESS=temporal:7233"
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
 
@@ -65,7 +80,7 @@ services:
       - "postgres"
       - "-c"
       - "config_file=/etc/postgresql.conf"
-      
+
   unitman-proxy:
     image: nginx
     restart: always
@@ -183,3 +198,12 @@ services:
     restart: unless-stopped
     tty: true
     stdin_open: true
+
+  buggregator:
+    image: ghcr.io/buggregator/server:1.13.5
+    environment:
+      - VAR_DUMPER_PREVIEW_MAX_DEPTH=3
+    ports:
+      - 8086:8000
+      - 9912:9912
+      - 9913:9913

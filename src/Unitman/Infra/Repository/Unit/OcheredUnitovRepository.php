@@ -9,6 +9,8 @@ use Symfony\Component\Serializer\Serializer;
 final class OcheredUnitovRepository
 {
     const TABLE = 'ochered_unitov';
+    const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
     public function __construct(private Connection $connection)
     {
     }
@@ -20,7 +22,7 @@ final class OcheredUnitovRepository
             (
                 id serial primary key,
                 unit_id varchar not null,
-                queue_name varchar(128) not null
+                last_update TIMESTAMP not null
             );
         ");
     }
@@ -36,33 +38,23 @@ final class OcheredUnitovRepository
         $this->connection->executeQuery("TRUNCATE $table");
     }
 
-    function findByUnitIdAndQueueName(string $unitId, string $queueName): ?OcheredUnitovReadModel
+    function getByUnitId(string $unitId): OcheredUnitovReadModel
     {
-        $table = self::TABLE;
-        $row = $this->connection->fetchAssociative(
-            "SELECT * FROM $table WHERE unit_id = :unitId and queue_name = :queueName",
-            ['unitId' => $unitId, 'queueName' => $queueName]
-        );
+        $model = $this->findByUnitId($unitId);
 
-        if (empty($row)) {
-            return null;
+        if (empty($model)) {
+            throw new \DomainException('unit.ochered_unitov.not_found');
         }
 
-        return $this->makeModelByRow($row);
+        return $model;
     }
 
-    function insert(string $unitId, string $queueName): void
+    function insert(string $unitId, \DateTimeImmutable $lastUpdate): void
     {
         $this->connection->insert(self::TABLE, [
             'unit_id' => $unitId,
-            'queue_name' => $queueName
+            'last_update' => $lastUpdate->format(self::DATETIME_FORMAT)
         ]);
-    }
-
-
-    function removeByUnitIdAndQueueName(string $unitId, string $queueName): void
-    {
-        $this->connection->delete(self::TABLE, ['unit_id' => $unitId, 'queue_name' => $queueName]);
     }
 
     function removeByUnitId(string $unitId): void
@@ -70,12 +62,11 @@ final class OcheredUnitovRepository
         $this->connection->delete(self::TABLE, ['unit_id' => $unitId]);
     }
 
-    function update(OcheredUnitovReadModel $model): void
+    function update(string $unitId, \DateTimeImmutable $lastUpdate): void
     {
         $this->connection->update(self::TABLE, [
-            'unit_id' => $model->unitId,
-            'queue_name' => $model->queueName
-        ], ['id' => $model->id]);
+            'last_update' => $lastUpdate->format(self::DATETIME_FORMAT),
+        ], ['unit_id' => $unitId]);
     }
 
 
@@ -88,7 +79,7 @@ final class OcheredUnitovRepository
         return new OcheredUnitovReadModel(
             (int)$row['id'],
             (string)$row['unit_id'],
-            (string)$row['queue_name'],
+            new \DateTimeImmutable($row['last_update']),
         );
     }
 
@@ -98,7 +89,7 @@ final class OcheredUnitovRepository
     public function poluchitZadachiNaObrabotku(int $limit = 10): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table LIMIT $limit");
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table ORDER BY last_update asc LIMIT $limit for update skip locked");
 
         $result = [];
         foreach ($rows as $row) {
@@ -106,5 +97,20 @@ final class OcheredUnitovRepository
         }
 
         return $result;
+    }
+
+    function findByUnitId(string $unitId): OcheredUnitovReadModel|null
+    {
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative(
+            "SELECT * FROM $table WHERE unit_id = :unitId",
+            ['unitId' => $unitId]
+        );
+
+        if ($row) {
+            return $this->makeModelByRow($row);
+        }
+
+        return null;
     }
 }

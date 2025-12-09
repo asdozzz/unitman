@@ -12,29 +12,16 @@ final class UdalitUnitUseCase
 {
     public function __construct(
         private UnitRepository $unitRepository,
-        private ProjectRepository $projectRepository,
         private RunnerService $runnerService,
-        private UnitmanSecurityService $securityService
     )
     {
     }
 
-    function handle(UdalitUnit $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $project = $this->projectRepository->getById($unit->getProjectId());
-        $projectUser = $project->getProjectUserById($this->securityService->getCurrentUserId());
-        $unit->proverkaPrav($projectUser);
-        $jobId = $this->runnerService->nachatUdalenieUnita($unit);
+        $unit = $this->unitRepository->getById($unitId);
         $unit->nachatUdalenieUnita($jobId);
-        $this->unitRepository->save($unit);
-    }
-
-    function handleSystem(UdalitUnit $command): void
-    {
-        $unit = $this->unitRepository->getById($command->id);
-        $jobId = $this->runnerService->nachatUdalenieUnita($unit);
-        $unit->nachatUdalenieUnita($jobId);
+        $this->runnerService->nachatUdalenieUnita($jobId, $unit);
         $this->unitRepository->save($unit);
     }
 

@@ -18,7 +18,8 @@ final class SozdatUnit implements JsonBodySerializableInterface
         public readonly string $projectId,
         public readonly string $unitName,
         public readonly string $branch,
-        array $znacheniePeremenoi = []
+        array $znacheniePeremenoi = [],
+        public readonly int $memoryLimit = 0
     )
     {
         $this->znacheniePeremenoi = $znacheniePeremenoi;

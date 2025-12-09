@@ -30,7 +30,6 @@ final class VOcherediNaZapusk extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatZapuska
         ];
     }
 }

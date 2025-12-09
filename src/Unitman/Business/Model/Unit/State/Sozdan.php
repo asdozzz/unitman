@@ -27,6 +27,6 @@ final class Sozdan extends AbstractState
 
     public function getCommands(Unit $unit): array
     {
-        return [StateUserCommand::nachatSborku, StateUserCommand::nachatUdalenie];
+        return [StateUserCommand::nachatUdalenie];
     }
 }

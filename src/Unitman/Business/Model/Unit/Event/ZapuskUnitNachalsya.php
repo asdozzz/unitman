@@ -7,7 +7,8 @@ final class ZapuskUnitNachalsya
     public function __construct(
         public readonly string $unitId,
         public readonly string $jobId,
-        public readonly array $stateAsArray
+        public readonly array $stateAsArray,
+        public readonly array $prozess,
     )
     {
     }

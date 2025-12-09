@@ -79,7 +79,8 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             false,
             ProjectList\ProjectListStateType::NEW,
             new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie),
-            $fact->proxyHost
+            $fact->proxyHost,
+            memoryLimit: $fact->memoryLimit
         );
         $this->projectListRepository->insert($projectList);
     }
@@ -96,17 +97,26 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
 
     function handleProektPostavlenVOcheredNaSborku(ProektPostavlenVOcheredNaSborku $fact): void
     {
-        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::BUILD_PENDING);
+        $project = $this->projectListRepository->getById($fact->id);
+        $project->waitResultRunner = true;
+        $project->state = ProjectList\ProjectListStateType::BUILD_PENDING;
+        $this->projectListRepository->update($project);
     }
 
     function handleProjectWasBuilt(ProjectWasBuilt $fact): void
     {
-        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::BUILD_SUCCESS, $fact->steps);
+        $project = $this->projectListRepository->getById($fact->id);
+        $project->waitResultRunner = false;
+        $project->state = ProjectList\ProjectListStateType::BUILD_SUCCESS;
+        $this->projectListRepository->update($project);
     }
 
     function handleProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
     {
-        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::BUILD_ERROR, $fact->steps);
+        $project = $this->projectListRepository->getById($fact->id);
+        $project->waitResultRunner = false;
+        $project->state = ProjectList\ProjectListStateType::BUILD_ERROR;
+        $this->projectListRepository->update($project);
     }
 
     function handleProjectWasEnabled(ProjectWasEnabled $fact): void
@@ -121,7 +131,10 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
 
     function handleProektPostavlenVOcheredNaUdalenie(ProektPostavlenVOcheredNaUdalenie $fact): void
     {
-        $this->projectListRepository->updateState($fact->id, ProjectList\ProjectListStateType::REMOVE_PENDING);
+        $project = $this->projectListRepository->getById($fact->id);
+        $project->waitResultRunner = true;
+        $project->state = ProjectList\ProjectListStateType::REMOVE_PENDING;
+        $this->projectListRepository->update($project);
     }
 
     function handleProjectWasDeleted(ProjectWasDeleted $fact): void

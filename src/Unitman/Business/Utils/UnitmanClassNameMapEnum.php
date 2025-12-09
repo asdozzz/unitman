@@ -64,14 +64,6 @@ enum UnitmanClassNameMapEnum: string
     case UspehZapuskaUnitaUstanovlen = 'UspehZapuskaUnitaUstanovlen';
     case ZapuskUnitNachalsya = 'ZapuskUnitNachalsya';
     case KonfigUnitaUstanovlen = 'KonfigUnitaUstanovlen';
-
-    case IzmenenieVetkiNachalos = 'IzmenenieVetkiNachalos';
-    case OshibkaIzmeneniyaVetkiUnitaUstanovlena = 'OshibkaIzmeneniyaVetkiUnitaUstanovlena';
-    case UspehIzmeneniyaVetkiUstanovlen = 'UspehIzmeneniyaVetkiUstanovlen';
-    case ObnovlenieKodaUnitaPosleZapuskaNachalos = 'ObnovlenieKodaUnitaPosleZapuskaNachalos';
-    case OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena = 'OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena';
-    case UdalenieUnitaPosleZapuskaNachalos = 'UdalenieUnitaPosleZapuskaNachalos';
-    case OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena = 'OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena';
     case KodVetkiIzmenilsyaVHranilishe = 'KodVetkiIzmenilsyaVHranilishe';
     case AvtosborkaUnitaNachalas = 'AvtosborkaUnitaNachalas';
     case OshibkaAvtosborkiUstanovlena = 'OshibkaAvtosborkiUstanovlena';
@@ -83,4 +75,11 @@ enum UnitmanClassNameMapEnum: string
     case OshibkaDeistviyaUstanovlena = 'OshibkaDeistviyaUstanovlena';
 
     case UnitSbroshenDoSostoyaniyaSborki = 'UnitSbroshenDoSostoyaniyaSborki';
+
+    case DobavlenProzesVUnit = 'DobavlenProzesVUnit';
+    case DeistviePrikreplenoKJobe = 'DeistviePrikreplenoKJobe';
+    case ZadachiDobavleniVProzesUnita = 'ZadachiDobavleniVProzesUnita';
+
+    case ZadachaUnitaOtmenena = 'ZadachaUnitaOtmenena';
+
 }

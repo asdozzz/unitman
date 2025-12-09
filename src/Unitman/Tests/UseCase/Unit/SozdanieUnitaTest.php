@@ -3,17 +3,14 @@
 namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
-use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\VariableValue;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
-use App\Unitman\Business\Port\Unit\UmeetSobiratUnit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\Clock\ClockInterface;
 
 final class SozdanieUnitaTest extends AbstractUnitUseCase
 {
@@ -25,6 +22,10 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $userId = Uuid::uuid7()->toString();
         $securityService = $this->mokaemUspehSecurity($userId);
         $projectId = Uuid::uuid7()->toString();
+
+        $guidGenerator = new MemoryGuidGenerator([$projectId]);
+        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+
         $project = $this->stubProekta($projectId, $userId);
         $projectRepository = self::$container->get(ProjectRepository::class);
         /** @var $projectRepository ProjectRepository*/
@@ -36,11 +37,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $unitRepo = self::$container->get(UnitRepository::class);
         /** @var $unitRepo UnitRepository*/
 
-        $umeetSobiratUnit = $this->getMockBuilder(UmeetSobiratUnit::class)->getMock();
-        $jobId = '123';
-        $umeetSobiratUnit->expects($this->any())->method('sobratUnitOtLizaSystemi')->willReturn(new JobId($jobId));
-
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId,$unitId2,$unitId3]), $unitRepo, $umeetSobiratUnit);
+        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId,$unitId2,$unitId3]), $unitRepo);
         $useCase2->handle(new SozdatUnit(
             $projectId,
             'unit-1',
@@ -48,7 +45,8 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
             [
                 new SozdatUnit\ZnacheniePeremenoi('VARIABLE_1', 'VALUE_1', 'string'),
                 new SozdatUnit\ZnacheniePeremenoi('VARIABLE_2', 'VALUE_2', 'integer')
-            ]
+            ],
+            500
         ));
 
         $unit = $unitRepo->getById($unitId);

@@ -80,57 +80,58 @@ final class RunnerAdapter implements RunnerService
         return new JobId($workflowId);
     }
 
-    public function nachatSborkuUnita(Unit $unit): JobId
+    public function nachatSborkuUnita(string $jobId, Unit $unit): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $command = new NachatSborkuUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $unit->getBranch());
-        $workflowId = $this->runnerApi->nachatSborkuUnita($command);
+        $workflowId = $this->runnerApi->nachatSborkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
-    public function nachatPodgotovkuUnita(Unit $unit): JobId
+    public function nachatPodgotovkuUnita(string $jobId, Unit $unit): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $caches = $this->makeCachesListFromUnit($unit);
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches);
-        $workflowId = $this->runnerApi->nachatPodgotovkuUnita($command);
+        $containerSettings = new NachatPodgotovkuUnita\ContainerSettings($unit->poluchitNastroikiContaineraUnita()->memoryLimit.'m');
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings);
+        $workflowId = $this->runnerApi->nachatPodgotovkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
 
-    public function nachatObnovlenieUnita(Unit $unit): JobId
+    public function nachatObnovlenieUnita(string $jobId, Unit $unit): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $command = new NachatObnovlenieUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl);
-        $workflowId = $this->runnerApi->nachatObnovlenieUnita($command);
+        $workflowId = $this->runnerApi->nachatObnovlenieUnita($jobId, $command);
         return new JobId($workflowId);
     }
 
-    public function nachatSbrosPodgotovkiUnita(Unit $unit): JobId
+    public function nachatSbrosPodgotovkiUnita(string $jobId, Unit $unit): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $unit->getName(), $storageUrl, $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
-        $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($command);
+        $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($jobId, $command);
         return new JobId($workflowId);
     }
 
-    public function nachatZapuskUnita(Unit $unit, Project $project): JobId
+    public function nachatZapuskUnita(string $jobId, Unit $unit, Project $project): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $caches = $this->makeCachesListFromUnit($unit);
         $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables, $caches);
-        $workflowId = $this->runnerApi->nachatZapuskUnita($command);
+        $workflowId = $this->runnerApi->nachatZapuskUnita($jobId, $command);
         return new JobId($workflowId);
     }
 
 
-    public function nachatVipolnenieDeistviya(Unit $unit, Project $project, string $actionId, array $values): JobId
+    public function nachatVipolnenieDeistviya(string $jobId, Unit $unit, Project $project, string $actionId, array $values): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $konfigDeistviya = $unit->poluchitKonfigDeistviya($actionId);
@@ -141,33 +142,33 @@ final class RunnerAdapter implements RunnerService
         }
 
         $command = new NachatDeistvieUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $konfigDeistviya->commands, $variables);
-        $workflowId = $this->runnerApi->nachatDeistvieUnita($command);
+        $workflowId = $this->runnerApi->nachatDeistvieUnita($jobId, $command);
         return new JobId($workflowId);
     }
 
 
-    public function nachatOstanovkuUnita(Unit $unit, Project $project): JobId
+    public function nachatOstanovkuUnita(string $jobId, Unit $unit, Project $project): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $command = new NachatOstanovkuUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiOstanovki(), $variables);
-        $workflowId = $this->runnerApi->nachatOstanovkuUnita($command);
+        $workflowId = $this->runnerApi->nachatOstanovkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
 
-    public function nachatUdalenieUnita(Unit $unit): JobId
+    public function nachatUdalenieUnita(string $jobId, Unit $unit): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $command = new NachatUdalenieUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl);
-        $workflowId = $this->runnerApi->nachatUdalenieUnita($command);
+        $workflowId = $this->runnerApi->nachatUdalenieUnita($jobId, $command);
         return new JobId($workflowId);
     }
 
-    public function poluchitResultatSborki(Unit $unit): ResultatSborkiUnita
+    public function poluchitResultatSborki(string $jobId): ResultatSborkiUnita
     {
-        $result = $this->runnerApi->poluchitResultatSborki($unit->poluchitWorkflowIdDlySborki());
+        $result = $this->runnerApi->poluchitResultatSborki($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.sborka_eshe_ne_zakonchena');
@@ -176,9 +177,9 @@ final class RunnerAdapter implements RunnerService
         return new ResultatSborkiUnita((bool)$result->Success, $this->convertRunnerSteps($result->Steps), $result->Config);
     }
 
-    public function poluchitResultatObnovleniyaUnita(Unit $unit): ResultatObnovleniyaUnita
+    public function poluchitResultatObnovleniyaUnita(string $jobId): ResultatObnovleniyaUnita
     {
-        $result = $this->runnerApi->poluchitResultatObnovleniyaUnita($unit->poluchitWorkflowIdDlyObnovleniya());
+        $result = $this->runnerApi->poluchitResultatObnovleniyaUnita($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.obnovlenie_eshe_ne_zakoncheno');
@@ -187,9 +188,9 @@ final class RunnerAdapter implements RunnerService
         return new ResultatObnovleniyaUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps), $result->Config);
     }
 
-    public function poluchitResultatPodgotovki(Unit $unit): ResultatPodgotovkiUnita
+    public function poluchitResultatPodgotovki(string $jobId): ResultatPodgotovkiUnita
     {
-        $result = $this->runnerApi->poluchitResultatPodgotovki($unit->poluchitWorkflowIdDlyPodgotovki());
+        $result = $this->runnerApi->poluchitResultatPodgotovki($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.podgotovka_eshe_ne_zakonchena');
@@ -199,9 +200,9 @@ final class RunnerAdapter implements RunnerService
     }
 
 
-    public function poluchitResultatSbrosaPodgotovkiUnita(Unit $unit): ResultatSbrosaPodgotovkiUnita
+    public function poluchitResultatSbrosaPodgotovkiUnita(string $jobId): ResultatSbrosaPodgotovkiUnita
     {
-        $result = $this->runnerApi->poluchitResultatSbrosaPodgotovkiUnita($unit->poluchitWorkflowIdDlySbrosaPodgotovki());
+        $result = $this->runnerApi->poluchitResultatSbrosaPodgotovkiUnita($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.sbros_podgotovki_eshe_ne_zakonchen');
@@ -210,9 +211,9 @@ final class RunnerAdapter implements RunnerService
         return new ResultatSbrosaPodgotovkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
-    public function poluchitResultatZapuskaUnita(Unit $unit): ResultatZapuskaUnita
+    public function poluchitResultatZapuskaUnita(string $jobId): ResultatZapuskaUnita
     {
-        $result = $this->runnerApi->poluchitResultatZapuskaUnita($unit->poluchitWorkflowIdDlyZapuska());
+        $result = $this->runnerApi->poluchitResultatZapuskaUnita($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.zapusk_eshe_ne_zakonchen');
@@ -221,9 +222,9 @@ final class RunnerAdapter implements RunnerService
         return new ResultatZapuskaUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
-    public function poluchitResultatOstanovkiUnita(Unit $unit): ResultatOstanovkiUnita
+    public function poluchitResultatOstanovkiUnita(string $jobId): ResultatOstanovkiUnita
     {
-        $result = $this->runnerApi->poluchitResultatOstanovkiUnita($unit->poluchitWorkflowIdDlyOstanovki());
+        $result = $this->runnerApi->poluchitResultatOstanovkiUnita($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.ostanovka_eshe_ne_zakonchena');
@@ -232,9 +233,9 @@ final class RunnerAdapter implements RunnerService
         return new ResultatOstanovkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
-    public function poluchitResultatUdaleniyaUnita(Unit $unit): ResultatUdaleniyaUnita
+    public function poluchitResultatUdaleniyaUnita(string $jobId): ResultatUdaleniyaUnita
     {
-        $result = $this->runnerApi->poluchitResultatUdaleniyaUnita($unit->poluchitWorkflowIdDlyUdaleniya());
+        $result = $this->runnerApi->poluchitResultatUdaleniyaUnita($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.udalenie_eshe_ne_zakoncheno');
@@ -291,26 +292,6 @@ final class RunnerAdapter implements RunnerService
         return $projectUrl;
     }
 
-    public function poluchitResultatIzmeneniyaVetki(Unit $unit): ResultatIzmeneniyaVetkiUnita
-    {
-        $result = $this->runnerApi->poluchitResultatIzmeneniyaVetki($unit->poluchitWorkflowIdDlyIzmeneniya());
-
-        if (empty($result)) {
-            throw new \Exception('runner.izmenenie_vetki_eshe_ne_zakoncheno');
-        }
-
-        return new ResultatIzmeneniyaVetkiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps), $result->Config);
-    }
-
-    public function nachatIzmenenieVetkiUnita(Unit $unit, string $newBranch): JobId
-    {
-        $project = $this->projectEventsRepository->getById($unit->getProjectId());
-        $storageUrl = $this->getProjectUrl($project);
-        $command = new NachatIzmenenieVetkiUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $newBranch);
-        $workflowId = $this->runnerApi->nachatIzmenenieVetkiUnita($command);
-        return new JobId($workflowId);
-    }
-
     public function poluchitResultatSborkiProekta(Project $project): ResultatSborkiProekta
     {
         $result = $this->runnerApi->poluchitResultatSborkiProekta($project->poluchitWorkflowIdDlySborki());
@@ -344,9 +325,9 @@ final class RunnerAdapter implements RunnerService
         return new ResultatOshistkiProekta((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
-    public function poluchitResultatDeistviya(Unit $unit): ResultatDeistviyaiUnita
+    public function poluchitResultatDeistviya(string $jobId): ResultatDeistviyaiUnita
     {
-        $result = $this->runnerApi->poluchitResultatDeistviya($unit->poluchitWorkflowIdDlyDeistviya());
+        $result = $this->runnerApi->poluchitResultatDeistviya($jobId);
 
         if (empty($result)) {
             throw new \Exception('runner.deistvie_ne_zakonchena');

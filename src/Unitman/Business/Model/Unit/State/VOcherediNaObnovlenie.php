@@ -28,7 +28,6 @@ final class VOcherediNaObnovlenie extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatObnovleniya
         ];
     }
 }

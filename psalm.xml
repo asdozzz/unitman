@@ -15,6 +15,7 @@
             <directory name="vendor" />
             <directory name="tests" />
             <directory name="src/*/Tests" />
+            <directory name="src/*/Migrations" />
             <file name="./src/Utils/Service/MigrationFactoryDecorator.php"/>
         </ignoreFiles>
     </projectFiles>

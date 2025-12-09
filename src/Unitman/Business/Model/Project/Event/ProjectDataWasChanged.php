@@ -8,5 +8,6 @@ final class ProjectDataWasChanged
         public readonly string $id,
         public readonly string $newName,
         public readonly string $newProxyHost,
+        public readonly int $memoryLimit = 3072
     ) {}
 }

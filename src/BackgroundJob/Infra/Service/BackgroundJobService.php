@@ -43,7 +43,8 @@ final class BackgroundJobService
                 name: $job->getName(),
                 command: 'php bin/console app:service:start '.$job->getName(),
                 remainAfterExit: true,
-                restartSec: 1
+                restartSec: 10,
+                processNum: $job->getProcessNum(),
             );
 
             if (!$result) {

@@ -29,13 +29,4 @@ final class UnitBranch
             throw new \DomainException('unit.branch_is_empty');
         }
     }
-
-    public function validateNewBranch(string $newName): void
-    {
-        $this->validate($newName);
-
-        if ($this->name === $newName) {
-            throw new \DomainException('unit.new_branch_equal_old_branch');
-        }
-    }
 }

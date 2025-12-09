@@ -19,15 +19,21 @@ services:
       file: common-services.yml
       service: temporal-ui
 
+  buggregator:
+    extends:
+      file: common-services.yml
+      service: buggregator
+
   web:
     extends:
       file: common-services.yml
-      service: web
+      service: web-mvp
     depends_on:
       - temporal
       - beanstalk
       - centrifugo
       - postgres
+      - buggregator
     environment:
       - PHP_OPCACHE_ENABLE=0
       - PHP_OPCACHE_ENABLE_CLI=0

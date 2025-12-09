@@ -65,12 +65,6 @@ final class ZadachaDlyOcherediRepository
         $this->connection->executeQuery($str, ["ids" => '\''.join('\',\'', $ids). '\'']);
     }
 
-    public function setSuccess(array $ids, string $error): void
-    {
-        $this->connection->executeQuery('UPDATE '.self::TABLE.' SET attempt=10,error=:error WHERE id IN (\''.join('\',\'', $ids). '\')',
-            ['error'=>$error]);
-    }
-
     public function setError(array $ids, string $error): void
     {
         $this->connection->executeQuery('UPDATE '.self::TABLE.' SET attempt=attempt+1,error=:error WHERE id IN (\''.join('\',\'', $ids). '\')',

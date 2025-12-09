@@ -9,12 +9,13 @@ use App\Unitman\Business\Port\Unit\CanFindUnitIdByContainerName;
 use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
+use App\Unitman\Business\Port\Unit\UmeetOtbiratNeaktivnieUniti;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
 
-final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById, CanFindUnitIdByContainerName
+final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById, CanFindUnitIdByContainerName, UmeetOtbiratNeaktivnieUniti
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection, private Serializer $serializer)
@@ -113,6 +114,11 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $params = ['limit' => $query->limit, 'offset' => $query->offset];
         $whereArr = [];
 
+        if ($query->filter->unitId) {
+            $whereArr[] = "payload->>'id' = :id";
+            $params['id'] = $query->filter->unitId;
+        }
+
         if ($query->filter->onlyMine) {
             $whereArr[] = "payload->>'authorId' = :authorId";
             $params['authorId'] = $currentUserId;
@@ -198,5 +204,31 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $table = self::TABLE;
         $json = $this->serializer->serialize($containerStats, 'json');
         $this->connection->executeQuery("update $table set payload = jsonb_set(payload, '{statistikaKonteinera}', :val) where id=:id", ['id' => $id, 'val' =>$json]);
+    }
+
+    function otobratNeaktivnieUniti(int $unixtime): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT id FROM $table where payload->>'unixtimePoslednegoObnovleniyaUnita' is not null and payload->>'unixtimePoslednegoObnovleniyaUnita' < :unixtime",
+            ['unixtime' => $unixtime]);
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $row['id'];
+        }
+        return $result;
+    }
+
+    function naitiDubliPoVetke(string $projectId, string $branch): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection
+            ->fetchAllAssociative("SELECT * FROM $table WHERE payload->>'projectId' = :projectId and payload->>'branch' = :branch",
+                ['branch' => $branch, 'projectId' => $projectId]);
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeUnitByRow($row);
+        }
+
+        return $result;
     }
 }

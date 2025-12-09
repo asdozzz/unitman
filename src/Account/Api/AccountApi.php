@@ -26,7 +26,7 @@ final class AccountApi
     {
         $user = $this->userRepository->getById($id);
         $nickname = $user->getNickname();
-        return $nickname ?? $user->getEmail();
+        return !empty($nickname) ? $nickname : $user->getEmail();
     }
 
     public function getCurrentUser(): JWTUser

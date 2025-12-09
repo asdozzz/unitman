@@ -79,28 +79,17 @@ final class ProjectionsManager
 
     public function pullAllProjectionsByAggregateRoot(AggregateRoot $aggregateRoot): void
     {
-        $this->connection->beginTransaction();
-
-        try {
-            $streamName = $this->eventsRepository->getEventStreamByAggregateName($aggregateRoot::class);
-
-            foreach ($this->projections as $projection) {
-                if ($streamName->aggregateType !== $projection->getStreamName()->aggregateType) continue;
-                if (!$projection->isSyncProjection() && $this->appEnv != 'test') continue;
-                $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
-                if ($checkpoint === 0) {
-                    $projection->init();
-                }
-
-                $this->handleEventsByCheckpoint($projection, $checkpoint, 200);
+        $streamName = $this->eventsRepository->getEventStreamByAggregateName($aggregateRoot::class);
+        foreach ($this->projections as $projection) {
+            if ($streamName->aggregateType !== $projection->getStreamName()->aggregateType) continue;
+            if (!$projection->isSyncProjection() && $this->appEnv != 'test') continue;
+            $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
+            if ($checkpoint === 0) {
+                $projection->init();
             }
 
-            $this->connection->commit();
-        } catch (\Exception $exception) {
-            $this->connection->rollBack();
-            throw $exception;
+            $this->handleEventsByCheckpoint($projection, $checkpoint, 200);
         }
-
     }
 
     public function pullProjectionByName(string $projectionName): void

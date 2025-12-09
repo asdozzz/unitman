@@ -209,6 +209,7 @@ final class ConfigUnita
         $action = $this->findActionById($id);
 
         if ($action === null) {
+            die("<pre>" . print_r($this, true) . "</pre>");
             throw new \DomainException('unit.konfig.actions');
         }
 

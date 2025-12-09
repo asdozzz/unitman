@@ -5,40 +5,63 @@ namespace App\Unitman\Business\Model\Unit\Runner;
 final class RunnerJob
 {
     private string $jobId;
-    private bool $isFinish;
-    private bool $success;
     /**
      * @var array<RunnerJobStep>
      * */
     private array $steps;
+    private RunnerJobState $state;
+    private RunnerJobType $type;
 
     /**
      * @param array<RunnerJobStep> $steps
      * */
-    public function __construct(string $jobId, bool $isFinish = false, bool $success = false, array $steps = [])
+    public function __construct(
+        string $jobId,
+        RunnerJobType $type,
+        RunnerJobState $state,
+        array $steps = [],
+    )
     {
+
         if (empty($jobId)) {
             throw new \DomainException('unit.sborka.jobId_is_empty');
         }
         $this->jobId = $jobId;
-        $this->isFinish = $isFinish;
-        $this->success = $success;
         $this->steps = $steps;
+        $this->state = $state;
+        $this->type = $type;
     }
 
-    static function start(string $jobId): static
+    static function make(string $jobId, RunnerJobType $type): self
     {
-        return new static($jobId);
+        return new self($jobId, $type, RunnerJobState::NEW, []);
     }
 
-    function ustanovitUspeh(array $steps): static
+    function getType(): RunnerJobType
     {
-        return new static($this->jobId, true, true, $steps);
+        return $this->type;
     }
 
-    function ustanovitOshibku(array $steps): static
+    function start(): void
     {
-        return new static($this->jobId, true, false, $steps);
+        $this->state = RunnerJobState::PENDING;
+    }
+
+    function cancel(string $message = 'CANCEL'): void
+    {
+        $this->state = RunnerJobState::CANCLED;
+        $this->steps = [(new RunnerJobStep('CANCEL', $message, false, time()))];
+    }
+
+    function ustanovitResultat(bool $success, array $steps): void
+    {
+        if ($success) {
+            $this->state = RunnerJobState::SUCCESS;
+        } else {
+            $this->state = RunnerJobState::ERROR;
+        }
+
+        $this->steps = $steps;
     }
 
     public function getJobId(): string
@@ -46,14 +69,24 @@ final class RunnerJob
         return $this->jobId;
     }
 
+    public function isNew(): bool
+    {
+        return $this->state === RunnerJobState::NEW;
+    }
+
+    public function isStart(): bool
+    {
+        return $this->state === RunnerJobState::PENDING;
+    }
+
     public function isFinish(): bool
     {
-        return $this->isFinish;
+        return in_array($this->state, [RunnerJobState::SUCCESS, RunnerJobState::ERROR, RunnerJobState::CANCLED]);
     }
 
     public function isSuccess(): bool
     {
-        return $this->success;
+        return in_array($this->state, [RunnerJobState::SUCCESS]);
     }
 
     public function getSteps(): array
@@ -62,4 +95,24 @@ final class RunnerJob
     }
 
 
+    function toArray(): array
+    {
+        return [
+            'id' => $this->jobId,
+            'type' => $this->type->value,
+            'state' => $this->state->value,
+            'steps' => array_map(fn(RunnerJobStep $step) => $step->toArray(),$this->steps),
+        ];
+    }
+
+    static function fromArray(array $data): static
+    {
+        $steps = [];
+        foreach ($data['steps'] as $stepArr) {
+            $steps[] = RunnerJobStep::fromArray($stepArr);
+        }
+        $state = RunnerJobState::from($data['state']);
+        $type = RunnerJobType::from($data['type']);
+        return new self($data['id'], $type, $state, $steps);
+    }
 }

@@ -27,7 +27,6 @@ final class VOcherediNaPodgotovku extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatPodgotovki
         ];
     }
 }

@@ -43,8 +43,8 @@ final class OtpravkaZadachVOcheredBackgroundJob extends AbstractBackgroundJob
             }
             try {
                 $queue->dispatchMany(...$data);
-                //$this->zadachaDlyOcherediRepository->removeByIds(array_map(fn(ZadachaDlyOcheredi $item) => $item->id, $tasks));
-                $this->zadachaDlyOcherediRepository->setSuccess(array_map(fn(ZadachaDlyOcheredi $item) => $item->id, $tasks), 'success');
+                $this->zadachaDlyOcherediRepository->removeByIds(array_map(fn(ZadachaDlyOcheredi $item) => $item->id, $tasks));
+                //$this->zadachaDlyOcherediRepository->setSuccess(array_map(fn(ZadachaDlyOcheredi $item) => $item->id, $tasks), 'success');
             } catch (\Exception $e) {
                 $this->zadachaDlyOcherediRepository->setError(array_map(fn(ZadachaDlyOcheredi $item) => $item->id, $tasks), $e->getMessage());
             }

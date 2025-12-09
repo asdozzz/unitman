@@ -22,7 +22,7 @@ final class RegisterAccountUseCase
     {
     }
 
-    function handle(RegisterAccount $registerAccount): void
+    function handle(RegisterAccount $registerAccount): string
     {
         if (!$this->securityService->isAdmin()) {
             throw new \Exception('security.access_denied');
@@ -37,5 +37,7 @@ final class RegisterAccountUseCase
 
         $account = Account::registerAccount($accountId, $registerAccount);
         $this->accountRepository->save($account);
+
+        return $accountId;
     }
 }

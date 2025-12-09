@@ -15,14 +15,14 @@ final class UstanovitResultatUdaleniyaUseCase
     {
     }
 
-    function handle(UstanovitResultatUdaleniya $command): void
+    function handle(string $unitId, string $jobId): void
     {
-        $unit = $this->unitRepository->getById($command->id);
-        $resultatUdaleniya = $this->runnerService->poluchitResultatUdaleniyaUnita($unit);
+        $unit = $this->unitRepository->getById($unitId);
+        $resultatUdaleniya = $this->runnerService->poluchitResultatUdaleniyaUnita($jobId);
         if ($resultatUdaleniya->success) {
-            $unit->ustanovitUspehUdaleniya($resultatUdaleniya->steps);
+            $unit->ustanovitUspehUdaleniya($jobId, $resultatUdaleniya->steps);
         } else {
-            $unit->ustanovitOshibkuUdaleniya($resultatUdaleniya->steps);
+            $unit->ustanovitOshibkuUdaleniya($jobId, $resultatUdaleniya->steps);
         }
         $this->unitRepository->save($unit);
     }

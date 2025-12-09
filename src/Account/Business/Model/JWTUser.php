@@ -2,6 +2,7 @@
 
 namespace App\Account\Business\Model;
 
+use App\Account\Business\Model\Account\Role;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
@@ -49,6 +50,11 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
         $this->password = $newPassword;
     }
 
+    public function updateRole(string $newRole): void
+    {
+        $this->roles = [$newRole];
+    }
+
     public function updateEmail(string $newEmail): void
     {
         $this->email = $newEmail;
@@ -93,6 +99,11 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
     public function isBlocked(): bool
     {
         return $this->isBlocked;
+    }
+
+    public function hasSystemRole(): bool
+    {
+        return in_array(Role::ROLE_SYSTEM->value, $this->roles);
     }
 
     public function getLocale(): string

@@ -8,6 +8,7 @@ use App\Account\Business\Command\ChangeMyNickname;
 use App\Account\Business\Command\ChangeMyPassword;
 use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Command\ChangePasswordByAdmin;
+use App\Account\Business\Command\ChangeRoleByAdmin;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\Model\Account\Role;
@@ -19,6 +20,7 @@ use App\Account\Business\UseCase\ChangeMyNicknameUseCase;
 use App\Account\Business\UseCase\ChangeMyPasswordUseCase;
 use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
+use App\Account\Business\UseCase\ChangeRoleByAdminUseCase;
 use App\Account\Business\UseCase\RegisterAccountUseCase;
 use App\Account\Business\UseCase\RegisterSystemAccountUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
@@ -271,5 +273,31 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $row = $jwtRepository->findRowById($id);
 
         $this->assertEquals(0, $row['is_blocked']);
+    }
+    /**
+     * @test
+     * */
+    function role_was_changed_by_admin()
+    {
+        $row = $this->registerAccount('asd123@asd.ru', 'first');
+        $this->assertEquals($row['nickname'], 'first');
+
+        $command = new ChangeRoleByAdmin($row['id'], Role::ROLE_ADMIN->value);
+
+        $sut = self::$container->get(ChangeRoleByAdminUseCase::class);
+        /** @var ChangeRoleByAdminUseCase $sut */
+        $sut->handle($command);
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        /** @var JWTUserRepository $jwtRepository */
+        $jwtUser = $jwtRepository->getActiveById($row['id']);
+        $this->assertEquals([Role::ROLE_ADMIN->value], $jwtUser->getRoles());
+
+        $command = new ChangeRoleByAdmin($row['id'], Role::ROLE_ADMIN->value);
+
+        $this->expectExceptionMessage('account.old_role_equal_new_role');
+        $sut = self::$container->get(ChangeRoleByAdminUseCase::class);
+        /** @var ChangeRoleByAdminUseCase $sut */
+        $sut->handle($command);
     }
 }

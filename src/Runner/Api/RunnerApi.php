@@ -19,7 +19,6 @@ use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
-use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
@@ -33,7 +32,6 @@ use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
-use App\Runner\Infra\Workflow\NachatIzmenenieVetkiUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatOchistkuProektaWorkflow;
 use App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow;
@@ -131,11 +129,12 @@ final class RunnerApi implements RunnerApiInterface
         return $this->makeResult($workflow, ResultatOchistkiProekta::class);
     }
 
-    public function nachatSborkuUnita(NachatSborkuUnita $command): string
+    public function nachatSborkuUnita(string $workflowId,NachatSborkuUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatSborkuUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
@@ -150,11 +149,12 @@ final class RunnerApi implements RunnerApiInterface
         return $this->makeResultWithConfig($workflow, ResultatSbrokiUnita::class);
     }
 
-    public function nachatUdalenieUnita(NachatUdalenieUnita $command): string
+    public function nachatUdalenieUnita(string $workflowId,NachatUdalenieUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatUdalenieUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
@@ -169,17 +169,12 @@ final class RunnerApi implements RunnerApiInterface
         return $this->makeResult($workflow, ResultatUdaleniyaUnita::class);
     }
 
-    public function poluchitResultatIzmeneniyaVetki(string $workflowId): ?ResultatIzmeneniyaVetkiUnita
-    {
-        $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResultWithConfig($workflow, ResultatIzmeneniyaVetkiUnita::class);
-    }
-
-    public function nachatPodgotovkuUnita(NachatPodgotovkuUnita $command): string
+    public function nachatPodgotovkuUnita(string $workflowId,NachatPodgotovkuUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatPodgotovkuUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
@@ -188,11 +183,12 @@ final class RunnerApi implements RunnerApiInterface
         return $run->getExecution()->getID();
     }
 
-    public function nachatObnovlenieUnita(NachatObnovlenieUnita $command): string
+    public function nachatObnovlenieUnita(string $workflowId,NachatObnovlenieUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatObnovlenieUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
@@ -201,24 +197,12 @@ final class RunnerApi implements RunnerApiInterface
         return $run->getExecution()->getID();
     }
 
-    public function nachatIzmenenieVetkiUnita(NachatIzmenenieVetkiUnita $command): string
-    {
-        $workflow = $this->workflowClient->newWorkflowStub(
-            NachatIzmenenieVetkiUnitaWorkflow::class,
-            WorkflowOptions::new()
-                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
-                ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
-        );
-
-        $run = $this->workflowClient->start($workflow, $command);
-        return $run->getExecution()->getID();
-    }
-
-    public function nachatSbrosPodgotovkiUnita(NachatSbrosPodgotovkiUnita $command): string
+    public function nachatSbrosPodgotovkiUnita(string $workflowId,NachatSbrosPodgotovkiUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatSbrosPodgotovkiWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
@@ -227,7 +211,7 @@ final class RunnerApi implements RunnerApiInterface
         return $run->getExecution()->getID();
     }
 
-    public function nachatZapuskUnita(NachatZapuskUnita $command): string
+    public function nachatZapuskUnita(string $workflowId,NachatZapuskUnita $command): string
     {
         $percentFree = $this->runnerRepository->getDefaultRunnerState()->getMemoryInfo()->getFreePercent();
 
@@ -238,6 +222,7 @@ final class RunnerApi implements RunnerApiInterface
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatZapuskUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowTaskTimeout(CarbonInterval::minute(1))
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(60))
@@ -247,11 +232,12 @@ final class RunnerApi implements RunnerApiInterface
         return $run->getExecution()->getID();
     }
 
-    public function nachatOstanovkuUnita(NachatOstanovkuUnita $command): string
+    public function nachatOstanovkuUnita(string $workflowId,NachatOstanovkuUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatOstanvkuUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
@@ -261,11 +247,12 @@ final class RunnerApi implements RunnerApiInterface
     }
 
 
-    public function nachatDeistvieUnita(NachatDeistvieUnita $command): string
+    public function nachatDeistvieUnita(string $workflowId,NachatDeistvieUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatDeistvieUnitaWorkflow::class,
             WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
@@ -284,7 +271,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), 1);
+                $result->Steps = json_decode(json_encode($Steps), true);
             }
         }
 
@@ -307,7 +294,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), 1);
+                $result->Steps = json_decode(json_encode($Steps), true);
             }
         }
 
@@ -324,7 +311,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), 1);
+                $result->Steps = json_decode(json_encode($Steps), true);
             }
         }
 
@@ -341,7 +328,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), 1);
+                $result->Steps = json_decode(json_encode($Steps), true);
             }
         }
 
@@ -427,7 +414,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), 1);
+                $result->Steps = json_decode(json_encode($Steps), true);
             }
         }
 

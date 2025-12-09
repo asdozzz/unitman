@@ -3,7 +3,6 @@
 namespace App\Unitman\Infra\BackgroundJob\OcheredProektov;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
-use App\Unitman\Infra\BackgroundJob\OcheredUnitov\OcheredUnitovActivity;
 
 final class OcheredProektovBackgroundJob extends AbstractBackgroundJob
 {

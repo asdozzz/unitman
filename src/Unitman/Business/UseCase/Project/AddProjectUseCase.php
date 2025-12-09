@@ -20,7 +20,7 @@ final class AddProjectUseCase
     {
     }
 
-    function handle(AddProject $command): void
+    function handle(AddProject $command): string
     {
         if (!$this->securityService->isAdmin()) {
             throw new \Exception('security.access_denied');
@@ -34,5 +34,7 @@ final class AddProjectUseCase
 
         $project = Project::addProject($projectId, $command, $this->securityService->getCurrentUserId());
         $this->projectRepository->save($project);
+
+        return $projectId;
     }
 }

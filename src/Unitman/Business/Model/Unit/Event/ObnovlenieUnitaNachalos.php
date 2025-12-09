@@ -8,7 +8,8 @@ final class ObnovlenieUnitaNachalos
         public readonly string $unitId,
         public readonly string $jobId,
         public readonly array $stateAsArray,
-        public readonly ?int $unixtime = null
+        public readonly int $unixtime,
+        public readonly array $prozess,
     )
     {
     }

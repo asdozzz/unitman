@@ -43,6 +43,7 @@ use App\Unitman\Business\UseCase\Project\ObnovitNastroikiHukaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitSpisokProektovPolzovatelyaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokVetokProektaQuery;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
@@ -51,6 +52,7 @@ use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiPro
 use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
+use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -68,6 +70,13 @@ final class ProjectController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
+    #[Route('/read/{id}', methods: ['POST'])]
+    public function byId(string $id, SqlProjectListRepository $repository): Response
+    {
+        $data = $repository->getById($id);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
     #[Route('/activeList', methods: ['POST'])]
     public function activeList(GetActiveProjectList $command, GetActiveProjectListQuery $query): Response
     {
@@ -82,10 +91,18 @@ final class ProjectController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
-    #[Route('/add', methods: ['POST'])]
-    public function add(AddProject $command, AddProjectUseCase $useCase): Response
+    #[Route('/user/{id}', methods: ['POST'])]
+    public function byUserId(string $id, PoluchitSpisokProektovPolzovatelyaUseCase $query): Response
     {
-        $useCase->handle($command);
+        $data = $query->handle($id);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[Route('/add', methods: ['POST'])]
+    public function add(AddProject $command, AddProjectUseCase $useCase, PostavitVOcheredNaSborkuUseCase $postavitVOcheredNaSborkuUseCase): Response
+    {
+        $id = $useCase->handle($command);
+        $postavitVOcheredNaSborkuUseCase->handle(new PostavitVOcheredNaSborku($id));
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 

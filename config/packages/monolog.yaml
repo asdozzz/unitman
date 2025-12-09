@@ -5,11 +5,12 @@ monolog:
 when@dev:
     monolog:
         handlers:
-            main:
-                type: stream
-                path: "%kernel.logs_dir%/%kernel.environment%.log"
+            socket:
+                type: socket
+                connection_string: '%env(MONOLOG_SOCKET_HOST)%'
                 level: debug
-                channels: ["!event"]
+                formatter: monolog.formatter.json
+                channels: ["!event", "!doctrine", "!console", "!security"]
             # uncomment to get logging in your browser
             # you may have to allow bigger header sizes in your Web server configuration
             #firephp:

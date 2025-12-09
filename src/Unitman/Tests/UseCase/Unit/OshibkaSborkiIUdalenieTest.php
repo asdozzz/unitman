@@ -5,24 +5,15 @@ namespace App\Unitman\Tests\UseCase\Unit;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
-use App\Runner\Business\Model\GolangRunner\Unit\Step;
-use App\Unitman\Business\Command\Unit\SobratUnit;
-use App\Unitman\Business\Command\Unit\SozdatUnit;
-use App\Unitman\Business\Command\Unit\UdalitUnit;
-use App\Unitman\Business\Command\Unit\UstanovitResultatSborkiUnita;
-use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
-use App\Unitman\Business\Model\Repo\RepoType;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
+use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 use App\Unitman\Business\Port\CanGeneateGuid;
-use App\Unitman\Business\Port\Project\ProjectRepository;
-use App\Unitman\Business\Port\RunnerService;
-use App\Unitman\Business\Port\UnitmanSecurityService;
-use App\Unitman\Business\UseCase\Unit\SobratUnitUseCase;
-use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
-use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatSborkiUnitaUseCase;
-use App\Unitman\Business\UseCase\Unit\UstanovitResultatUdaleniyaUseCase;
-use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
+use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Acl\MemoryRunnerService;
+use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
+use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
 
@@ -31,7 +22,13 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
     function test()
     {
         $unitId = Uuid::uuid7()->toString();
-        $this->sozdatUnit($unitId);
+        $prozesSborkiId = Uuid::uuid7()->toString();
+        $prozesUdaleniyaId = Uuid::uuid7()->toString();
+        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSborkiId, $prozesUdaleniyaId]));
+
+        $userId = Uuid::uuid7()->toString();
+        $this->mokaemUspehSecurity($userId);
+        $this->sozdatUnit($userId, $unitId);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');
@@ -51,25 +48,45 @@ final class OshibkaSborkiIUdalenieTest extends AbstractUnitUseCase
         $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, 'UDALENIE_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA, new ResultatUdaleniyaUnita(true, $stepsSuccess));
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
-
-        $useCase = self::$container->get(SobratUnitUseCase::class);
-        $useCase->handle(new SobratUnit($unitId));
-
-        $useCase = self::$container->get(UstanovitResultatSborkiUnitaUseCase::class);
-        $useCase->handle(new UstanovitResultatSborkiUnita($unitId));
-
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
+        /** @var  $spisokUnitovRepo SpisokUnitovRepository*/
+
+
+        $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
+        $useCase->handle($unitId);
+
+        $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
+        $useCase->handle($unitId);
+
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals($spisokUnitovReadModel->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel->state, 'OSHIBKA_SBORKI');
+        $this->assertEquals(UnitProcessState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
+        $this->assertEquals(true, $spisokUnitovReadModel->error);
 
-        $useCase = self::$container->get(UdalitUnitUseCase::class);
-        $useCase->handle(new UdalitUnit($unitId));
+        $useCase = self::$container->get(DobavitProzesUdaleniyaUseCase::class);
+        $useCase->handle($unitId);
 
-        $useCase = self::$container->get(UstanovitResultatUdaleniyaUseCase::class);
-        $useCase->handle(new UstanovitResultatUdaleniya($unitId));
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[1]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
+        $this->assertEquals(RunnerJobType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['type']);
+
+        $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
+        $useCase->handle($unitId);
+
+        $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['state']);
+        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
+
+        $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->findById($unitId);
         $this->assertTrue(empty($spisokUnitovReadModel));
+
+        $prozesUnitaRepo = self::$container->get(ProzesUnitaRepository::class);
+        /** @var $prozesUnitaRepo ProzesUnitaRepository*/
+        $prozesi = $prozesUnitaRepo->poluchitProzesiPoIdUnita($unitId);
+
+        $this->assertEquals(2, count($prozesi));
     }
 }

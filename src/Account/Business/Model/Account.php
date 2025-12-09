@@ -18,6 +18,7 @@ use App\Account\Business\Model\Event\NicknameWasChanged;
 use App\Account\Business\Model\Event\NicknameWasChangedByAdmin;
 use App\Account\Business\Model\Event\PasswordWasChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
+use App\Account\Business\Model\Event\RoleWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use App\Utils\Exception\TranslatorKeyword;
 use EventSauce\EventSourcing\AggregateRoot;
@@ -174,6 +175,22 @@ final class Account implements AggregateRoot
     private function applyNicknameWasChangedByAdmin(NicknameWasChangedByAdmin $fact): void
     {
         $this->nickname = new Nickname($fact->newNickname);
+    }
+
+    public function changeRoleByAdmin(string $newRole): void
+    {
+        $this->checkSystemRole();
+
+        if ($this->role->value === $newRole) {
+            throw new \RuntimeException('account.old_role_equal_new_role');
+        }
+
+        $this->recordThat(new RoleWasChangedByAdmin($this->accountId->toString(), $newRole));
+    }
+
+    private function applyRoleWasChangedByAdmin(RoleWasChangedByAdmin $fact): void
+    {
+        $this->role = Role::from($fact->newRole);
     }
 
     public function blockByAdmin(?string $reason): void

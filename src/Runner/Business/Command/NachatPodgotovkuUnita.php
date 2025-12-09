@@ -2,6 +2,8 @@
 
 namespace App\Runner\Business\Command;
 
+use App\Runner\Business\Command\NachatPodgotovkuUnita\ContainerSettings;
+
 final class NachatPodgotovkuUnita
 {
     public function __construct(
@@ -13,6 +15,7 @@ final class NachatPodgotovkuUnita
         public readonly array $Commands,
         public readonly array $Variables,
         public readonly array $Caches,
+        public readonly ContainerSettings $ContainerSettings
     )
     {
     }

@@ -26,14 +26,13 @@ final class AccountAdapter implements UnitmanSecurityService
     {
         $userFromAccountContext = $this->accountApi->getCurrentUser();
 
-        return new Account($userFromAccountContext->getId(), $userFromAccountContext->getEmail());
+        return new Account($userFromAccountContext->getId(), $userFromAccountContext->getEmail(), $userFromAccountContext->hasSystemRole());
     }
 
     public function getUserById(string $userId): Account
     {
         $userFromAccountContext = $this->accountApi->getUserById($userId);
-
-        return new Account($userFromAccountContext->getId(), $userFromAccountContext->getEmail());
+        return new Account($userFromAccountContext->getId(), $userFromAccountContext->getEmail(), $userFromAccountContext->hasSystemRole());
     }
 
     public function getEmailOrNicknameByUserId(string $id): string

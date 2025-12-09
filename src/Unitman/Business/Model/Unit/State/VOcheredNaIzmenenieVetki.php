@@ -25,7 +25,6 @@ final class VOcheredNaIzmenenieVetki extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatIzmeneniyaVetki
         ];
     }
 }

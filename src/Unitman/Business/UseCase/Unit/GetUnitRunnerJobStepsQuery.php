@@ -2,18 +2,18 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Unitman\Business\Command\Unit\GetUnitRunnerJobSteps;
-use App\Unitman\Business\Port\Unit\CanGetUnitRunnerJobs;
-use App\Unitman\Business\ReadModel\Unit\UnitRunnerJob;
+use App\Unitman\Business\Command\Unit\PoluchitShagiZadachiUnita;
+use App\Unitman\Business\Port\Unit\UmeetPoluchatProzesiUnitaPoId;
+use App\Unitman\Business\ReadModel\Unit\ProzesUnita;
 
 final class GetUnitRunnerJobStepsQuery
 {
-    public function __construct(private CanGetUnitRunnerJobs $canGetUnitRunnerJobs)
+    public function __construct(private UmeetPoluchatProzesiUnitaPoId $canGetUnitRunnerJobs)
     {
     }
 
-    function handle(GetUnitRunnerJobSteps $command): UnitRunnerJob
+    function handle(PoluchitShagiZadachiUnita $command): array
     {
-        return $this->canGetUnitRunnerJobs->getStepsByJobId($command->id);
+        return $this->canGetUnitRunnerJobs->poluchitShagiZadachiPoId($command->prozesId, $command->zadachaId);
     }
 }

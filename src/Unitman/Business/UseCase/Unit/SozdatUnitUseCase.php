@@ -7,12 +7,9 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
-use App\Unitman\Business\Port\Unit\UmeetSobiratUnit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Utils\Exception\TranslatorKeyword;
-use Symfony\Component\Clock\Clock;
-use Symfony\Component\Clock\ClockInterface;
 
 final class SozdatUnitUseCase
 {
@@ -22,7 +19,6 @@ final class SozdatUnitUseCase
         private UnitmanSecurityService $securityService,
         private CanGeneateGuid         $uuidGenerator,
         private UnitRepository         $unitRepository,
-        private UmeetSobiratUnit $umeetSobiratUnit
     )
     {
     }
@@ -41,17 +37,9 @@ final class SozdatUnitUseCase
 
         $userId = $this->securityService->getCurrentUserId();
 
-        if (!$project->esliRazreshenoSobiratUniti($userId)) {
-            throw new \DomainException('unit.ne_hvataet_prav');
-        }
-
-        $unit = Unit::sozdatUnit($this->uuidGenerator->makeGuid(), $userId, $command);
-        $this->unitRepository->save($unit);
-
-        $jobId = $this->umeetSobiratUnit->sobratUnitOtLizaSystemi($unit->getId());
-
-        $unit = $this->unitRepository->getById($unit->getId());
-        $unit->nachatAvtosborku($jobId);
+        $unitId = $this->uuidGenerator->makeGuid();
+        $prozesId = $this->uuidGenerator->makeGuid();
+        $unit = Unit::sozdatUnit($unitId, $userId, $prozesId, $command);
         $this->unitRepository->save($unit);
 
         return $unit->getId();

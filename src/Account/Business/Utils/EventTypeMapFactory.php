@@ -13,6 +13,7 @@ use App\Account\Business\Model\Event\NicknameWasChanged;
 use App\Account\Business\Model\Event\NicknameWasChangedByAdmin;
 use App\Account\Business\Model\Event\PasswordWasChanged;
 use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
+use App\Account\Business\Model\Event\RoleWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
 
@@ -29,6 +30,7 @@ final class EventTypeMapFactory
             AccountWasUnblockedByAdmin::class => AccountEventTypeEnum::AccountWasUnblockedByAdmin,
             EmailWasChangedByAdmin::class => AccountEventTypeEnum::EmailWasChangedByAdmin,
             NicknameWasChangedByAdmin::class => AccountEventTypeEnum::NicknameWasChangedByAdmin,
+            RoleWasChangedByAdmin::class => AccountEventTypeEnum::RoleWasChangedByAdmin,
             PasswordWasChangedByAdmin::class => AccountEventTypeEnum::PasswordWasChangedByAdmin,
             PasswordWasChanged::class => AccountEventTypeEnum::PasswordWasChanged,
             NicknameWasChanged::class => AccountEventTypeEnum::NicknameWasChanged,

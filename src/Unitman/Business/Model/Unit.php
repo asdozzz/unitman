@@ -2,32 +2,25 @@
 
 namespace App\Unitman\Business\Model;
 
-use App\Unitman\Business\Command\Unit\IzmenitVetkuUnita;
-use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
-use App\Unitman\Business\Command\Unit\UstanovitOshibkuObnovleniyaUnitaPosleZapuska;
 use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
-use App\Unitman\Business\Model\Unit\Event\AvtosborkaUnitaNachalas;
-use App\Unitman\Business\Model\Unit\Event\IzmenenieVetkiNachalos;
+use App\Unitman\Business\Model\Unit\ContainerSettings;
+use App\Unitman\Business\Model\Unit\Event\DeistviePrikreplenoKJobe;
+use App\Unitman\Business\Model\Unit\Event\DobavlenProzesVUnit;
 use App\Unitman\Business\Model\Unit\Event\KodVetkiIzmenilsyaVHranilishe;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
-use App\Unitman\Business\Model\Unit\Event\ObnovlenieKodaUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ObnovlenieUnitaNachalos;
-use App\Unitman\Business\Model\Unit\Event\OshibkaAvtosborkiUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaDeistviyaUstanovlena;
-use App\Unitman\Business\Model\Unit\Event\OshibkaIzmeneniyaVetkiUnitaUstanovlena;
-use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaObnovleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSborkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSbrosaPodgotovkiUnitaUstanovlena;
-use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaUdaleniyaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaZapuskaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
@@ -36,14 +29,11 @@ use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
-use App\Unitman\Business\Model\Unit\Event\StatistikaPoKonteineruObnovlena;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
-use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaPosleZapuskaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSbroshenDoSostoyaniyaSborki;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
-use App\Unitman\Business\Model\Unit\Event\UspehIzmeneniyaVetkiUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehObnovleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehOstanovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehPodgotovkiUnitaUstanovlen;
@@ -52,8 +42,12 @@ use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
+use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
+use App\Unitman\Business\Model\Unit\Event\ZadachiDobavleniVProzesUnita;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\State\AbstractState;
 use App\Unitman\Business\Model\Unit\State\OshibkaObnovleniya;
 use App\Unitman\Business\Model\Unit\State\OshibkaOstanovki;
@@ -76,18 +70,19 @@ use App\Unitman\Business\Model\Unit\State\VOcherediNaSbrosPodgotovki;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaUdalenie;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaVipolnenieDeistviya;
 use App\Unitman\Business\Model\Unit\State\VOcherediNaZapusk;
-use App\Unitman\Business\Model\Unit\State\VOcheredNaIzmenenieVetki;
 use App\Unitman\Business\Model\Unit\State\Zapushen;
 use App\Unitman\Business\Model\Unit\StatistikaKonteinera;
 use App\Unitman\Business\Model\Unit\UnitBranch;
 use App\Unitman\Business\Model\Unit\UnitId;
 use App\Unitman\Business\Model\Unit\UnitName;
+use App\Unitman\Business\Model\Unit\UnitProcess;
 use App\Unitman\Business\Model\Unit\UnitProject;
 use App\Unitman\Business\Model\Unit\VariableValue;
 use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 use Exception;
+use Ramsey\Uuid\Uuid;
 
 /**
  * @template-implements AggregateRoot<UnitId>
@@ -102,6 +97,8 @@ final class Unit implements AggregateRoot
     private ?UnitProject $project;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?string $authorId;
+    /** @psalm-suppress PropertyNotSetInConstructor*/
+    private ?ContainerSettings $containerSettings;
 
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private ?AbstractState $state;
@@ -120,16 +117,8 @@ final class Unit implements AggregateRoot
     private ?RunnerJob $zapusk = null;
     private ?RunnerJob $ostanovka = null;
     private ?RunnerJob $udalenie = null;
-
     private ?RunnerJob $vipolnenieDeistviya = null;
 
-    private ?RunnerJob $izmenenieVetki = null;
-
-    private ?string $obnovleniePosleZapuska = null;
-
-    private ?string $udaleniePosleZapuska = null;
-
-    private ?string $avtosborkaUnitaSystemoi = null;
 
     private bool $isDeleted = false;
 
@@ -148,6 +137,13 @@ final class Unit implements AggregateRoot
      * */
     use AggregateRootBehaviour;
 
+    /**
+     * @var Unit\UnitProcess[]
+     * */
+    private array $prozesi = [];
+
+    private array $mapActions = [];
+
     public function getId(): string
     {
         return $this->aggregateRootId->toString();
@@ -163,67 +159,29 @@ final class Unit implements AggregateRoot
         return !empty($this->sborka) && $this->sborka->isSuccess();
     }
 
-    function esliPoluchenResultatSborki(): bool
-    {
-        return !empty($this->sborka) && $this->sborka->isFinish();
-    }
-
-    function esliPoluchenResultatZapuska(): bool
-    {
-        return !empty($this->zapusk) && $this->zapusk->isFinish();
-    }
-
-    function esliPoluchenResultatOstanovki(): bool
-    {
-        return !empty($this->ostanovka) && $this->ostanovka->isFinish();
-    }
-
-    function esliPoluchenResultatIzmeneniyaVetki(): bool
-    {
-        return !empty($this->izmenenieVetki) && $this->izmenenieVetki->isFinish();
-    }
-    function esliPoluchenResultatUdaleniya(): bool
-    {
-        return !empty($this->udalenie) && $this->udalenie->isFinish();
-    }
-
-    function esliPoluchenResultatObnovleniya(): bool
-    {
-        return !empty($this->obnovlenie) && $this->obnovlenie->isFinish();
-    }
-
-    function esliPoluchenResultatPodgotovki(): bool
-    {
-        return !empty($this->podgotovka) && $this->podgotovka->isFinish();
-    }
-
-    function esliPoluchenResultatSbrosaPodgotovki(): bool
-    {
-        return !empty($this->sbrosPodgotovki) && $this->sbrosPodgotovki->isFinish();
-    }
-
     function esliPodgotovlen(): bool
     {
         return !empty($this->podgotovka) && $this->podgotovka->isSuccess();
     }
 
+    public function esliEstNeobrabotanieProzesi(): bool
+    {
+        foreach ($this->prozesi as $process) {
+            if (!$process->isFinish()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function isWaitResultFromRunner(): bool
     {
-        $props = [
-            'sborka',
-            'podgotovka',
-            'obnovlenie',
-            'sbrosPodgotovki',
-            'zapusk',
-            'ostanovka',
-            'udalenie',
-            'izmenenieVetki',
-            'vipolnenieDeistviya',
-        ];
-
-        foreach ($props as $prop) {
-            if (!empty($this->{$prop}) && !$this->{$prop}->isFinish()) {
-                return true;
+        foreach ($this->prozesi as $process) {
+            foreach ($process->jobs as $job) {
+                if ($job->isStart()) {
+                    return true;
+                }
             }
         }
 
@@ -232,7 +190,7 @@ final class Unit implements AggregateRoot
 
     public function esliRazreshenoUpravlyatUnitom(ProjectUser $projectUser): bool
     {
-        return $this->authorId === $projectUser->userId || $projectUser->userRole === ProjectUserRole::ADMIN || $this->unitSozdanSystemoi;
+        return true;
     }
 
     public function proveritZnacheniePeremenihDeistviya(string $actionId, array $values): void
@@ -242,11 +200,141 @@ final class Unit implements AggregateRoot
         $errs = $config->validateActionValues($actionId, $values);
 
         if (!empty($errs)) {
-            throw new \DomainException(join(',', $errs));
+            throw new DomainException(join(',', $errs));
         }
     }
 
-    public function vipolnitDeistvie(JobId $jobId,VipolnitDeistviye $command,int $unixtime): void
+
+    private function dobavitProzes(UnitProcess $process): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        $this->recordThat(new DobavlenProzesVUnit($this->getId(), $process->toArray()));
+    }
+
+    private function applyDobavlenProzesVUnit(DobavlenProzesVUnit $fact): void
+    {
+        $this->prozesi[] = UnitProcess::fromArray($fact->prozes);
+    }
+
+    function ustanovitZadachiDlyProzesa(string $prozesId, array $zadachi): void
+    {
+        $finded = $this->poluchitProzesPoId($prozesId);
+
+        $finded->dobavitZadachiVProzess($zadachi);
+        $this->recordThat(new ZadachiDobavleniVProzesUnita($this->getId(), $finded->toArray()));
+    }
+
+    private function applyZadachiDobavleniVProzesUnita(ZadachiDobavleniVProzesUnita $fact): void
+    {
+        $prozes = UnitProcess::fromArray($fact->process);
+        $this->obnovitProzes($prozes);
+    }
+
+    private function obnovitProzes(UnitProcess $updatedProcess): void
+    {
+        $newArray = [];
+        foreach ($this->prozesi as $process) {
+            if ($process->id === $updatedProcess->id) {
+                $newArray[] = $updatedProcess;
+            } else {
+                $newArray[] = $process;
+            }
+        }
+
+        $this->prozesi = $newArray;
+    }
+
+    private function poluchitProzesPoIdZadachi(string $jobId): UnitProcess
+    {
+        $result = null;
+        foreach ($this->prozesi as $prozes) {
+            if ($prozes->esliEstZadacha($jobId)) {
+                $result = $prozes;
+            }
+        }
+
+        if (empty($result)) {
+            throw new DomainException('unit.prozess.not_found_by_job_id');
+        }
+
+        return $result;
+    }
+
+    private function startProzes(string $jobId): void
+    {
+        foreach ($this->prozesi as $prozes) {
+            if ($prozes->esliEstZadacha($jobId)) {
+                $prozes->startJob($jobId);
+            }
+        }
+    }
+
+    private function getJobById(string $jobId): RunnerJob
+    {
+        $job = null;
+
+        foreach ($this->prozesi as $prozes) {
+            if ($prozes->esliEstZadacha($jobId)) {
+                $job = $prozes->findJob($jobId);
+            }
+        }
+
+        if (empty($job)) {
+            throw new \Exception('unit.job_not_found');
+        }
+
+        return $job;
+    }
+
+    private function ustanovitResultatZadachi(string $jobId, bool $success, array $steps): void
+    {
+        foreach ($this->prozesi as $prozes) {
+            if ($prozes->esliEstZadacha($jobId)) {
+                $prozes->ustanovitResultatZadachi($jobId, $success, array_map(fn(array $stepArr) => RunnerJobStep::fromArray($stepArr),$steps));
+                break;
+            }
+        }
+    }
+
+    private function provrkaNeobrabotanihProzesov(): void
+    {
+        if ($this->esliEstNeobrabotanieProzesi()) {
+            throw new DomainException('unit.wait_another_proccess');
+        }
+    }
+
+    public function dobavitProzesVipolneniyaDeistviya(string $userId, string $prozesId, VipolnitDeistviye $command): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        $this->provrkaNeobrabotanihProzesov();
+
+        $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::DEISTVIE);
+        $jobId = Uuid::uuid7()->toString();
+        $prozes->dobavitZadachiVProzess([
+            RunnerJob::make($jobId, RunnerJobType::DEISTVIE),
+        ]);
+        $this->dobavitProzes($prozes);
+        $this->recordThat(new DeistviePrikreplenoKJobe($this->getId(), $jobId, $command->actionId, $command->values));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyDeistviePrikreplenoKJobe(DeistviePrikreplenoKJobe $fact): void
+    {
+        $this->mapActions[$fact->jobId] = [
+            'actionId' => $fact->actionId,
+            'values' => $fact->values
+        ];
+    }
+
+    public function vipolnitDeistvie(string $jobId,int $unixtime): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
@@ -260,11 +348,10 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.unit_ne_zapushen');
         }
 
-        $this->proveritZnacheniePeremenihDeistviya($command->actionId, $command->values);
-
-
         $state = $this->newState(new VOcherediNaVipolnenieDeistviya());
-        $this->recordThat(new VipolnenieDeistviyaNachalos($this->getId(), (string) $jobId, $command->actionId, $command->values, $state->toArray($this), $unixtime));
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->startJob($jobId);
+        $this->recordThat(new VipolnenieDeistviyaNachalos($this->getId(), $jobId, $state->toArray($this), $unixtime, $prozes->toArray()));
     }
 
     /**
@@ -272,11 +359,13 @@ final class Unit implements AggregateRoot
      */
     private function applyVipolnenieDeistviyaNachalos(VipolnenieDeistviyaNachalos $fact): void
     {
-        $this->vipolnenieDeistviya = new RunnerJob($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->vipolnenieDeistviya = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitUspehDeistviya(array $steps): void
+    public function ustanovitUspehDeistviya(string $jobId, array $steps): void
     {
         if (empty($this->vipolnenieDeistviya)) {
             throw new DomainException('unit.vipolnenieDeistviya_ne_nachalas');
@@ -287,7 +376,9 @@ final class Unit implements AggregateRoot
         }
 
         $this->state = $this->newState(new Zapushen());
-        $this->recordThat(new UspehDeistviyaUstanovlen($this->getId(), $steps, $this->state->toArray($this)));
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
+        $this->recordThat(new UspehDeistviyaUstanovlen($this->getId(), $jobId, $steps, $this->state->toArray($this), $prozes->toArray()));
     }
 
     /**
@@ -295,11 +386,13 @@ final class Unit implements AggregateRoot
      */
     private function applyUspehDeistviyaUstanovlen(UspehDeistviyaUstanovlen $fact): void
     {
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->vipolnenieDeistviya = $this->vipolnenieDeistviya->ustanovitUspeh($fact->steps);
+        $this->vipolnenieDeistviya = $this->getJobById($fact->jobId);
     }
 
-    public function ustanovitOshibkuDeistviya(array $steps): void
+    public function ustanovitOshibkuDeistviya(string $jobId, array $steps): void
     {
         if (empty($this->vipolnenieDeistviya)) {
             throw new DomainException('unit.vipolnenieDeistviya_ne_nachalas');
@@ -310,7 +403,9 @@ final class Unit implements AggregateRoot
         }
 
         $this->state = $this->newState(new Zapushen());
-        $this->recordThat(new OshibkaDeistviyaUstanovlena($this->getId(), $steps, $this->state->toArray($this)));
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
+        $this->recordThat(new OshibkaDeistviyaUstanovlena($this->getId(), $jobId, $steps, $this->state->toArray($this), $prozes->toArray()));
     }
 
     /**
@@ -318,11 +413,13 @@ final class Unit implements AggregateRoot
      */
     private function applyOshibkaDeistviyaUstanovlena(OshibkaDeistviyaUstanovlena $fact): void
     {
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->vipolnenieDeistviya = $this->vipolnenieDeistviya->ustanovitOshibku($fact->steps);
+        $this->vipolnenieDeistviya = $this->getJobById($fact->jobId);
     }
 
-    public static function sozdatUnit(string $id, string $authorId, SozdatUnit $command): self
+    public static function sozdatUnit(string $id, string $authorId, string $prozesId,SozdatUnit $command): self
     {
         if (empty($command->projectId)) {
             throw new DomainException('unit.projectId_is_empty');
@@ -340,7 +437,9 @@ final class Unit implements AggregateRoot
             } catch (\Exception) {
             }
         }
-        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $peremenie));
+        ContainerSettings::validateMemory($command->memoryLimit);
+        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $peremenie, $command->memoryLimit));
+        $unit->dobavitProzesSborki($authorId, $prozesId);
         return $unit;
     }
 
@@ -357,6 +456,8 @@ final class Unit implements AggregateRoot
         $this->variableValues = array_map(function (array $item) {
             return new VariableValue($item['id'], $item['value'], $item['type']);
         }, $fact->values);
+        $this->containerSettings = new ContainerSettings($fact->memoryLimit);
+
     }
 
     public static function sozdatUnitSystemoi(string $id, Account $account, SozdatUnit $command): self
@@ -367,9 +468,10 @@ final class Unit implements AggregateRoot
         if (!$account->isSystemRole) {
             throw new DomainException('unit.author_must_have_system_role');
         }
+        ContainerSettings::validateMemory($command->memoryLimit);
         $unit = new self(UnitId::fromString($id));
         $state = new Sozdan();
-        $unit->recordThat(new UnitSozdanSystemoi($id, $account->id, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit)));
+        $unit->recordThat(new UnitSozdanSystemoi($id, $account->id, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $command->memoryLimit));
         return $unit;
     }
 
@@ -384,6 +486,7 @@ final class Unit implements AggregateRoot
         $this->branch = new UnitBranch($fact->branch);
         $this->authorId = $fact->authorId;
         $this->unitSozdanSystemoi = true;
+        $this->containerSettings = new ContainerSettings($fact->memoryLimit);
     }
 
     /**
@@ -397,40 +500,12 @@ final class Unit implements AggregateRoot
         $typeMap = $config->getVariableTypeMap();
         foreach ($values as $id => $value) {
             if (empty($typeMap[$id])) {
-                throw new \DomainException('unit.config.type_for_variable_not_found');
+                throw new DomainException('unit.config.type_for_variable_not_found');
             }
             $tmpVariables[] = new VariableValue($id, $value, $typeMap[$id]);
         }
         return $tmpVariables;
     }
-
-    /**
-     * @param string $newBranch
-     * @return void
-     */
-    public function validateNewBranch(ProjectUser $projectUser, string $newBranch): void
-    {
-        $this->proverkaPrav($projectUser);
-
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if (!$this->state || $this->state->getCode() !== Sobran::CODE) {
-            throw new DomainException('unit.allow_after_build');
-        }
-
-        if (!$this->branch) {
-            throw new DomainException('unit.old_branch_is_empty');
-        }
-
-        $this->branch->validateNewBranch($newBranch);
-    }
-
 
     private function newState(AbstractState $state): AbstractState
     {
@@ -440,8 +515,10 @@ final class Unit implements AggregateRoot
         return $this->state->newState($state);
     }
 
-    public function nachatSborkuUnita(JobId $jobId, int $unixtime): void
+    public function dobavitProzesSborki(string $userId, string $prozesId): void
     {
+        $this->provrkaNeobrabotanihProzesov();
+
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
         }
@@ -449,8 +526,22 @@ final class Unit implements AggregateRoot
         if (!empty($this->sborka) && $this->sborka->isSuccess()) {
             throw new DomainException('unit.uge_sobran');
         }
+
+        $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::SBORKA);
+        $prozes->dobavitZadachiVProzess([
+            RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::SBORKA),
+            RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::PODGOTOVKA),
+            RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::ZAPUSK),
+        ]);
+        $this->dobavitProzes($prozes);
+    }
+
+    public function nachatSborkuUnita(string $jobId, int $unixtime): void
+    {
         $state = $this->newState(new VOcherediNaSborku());
-        $this->recordThat(new SborkaUnitNachalas($this->getId(), (string) $jobId, $state->toArray($this), $unixtime));
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->startJob($jobId);
+        $this->recordThat(new SborkaUnitNachalas($this->getId(), $jobId, $state->toArray($this), $unixtime, $prozes->toArray()));
     }
 
     /**
@@ -458,23 +549,20 @@ final class Unit implements AggregateRoot
      */
     private function applySborkaUnitNachalas(SborkaUnitNachalas $fact): void
     {
-        $this->sborka = RunnerJob::start($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->sborka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->unixtimePoslednegoObnovleniyaKodaUnita = $fact->unixtime ?? time();
-        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = $fact->unixtime ?? time();
+        $this->unixtimePoslednegoObnovleniyaKodaUnita = $fact->unixtime;
+        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = $fact->unixtime;
     }
 
-    public function ustanovitOshibkuSborki(array $steps): void
+    public function ustanovitOshibkuSborki(string $jobId, array $steps): void
     {
-        if (empty($this->sborka)) {
-            throw new DomainException('unit.sborka_ne_nachalas');
-        }
-
-        if ($this->sborka->isFinish()) {
-            throw new DomainException('unit.resultat_sborki_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
         $state = $this->newState(new OshibkaSborki());
-        $this->recordThat(new OshibkaSborkiUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new OshibkaSborkiUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
 
     /**
@@ -482,24 +570,20 @@ final class Unit implements AggregateRoot
      */
     private function applyOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void
     {
-        $this->sborka = $this->sborka->ustanovitOshibku($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->sborka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->avtosborkaUnitaSystemoi = null;
     }
 
-    public function ustanovitUspehSborki(array $steps, array $configUnita): void
+    public function ustanovitUspehSborki(string $jobId,array $steps, array $configUnita): void
     {
         //TODO вынести создание объекта конфига наружу
-        if (empty($this->sborka)) {
-            throw new DomainException('unit.sborka_ne_nachalas');
-        }
-
-        if ($this->sborka->isFinish()) {
-            throw new DomainException('unit.resultat_sborki_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
 
         $state = $this->newState(new Sobran());
-        $this->recordThat(new UspehSborkiUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new UspehSborkiUnitaUstanovlen($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
 
         $errs = $this->validateConfig($configUnita);
 
@@ -514,7 +598,9 @@ final class Unit implements AggregateRoot
      */
     private function applyUspehSborkiUnitaUstanovlen(UspehSborkiUnitaUstanovlen $fact): void
     {
-        $this->sborka = $this->sborka->ustanovitUspeh($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->sborka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -536,73 +622,6 @@ final class Unit implements AggregateRoot
         }
 
         return $errors;
-    }
-
-    public function nachatIzmenenieVetkiUnita(JobId $jobId, ProjectUser $projectUser, string $newBranch): void
-    {
-        $this->validateNewBranch($projectUser, $newBranch);
-
-        $state = $this->newState(new VOcheredNaIzmenenieVetki());
-        $this->recordThat(new IzmenenieVetkiNachalos($this->getId(), (string)$jobId, $newBranch, $state->toArray($this)));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyIzmenenieVetkiNachalos(IzmenenieVetkiNachalos $fact): void
-    {
-        $this->izmenenieVetki = RunnerJob::start($fact->jobId);
-        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->newBranch = new UnitBranch($fact->newBranch);
-        $this->unixtimePoslednegoObnovleniyaKodaUnita = null;
-        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = null;
-    }
-
-    public function ustanovitOshibkuIzmeneniyaVetki(array $steps): void
-    {
-        if (empty($this->izmenenieVetki)) {
-            throw new DomainException('unit.izmenenieVetki_ne_nachalas');
-        }
-
-        if ($this->izmenenieVetki->isFinish()) {
-            throw new DomainException('unit.resultat_izmenenieVetki_uge_ustanovlen');
-        }
-        $state = $this->newState(new Sobran());
-        $this->recordThat(new OshibkaIzmeneniyaVetkiUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyOshibkaIzmeneniyaVetkiUnitaUstanovlena(OshibkaIzmeneniyaVetkiUnitaUstanovlena $fact): void
-    {
-        $this->izmenenieVetki = $this->izmenenieVetki->ustanovitOshibku($fact->steps);
-        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->newBranch = null;
-    }
-
-    public function ustanovitUspehIzmeneniyaVetki(array $steps): void
-    {
-        if (empty($this->izmenenieVetki)) {
-            throw new DomainException('unit.izmenenieVetki_ne_nachalas');
-        }
-
-        if ($this->izmenenieVetki->isFinish()) {
-            throw new DomainException('unit.resultat_izmenenieVetki_uge_ustanovlen');
-        }
-
-        $state = $this->newState(new Sobran());
-        $this->recordThat(new UspehIzmeneniyaVetkiUstanovlen($this->getId(), $steps, $state->toArray($this), (string)$this->newBranch));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyUspehIzmeneniyaVetkiUstanovlen(UspehIzmeneniyaVetkiUstanovlen $fact): void
-    {
-        $this->izmenenieVetki = $this->izmenenieVetki->ustanovitUspeh($fact->steps);
-        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->branch = new UnitBranch($fact->newBranch);
     }
 
     public function zapolnitPeremenie(array $values): void
@@ -659,11 +678,27 @@ final class Unit implements AggregateRoot
         return true;
     }
 
-    public function nachatPodgotovkuUnita(JobId $jobId): void
+    public function dobavitProzesPodgotovki(string $userId, string $prozesId): void
+    {
+        $this->provrkaNeobrabotanihProzesov();
+        $this->validaziyaPeredPodgotovkoi();
+        $prozes = UnitProcess::make($prozesId, $userId,UnitProcess\UnitProcessType::PODGOTOVKA);
+        $prozes->dobavitZadachiVProzess([
+            RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::PODGOTOVKA),
+        ]);
+        $this->dobavitProzes($prozes);
+    }
+
+    public function nachatPodgotovkuUnita(string $jobId): void
     {
         $this->validaziyaPeredPodgotovkoi();
+
         $state = $this->newState(new VOcherediNaPodgotovku());
-        $this->recordThat(new PodgotovkaUnitaNachalas($this->getId(), (string) $jobId, $state->toArray($this)));
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        /*echo "AAAAAAAA:".$jobId;
+        die("<pre>" . print_r($prozes->jobs, true) . "</pre>");*/
+        $prozes->startJob($jobId);
+        $this->recordThat(new PodgotovkaUnitaNachalas($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
 
     /**
@@ -671,22 +706,18 @@ final class Unit implements AggregateRoot
      */
     private function applyPodgotovkaUnitaNachalas(PodgotovkaUnitaNachalas $fact): void
     {
-        $this->podgotovka = RunnerJob::start($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->podgotovka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuPodgotovki(array $steps): void
+    public function ustanovitOshibkuPodgotovki(string $jobId, array $steps): void
     {
-        if (empty($this->podgotovka)) {
-            throw new DomainException('unit.podgotovka_ne_nachalas');
-        }
-
-        if ($this->podgotovka->isFinish()) {
-            throw new DomainException('unit.resultat_podgotovki_uge_ustanovlen');
-        }
-
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
         $state = $this->newState(new OshibkaPodgotovki());
-        $this->recordThat(new OshibkaPodgotovkiUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new OshibkaPodgotovkiUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
 
     /**
@@ -694,24 +725,18 @@ final class Unit implements AggregateRoot
      */
     private function applyOshibkaPodgotovkiUnitaUstanovlena(OshibkaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $this->podgotovka = $this->podgotovka->ustanovitOshibku($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->podgotovka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->obnovleniePosleZapuska = null;
-        $this->avtosborkaUnitaSystemoi = null;
     }
 
-    public function ustanovitUspehPodgotovki(array $steps): void
+    public function ustanovitUspehPodgotovki(string $jobId, array $steps): void
     {
-        if (empty($this->podgotovka)) {
-            throw new DomainException('unit.podgotovka_ne_nachalas');
-        }
-
-        if ($this->podgotovka->isFinish()) {
-            throw new DomainException('unit.resultat_podgotovki_uge_ustanovlen');
-        }
-
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
         $state = $this->newState(new Podgotovlen());
-        $this->recordThat(new UspehPodgotovkiUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new UspehPodgotovkiUnitaUstanovlen($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
 
     /**
@@ -719,42 +744,47 @@ final class Unit implements AggregateRoot
      */
     private function applyUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
     {
-        $this->podgotovka = $this->podgotovka->ustanovitUspeh($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->podgotovka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    //-----Стата
-
-    public function onbovitStatistikuKonteinera(ObnovitStatistikuPoKontaineruUnita $command): void
-    {
-        $this->recordThat(
-            new StatistikaPoKonteineruObnovlena(
-                id: $this->getId(),
-                cpuPercent: $command->cpuPercent,
-                memoryPercent: $command->memoryPercent,
-                memoryUsage: $command->memoryUsage,
-                netIO: $command->netIO
-            )
-        );
-    }
-
-    private function applyStatistikaPoKonteineruObnovlena(StatistikaPoKonteineruObnovlena $fact): void
-    {
-        $this->statistikaKonteinera = new StatistikaKonteinera(
-            cpuPercent: $fact->cpuPercent,
-            memoryPercent: $fact->memoryPercent,
-            memoryUsage: $fact->memoryUsage,
-            netIO: $fact->netIO
-        );
-    }
-
     //---------Обновление
-    public function nachatObnovlenieUnita(JobId $jobId, int $unixtime): void
+    public function dobavitProzesObnovleniya(string $userId, string $prozesId, bool $neproveryatProzesi = false, bool $bistrayaProverka = false): void
+    {
+        if (!$neproveryatProzesi) {
+            $this->provrkaNeobrabotanihProzesov();
+        }
+
+        $this->proverkaVozmognostiObnovleniyaUnita();
+        $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::OBNOVLENIE);
+        $zadachi = [];
+        if ($this->esliZapushen()) {
+            $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::OSTANOVKA);
+        }
+        if ($this->esliPodgotovlen() && !$bistrayaProverka) {
+            $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::SBROS_PODGOTOVKI);
+        }
+        $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::OBNOVLENIE);
+
+        if (!$bistrayaProverka) {
+            $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::PODGOTOVKA);
+        }
+
+        $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::ZAPUSK);
+
+        $prozes->dobavitZadachiVProzess($zadachi);
+        $this->dobavitProzes($prozes);
+    }
+
+    public function nachatObnovlenieUnita(string $jobId, int $unixtime): void
     {
         $this->proverkaVozmognostiObnovleniyaUnita();
-
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->startJob($jobId);
         $state = $this->newState(new VOcherediNaObnovlenie());
-        $this->recordThat(new ObnovlenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this), $unixtime));
+        $this->recordThat(new ObnovlenieUnitaNachalos($this->getId(), $jobId, $state->toArray($this), $unixtime, $prozes->toArray()));
     }
 
     /**
@@ -762,152 +792,36 @@ final class Unit implements AggregateRoot
      */
     private function applyObnovlenieUnitaNachalos(ObnovlenieUnitaNachalos $fact): void
     {
-        $this->obnovlenie = RunnerJob::start($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->obnovlenie = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->unixtimePoslednegoObnovleniyaKodaUnita = $fact->unixtime ?? time();
-        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = $fact->unixtime ?? time();
+        $this->unixtimePoslednegoObnovleniyaKodaUnita = $fact->unixtime;
+        $this->unixtimePoslednegoObnovleniyaKodaVHranilishe = $fact->unixtime;
     }
 
-    public function nachatObnovlenieUnitaPosleZapuska(JobId $jobId): void
+    public function ustanovitOshibkuObnovleniya(string $jobId, array $steps): void
     {
-        $this->proverkaVozmognostiObnovleniyaPosleZapuska();
-
-        $this->recordThat(new ObnovlenieKodaUnitaPosleZapuskaNachalos($this->getId(), (string) $jobId));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyObnovlenieKodaUnitaPosleZapuskaNachalos(ObnovlenieKodaUnitaPosleZapuskaNachalos $fact): void
-    {
-        $this->obnovleniePosleZapuska = $fact->jobId;
-    }
-
-
-    public function ustanovitOshibkuObnovleniyaPosleZapuska(string $error): void
-    {
-        $this->recordThat(new OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena($this->getId(), $error));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyOshibkaObnovleniyaUnitaPosleZapuskaUstanovlena(OshibkaObnovleniyaUnitaPosleZapuskaUstanovlena $fact): void
-    {
-        $this->obnovleniePosleZapuska = null;
-    }
-
-    public function nachatAvtosborku(JobId $jobId): void
-    {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if (!empty($this->avtosborkaUnitaSystemoi)) {
-            throw new DomainException('unit.avtosborka_uge_zapusheno');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        $this->recordThat(new AvtosborkaUnitaNachalas($this->getId(), (string) $jobId));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyAvtosborkaUnitaNachalas(AvtosborkaUnitaNachalas $fact): void
-    {
-        $this->avtosborkaUnitaSystemoi = $fact->jobId;
-    }
-
-    public function ustanovitOshibkuAvtosborki(string $error): void
-    {
-        $this->recordThat(new OshibkaAvtosborkiUstanovlena($this->getId(), $error));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyOshibkaAvtosborkiUstanovlena(OshibkaAvtosborkiUstanovlena $fact): void
-    {
-        $this->avtosborkaUnitaSystemoi = null;
-    }
-
-
-    public function nachatUdalenieUnitaPosleZapuska(JobId $jobId): void
-    {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if (!empty($this->udaleniePosleZapuska)) {
-            throw new DomainException('unit.udalenie_uge_zapusheno');
-        }
-
-        if (!$this->esliZapushen()) {
-            throw new DomainException('unit.unit_ne_zapushen');
-        }
-
-        $this->recordThat(new UdalenieUnitaPosleZapuskaNachalos($this->getId(), (string) $jobId));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyUdalenieUnitaPosleZapuskaNachalos(UdalenieUnitaPosleZapuskaNachalos $fact): void
-    {
-        $this->udaleniePosleZapuska = $fact->jobId;
-    }
-
-
-    public function ustanovitOshibkaUdaleniyaUnitaPosleZapuska(string $error): void
-    {
-        $this->recordThat(new OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena($this->getId(), $error));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyOshibkaUdaleniyaUnitaPosleZapuskaUstanovlena(OshibkaUdaleniyaUnitaPosleZapuskaUstanovlena $fact): void
-    {
-        $this->udaleniePosleZapuska = null;
-    }
-
-    public function ustanovitOshibkuObnovleniya(array $steps): void
-    {
-        if (empty($this->obnovlenie)) {
-            throw new DomainException('unit.obnovlenie_ne_nachalas');
-        }
-
-        if ($this->obnovlenie->isFinish()) {
-            throw new DomainException('unit.resultat_obnovleniya_uge_ustanovlen');
-        }
-
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
         $state = $this->newState(new OshibkaObnovleniya());
-        $this->recordThat(new OshibkaObnovleniyaUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new OshibkaObnovleniyaUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyOshibkaObnovleniyaUnitaUstanovlena(OshibkaObnovleniyaUnitaUstanovlena $fact): void
     {
-        $this->obnovlenie = $this->obnovlenie->ustanovitOshibku($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->obnovlenie = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->obnovleniePosleZapuska = null;
     }
 
-    public function ustanovitUspehObnovleniya(array $steps, array $configUnita): void
+    public function ustanovitUspehObnovleniya(string $jobId, array $steps, array $configUnita): void
     {
-        //TODO вынести создание объекта конфига наружу
-        if (empty($this->obnovlenie)) {
-            throw new DomainException('unit.obnovlenie_ne_nachalas');
-        }
-
-        if ($this->obnovlenie->isFinish()) {
-            throw new DomainException('unit.resultat_obnovleniya_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
 
         if ($this->esliZapushen()) {
             $state = $this->newState(new Zapushen());
@@ -917,7 +831,7 @@ final class Unit implements AggregateRoot
             $state = $this->newState(new Sobran());
         }
 
-        $this->recordThat(new UspehObnovleniyaUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new UspehObnovleniyaUnitaUstanovlen($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
 
         $errs = $this->validateConfig($configUnita);
 
@@ -931,7 +845,9 @@ final class Unit implements AggregateRoot
      */
     private function applyUspehObnovleniyaUnitaUstanovlen(UspehObnovleniyaUnitaUstanovlen $fact): void
     {
-        $this->obnovlenie = $this->obnovlenie->ustanovitUspeh($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->obnovlenie = $this->getJobById($fact->jobId);
 
         if (!empty($fact->configUnita)) {
             $this->configUnita = ConfigUnita::fromArray($fact->configUnita);
@@ -941,12 +857,24 @@ final class Unit implements AggregateRoot
     }
 
     //----------Сброс подготовки
-    public function nachatSbrosPodgotovkiUnita(JobId $jobId): void
+    public function dobavitProzesSbrosaPodgotovki(string $userId, string $prozesId): void
+    {
+        $this->provrkaNeobrabotanihProzesov();
+        $this->validaziyaPeredSbrosomPodgotovkoi();
+        $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::SBROS_PODGOTOVKI);
+        $zadachi = [];
+        $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::SBROS_PODGOTOVKI);
+
+        $prozes->dobavitZadachiVProzess($zadachi);
+        $this->dobavitProzes($prozes);
+    }
+    public function nachatSbrosPodgotovkiUnita(string $jobId): void
     {
         $this->validaziyaPeredSbrosomPodgotovkoi();
-
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->startJob($jobId);
         $state = $this->newState(new VOcherediNaSbrosPodgotovki());
-        $this->recordThat(new SbrosPodgotovkiNachalsya($this->getId(), (string) $jobId, $state->toArray($this)));
+        $this->recordThat(new SbrosPodgotovkiNachalsya($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
 
     /**
@@ -954,117 +882,118 @@ final class Unit implements AggregateRoot
      */
     private function applySbrosPodgotovkiNachalsya(SbrosPodgotovkiNachalsya $fact): void
     {
-        $this->sbrosPodgotovki = RunnerJob::start($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->sbrosPodgotovki = $this->getJobById($fact->jobId);
 
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuSbrosaPodgotovki(array $steps): void
+    public function ustanovitOshibkuSbrosaPodgotovki(string $jobId, array $steps): void
     {
-        if (empty($this->sbrosPodgotovki)) {
-            throw new DomainException('unit.sbrosPodgotovki_ne_nachalas');
-        }
-
-        if ($this->sbrosPodgotovki->isFinish()) {
-            throw new DomainException('unit.resultat_sbrosPodgotovki_uge_ustanovlen');
-        }
-
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
         $state = $this->newState(new OshibkaSbrosaPodgotovki());
-        $this->recordThat(new OshibkaSbrosaPodgotovkiUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new OshibkaSbrosaPodgotovkiUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyOshibkaSbrosaPodgotovkiUnitaUstanovlena(OshibkaSbrosaPodgotovkiUnitaUstanovlena $fact): void
     {
-        $this->sbrosPodgotovki = $this->sbrosPodgotovki->ustanovitOshibku($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->sbrosPodgotovki = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->obnovleniePosleZapuska = null;
     }
 
-    public function ustanovitUspehSbrosaPodgotovki(array $steps): void
+    public function ustanovitUspehSbrosaPodgotovki(string $jobId, array $steps): void
     {
-        if (empty($this->sbrosPodgotovki)) {
-            throw new DomainException('unit.sbrosPodgotovki_ne_nachalas');
-        }
-
-        if ($this->sbrosPodgotovki->isFinish()) {
-            throw new DomainException('unit.resultat_sbrosPodgotovki_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
 
         $state = $this->newState(new Sobran());
-        $this->recordThat(new UspehSbrosaPodgotovkiUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new UspehSbrosaPodgotovkiUnitaUstanovlen($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUspehSbrosaPodgotovkiUnitaUstanovlen(UspehSbrosaPodgotovkiUnitaUstanovlen $fact): void
     {
-        $this->sbrosPodgotovki = $this->sbrosPodgotovki->ustanovitUspeh($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->sbrosPodgotovki = $this->getJobById($fact->jobId);
         $this->podgotovka = null;
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
     //---------Запуск
-    public function nachatZapuskUnita(JobId $jobId): void
+    public function dobavitProzesZapuska(string $userId, string $prozesId): void
     {
+        $this->provrkaNeobrabotanihProzesov();
         $this->validaziyaPeredZapuskom();
+        $prozes = UnitProcess::make($prozesId, $userId,UnitProcess\UnitProcessType::ZAPUSK);
+        $zadachi = [];
+        $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::ZAPUSK);
+
+        $prozes->dobavitZadachiVProzess($zadachi);
+        $this->dobavitProzes($prozes);
+    }
+    public function nachatZapuskUnita(string $jobId): void
+    {
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->startJob($jobId);
 
         $state = $this->newState(new VOcherediNaZapusk());
-        $this->recordThat(new ZapuskUnitNachalsya($this->getId(), (string) $jobId, $state->toArray($this)));
+        $this->recordThat(new ZapuskUnitNachalsya($this->getId(), $jobId, $state->toArray($this),$prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyZapuskUnitNachalsya(ZapuskUnitNachalsya $fact): void
     {
-        $this->zapusk = RunnerJob::start($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->zapusk = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->obnovleniePosleZapuska = null;
-        $this->avtosborkaUnitaSystemoi = null;
     }
 
-    public function ustanovitOshibkuZapuska(array $steps): void
+    public function ustanovitOshibkuZapuska(string $jobId, array $steps): void
     {
-        if (empty($this->zapusk)) {
-            throw new DomainException('unit.zapusk_ne_nachalas');
-        }
-
-        if ($this->zapusk->isFinish()) {
-            throw new DomainException('unit.resultat_zapusk_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
 
         $state = $this->newState(new OshibkaZapuska());
-        $this->recordThat(new OshibkaZapuskaUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new OshibkaZapuskaUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
+
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyOshibkaZapuskaUnitaUstanovlena(OshibkaZapuskaUnitaUstanovlena $fact): void
     {
-        $this->zapusk = $this->zapusk->ustanovitOshibku($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->zapusk = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitUspehZapuska(array $steps): void
+    public function ustanovitUspehZapuska(string $jobId,array $steps): void
     {
-        if (empty($this->zapusk)) {
-            throw new DomainException('unit.zapusk_ne_nachalas');
-        }
-
-        if ($this->zapusk->isFinish()) {
-            throw new DomainException('unit.resultat_zapusk_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
 
         $state = $this->newState(new Zapushen());
-        $this->recordThat(new UspehZapuskaUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new UspehZapuskaUnitaUstanovlen($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUspehZapuskaUnitaUstanovlen(UspehZapuskaUnitaUstanovlen $fact): void
     {
-        $this->zapusk = $this->zapusk->ustanovitUspeh($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->zapusk = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -1078,149 +1007,181 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.wait_runner');
         }
 
-        if (!$this->zapusk || !$this->zapusk->isSuccess()) {
+        if (!$this->esliZapushen()) {
             throw new DomainException('unit.ne_zapushen');
         }
     }
     //---------Остановка
-    public function nachatOstanovkuUnita(JobId $jobId): void
+    public function dobavitProzesOstanovki(string $userId, string $prozesId): void
+    {
+        $this->provrkaNeobrabotanihProzesov();
+        $this->validaziyaPeredOstanovkoi();
+        $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::OSTANOVKA);
+        $zadachi = [];
+        $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::OSTANOVKA);
+
+        $prozes->dobavitZadachiVProzess($zadachi);
+        $this->dobavitProzes($prozes);
+    }
+    public function nachatOstanovkuUnita(string $jobId): void
     {
         $this->validaziyaPeredOstanovkoi();
 
-        $this->validateConfigValues();
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->startJob($jobId);
 
         $state = $this->newState(new VOcherediNaOstanovku());
-        $this->recordThat(new OstanovkaUnitaNachalas($this->getId(),(string) $jobId, $state->toArray($this)));
+        $this->recordThat(new OstanovkaUnitaNachalas($this->getId(),$jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyOstanovkaUnitaNachalas(OstanovkaUnitaNachalas $fact): void
     {
-        $this->ostanovka = RunnerJob::start($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->ostanovka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
-    public function ustanovitOshibkuOstanovki(array $steps): void
+    public function otmenitZadachu(\Throwable $e, string $jobId, int $unixtime): void
     {
-        if (empty($this->ostanovka)) {
-            throw new DomainException('unit.ostanovka_ne_nachalas');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->cancelJob($jobId, $e->getMessage());
+        $this->recordThat(new ZadachaUnitaOtmenena($this->getId(), $jobId, $unixtime, $prozes->toArray()));
+    }
 
-        if ($this->ostanovka->isFinish()) {
-            throw new DomainException('unit.resultat_ostanovka_uge_ustanovlen');
-        }
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyZadachaUnitaOtmenena(ZadachaUnitaOtmenena $fact): void
+    {
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+    }
+
+    public function ustanovitOshibkuOstanovki(string $jobId, array $steps): void
+    {
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
 
         $state = $this->newState(new OshibkaOstanovki());
-
-        $this->recordThat(new OshibkaOstanovkiUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new OshibkaOstanovkiUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyOshibkaOstanovkiUnitaUstanovlena(OshibkaOstanovkiUnitaUstanovlena $fact): void
     {
-        $this->ostanovka = $this->ostanovka->ustanovitOshibku($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->ostanovka = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->obnovleniePosleZapuska = null;
     }
 
-    public function ustanovitUspehOstanovki(array $steps): void
+    public function ustanovitUspehOstanovki(string $jobId, array $steps): void
     {
-        if (empty($this->ostanovka)) {
-            throw new DomainException('unit.ostanovka_ne_nachalas');
-        }
-
-        if ($this->ostanovka->isFinish()) {
-            throw new DomainException('unit.resultat_ostanovka_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
 
         $state = $this->newState(new Podgotovlen());
-        $this->recordThat(new UspehOstanovkiUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new UspehOstanovkiUnitaUstanovlen($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUspehOstanovkiUnitaUstanovlen(UspehOstanovkiUnitaUstanovlen $fact): void
     {
-        $this->ostanovka = $this->ostanovka->ustanovitUspeh($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->ostanovka = $this->getJobById($fact->jobId);
         $this->zapusk = null;
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
     //---------Удаление
-    public function nachatUdalenieUnita(JobId $jobId): void
+    public function dobavitProzesUdaleniya(string $userId, string $prozesId, bool $neproveryatProzesi = false): void
     {
+        if (!$neproveryatProzesi) {
+            $this->provrkaNeobrabotanihProzesov();
+        }
+
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
         }
 
+        $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::UDALENIE);
+        $zadachi = [];
+        if ($this->esliZapushen()) {
+            $zadachi[] = RunnerJob::make( Uuid::uuid7()->toString(), RunnerJobType::OSTANOVKA);
+        }
+        if ($this->esliPodgotovlen()) {
+            $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::SBROS_PODGOTOVKI);
+        }
+        $zadachi[] = RunnerJob::make(Uuid::uuid7()->toString(), RunnerJobType::UDALENIE);
+
+        $prozes->dobavitZadachiVProzess($zadachi);
+        $this->dobavitProzes($prozes);
+    }
+    public function nachatUdalenieUnita(string $jobId): void
+    {
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->startJob($jobId);
         $state = new VOcherediNaUdalenie();
-        $this->recordThat(new UdalenieUnitaNachalos($this->getId(), (string) $jobId, $state->toArray($this)));
+        $this->recordThat(new UdalenieUnitaNachalos($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUdalenieUnitaNachalos(UdalenieUnitaNachalos $fact): void
     {
-        $this->udalenie = RunnerJob::start($fact->jobId);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->udalenie = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->udaleniePosleZapuska = null;
     }
 
-    public function ustanovitOshibkuUdaleniya(array $steps): void
+    public function ustanovitOshibkuUdaleniya(string $jobId, array $steps): void
     {
-        if (empty($this->udalenie)) {
-            throw new DomainException('unit.udalenie_ne_nachalas');
-        }
-
-        if ($this->udalenie->isFinish()) {
-            throw new DomainException('unit.resultat_udaleniya_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, false, $steps);
 
         $state = $this->newState(new Sloman());
-        $this->recordThat(new OshibkaUdaleniyaUnitaUstanovlena($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new OshibkaUdaleniyaUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyOshibkaUdaleniyaUnitaUstanovlena(OshibkaUdaleniyaUnitaUstanovlena $fact): void
     {
-        $this->udalenie = $this->udalenie->ustanovitOshibku($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->udalenie = $this->getJobById($fact->jobId);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->udaleniePosleZapuska = null;
     }
 
-    public function ustanovitUspehUdaleniya(array $steps): void
+    public function ustanovitUspehUdaleniya(string $jobId, array $steps): void
     {
-        if (empty($this->udalenie)) {
-            throw new DomainException('unit.udalenie_ne_nachalas');
-        }
-
-        if ($this->udalenie->isFinish()) {
-            throw new DomainException('unit.resultat_udaleniya_uge_ustanovlen');
-        }
+        $prozes = $this->poluchitProzesPoIdZadachi($jobId);
+        $prozes->ustanovitResultatZadachi($jobId, true, $steps);
 
         $state = $this->newState(new Udalen());
-        $this->recordThat(new UspehUdaleniyaUnitaUstanovlen($this->getId(), $steps, $state->toArray($this)));
+        $this->recordThat(new UspehUdaleniyaUnitaUstanovlen($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
     /**
      * @psalm-suppress PossiblyNullReference
      */
     private function applyUspehUdaleniyaUnitaUstanovlen(UspehUdaleniyaUnitaUstanovlen $fact): void
     {
-        $this->udalenie = $this->udalenie->ustanovitUspeh($fact->steps);
+        $prozess = UnitProcess::fromArray($fact->prozess);
+        $this->obnovitProzes($prozess);
+        $this->udalenie = $this->getJobById($fact->jobId);
         $this->isDeleted = true;
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
-        $this->udaleniePosleZapuska = null;
     }
 
     public function udalitSlomaniyUnit(): void
     {
-        /*if ($this->isWaitResultFromRunner()) {
-            throw new \DomainException('unit.wait_runner');
-        }*/
-
         if ($this->isDeleted) {
             throw new DomainException('unit.uge_udalen');
         }
@@ -1273,78 +1234,6 @@ final class Unit implements AggregateRoot
         }
 
         return $this->project->id;
-    }
-
-    public function poluchitWorkflowIdDlySborki(): string
-    {
-        if (empty($this->sborka)) {
-            throw new DomainException('unit.sborka_not_found');
-        }
-        return $this->sborka->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlyObnovleniya(): string
-    {
-        if (empty($this->obnovlenie)) {
-            throw new DomainException('unit.obnovlenie_not_found');
-        }
-        return $this->obnovlenie->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlyPodgotovki(): string
-    {
-        if (empty($this->podgotovka)) {
-            throw new DomainException('unit.podgotovka_not_found');
-        }
-        return $this->podgotovka->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlySbrosaPodgotovki(): string
-    {
-        if (empty($this->sbrosPodgotovki)) {
-            throw new DomainException('unit.sbrosPodgotovki_not_found');
-        }
-        return $this->sbrosPodgotovki->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlyZapuska(): string
-    {
-        if (empty($this->zapusk)) {
-            throw new DomainException('unit.zapusk_not_found');
-        }
-        return $this->zapusk->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlyOstanovki(): string
-    {
-        if (empty($this->ostanovka)) {
-            throw new DomainException('unit.ostanovka_not_found');
-        }
-        return $this->ostanovka->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlyUdaleniya(): string
-    {
-        if (empty($this->udalenie)) {
-            throw new DomainException('unit.udalenie_not_found');
-        }
-        return $this->udalenie->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlyIzmeneniya(): string
-    {
-        if (empty($this->izmenenieVetki)) {
-            throw new DomainException('unit.izmenenieVetki_not_found');
-        }
-        return $this->izmenenieVetki->getJobId();
-    }
-
-    public function poluchitWorkflowIdDlyDeistviya(): string
-    {
-        if (empty($this->vipolnenieDeistviya)) {
-            throw new DomainException('unit.vipolnenieDeistviya_not_found');
-        }
-        return $this->vipolnenieDeistviya->getJobId();
     }
 
     public function poluchitKomandiPodgotovki(): array
@@ -1420,19 +1309,13 @@ final class Unit implements AggregateRoot
         }
     }
 
-    function poluchitWorkflowIdDlyObnovleniyaKodaPosleZapuska(): ?string
+    function poluchitDeistviePoJobId(string $jobId): array
     {
-        return $this->obnovleniePosleZapuska;
-    }
+        if (empty($this->mapActions[$jobId])) {
+            throw new \DomainException('unit.mapAction.not_found');
+        }
 
-    function poluchitWorkflowIdDlyUdaleniyaUnitaPosleZapuska(): ?string
-    {
-        return $this->udaleniePosleZapuska;
-    }
-
-    function poluchitWorkflowIdDlySozdaniyaUnitaSystemoi(): ?string
-    {
-        return $this->avtosborkaUnitaSystemoi;
+        return $this->mapActions[$jobId];
     }
 
     /**
@@ -1474,7 +1357,6 @@ final class Unit implements AggregateRoot
         }
 
         $state = new Sobran();
-
         $this->recordThat(new UnitSbroshenDoSostoyaniyaSborki($this->getId(), $state->toArray($this)));
     }
 
@@ -1488,36 +1370,10 @@ final class Unit implements AggregateRoot
     /**
      * @return void
      */
-    public function proverkaVozmognostiObnovleniyaPosleZapuska(): void
-    {
-        if ($this->isDeleted) {
-            throw new DomainException('unit.udalen');
-        }
-
-        if (!empty($this->obnovleniePosleZapuska)) {
-            throw new DomainException('unit.obnovlenie_uge_zapusheno');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
-        }
-
-        if (!$this->esliSobran()) {
-            throw new DomainException('unit.unit_ne_sobran');
-        }
-    }
-
-    /**
-     * @return void
-     */
     public function proverkaVozmognostiObnovleniyaUnita(): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
-        }
-
-        if ($this->isWaitResultFromRunner()) {
-            throw new DomainException('unit.wait_runner');
         }
 
         if (empty($this->sborka)) {
@@ -1565,7 +1421,7 @@ final class Unit implements AggregateRoot
             $errors[] = 'unit.wait_runner';
         }
 
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
+        if ($this->esliZapushen()) {
             $errors[] = 'unit.zapushen';
         }
 
@@ -1593,7 +1449,7 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.wait_runner');
         }
 
-        if ($this->zapusk && $this->zapusk->isSuccess()) {
+        if ($this->esliZapushen()) {
             throw new DomainException('unit.zapushen');
         }
 
@@ -1602,5 +1458,58 @@ final class Unit implements AggregateRoot
         }
 
         $this->validateConfigValues();
+    }
+
+    /**
+     * @param string $prozesId
+     * @return UnitProcess|null
+     */
+    private function naitiProzesPoId(string $prozesId): ?UnitProcess
+    {
+        $finded = null;
+
+        foreach ($this->prozesi as $process) {
+            if ($process->id === $prozesId) {
+                $finded = $process;
+            }
+        }
+        return $finded;
+    }
+
+    /**
+     * @param string $prozesId
+     * @return UnitProcess
+     */
+    private function poluchitProzesPoId(string $prozesId): UnitProcess
+    {
+        $finded = $this->naitiProzesPoId($prozesId);
+
+        if (empty($finded)) {
+            throw new DomainException('unit.prozess.not_found');
+        }
+        return $finded;
+    }
+
+    function poluchitJobuDlyObravotki(): RunnerJob | null
+    {
+        $result = null;
+
+        foreach ($this->prozesi as $process) {
+            if (!$process->isFinish()) {
+                foreach ($process->jobs as $job) {
+                    if (!$job->isFinish()) {
+                        $result = $job;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    function poluchitNastroikiContaineraUnita(): ContainerSettings
+    {
+        return $this->containerSettings;
     }
 }

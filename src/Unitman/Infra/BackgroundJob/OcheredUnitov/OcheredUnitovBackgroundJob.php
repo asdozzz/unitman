@@ -3,11 +3,14 @@
 namespace App\Unitman\Infra\BackgroundJob\OcheredUnitov;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
-use App\Unitman\Infra\BackgroundJob\OcheredUnitov\OcheredUnitovActivity;
+use Psr\Log\LoggerInterface;
 
 final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
 {
-    public function __construct(private OcheredUnitovActivity $ocheredUnitovActivity)
+    public function __construct(
+        private OcheredUnitovActivity $ocheredUnitovActivity,
+        private LoggerInterface $logger
+    )
     {
     }
 
@@ -23,14 +26,18 @@ final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
         foreach ($zadachi as $zadacha) {
             try {
                 $this->ocheredUnitovActivity->obrabotatZadachu($zadacha);
-            } catch (\Exception) {
-                continue;
+            } catch (\Throwable $e) {
+                echo "AAAAAAAAA:".$e->getMessage()."\n";
+                //$this->logger->error($e->getMessage());
+                //continue;
             }
-
         }
 
         return true;
     }
 
-
+    function getProcessNum(): int
+    {
+        return 10;
+    }
 }

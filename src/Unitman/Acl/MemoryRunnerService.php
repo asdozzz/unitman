@@ -134,7 +134,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function nachatSborkuUnita(NachatSborkuUnita $command): string
+    public function nachatSborkuUnita(string $workflowId,NachatSborkuUnita $command): string
     {
         $response = $this->getNextResponse(self::SBORKA_UNITA);
         if (!empty($response['expectedParams'])) {
@@ -152,7 +152,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function nachatUdalenieUnita(NachatUdalenieUnita $command): string
+    public function nachatUdalenieUnita(string $workflowId,NachatUdalenieUnita $command): string
     {
         $response = $this->getNextResponse(self::UDALENIE_UNITA);
         if (!empty($response['expectedParams'])) {
@@ -170,16 +170,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function poluchitResultatIzmeneniyaVetki(string $workflowId): ?\App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita
-    {
-        $response = $this->getNextResponse(self::RESULTAT_IZMENENIYA_VETKI);
-        if (!empty($response['expectedParams'])) {
-            $response['expectedParams'](func_get_args());
-        }
-        return $response['response'];
-    }
-
-    public function nachatPodgotovkuUnita(NachatPodgotovkuUnita $command): string
+    public function nachatPodgotovkuUnita(string $workflowId,NachatPodgotovkuUnita $command): string
     {
         $response = $this->getNextResponse(self::PODGOTOVKA_UNITA);
         if (!empty($response['expectedParams'])) {
@@ -188,7 +179,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function nachatObnovlenieUnita(NachatObnovlenieUnita $command): string
+    public function nachatObnovlenieUnita(string $workflowId,NachatObnovlenieUnita $command): string
     {
         $response = $this->getNextResponse(self::OBNOVLENIE_UNITA);
         if (!empty($response['expectedParams'])) {
@@ -197,16 +188,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function nachatIzmenenieVetkiUnita(NachatIzmenenieVetkiUnita $command): string
-    {
-        $response = $this->getNextResponse(self::IZMENENIYE_UNITA);
-        if (!empty($response['expectedParams'])) {
-            $response['expectedParams'](func_get_args());
-        }
-        return $response['response'];
-    }
-
-    public function nachatSbrosPodgotovkiUnita(NachatSbrosPodgotovkiUnita $command): string
+    public function nachatSbrosPodgotovkiUnita(string $workflowId,NachatSbrosPodgotovkiUnita $command): string
     {
         $response = $this->getNextResponse(self::SBROS_PODGOTOVKI_UNITA);
         if (!empty($response['expectedParams'])) {
@@ -215,7 +197,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function nachatZapuskUnita(NachatZapuskUnita $command): string
+    public function nachatZapuskUnita(string $workflowId,NachatZapuskUnita $command): string
     {
         $response = $this->getNextResponse(self::ZAPUSK_UNITA);
         if (!empty($response['expectedParams'])) {
@@ -224,7 +206,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function nachatOstanovkuUnita(NachatOstanovkuUnita $command): string
+    public function nachatOstanovkuUnita(string $workflowId,NachatOstanovkuUnita $command): string
     {
         $response = $this->getNextResponse(self::OSTANOVKA_UNITA);
         if (!empty($response['expectedParams'])) {
@@ -278,7 +260,7 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $response['response'];
     }
 
-    public function nachatDeistvieUnita(NachatDeistvieUnita $command): string
+    public function nachatDeistvieUnita(string $workflowId,NachatDeistvieUnita $command): string
     {
         $response = $this->getNextResponse(self::DEISTVIE_UNITA);
         if (!empty($response['expectedParams'])) {

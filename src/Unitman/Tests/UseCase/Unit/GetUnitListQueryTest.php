@@ -40,19 +40,19 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         $readModelRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $readModelRepo*/
         $readModelRepo->truncate();
-        $unit1 = new SpisokUnitovReadModel('1', '5', 'asd@asd.ru', '001', 'pr1', 'prName1', 'master', Sobran::CODE, false);
+        $unit1 = new SpisokUnitovReadModel('1', '5', 'asd@asd.ru', '001', 'pr1', 'prName1', 'master', [], []);
         $readModelRepo->insert($unit1);
-        $unit2 = new SpisokUnitovReadModel('2', '5', 'asd@asd.ru', '002', 'pr1', 'prName1', 'master', Sobran::CODE, false);
+        $unit2 = new SpisokUnitovReadModel('2', '5', 'asd@asd.ru', '002', 'pr1', 'prName1', 'master', [], []);
         $readModelRepo->insert($unit2);
-        $unit3 = new SpisokUnitovReadModel('3', '6', 'test@asd.ru', '003', 'pr1', 'prName1', 'feature/001', Sobran::CODE, false);
+        $unit3 = new SpisokUnitovReadModel('3', '6', 'test@asd.ru', '003', 'pr1', 'prName1', 'feature/001', [], []);
         $readModelRepo->insert($unit3);
-        $unit4 = new SpisokUnitovReadModel('4', '6', 'test@asd.ru', '004', 'pr1', 'prName1', 'feature/001', Sobran::CODE, false);
+        $unit4 = new SpisokUnitovReadModel('4', '6', 'test@asd.ru', '004', 'pr1', 'prName1', 'feature/001', [], []);
         $readModelRepo->insert($unit4);
-        $unit5 = new SpisokUnitovReadModel('5', '7', 'www@asd.ru', '003', 'pr2', 'prName2', 'feature/001', Sobran::CODE, false);
+        $unit5 = new SpisokUnitovReadModel('5', '7', 'www@asd.ru', '003', 'pr2', 'prName2', 'feature/001', [], []);
         $readModelRepo->insert($unit5);
-        $unit6 = new SpisokUnitovReadModel('6', '7', 'www@asd.ru', '006', 'pr2', 'prName2', 'feature/001', Sobran::CODE, false);
+        $unit6 = new SpisokUnitovReadModel('6', '7', 'www@asd.ru', '006', 'pr2', 'prName2', 'feature/001', [], []);
         $readModelRepo->insert($unit6);
-        $unit6 = new SpisokUnitovReadModel('7', '7', 'www@asd.ru', '007', 'pr3', 'prName2', 'feature/001', Sobran::CODE, false);
+        $unit6 = new SpisokUnitovReadModel('7', '7', 'www@asd.ru', '007', 'pr3', 'prName2', 'feature/001', [], []);
         $readModelRepo->insert($unit6);
 
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();

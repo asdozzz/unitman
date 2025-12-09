@@ -10,7 +10,8 @@ final class UnitSozdanSystemoi
         public readonly string $projectId,
         public readonly string $name,
         public readonly string $branch,
-        public readonly array $stateAsArray
+        public readonly array $stateAsArray,
+        public readonly int $memoryLimit = 3072
     )
     {
     }

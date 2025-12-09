@@ -2,10 +2,6 @@
 
 namespace App\Unitman\Infra\Jobs\SobitiyaIzHranilisha;
 
-use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
-use App\Unitman\Business\Command\Unit\ObnovitKodUnitaPosleZapuska;
-use App\Unitman\Business\Command\Unit\UdalitUnit;
-use App\Unitman\Business\Command\Unit\UdalitUnitPosleZapuska;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\SobitieIzHranilisha;
 use App\Unitman\Business\Model\SobitieIzHranilisha\DannieSobitiya;
@@ -13,11 +9,9 @@ use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
-use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaPosleZapuskaUseCase;
-use App\Unitman\Business\UseCase\Unit\ObnovitKodUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesObnovleniyaUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
-use App\Unitman\Business\UseCase\Unit\UdalitUnitPosleZapuskaUseCase;
-use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter\StorageTypeAdapterFactory;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 
@@ -32,11 +26,9 @@ final class SobitiyaIzHranilishaActivity
         private ProjectRepository $projectRepository,
         private RepoRepository $repoRepository,
         private SpisokUnitovRepository $spisokUnitovRepository,
+        private DobavitProzesObnovleniyaUseCase $dobavitProzesObnovleniyaUseCase,
+        private DobavitProzesUdaleniyaUseCase $dobavitProzesUdaleniyaUseCase,
         private UnitRepository $unitRepository,
-        private UdalitUnitUseCase $udalitUnitUseCase,
-        private UdalitUnitPosleZapuskaUseCase $udalitUnitPosleZapuskaUseCase,
-        private ObnovitKodUnitaPosleZapuskaUseCase $obnovitKodUnitaPosleZapuskaUseCase,
-        private ObnovitKodUnitaUseCase $obnovitKodUnitaUseCase,
         private SozdatUnitSystemoiUseCase $sozdatUnitSystemoiUseCase
     )
     {
@@ -100,7 +92,7 @@ final class SobitiyaIzHranilishaActivity
 
                 if ($unit->esliNugnoObnovitKodUnita()) {
                     if ($unit->esliSobran()) {
-                        $this->obnovitKodUnitaPosleZapuskaUseCase->handleSystem(new ObnovitKodUnitaPosleZapuska($id));
+                        $this->dobavitProzesObnovleniyaUseCase->handleSystem($id);
                     } else {
                         $errs[] = 'invalid status';
                     }
@@ -133,13 +125,7 @@ final class SobitiyaIzHranilishaActivity
         $errs = [];
         foreach ($ids as $id) {
             try {
-                $unit = $this->unitRepository->getById($id);
-
-                if ($unit->esliZapushen()) {
-                    $this->udalitUnitPosleZapuskaUseCase->handleSystem(new UdalitUnitPosleZapuska($id));
-                } else {
-                    $this->udalitUnitUseCase->handleSystem(new UdalitUnit($id));
-                }
+                $this->dobavitProzesUdaleniyaUseCase->handleSystem($id);
             } catch (\Exception $e) {
                 $errs[] = $e->getMessage();
             }

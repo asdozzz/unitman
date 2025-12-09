@@ -15,6 +15,7 @@ final class ProjectWasAdded
         public readonly bool $avtoobnovlenie = true,
         public readonly bool $avtoudalenie = true,
         public readonly bool $obnovlenieBezSbrosaPodgotovki = false,
+        public readonly int $memoryLimit = 3072
     )
     {
     }

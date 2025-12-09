@@ -16,16 +16,15 @@ use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Repo\RepoRepository;
-use App\Unitman\Business\Port\Unit\UmeetSobiratUnit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
+use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Tests\UseCase\AbstractUnitmanUseCase;
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\Clock\ClockInterface;
 
 abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
 {
@@ -40,7 +39,7 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
         $securityService->expects($this->any())->method('getEmailOrNicknameByUserId')->willReturn('asd@asd.ru');
-        $securityService->expects($this->any())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru'));
+        $securityService->expects($this->any())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
         return $securityService;
     }
@@ -78,13 +77,9 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
      * @return void
      * @throws \Exception
      */
-    public function sozdatUnit(string $unitId, string $unitName = 'task-123', $projectName = 'uwin', string $projectId = null): void
+    public function sozdatUnit(string $userId, string $unitId, string $unitName = 'task-123', $projectName = 'uwin', string $projectId = null): void
     {
         $repoId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId]));
-
-        $userId = Uuid::uuid7()->toString();
-        $securityService = $this->mokaemUspehSecurity($userId);
 
         $repo = $this->stubRepo($repoId, RepoType::GITLAB, 'repoName', 'http://repoUrl');
         $repo->accessConfirm();
@@ -105,25 +100,22 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
 
-        $unitRepo = self::$container->get(UnitRepository::class);
-        $umeetSobiratUnit = $this->getMockBuilder(UmeetSobiratUnit::class)->getMock();
-        $jobId = '123';
-        $umeetSobiratUnit->expects($this->any())->method('sobratUnitOtLizaSystemi')->willReturn(new JobId($jobId));
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId]), $unitRepo, $umeetSobiratUnit);
+        $useCase2 = self::$container->get(SozdatUnitUseCase::class);
+        //new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, $guidGenerator, $unitRepo);
         $useCase2->handle(new SozdatUnit(
             $projectId,
             $unitName,
-            'feature/123'
+            'feature/123',
+            [],
+            3000
         ));
 
         $spisokUnitovReadModel2 = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel2 */
 
-        $this->assertEquals($spisokUnitovReadModel2->waitResultFromRunner, false);
-        $this->assertEquals($spisokUnitovReadModel2->state, 'SOZDAN');
         $this->assertEquals($spisokUnitovReadModel2->name, $unitName);
         $this->assertEquals($spisokUnitovReadModel2->branch, 'feature/123');
         $this->assertEquals($spisokUnitovReadModel2->projectId, $projectId);
-        $this->assertEquals($spisokUnitovReadModel2->commands, ['nachatSborku','nachatUdalenie']);
+        $this->assertEquals($spisokUnitovReadModel2->commands, ['nachatUdalenie']);
     }
 }

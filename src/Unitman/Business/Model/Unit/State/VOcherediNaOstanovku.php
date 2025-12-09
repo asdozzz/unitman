@@ -27,7 +27,6 @@ final class VOcherediNaOstanovku extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatOstanovki
         ];
     }
 }

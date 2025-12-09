@@ -30,7 +30,6 @@ final class VOcherediNaSborku extends AbstractState
     {
         return [
             StateUserCommand::nachatUdalenie,
-            StateUserCommand::ustanovitResultatSborki
         ];
     }
 }

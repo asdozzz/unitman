@@ -12,6 +12,7 @@ final class UnitSozdan
         public readonly string $branch,
         public readonly array $stateAsArray,
         public readonly array $values = [],
+        public readonly int $memoryLimit = 3072
     )
     {
     }
