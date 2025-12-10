@@ -65,8 +65,8 @@ services:
   unitman-front:
     image: asdozzz/unitman-front:0.0.2
     environment:
-      API_HOST: http://localhost:8082/api
-      CENTRIFUGE_HOST: ws://localhost:8000/connection/websocket
+      API_HOST: http://localhost:${UNITMAN_API_PORT}/api
+      CENTRIFUGE_HOST: ws://localhost:${UNITMAN_CENTRIFUGO_PORT}/connection/websocket
     ports:
       - ${UNITMAN_FRONT_PORT}:80
     depends_on:

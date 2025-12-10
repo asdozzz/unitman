@@ -95,7 +95,7 @@ services:
       - ./.docker/centrifugo/config.json:/centrifugo/config.json
     command: centrifugo -c config.json
     ports:
-      - 8000:8000
+      - ${UNITMAN_CENTRIFUGO_PORT:-8000}:8000
     ulimits:
       nofile:
         soft: 65535
