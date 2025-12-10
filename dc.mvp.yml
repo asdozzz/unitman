@@ -63,7 +63,7 @@ services:
       service: unitman-proxy
 
   unitman-front:
-    image: asdozzz/unitman-front:0.0.2
+    image: asdozzz/unitman-front:0.0.3
     environment:
       API_HOST: http://localhost:${UNITMAN_API_PORT}/api
       CENTRIFUGE_HOST: ws://localhost:${UNITMAN_CENTRIFUGO_PORT}/connection/websocket

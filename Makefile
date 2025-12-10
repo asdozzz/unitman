@@ -13,3 +13,7 @@ tools:
 	docker compose -f dc.tools.yml up -d
 tools-stop:
 	docker compose -f dc.tools.yml down
+
+tag:
+	docker build -f Dockerfile.dist -t asdozzz/roadrunner:$(VERSION) .
+	docker push asdozzz/roadrunner:$(VERSION)
