@@ -136,6 +136,21 @@ final class SqlWebhookEventRepository implements WebhookEventRepository
         return $result;
     }
 
+    function findAllNewByWebhookId(string $webhookId, int $limit = 10, int $offset = 0): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table 
+            WHERE webhook_id = :webhookId and sent_in_queue = 0 ORDER BY id asc LIMIT :limit OFFSET :offset",
+            ['webhookId' => $webhookId, 'limit' => $limit, 'offset' => $offset]);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->makeModelByRow($row);
+        }
+
+        return $result;
+    }
+
 
     function getCountByWebhookId(string $webhookId): int
     {

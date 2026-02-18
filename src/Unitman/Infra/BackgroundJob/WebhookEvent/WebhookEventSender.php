@@ -7,7 +7,6 @@ use App\Unitman\Business\Model\WebhookEventJob;
 use App\Unitman\Infra\Jobs\WebhookEventJobHandler;
 use App\Unitman\Infra\Jobs\ZadachaDlyOcherediService;
 use App\Unitman\Infra\Repository\Unit\SqlWebhookEventRepository;
-use Doctrine\DBAL\Connection;
 
 final class WebhookEventSender extends AbstractBackgroundJob
 {

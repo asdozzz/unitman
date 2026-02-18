@@ -25,7 +25,7 @@ final class DannieProektaIzmeneniTest extends AbstractProjectUseCase
 
         $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
 
-        $command = new UpdateProjectData($projectId, 'Units2', 'https://testcase2.su');
+        $command = new UpdateProjectData($projectId, 'Units2', 'https://testcase2.su', memoryLimit: 500);
         $useCase = self::$container->get(UpdateProjectDataUseCase::class);
         $useCase->handle($command);
 
@@ -35,5 +35,6 @@ final class DannieProektaIzmeneniTest extends AbstractProjectUseCase
 
         $this->assertEquals($project->name, 'Units2');
         $this->assertEquals($project->proxyHost, 'https://testcase2.su');
+        $this->assertEquals($project->memoryLimit, 500);
     }
 }

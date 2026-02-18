@@ -104,7 +104,7 @@
         ],
         "coverage": "XDEBUG_MODE=coverage php bin/phpunit --coverage-html ./var/coverage --path-coverage",
         "check-psalm": "php vendor/bin/psalm",
-        "check-phpunit": "php vendor/bin/phpunit",
+        "check-phpunit": "php vendor/bin/phpunit --stop-on-failure",
         "check-deptrac": "php deptrac.phar",
         "check-account-deptrac": "php deptrac.phar analyze --config-file=./src/Account/deptrac.yaml",
         "check-background-deptrac": "php deptrac.phar analyze --config-file=./src/BackgroundJob/deptrac.yaml",

@@ -1508,7 +1508,10 @@ final class Unit implements AggregateRoot
         return $result;
     }
 
-    function poluchitNastroikiContaineraUnita(): ContainerSettings
+    /**
+     * @psalm-ignore-nullable-return
+     */
+    function poluchitNastroikiContaineraUnita(): ?ContainerSettings
     {
         return $this->containerSettings;
     }

@@ -128,6 +128,8 @@ final class WebhookTest extends AbstractUnitUseCase
 
         $this->assertEquals($expectedId, $unitId);
 
+
+
         $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
         /** @var $useCase ObrabotatProzesiUnitaUseCase*/
         $useCase->handle($unitId);
@@ -140,13 +142,13 @@ final class WebhookTest extends AbstractUnitUseCase
         $webhookEventRepo = self::$container->get(WebhookEventRepository::class);
         /** @var WebhookEventRepository $webhookEventRepo*/
 
-        $models = $webhookEventRepo->findAllByWebhookId($webhookPrId);
+        $models = $webhookEventRepo->findAllNewByWebhookId($webhookPrId);
         $this->assertEquals(3 , count($models));
         $this->assertEquals(WebhookEventPayloadType::SOBRAN, $models[0]->payload->type);
         $this->assertEquals(WebhookEventPayloadType::ZAPUSHEN, $models[2]->payload->type);
         $this->assertEquals(0, $models[2]->getSentInQueue());
 
-        $models = $webhookEventRepo->findAllByWebhookId($webhookPrId2);
+        $models = $webhookEventRepo->findAllNewByWebhookId($webhookPrId2);
         $this->assertEquals(3 , count($models));
         $this->assertEquals(WebhookEventPayloadType::SOBRAN, $models[0]->payload->type);
         $this->assertEquals(WebhookEventPayloadType::ZAPUSHEN, $models[2]->payload->type);

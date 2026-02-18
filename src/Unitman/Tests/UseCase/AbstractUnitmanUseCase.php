@@ -42,7 +42,7 @@ abstract class AbstractUnitmanUseCase extends AbstractTestCaseWithTransactionWra
      */
     protected function addProjectRaw(string $repoId, string $projectCode, string $projectName, string $mainBranch, string $proxyHost): void
     {
-        $command = new AddProject($repoId, $projectCode, $projectName, $mainBranch, $proxyHost);
+        $command = new AddProject($repoId, $projectCode, $projectName, $mainBranch, $proxyHost, memoryLimit: 300);
         $useCase = self::$container->get(AddProjectUseCase::class);
         $useCase->handle($command);
     }

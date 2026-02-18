@@ -32,7 +32,6 @@ final class OtpravitEventNaWebhookUseCase
         } catch (\Throwable $e) {
             $event->setError($e->getMessage());
         }
-
         $this->webhookEventRepository->update($event);
     }
 }

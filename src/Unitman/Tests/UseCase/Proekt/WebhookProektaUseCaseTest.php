@@ -28,8 +28,9 @@ final class WebhookProektaUseCaseTest extends AbstractUnitUseCase
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $webhookId = Uuid::uuid7()->toString();
+        $webhookIdDouble = Uuid::uuid7()->toString();
         $projectId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$webhookId]));
+        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$webhookId, $webhookIdDouble]));
 
         $useCase = self::$container->get(DobavitWebhookProektaUseCase::class);
         $useCase->handle(new SozdatWebhookProekta($projectId,'http://asd.ru'));
@@ -60,6 +61,10 @@ final class WebhookProektaUseCaseTest extends AbstractUnitUseCase
         $readModel = $repository->getById($webhookId);
         $this->assertEquals('http://asd2.com', $readModel->getUrl());
 
+        $this->expectExceptionMessage('proekt.webhook.double');
+        $useCase = self::$container->get(DobavitWebhookProektaUseCase::class);
+        $useCase->handle(new SozdatWebhookProekta($projectId,'http://asd2.com'));
+
         $useCase = self::$container->get(UdalitWebhookProektaUseCase::class);
         $useCase->handle($webhookId);
 
@@ -67,7 +72,6 @@ final class WebhookProektaUseCaseTest extends AbstractUnitUseCase
         $this->assertEquals(true, $readModel->isDeleted());
         $this->assertEquals(false, $readModel->isActive());
 
-        $this->expectExceptionMessage('proekt.webhook.double');
         $useCase = self::$container->get(DobavitWebhookProektaUseCase::class);
         $useCase->handle(new SozdatWebhookProekta($projectId,'http://asd2.com'));
     }

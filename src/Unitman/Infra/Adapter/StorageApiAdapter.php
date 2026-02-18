@@ -24,4 +24,6 @@ interface StorageApiAdapter
     public function getUrlForInitProject(Repo $repo, Project $project): string;
 
     public function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string;
+
+    public function poluchitProektiHranilisha(Repo $repo, ?string $query): array;
 }

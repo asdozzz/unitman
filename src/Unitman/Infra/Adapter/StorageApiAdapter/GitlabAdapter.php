@@ -78,4 +78,9 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         $client = $this->clientFactory->makeClient($repo);
         return $client->repositoryFiles()->getRawFile($projectCode, 'unitman.yaml', $branchName);
     }
+
+    public function poluchitProektiHranilisha(Repo $repo, ?string $query): array
+    {
+        return [];
+    }
 }

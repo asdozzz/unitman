@@ -57,7 +57,8 @@ abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
             $repoId = Uuid::uuid7()->toString();
         }
 
-        $project = Project::addProject($projectId, new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru'), $userId);
+        $command = new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru', memoryLimit: 500);
+        $project = Project::addProject($projectId, $command, $userId);
         $project->postavitVOcheredNaSborku('stub');
         $project->successfullyBuild([new RunnerJobStep('command', 'response', true, 1231231)]);
         $project->enable();

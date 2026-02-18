@@ -6,6 +6,8 @@ use App\Unitman\Business\ReadModel\Unit\WebhookEvent;
 
 interface WebhookEventRepository
 {
+    function update(WebhookEvent $event): void;
+
     function getById(string $id): WebhookEvent;
 
     /**
@@ -16,6 +18,9 @@ interface WebhookEventRepository
      * @return WebhookEvent[]
      * */
     function findAllByWebhookId(string $webhookId, int $limit = 10, int $offset = 0): array;
-
+    /**
+     * @return WebhookEvent[]
+     * */
+    function findAllNewByWebhookId(string $webhookId, int $limit = 10, int $offset = 0): array;
     function getCountByWebhookId(string $webhookId): int;
  }

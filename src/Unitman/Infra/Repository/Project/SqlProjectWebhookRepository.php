@@ -81,6 +81,9 @@ final class SqlProjectWebhookRepository implements WebhookProjectRepository
         $dataUdaleniya = null;
         if (!empty($row['deleted_at'])) {
             $dataUdaleniya = \DateTimeImmutable::createFromFormat('U', (string)$row['deleted_at']);
+            if ($dataUdaleniya === false) {
+                throw new \DomainException('error convert deleted_at');
+            }
         }
 
         $model = new ProjectWebhook($row['id'], $row['project_id'], $row['url'], !empty($row['active']), $dataUdaleniya);

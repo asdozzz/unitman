@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Business\Model\Project;
 
-use App\Unitman\Business\Command\Project\Webhook\ObnovitWebhookProekta;
 use App\Unitman\Business\Command\Project\Webhook\SozdatWebhookProekta;
 
 final class ProjectWebhook
@@ -34,12 +33,6 @@ final class ProjectWebhook
         self::validateUrl($command->url);
 
         return new self($id, $command->projectId, $command->url, true, null);
-    }
-
-    function obnovitDannie(ObnovitWebhookProekta $command): void
-    {
-        self::validateUrl($command->url);
-        $this->url = $command->url;
     }
 
     /**

@@ -104,7 +104,7 @@ final class Project implements AggregateRoot
         $project = new self($projectId);
         ProjectName::validate($command->projectName);
         ProjectContainerSettings::validateMemory($command->memoryLimit);
-        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost, $command->memoryLimit));
+        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost, memoryLimit: $command->memoryLimit));
         $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
     }

@@ -6,6 +6,7 @@ use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
+use App\Unitman\Business\ReadModel\ProektHranilisha;
 use App\Unitman\Business\ReadModel\RepoTypeList;
 use App\Unitman\Business\ReadModel\VetkaProekta;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\GithubAdapter\GithubClientFactory;
@@ -87,5 +88,11 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         list($login, $code) = explode('/', $projectCode);
         $config = $client->repository()->contents()->rawDownload($login, $code, 'unitman.yaml', $branchName);
         return $config;
+    }
+
+    public function poluchitProektiHranilisha(Repo $repo, ?string $query): array
+    {
+        $client = $this->githubClientFactory->makeClient($repo);
+        return array_map(fn(array $item) => new ProektHranilisha($item['full_name'] ?? "", $item['name'] ?? ""),$client->currentUser()->repositories());
     }
 }
