@@ -23,7 +23,7 @@ final class OchistkaDockeraWorkflow
             'OchistkaDockeraActivity',
             [],
             ActivityOptions::new()
-                ->withScheduleToCloseTimeout(CarbonInterval::seconds(30))
+                ->withStartToCloseTimeout(60*60)
                 ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
         );
     }
