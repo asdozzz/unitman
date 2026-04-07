@@ -1,7 +1,6 @@
 temporal:
   address: 'localhost:7233'
   worker:
-    factory: Highcore\TemporalBundle\WorkerFactory
     queue: '%env(TEMPORAL_WORKER_QUEUE)%'
     data-converter:
       class: Temporal\DataConverter\DataConverter

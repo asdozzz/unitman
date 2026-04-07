@@ -1,14 +1,39 @@
 # syntax=docker/dockerfile:1
-FROM asdozzz/roadrunner:0.0.5
+FROM ghcr.io/roadrunner-server/roadrunner:2025.1.12 AS roadrunner
+
+FROM ghcr.io/spiral/php-grpc:8.2
+
+RUN --mount=type=bind,from=mlocati/php-extension-installer:2.10.8,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
+     install-php-extensions pdo_pgsql pgsql xdebug xhprof && \
+     apk del --no-cache ${PHPIZE_DEPS} ${BUILD_DEPENDS}
+
+COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
+
+RUN mkdir -p /tmp/xhprof_runs && \
+    echo 'xhprof.output_dir = /tmp/xhprof_runs' >> /usr/local/etc/php/conf.d/xhprof.ini
+
+ARG CURRENT_USER_ID=1000
+ARG CURRENT_USER_GROUP=1000
+
+RUN addgroup --gid ${CURRENT_USER_GROUP} groupcontainer
+RUN adduser --uid ${CURRENT_USER_ID} -G groupcontainer -h /home/containeruser -D containeruser
+RUN adduser containeruser root
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+USER containeruser
+WORKDIR /home/containeruser/www
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
 RUN composer install --no-scripts --no-autoloader
 
 COPY --chown=containeruser:groupcontainer . .
 RUN composer dump-autoload --optimize && \
-    composer run-script post-install-cmd && \
-    composer check-platform-reqs && \
-    php bin/console cache:warmup
+    #composer run-script post-install-cmd && \
+    composer check-platform-reqs
+    #php bin/console cache:warmup
 
 CMD ["rr", "serve","-c",".rr.yaml"]
 #ENTRYPOINT ["tail", "-f", "/dev/null"]

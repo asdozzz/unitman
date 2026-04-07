@@ -1,5 +1,5 @@
 local:
-	docker compose up -d
+	docker compose up -d --build
 	docker compose exec web php bin/console app:jobs start
 local-stop:
 	docker compose down

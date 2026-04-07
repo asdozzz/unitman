@@ -15,7 +15,7 @@ use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 
 final class GetUnitListQueryTest extends AbstractUnitUseCase
 {
-    function dataProviderGetUnitList()
+    static function dataProviderGetUnitList()
     {
         yield [new GetUnitListFilter(true), '6', ['4', '3']];
         yield [new GetUnitListFilter(true), '7', ['6', '5']];
@@ -31,6 +31,7 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         yield [new GetUnitListFilter(projectId:  'pr1'), '6', ['4', '3','2','1']];
         yield [new GetUnitListFilter(), '6', ['6', '5','4','3','2','1']];
     }
+
     /**
      * @test
      * @dataProvider dataProviderGetUnitList
