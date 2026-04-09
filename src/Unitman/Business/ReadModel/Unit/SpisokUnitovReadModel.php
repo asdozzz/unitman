@@ -6,6 +6,27 @@ use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 
 final class SpisokUnitovReadModel
 {
+
+    /**
+     * @param string $id
+     * @param string $authorId
+     * @param string $authorName
+     * @param string $name
+     * @param string $projectId
+     * @param string $projectName
+     * @param string $branch
+     * @param array $commands
+     * @param array $prozesi
+     * @param bool $error
+     * @param bool $zapushen
+     * @param array $links
+     * @param int|null $unixtimePoslednegoObnovleniyaUnita
+     * @param int|null $unixtimePoslednegoObnovleniyaVHranilishe
+     * @param array $peremenie
+     * @param bool $unitSozdanSystemoi
+     * @param array $deistviya
+     * @param ProjectListContainerStats|null $statistikaKonteinera
+     */
     public function __construct(
         public readonly string $id,
         public readonly string $authorId,

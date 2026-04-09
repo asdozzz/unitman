@@ -50,6 +50,7 @@ use App\Unitman\Infra\Service\RebuildService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/unit')]
@@ -67,7 +68,7 @@ final class UnitConroller extends AbstractController
     }
 
     #[Route('/list', methods: ['POST'])]
-    public function list(GetUnitList $command, GetUnitListQuery $query): Response
+    public function list(#[MapRequestPayload] GetUnitList $command, GetUnitListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));

@@ -206,30 +206,15 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         return $result;
     }
 
-    function getActiveListByIds(array $projectIds): array
-    {
-        $table = self::TABLE;
-        $ids = "'" . join("','", $projectIds) . "'";
-        $sql = "SELECT * FROM $table WHERE payload->>'isActive'= 'true' and id in ($ids) ORDER BY id desc";
-        $rows = $this->connection->fetchAllAssociative($sql);
-
-        $result = [];
-        foreach ($rows as $row) {
-            $result[] = $this->makeProjectByDbRow($row);
-        }
-
-        return $result;
-    }
-
     function poluchitSpisokProektovDlyPolzovatelya(string $userId): array
     {
         $table = self::TABLE;
 
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE payload->>'isActive'= 'true' and payload->'users' @> '[{\"userId\":\"$userId\"}]'");
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table WHERE payload->>'isActive'= 'true' and payload->'users' @> '[{\"userId\":\"$userId\"}]' ORDER BY id desc");
 
         $result = [];
         foreach ($rows as $row) {
-            $result[] = $this->makeProjectByDbRow($row);
+            $result[] = json_decode($row['payload'], true);
         }
 
         return $result;

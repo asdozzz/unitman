@@ -2,9 +2,7 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-use App\Utils\Converter\JsonBodySerializableInterface;
-
-final class DobavitPeremenuyuVProekt implements JsonBodySerializableInterface
+final class DobavitPeremenuyuVProekt
 {
     public function __construct(
         public readonly string $projectId,

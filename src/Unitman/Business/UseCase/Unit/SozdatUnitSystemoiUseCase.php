@@ -33,8 +33,7 @@ final class SozdatUnitSystemoiUseCase
         if (!$project->poluchitNastroikiHuka()->avtosozdanie) {
             throw new \DomainException('unit.avtosozdanie_viklucheno');
         }
-
-        $unitName = preg_replace('/[^a-zA-Z0-9_]+/misu', '_',$vetka);
+        $unitName = preg_replace('/[^a-zA-Z0-9_]+/misu', '_',$vetka) ?: "";
 
         $command = new SozdatUnit($projectId, $unitName, $vetka);
 

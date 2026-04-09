@@ -56,7 +56,13 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         $branches = $client->repositories()->branches($projectCode, $parameters);
         usort($branches, function ($a, $b) {
             $datetime1 = strtotime($a['commit']['created_at']);
+            if (empty($datetime1)) {
+                $datetime1 = 0;
+            }
             $datetime2 = strtotime($b['commit']['created_at']);
+            if (empty($datetime2)) {
+                $datetime2 = 0;
+            }
             return $datetime2 - $datetime1;
         });
 
@@ -67,6 +73,9 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
     {
         $url = $repo->getCredentials()->url;
         $scheme = parse_url($url, PHP_URL_SCHEME);
+        if (empty($scheme)) {
+            $scheme = "";
+        }
         $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
         $storageUrl = $scheme.'://oauth2:'.$repo->getCredentials()->token.'@'.$urlWithoutScheme;
         $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';

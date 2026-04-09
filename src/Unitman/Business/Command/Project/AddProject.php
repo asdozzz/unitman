@@ -2,9 +2,7 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-use App\Utils\Converter\JsonBodySerializableInterface;
-
-final class AddProject implements JsonBodySerializableInterface
+final class AddProject
 {
     public function __construct(
         public readonly string $repoId,

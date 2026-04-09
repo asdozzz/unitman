@@ -2,15 +2,12 @@
 
 namespace App\Utils\EventSauce;
 
-use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
-use App\Utils\EventSauce\Model\StreamName;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use App\Utils\EventSauce\Repository\CheckpointStore;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootId;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
-use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 
 #[AutoconfigureTag('utils.event_store.projections_manager')]
 final class ProjectionsManager

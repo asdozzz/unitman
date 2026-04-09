@@ -22,7 +22,7 @@ final class GetUnitListQuery
     {
         $currentUserId = $this->securityService->getCurrentUserId();
         $moiProekti = $this->umeetPoluchatSpisokProektovDlyPolzovatelya->poluchitSpisokProektovDlyPolzovatelya($currentUserId);
-        $projectIds = array_map(fn(ProjectList $project) => $project->id, $moiProekti);
+        $projectIds = array_map(fn(array $project): string => $project['id'], $moiProekti);
         return $this->repo->getList($query, $currentUserId, $projectIds);
     }
 }

@@ -20,27 +20,28 @@ use App\Unitman\Business\UseCase\Repo\GetRepoTypeListQuery;
 use App\Unitman\Business\UseCase\Repo\PoluchitSpisokProektovRepiUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/repo')]
 final class RepoController extends AbstractController
 {
     #[Route('/add', methods: ['POST'])]
-    public function add(AddRepo $command, AddRepoUseCase $useCase): Response
+    public function add(#[MapRequestPayload] AddRepo $command, AddRepoUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/list', methods: ['POST'])]
-    public function list(GetRepoList $command, GetRepoListQuery $query): Response
+    public function list(#[MapRequestPayload] GetRepoList $command, GetRepoListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
     #[Route('/projectList', methods: ['POST'])]
-    public function projectList(PoluchitSpisokProektovRepi $command, PoluchitSpisokProektovRepiUseCase $query): Response
+    public function projectList(#[MapRequestPayload] PoluchitSpisokProektovRepi $command, PoluchitSpisokProektovRepiUseCase $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
@@ -48,35 +49,35 @@ final class RepoController extends AbstractController
 
 
     #[Route('/activeList', methods: ['POST'])]
-    public function activeList(GetActiveRepoList $command, GetActiveRepoListQuery $query): Response
+    public function activeList(#[MapRequestPayload] GetActiveRepoList $command, GetActiveRepoListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
     #[Route('/type/list', methods: ['POST'])]
-    public function typeList(GetRepoTypeList $command, GetRepoTypeListQuery $query): Response
+    public function typeList(#[MapRequestPayload] GetRepoTypeList $command, GetRepoTypeListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
     #[Route('/delete', methods: ['POST'])]
-    public function delete(DeleteRepo $command, DeleteRepoUseCase $useCase): Response
+    public function delete(#[MapRequestPayload] DeleteRepo $command, DeleteRepoUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/changeCredentials', methods: ['POST'])]
-    public function changeCredentials(ChangeCredentialsOfRepo $command, ChangeCredentialsOfRepoUseCase $useCase): Response
+    public function changeCredentials(#[MapRequestPayload] ChangeCredentialsOfRepo $command, ChangeCredentialsOfRepoUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/confirm', methods: ['POST'])]
-    public function checkAccess(CheckAccessToRepo $command, CheckAccessToRepoUseCase $useCase): Response
+    public function checkAccess(#[MapRequestPayload] CheckAccessToRepo $command, CheckAccessToRepoUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());

@@ -2,9 +2,7 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-use App\Utils\Converter\JsonBodySerializableInterface;
-
-final class PostavitVOcheredNaUdalenie implements JsonBodySerializableInterface
+final class PostavitVOcheredNaUdalenie
 {
     public function __construct(
         public readonly string $id,

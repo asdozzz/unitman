@@ -67,9 +67,9 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         /** @var RepoListRepository $repoListRepository*/
         $repoList = $repoListRepository->getById($repoId);
 
-        $this->assertEquals(false, $repoList->isConfirmed());
+        $this->assertEquals(false, $repoList->confirmed);
         $this->assertEquals('newToken', $repoList->token);
-        $this->assertEquals('https://org2@gitlab.ru', $repoList->getRepoUrl());
+        $this->assertEquals('https://org2@gitlab.ru', $repoList->repoUrl);
     }
 
     /**
@@ -106,10 +106,18 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $query = self::$container->get(GetActiveRepoListQuery::class);
         /** @var $query GetActiveRepoListQuery*/
         $actualResultRaw = $query->handle($command);
-        $actualResult = array_filter($actualResultRaw, fn(RepoList $repo) => in_array($repo->getId(), [$repoId, $repoId2]));
+        $actualResult = array_filter($actualResultRaw, fn(RepoList $repo) => in_array($repo->id, [$repoId, $repoId2]));
         $actualResult = array_values($actualResult);
 
-        $expectedResult = [new RepoList($repoId, RepoType::GITLAB->value, $repoName, 'https://org@gitlab.ru', 'token', true)];
+        $readModel = new RepoList();
+        $readModel->id = $repoId;
+        $readModel->name = $repoName;
+        $readModel->type = RepoType::GITLAB->value;
+        $readModel->repoUrl = 'https://org@gitlab.ru';
+        $readModel->token = 'token';
+        $readModel->confirmed = true;
+
+        $expectedResult = [$readModel];
         $this->assertEquals($expectedResult, $actualResult);
     }
 
@@ -132,12 +140,12 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         /** @var \App\Unitman\Infra\Repository\Repo\RepoListRepository $repoListRepository */
         $repoList = $repoListRepository->getById($repoId);
 
-        $this->assertEquals($repoId, $repoList->getId());
-        $this->assertEquals($repoType->value, $repoList->getType());
-        $this->assertEquals($repoName, $repoList->getName());
+        $this->assertEquals($repoId, $repoList->id);
+        $this->assertEquals($repoType->value, $repoList->type);
+        $this->assertEquals($repoName, $repoList->name);
         $this->assertEquals('token', $repoList->token);
-        $this->assertEquals($repoUrl, $repoList->getRepoUrl());
-        $this->assertFalse($repoList->isConfirmed());
+        $this->assertEquals($repoUrl, $repoList->repoUrl);
+        $this->assertFalse($repoList->confirmed);
     }
 
     /**

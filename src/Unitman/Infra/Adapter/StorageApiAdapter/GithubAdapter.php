@@ -67,6 +67,9 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
     {
         $url = $repo->getCredentials()->url;
         $scheme = parse_url($url, PHP_URL_SCHEME);
+        if (empty($scheme)) {
+            $scheme = "";
+        }
         $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
         $storageUrl = $scheme.'://'.$repo->getCredentials()->token.'@'.$urlWithoutScheme;
         $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';

@@ -22,10 +22,15 @@ final class SerializerFactory
 
     public function __invoke(): Serializer
     {
-        $extractor = new PropertyInfoExtractor([], [new PhpDocExtractor(), new ReflectionExtractor()]);
+        $extractor = new PropertyInfoExtractor([], [new ReflectionExtractor()]);
+        /*
         $objectNormalizer = new ObjectNormalizer(
             classMetadataFactory: $this->classMetadataFactory,
             propertyTypeExtractor: $extractor
+        );*/
+        $objectNormalizer = new PropertyNormalizer(
+            classMetadataFactory: $this->classMetadataFactory,
+            propertyTypeExtractor: new PhpDocExtractor()
         );
         $normalizers = [new BackedEnumNormalizer(), $objectNormalizer, new ArrayDenormalizer()];
         return new Serializer($normalizers,[new JsonEncoder()]);

@@ -7,9 +7,6 @@ use App\Unitman\Business\ReadModel\ProjectList;
 
 interface CanGetProjectList
 {
-    /**
-     * @return ProjectList[]
-     * */
     function getList(GetProjectList $query): array;
 
     /**

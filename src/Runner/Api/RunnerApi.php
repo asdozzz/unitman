@@ -271,7 +271,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), true);
+                $result->Steps = json_decode(json_encode($Steps, JSON_THROW_ON_ERROR), true);
             }
         }
 
@@ -294,7 +294,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), true);
+                $result->Steps = json_decode(json_encode($Steps, JSON_THROW_ON_ERROR), true);
             }
         }
 
@@ -311,7 +311,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), true);
+                $result->Steps = json_decode(json_encode($Steps, JSON_THROW_ON_ERROR), true);
             }
         }
 
@@ -328,7 +328,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), true);
+                $result->Steps = json_decode(json_encode($Steps, JSON_THROW_ON_ERROR), true);
             }
         }
 
@@ -414,7 +414,7 @@ final class RunnerApi implements RunnerApiInterface
 
             if (!empty($responseContent)) {
                 $Steps = $this->serializer->deserialize($responseContent, Step::class.'[]', 'json');
-                $result->Steps = json_decode(json_encode($Steps), true);
+                $result->Steps = json_decode(json_encode($Steps, JSON_THROW_ON_ERROR), true);
             }
         }
 

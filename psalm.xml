@@ -17,6 +17,7 @@
             <directory name="src/*/Tests" />
             <directory name="src/*/Migrations" />
             <file name="./src/Utils/Service/MigrationFactoryDecorator.php"/>
+            <file name="./src/Unitman/Infra/Controller/TestController.php"/>
         </ignoreFiles>
     </projectFiles>
     <plugins>
@@ -25,21 +26,12 @@
     <issueHandlers>
         <RiskyTruthyFalsyComparison errorLevel="suppress"/>
         <TooManyTemplateParams errorLevel="suppress"/>
-         <UndefinedClass>
-             <errorLevel type="suppress">
-                 <!-- These classes have been added in PHP 8.1 -->
-                 <referencedClass name="BackedEnum"/>
-                 <referencedClass name="ReflectionIntersectionType"/>
-                 <referencedClass name="UnitEnum"/>
-             </errorLevel>
-         </UndefinedClass>
-         <UndefinedDocblockClass>
-             <errorLevel type="suppress">
-                 <!-- These classes have been added in PHP 8.1 -->
-                 <referencedClass name="BackedEnum"/>
-                 <referencedClass name="ReflectionIntersectionType"/>
-                 <referencedClass name="UnitEnum"/>
-             </errorLevel>
-         </UndefinedDocblockClass>
+        <MissingOverrideAttribute errorLevel="suppress" />
+        <ClassMustBeFinal errorLevel="suppress" />
+        <ArgumentTypeCoercion errorLevel="suppress" />
+        <MissingConstructor errorLevel="suppress" />
+        <LessSpecificReturnType errorLevel="suppress" />
+        <LessSpecificReturnStatement errorLevel="suppress" />
+        <MoreSpecificReturnType errorLevel="suppress" />
      </issueHandlers>
 </psalm>

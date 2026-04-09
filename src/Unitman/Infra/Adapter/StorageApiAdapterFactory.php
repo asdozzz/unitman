@@ -14,7 +14,7 @@ use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\Repo\CanGetRepoTypeList;
 use App\Unitman\Business\Port\Repo\UmeetPoluchatSpisokProektovHranilisha;
 use App\Unitman\Business\Port\Repo\UmeetPoluchatUrlHranilisha;
-use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluchatUrlHranilisha, CanGetRepoTypeList, UmeetPoluchatSpisokVetokProekta, UmeetPoluchatKonfigProekta, UmeetPoluchatSpisokProektovHranilisha
 {
@@ -22,7 +22,7 @@ final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluc
      * @var iterable<StorageApiAdapter>
      * */
     private iterable $adapters;
-    public function __construct(#[TaggedIterator('unitman.storage_api_adapter')] iterable $adapters)
+    public function __construct(#[AutowireIterator('unitman.storage_api_adapter')] iterable $adapters)
     {
         $this->adapters = $adapters;
     }

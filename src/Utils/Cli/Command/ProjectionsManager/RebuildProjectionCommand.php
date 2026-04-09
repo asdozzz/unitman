@@ -8,7 +8,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 #[AsCommand(name: 'app:projections:rebuild')]
 final class RebuildProjectionCommand extends Command
@@ -16,7 +16,7 @@ final class RebuildProjectionCommand extends Command
     /** @var iterable<ProjectionsManager>*/
     private iterable $managers;
 
-    public function __construct(#[TaggedIterator('utils.event_store.projections_manager')] iterable $managers)
+    public function __construct(#[AutowireIterator('utils.event_store.projections_manager')] iterable $managers)
     {
         parent::__construct();
         $this->managers = $managers;

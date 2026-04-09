@@ -21,7 +21,7 @@ final class JsonBodySerializableConverter implements ValueResolverInterface
         }
 
         $obj = $this->serializer->deserialize($request->getContent(), $argument->getType() ?? '', 'json',[
-            AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false
+            //AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false
         ]);
 
         $request->attributes->set($argument->getName(), $obj);

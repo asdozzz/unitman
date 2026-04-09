@@ -58,13 +58,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/project')]
 final class ProjectController extends AbstractController
 {
     #[Route('/list', methods: ['POST'])]
-    public function list(GetProjectList $command, GetProjectListQuery $query): Response
+    public function list(#[MapRequestPayload] GetProjectList $command, GetProjectListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
@@ -78,14 +79,14 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/activeList', methods: ['POST'])]
-    public function activeList(GetActiveProjectList $command, GetActiveProjectListQuery $query): Response
+    public function activeList(#[MapRequestPayload] GetActiveProjectList $command, GetActiveProjectListQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
     #[Route('/my', methods: ['POST'])]
-    public function my(PoluchitMoiProekti $command, PoluchitMoiProektiQuery $query): Response
+    public function my(#[MapRequestPayload] PoluchitMoiProekti $command, PoluchitMoiProektiQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
@@ -99,7 +100,7 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/add', methods: ['POST'])]
-    public function add(AddProject $command, AddProjectUseCase $useCase, PostavitVOcheredNaSborkuUseCase $postavitVOcheredNaSborkuUseCase): Response
+    public function add(#[MapRequestPayload] AddProject $command, AddProjectUseCase $useCase, PostavitVOcheredNaSborkuUseCase $postavitVOcheredNaSborkuUseCase): Response
     {
         $id = $useCase->handle($command);
         $postavitVOcheredNaSborkuUseCase->handle(new PostavitVOcheredNaSborku($id));
@@ -107,14 +108,14 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/updateData', methods: ['POST'])]
-    public function updateData(UpdateProjectData $command, UpdateProjectDataUseCase $useCase): Response
+    public function updateData(#[MapRequestPayload] UpdateProjectData $command, UpdateProjectDataUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/remove', methods: ['POST'])]
-    public function remove(PostavitVOcheredNaUdalenie $command, PostavitVOcheredNaUdalenieUseCase $useCase): Response
+    public function remove(#[MapRequestPayload] PostavitVOcheredNaUdalenie $command, PostavitVOcheredNaUdalenieUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);
@@ -126,91 +127,91 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/forceRemove', methods: ['POST'])]
-    public function forceRemove(ForceRemoveProject $command, ForceRemoveProjectUseCase $useCase): Response
+    public function forceRemove(#[MapRequestPayload] ForceRemoveProject $command, ForceRemoveProjectUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/enable', methods: ['POST'])]
-    public function enable(EnableProject $command, EnableProjectUseCase $useCase): Response
+    public function enable(#[MapRequestPayload] EnableProject $command, EnableProjectUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/disable', methods: ['POST'])]
-    public function disable(DisableProject $command, DisableProjectUseCase $useCase): Response
+    public function disable(#[MapRequestPayload] DisableProject $command, DisableProjectUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/usersList', methods: ['POST'])]
-    public function usersList(PoluchitSpisokPolzovateleiProekta $command, PoluchitSpisokPolzovateleiProektaQuery $query): Response
+    public function usersList(#[MapRequestPayload] PoluchitSpisokPolzovateleiProekta $command, PoluchitSpisokPolzovateleiProektaQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
     #[Route('/addUser', methods: ['POST'])]
-    public function addUser(AddUserToProject $command, AddUserToProjectUseCase $useCase): Response
+    public function addUser(#[MapRequestPayload] AddUserToProject $command, AddUserToProjectUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/removeUser', methods: ['POST'])]
-    public function removeUser(RemoveUserFromProject $command, RemoveUserFromProjectUseCase $useCase): Response
+    public function removeUser(#[MapRequestPayload] RemoveUserFromProject $command, RemoveUserFromProjectUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/spisokPeremenihProekta', methods: ['POST'])]
-    public function variablesList(PoluchitSpisokPeremenihProekta $command, PoluchitSpisokPeremenihProektaQuery $query): Response
+    public function variablesList(#[MapRequestPayload] PoluchitSpisokPeremenihProekta $command, PoluchitSpisokPeremenihProektaQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
     #[Route('/dobavitPeremenuyu', methods: ['POST'])]
-    public function addVariable(DobavitPeremenuyuVProekt $command, ProzessDobavleniyaPeremenoiVProekt $useCase): Response
+    public function addVariable(#[MapRequestPayload] DobavitPeremenuyuVProekt $command, ProzessDobavleniyaPeremenoiVProekt $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/udalitPeremenuyu', methods: ['POST'])]
-    public function removeVariable(UdalitPeremenuyuIzProekta $command, ProzessUdaleniyaPeremenoiIzProekta $useCase): Response
+    public function removeVariable(#[MapRequestPayload] UdalitPeremenuyuIzProekta $command, ProzessUdaleniyaPeremenoiIzProekta $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/izmenitPeremenuyu', methods: ['POST'])]
-    public function izmenitPeremenuyu(IzmenitZnacheniePeremenoiProekta $command, ProzessIzmeneniyaZnacheniyaPeremenoiProekta $useCase): Response
+    public function izmenitPeremenuyu(#[MapRequestPayload] IzmenitZnacheniePeremenoiProekta $command, ProzessIzmeneniyaZnacheniyaPeremenoiProekta $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/build', methods: ['POST'])]
-    public function build(PostavitVOcheredNaSborku $command, PostavitVOcheredNaSborkuUseCase $useCase): Response
+    public function build(#[MapRequestPayload] PostavitVOcheredNaSborku $command, PostavitVOcheredNaSborkuUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/obnovitNastroikiHuka', methods: ['POST'])]
-    public function obnovitNastroikiHuka(ObnovitNastroikiHuka $command, ObnovitNastroikiHukaUseCase $useCase): Response
+    public function obnovitNastroikiHuka(#[MapRequestPayload] ObnovitNastroikiHuka $command, ObnovitNastroikiHukaUseCase $useCase): Response
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
     #[Route('/branchesList', methods: ['POST'])]
-    public function branchesList(PoluchitSpisokVetokProekta $command, PoluchitSpisokVetokProektaQuery $query): Response
+    public function branchesList(#[MapRequestPayload] PoluchitSpisokVetokProekta $command, PoluchitSpisokVetokProektaQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
@@ -230,7 +231,7 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/poluchitVipolnenieZadachiRunnera', methods: ['POST'])]
-    public function poluchitVipolnenieZadachiRunnera(GetProjectRunnerJobs $command, GetProjectRunnerJobsQuery $query): Response
+    public function poluchitVipolnenieZadachiRunnera(#[MapRequestPayload] GetProjectRunnerJobs $command, GetProjectRunnerJobsQuery $query): Response
     {
         try {
             $data = $query->handle($command);
@@ -241,7 +242,7 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/poluchitShagiZadachiRunnera', methods: ['POST'])]
-    public function poluchitShagiZadachiRunnera(GetProjectRunnerJobSteps $command, GetProjectRunnerJobStepsQuery $query): Response
+    public function poluchitShagiZadachiRunnera(#[MapRequestPayload] GetProjectRunnerJobSteps $command, GetProjectRunnerJobStepsQuery $query): Response
     {
         try {
             $data = $query->handle($command);
@@ -252,7 +253,7 @@ final class ProjectController extends AbstractController
     }
 
     #[Route('/ochistit', methods: ['POST'])]
-    public function ochistit(NachatOchistkuProekta $command, NachatOshistkuProektaUseCase $useCase): Response
+    public function ochistit(#[MapRequestPayload] NachatOchistkuProekta $command, NachatOshistkuProektaUseCase $useCase): Response
     {
         try {
             $useCase->handle($command);

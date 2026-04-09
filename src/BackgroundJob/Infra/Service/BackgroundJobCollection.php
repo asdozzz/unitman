@@ -2,7 +2,7 @@
 
 namespace App\BackgroundJob\Infra\Service;
 
-use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 final class BackgroundJobCollection
 {
@@ -11,7 +11,7 @@ final class BackgroundJobCollection
      * */
     private iterable $collection;
 
-    public function __construct(#[TaggedIterator('app.background_job')] iterable $collection, private BackgroundJobService $backgroundJobService)
+    public function __construct(#[AutowireIterator('app.background_job')] iterable $collection, private BackgroundJobService $backgroundJobService)
     {
         $this->collection = $collection;
     }

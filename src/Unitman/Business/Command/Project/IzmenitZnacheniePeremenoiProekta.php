@@ -2,9 +2,7 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-use App\Utils\Converter\JsonBodySerializableInterface;
-
-final class IzmenitZnacheniePeremenoiProekta implements JsonBodySerializableInterface
+final class IzmenitZnacheniePeremenoiProekta
 {
     public function __construct(
         public readonly string $projectId,

@@ -24,7 +24,13 @@ final class BlockerService
             return "";
         }
 
-        return file_get_contents($this->getFilePath());
+        $file_get_contents = file_get_contents($this->getFilePath());
+
+        if ($file_get_contents === false) {
+            throw new \RuntimeException('Unable to read lock file');
+        }
+
+        return $file_get_contents;
     }
 
     function unlock(): void
@@ -39,8 +45,7 @@ final class BlockerService
      */
     private function getLockFileName(): string
     {
-        $filename = 'lock.json';
-        return $filename;
+        return 'lock.json';
     }
 
     /**

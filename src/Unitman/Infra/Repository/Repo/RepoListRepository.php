@@ -4,18 +4,19 @@ namespace App\Unitman\Infra\Repository\Repo;
 
 use App\Unitman\Business\Command\Repo\GetActiveRepoList;
 use App\Unitman\Business\Command\Repo\GetRepoList;
-use App\Unitman\Business\Port\CanGetActiveProjectList;
 use App\Unitman\Business\Port\Repo\CanFindRepoDouble;
 use App\Unitman\Business\Port\Repo\CanGetActiveRepoList;
 use App\Unitman\Business\Port\Repo\CanGetRepoList;
 use App\Unitman\Business\ReadModel\RepoList;
 use Doctrine\DBAL\Connection;
-use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\JsonStreamer\JsonStreamReader;
+use Symfony\Component\JsonStreamer\JsonStreamWriter;
+use Symfony\Component\TypeInfo\Type;
 
 final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList, CanGetActiveRepoList
 {
     const TABLE = 'repo_list';
-    public function __construct(private readonly Connection $connection, private Serializer $serializer)
+    public function __construct(private readonly Connection $connection, private readonly JsonStreamWriter $jsonStreamWriter, private readonly JsonStreamReader $jsonStreamReader)
     {
     }
 
@@ -49,8 +50,8 @@ final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList, Can
     function insert(RepoList $repoList): void
     {
         $data = [
-            'id' => $repoList->getId(),
-            'payload' => $this->serializer->serialize($repoList, 'json'),
+            'id' => $repoList->id,
+            'payload' => $this->encodeModel($repoList),
         ];
         $this->connection->insert(self::TABLE, $data);
     }
@@ -58,8 +59,8 @@ final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList, Can
     function update(RepoList $repoList): void
     {
         $this->connection->update(self::TABLE, [
-            'payload' => $this->serializer->serialize($repoList, 'json'),
-        ], ['id' => $repoList->getId()]);
+            'payload' => $this->encodeModel($repoList),
+        ], ['id' => $repoList->id]);
     }
 
     function delete(string $id): void
@@ -82,7 +83,9 @@ final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList, Can
 
     function makeRepoByDbRow(array $row): RepoList
     {
-        $repo = $this->serializer->deserialize($row['payload'], RepoList::class, 'json');
+        $type = Type::object(RepoList::class);
+        $repo = $this->jsonStreamReader->read($row['payload'], $type);
+        //$repo = $this->serializer->deserialize($row['payload'], RepoList::class, 'json');
         return $repo;
     }
 
@@ -138,5 +141,16 @@ final class RepoListRepository implements CanFindRepoDouble, CanGetRepoList, Can
         }
 
         return $result;
+    }
+
+    /**
+     * @param RepoList $repoList
+     * @return \Traversable&\Stringable
+     */
+    private function encodeModel(RepoList $repoList): \Traversable&\Stringable
+    {
+        $type = Type::object(RepoList::class);
+        $json = $this->jsonStreamWriter->write($repoList, $type);
+        return $json;
     }
 }

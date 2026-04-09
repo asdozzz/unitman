@@ -129,7 +129,7 @@ final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
         /** @var PoluchitMoiProektiQuery $query*/
         $actualResult = $query->handle(new PoluchitMoiProekti());
 
-        $actualIds = array_map(fn(ProjectList $projectList) => $projectList->id, $actualResult);
+        $actualIds = array_map(fn(array $projectList) => $projectList['id'], $actualResult);
         $expecteResultIds = [$projectId2, $projectId];
         $this->assertEquals($expecteResultIds, $actualIds);
 

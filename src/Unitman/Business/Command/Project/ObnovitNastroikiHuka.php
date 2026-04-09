@@ -2,9 +2,7 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-use App\Utils\Converter\JsonBodySerializableInterface;
-
-final class ObnovitNastroikiHuka implements JsonBodySerializableInterface
+final class ObnovitNastroikiHuka
 {
     public function __construct(
         public string $id,

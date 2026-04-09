@@ -1,9 +1,8 @@
 <?php
 
 namespace App\Unitman\Business\Command\Project;
-use App\Utils\Converter\JsonBodySerializableInterface;
 
-final class PoluchitSpisokPeremenihProekta implements JsonBodySerializableInterface
+final class PoluchitSpisokPeremenihProekta
 {
     public function __construct(public readonly string $id)
     {

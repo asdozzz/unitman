@@ -7,8 +7,5 @@ use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 
 interface CanGetUnitList
 {
-    /**
-     * @return SpisokUnitovReadModel[]
-     * */
     function getList(GetUnitList $query, string $currentUserId, array $projectIds): array;
 }

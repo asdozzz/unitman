@@ -13,7 +13,6 @@ final class PoluchitMoiProektiQuery
 {
     public function __construct(
         private UmeetPoluchatSpisokProektovDlyPolzovatelya $umeetPoluchatSpisokMoihProektov,
-        private CanGetActiveProjectList $canGetProjectList,
         private UnitmanSecurityService $securityService
     )
     {
@@ -22,8 +21,6 @@ final class PoluchitMoiProektiQuery
     function handle(PoluchitMoiProekti $command): array
     {
         $userId = $this->securityService->getCurrentUserId();
-        $moiProekti = $this->umeetPoluchatSpisokMoihProektov->poluchitSpisokProektovDlyPolzovatelya($userId);
-        $projectIds = array_map(fn(ProjectList $project) => $project->id, $moiProekti);
-        return $this->canGetProjectList->getActiveListByIds($projectIds);
+        return $this->umeetPoluchatSpisokMoihProektov->poluchitSpisokProektovDlyPolzovatelya($userId);
     }
 }

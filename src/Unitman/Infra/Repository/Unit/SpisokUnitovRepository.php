@@ -52,8 +52,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
 
     public function findById(string $id): ?SpisokUnitovReadModel
     {
-        $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE id = :id", ['id' => $id]);
+        $row = $this->findByIdRaw($id);
         if (empty($row)) {
             return null;
         }
@@ -148,7 +147,7 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
 
         $result = [];
         foreach ($rows as $row) {
-            $result[] = $this->makeUnitByRow($row);
+            $result[] = json_decode($row['payload'], true);
         }
 
         return $result;
@@ -230,5 +229,17 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         }
 
         return $result;
+    }
+
+    /**
+     * @param string $id
+     * @return array|false|mixed[]
+     * @throws \Doctrine\DBAL\Exception
+     */
+    function findByIdRaw(string $id): array|false
+    {
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative("SELECT * FROM $table WHERE id = :id", ['id' => $id]);
+        return $row;
     }
 }

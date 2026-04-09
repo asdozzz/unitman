@@ -263,7 +263,7 @@ final class Project implements AggregateRoot
     private function applyUserRemovedFromProject(UserRemovedFromProject $fact): void
     {
         $userIndex = $this->findIndexUserById($fact->userId);
-        if (isset($this->users[$userIndex])) {
+        if (isset($userIndex) && isset($this->users[$userIndex])) {
             unset($this->users[$userIndex]);
         }
     }

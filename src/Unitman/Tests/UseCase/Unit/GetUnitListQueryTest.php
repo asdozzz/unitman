@@ -61,10 +61,10 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $spisokProektovRepo = $this->getMockBuilder(UmeetPoluchatSpisokProektovDlyPolzovatelya::class)->getMock();
-        $nastroikiHukaProektov = new ProjectList\NastroikiHukaProekta(false, true, true);
+        $nastroikiHukaProektov = ['avtosozdanie' => false, 'avtoobnovlenie' => true, 'avtoudalenie' => true];
         $spisokProektovRepo->expects($this->any())->method('poluchitSpisokProektovDlyPolzovatelya')->willReturn([
-            new ProjectList('pr1', 'repoId', 'pr1Code', 'pr1Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS, $nastroikiHukaProektov),
-            new ProjectList('pr2', 'repoId', 'pr2Code', 'pr2Name', 'asd', true, ProjectListStateType::BUILD_SUCCESS, $nastroikiHukaProektov),
+            ['id' => 'pr1', 'repoId' => 'repoId', 'code' => 'pr1Code', 'name' => 'pr1Name', 'mainBranch' => 'asd', 'isActive' => true, 'state' => ProjectListStateType::BUILD_SUCCESS->value, 'nastroikiHukaProektov' => $nastroikiHukaProektov],
+            ['id' => 'pr2', 'repoId' => 'repoId', 'code' => 'pr2Code', 'name' => 'pr2Name', 'mainBranch' => 'asd', 'isActive' => true, 'state' => ProjectListStateType::BUILD_SUCCESS->value, 'nastroikiHukaProektov' => $nastroikiHukaProektov],
         ]);
         self::$container->set(UmeetPoluchatSpisokProektovDlyPolzovatelya::class, $spisokProektovRepo);
 
@@ -74,6 +74,6 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         $command = new GetUnitList($filter);
         $actual = $useCase->handle($command);
 
-        $this->assertSame($resultIds, array_map(fn(SpisokUnitovReadModel $readModel) => $readModel->id, $actual));
+        $this->assertSame($resultIds, array_map(fn(array $readModel) => $readModel['id'], $actual));
     }
 }

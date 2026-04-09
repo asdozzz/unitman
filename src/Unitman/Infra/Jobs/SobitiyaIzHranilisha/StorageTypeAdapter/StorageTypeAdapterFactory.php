@@ -3,7 +3,7 @@
 namespace App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter;
 
 use App\Unitman\Business\Model\Repo\RepoType;
-use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 final class StorageTypeAdapterFactory
 {
@@ -12,7 +12,7 @@ final class StorageTypeAdapterFactory
      * */
     private iterable $adapters;
 
-    public function __construct(#[TaggedIterator('unitman.storage_type_for_hook_adapter')] iterable $adapters)
+    public function __construct(#[AutowireIterator('unitman.storage_type_for_hook_adapter')] iterable $adapters)
     {
         $this->adapters = $adapters;
     }

@@ -56,14 +56,14 @@ final class RepoListProjection extends AbstractProjection implements UnitmanProj
 
     public function handleRepoWasAdded(RepoWasAdded $event): void
     {
-        $this->repoListRepository->insert(new RepoList(
-            $event->repoId,
-            $event->repoType,
-            $event->repoName,
-            $event->repoUrl,
-            $event->token,
-            false
-        ));
+        $readModel = new RepoList();
+        $readModel->id = $event->repoId;
+        $readModel->name = $event->repoName;
+        $readModel->type = $event->repoType;
+        $readModel->repoUrl = $event->repoUrl;
+        $readModel->token = $event->token;
+        $readModel->confirmed = false;
+        $this->repoListRepository->insert($readModel);
     }
 
     public function handleRepoWasDeleted(RepoWasDeleted $event): void
@@ -74,14 +74,16 @@ final class RepoListProjection extends AbstractProjection implements UnitmanProj
     public function handleCredentialsOfRepoWasChanged(CredentialsOfRepoWasChanged $event): void
     {
         $repo = $this->repoListRepository->getById($event->repoId);
-        $repo->changeCredentials($event->repoUrl, $event->token);
+        $repo->repoUrl = $event->repoUrl;
+        $repo->token = $event->token;
+        $repo->confirmed = false;
         $this->repoListRepository->update($repo);
     }
 
     public function handleAccessToRepoConfirmed(AccessToRepoConfirmed $event): void
     {
         $repo = $this->repoListRepository->getById($event->repoId);
-        $repo->confirmAccess();
+        $repo->confirmed = true;
         $this->repoListRepository->update($repo);
     }
 

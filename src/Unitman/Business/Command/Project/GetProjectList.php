@@ -2,9 +2,7 @@
 
 namespace App\Unitman\Business\Command\Project;
 
-use App\Utils\Converter\JsonBodySerializableInterface;
-
-final class GetProjectList implements JsonBodySerializableInterface
+final class GetProjectList
 {
     public function __construct(public readonly int $limit = 10, public readonly int $offset = 0)
     {

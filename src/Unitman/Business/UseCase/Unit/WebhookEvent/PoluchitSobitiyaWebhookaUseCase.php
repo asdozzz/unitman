@@ -22,8 +22,8 @@ final class PoluchitSobitiyaWebhookaUseCase
                 return new WebhookEventDlySpiska(
                     $webhookEvent->id,
                     $webhookEvent->payload->type->value,
-                    json_encode($webhookEvent->payload, JSON_PRETTY_PRINT),
-                    !empty($webhookEventResponse) ? json_encode($webhookEventResponse, JSON_PRETTY_PRINT) : $webhookEvent->getError(),
+                    json_encode($webhookEvent->payload, JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR),
+                    !empty($webhookEventResponse) ? json_encode($webhookEventResponse, JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR) : $webhookEvent->getError(),
                     $webhookEvent->payload->unixtime,
                     (bool) $webhookEvent->getSentInQueue()
                 );

@@ -11,9 +11,4 @@ interface CanGetActiveProjectList
      * @return ProjectList[]
      * */
     function getActiveList(GetActiveProjectList $query): array;
-
-    /**
-     * @return ProjectList[]
-     * */
-    function getActiveListByIds(array $projectIds): array;
 }
