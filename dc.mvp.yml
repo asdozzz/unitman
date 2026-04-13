@@ -14,20 +14,10 @@ services:
       file: common-services.yml
       service: temporal-admin-tools
 
-  temporal-create-namespace:
-    extends:
-      file: common-services.yml
-      service: temporal-create-namespace
-
   temporal-ui:
     extends:
       file: common-services.yml
       service: temporal-ui
-
-  buggregator:
-    extends:
-      file: common-services.yml
-      service: buggregator
 
   web:
     extends:
@@ -38,8 +28,8 @@ services:
       - beanstalk
       - centrifugo
       - postgres
-      - buggregator
     environment:
+      - APP_ENV=prod
       - PHP_OPCACHE_ENABLE=1
       - PHP_OPCACHE_ENABLE_CLI=1
       - PHP_ERROR_REPORTING="E_ALL"

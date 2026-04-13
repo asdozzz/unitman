@@ -21,7 +21,7 @@ rpc:
 
 http:
   address: 0.0.0.0:8080
-  middleware: ["http_metrics" ]
+  middleware: ["http_metrics", "gzip" ]
   pool:
     max_jobs: 100 # Maximal count of worker executions. Zero (or nothing) means no limit.
     supervisor:

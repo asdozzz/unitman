@@ -7,7 +7,7 @@ local-start:
 	docker compose exec web php bin/console app:jobs start
 
 mvp:
-	docker compose -f dc.mvp.yml up -d
+	docker compose -f dc.mvp.yml up -d --build
 	docker compose -f dc.mvp.yml exec web php bin/console app:jobs start
 mvp-stop:
 	docker compose -f dc.mvp.yml down

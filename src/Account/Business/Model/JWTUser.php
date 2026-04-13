@@ -83,11 +83,6 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
        return $this->roles;
     }
 
-    public function eraseCredentials(): void
-    {
-        // TODO: Implement eraseCredentials() method.
-    }
-
     public function getUserIdentifier(): string
     {
         return $this->email;
@@ -124,5 +119,11 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
     public function setNickname(?string $nickname): void
     {
         $this->nickname = $nickname;
+    }
+
+    #[\Deprecated]
+    public function eraseCredentials(): void
+    {
+        // TODO: Implement eraseCredentials() method.
     }
 }

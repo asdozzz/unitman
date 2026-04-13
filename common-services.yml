@@ -13,38 +13,8 @@ services:
     user: root
     environment:
       - "TEMPORAL_CLI_ADDRESS=temporal:7233"
-    depends_on:
-      - buggregator
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
-
-  elasticsearch:
-    container_name: elasticsearch
-    image: elasticsearch:7.14.0
-    restart: always
-    ports:
-      - ${ES_PORT}:9200
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
-    #volumes:
-    # - ./var/volume/elasticsearch_data:/usr/share/elasticsearch/data
-
-  kibana:
-    container_name: kibana
-    image: kibana:7.14.0
-    depends_on:
-      - elasticsearch
-    restart: always
-    environment:
-      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=d1a66dfd-c4d3-4a0a-8290-2abcb83ab3aa
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - ${KIBANA_PORT}:5601
-    #volumes:
-    # - ./var/volume/kibana_data:/usr/share/kibana/data
 
   postgres:
     image: postgres:13.3
@@ -82,8 +52,6 @@ services:
     image: touchify/beanstalkd
     hostname: beanstalk
     restart: always
-    environment:
-      BEANSTALKD_VERBOSE: 1
     volumes:
       - ./var/volume/beanstalk:/var/cache/beanstalkd
 
