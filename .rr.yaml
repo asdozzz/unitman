@@ -23,6 +23,7 @@ http:
   address: 0.0.0.0:8080
   middleware: ["http_metrics", "gzip" ]
   pool:
+    num_workers: ${RR_HTTP_NUM_WORKERS:-12}
     max_jobs: 100 # Maximal count of worker executions. Zero (or nothing) means no limit.
     supervisor:
       max_worker_memory: 100 # Maximal worker memory usage in megabytes (soft limit). Zero means no limit.
@@ -31,7 +32,7 @@ temporal:
   address: "temporal:7233"
   activities:
     command: "php bin/console temporal:workflow:runtime"
-    num_workers: 10
+    num_workers: ${RR_TEMPORAL_NUM_WORKERS:-12}
     max_jobs: 100
     supervisor:
       max_worker_memory: 100
@@ -59,13 +60,9 @@ jobs:
   timeout: 5
   pool:
     max_jobs: 200
-    num_workers: 20
-    allocate_timeout: 10s
-    destroy_timeout: 10s
-    dynamic_allocator:
-      max_workers: 40
-      spawn_rate: 10
-      idle_timeout: 10s
+    num_workers: ${RR_JOBS_NUM_WORKERS:-20}
+    allocate_timeout: 40s
+    destroy_timeout: 40s
   consume: [
     "sobitiya_iz_hranilisha",
     "websocket_unit_event",
@@ -79,11 +76,11 @@ jobs:
     websocket_unit_event:
       driver: beanstalk
       config:
-        priority: 10
+        priority: 1
     webhook_event:
       driver: beanstalk
       config:
-        priority: 10
+        priority: 50
 
 kv:
   redis:

@@ -38,15 +38,6 @@ services:
       - "-c"
       - "config_file=/etc/postgresql.conf"
 
-  unitman-proxy:
-    image: nginx
-    restart: always
-    volumes:
-      - ./.docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./.docker/nginx/html/index.html:/usr/share/nginx/html/index.html
-    ports:
-      - '8087:80'
-
   beanstalk:
     container_name: beanstalk
     image: touchify/beanstalkd

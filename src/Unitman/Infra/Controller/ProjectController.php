@@ -24,6 +24,7 @@ use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
 use App\Unitman\Business\Command\Project\PoluchitSpisokVetokProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
+use App\Unitman\Business\Command\Project\ProveritProxyHost;
 use App\Unitman\Business\Command\Project\RemoveProject;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
@@ -54,6 +55,7 @@ use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
+use App\Unitman\Infra\Service\ServiceProverkiProxyHost;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -258,6 +260,16 @@ final class ProjectController extends AbstractController
         try {
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/proverkaProxyHost', methods: ['POST'])]
+    public function proverkaProxyHost(#[MapRequestPayload] ProveritProxyHost $command, ServiceProverkiProxyHost $service): JsonResponse
+    {
+        try {
+            return $this->json(\App\Utils\Model\Reponse\Response::success(['result' => $service->proverit($command->proxyHost)]));
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
         }
