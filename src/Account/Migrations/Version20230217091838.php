@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace App\Account\Migrations;
 
-use App\Account\Business\Command\RegisterFirstAccount;
-use App\Account\Business\UseCase\RegisterFirstAccountUseCase;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
