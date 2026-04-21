@@ -4,20 +4,20 @@ services:
       file: common-services.yml
       service: postgresql
 
-  temporal:
-    extends:
-      file: common-services.yml
-      service: temporal
-
-  temporal-admin-tools:
-    extends:
-      file: common-services.yml
-      service: temporal-admin-tools
-
-  temporal-ui:
-    extends:
-      file: common-services.yml
-      service: temporal-ui
+  #temporal:
+  #  extends:
+  #    file: common-services.yml
+  #    service: temporal
+#
+  #temporal-admin-tools:
+  #  extends:
+  #    file: common-services.yml
+  #    service: temporal-admin-tools
+#
+  #temporal-ui:
+  #  extends:
+  #    file: common-services.yml
+  #    service: temporal-ui
 
   web:
     extends:
@@ -27,7 +27,6 @@ services:
       - '.:/home/containeruser/www'
     depends_on:
       - buggregator
-      - temporal
       - beanstalk
       - centrifugo
       - postgres
