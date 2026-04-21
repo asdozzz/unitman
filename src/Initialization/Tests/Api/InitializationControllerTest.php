@@ -84,4 +84,23 @@ final class InitializationControllerTest extends WebTestCase
         $this->assertArrayHasKey('status', $content);
         $this->assertEquals('error', $content['status']);
     }
+
+    public function get_all_props()
+    {
+        $this->client->request(
+            'GET',
+            '/api/initialization/list',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json']
+        );
+        $this->assertResponseIsSuccessful();
+
+        $responseJson = $this->client->getResponse()->getContent();
+        $response = json_decode($responseJson);
+        $expected = [
+            ['id' => 'proxy_host', 'prop' => 'proxy_host', 'value' => null, 'init' => null]
+        ];
+        $this->assertEquals($expected, $response);
+    }
 }
