@@ -85,7 +85,7 @@ final class InitializationControllerTest extends WebTestCase
         $this->assertEquals('error', $content['status']);
     }
 
-    public function get_all_props()
+    public function test_get_all_props(): void
     {
         $this->client->request(
             'GET',
@@ -97,9 +97,12 @@ final class InitializationControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
 
         $responseJson = $this->client->getResponse()->getContent();
-        $response = json_decode($responseJson);
+        $response = json_decode($responseJson, true);
         $expected = [
-            ['id' => 'proxy_host', 'prop' => 'proxy_host', 'value' => null, 'init' => null]
+            'status' => 'success',
+            'data' => [
+                ['id' => 'proxy_host', 'prop' => 'proxy_host', 'value' => null, 'init' => null]
+            ]
         ];
         $this->assertEquals($expected, $response);
     }

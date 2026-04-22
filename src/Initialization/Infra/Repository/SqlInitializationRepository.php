@@ -56,4 +56,9 @@ final class SqlInitializationRepository implements InitializationRepository
         $data = ['id' => $record->id, 'prop' => $record->prop, 'value' => $record->value, 'init' => 1];
         $this->connection->update(self::TABLE, $data, ['prop' => $record->prop]);
     }
+
+    public function getAll(): array
+    {
+        return $this->connection->fetchAllAssociative('SELECT * FROM '.self::TABLE);
+    }
 }

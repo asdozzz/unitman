@@ -9,4 +9,6 @@ interface InitializationRepository
     public function getByProp(string $prop): InitializationRecord;
 
     public function save(InitializationRecord $record): void;
+
+    public function getAll(): array;
 }
