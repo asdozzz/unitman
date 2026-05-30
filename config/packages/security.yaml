@@ -27,6 +27,7 @@ security:
     access_control:
         - { path: ^/test$, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/saveSteps$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/initialization/list, roles: PUBLIC_ACCESS }
         - { path: ^/api/project/(.*)/hook$, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: [ROLE_USER,ROLE_ADMIN]  }
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }

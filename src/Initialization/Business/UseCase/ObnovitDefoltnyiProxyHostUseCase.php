@@ -6,12 +6,14 @@ use App\Initialization\Business\Command\ObnovitDefoltnyiProxyHost;
 use App\Initialization\Business\Model\InitializationRecord;
 use App\Initialization\Business\Port\InitializationRepository as InitializationRepositoryPort;
 use App\Initialization\Business\Port\SecurityService;
+use App\Initialization\Business\Port\UnitmanPort;
 
 final class ObnovitDefoltnyiProxyHostUseCase
 {
     public function __construct(
         private InitializationRepositoryPort $repository,
-        private SecurityService $securityService
+        private SecurityService $securityService,
+        private UnitmanPort $unitmanPort
     ){}
 
     public function handle(ObnovitDefoltnyiProxyHost $command): void
@@ -19,6 +21,11 @@ final class ObnovitDefoltnyiProxyHostUseCase
         if (!$this->securityService->isAdmin()) {
             throw new \DomainException('security.access_denied');
         }
+
+        if (!$this->unitmanPort->proveritProxyHost($command->value)) {
+            throw new \DomainException('init.proxy_host_invalid');
+        }
+
         $record = $this->repository->getByProp('proxy_host');
 
         $record->value = $command->value;

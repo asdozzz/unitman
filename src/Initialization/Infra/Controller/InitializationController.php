@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/initialization')]
 final class InitializationController extends AbstractController
 {
-    #[Route('/proxy_host', methods: ['POST'])]
+    #[Route('/proxy_host', methods: ['PUT'])]
     public function updateProxyHost(#[MapRequestPayload] ObnovitDefoltnyiProxyHost $command, ObnovitDefoltnyiProxyHostUseCase $useCase): Response
     {
         try {

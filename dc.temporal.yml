@@ -1,9 +1,9 @@
 services:
   postgresql:
-    image: postgres:${POSTGRESQL_VERSION}
+    image: postgres:16
     container_name: temporal-postgresql
     ports:
-      - "5432:5432"
+      - "${TEMPORAL_DB_PORT:-5435}:5432"
     environment:
       POSTGRES_PASSWORD: temporal
       POSTGRES_USER: temporal
@@ -85,7 +85,7 @@ services:
       - TEMPORAL_CORS_ORIGINS=http://localhost:3000
     image: temporalio/ui:${TEMPORAL_UI_VERSION}
     ports:
-      - 8080:8080
+      - '${TEMPORAL_UI_PORT:-8088}:8080'
 
 networks:
   default:

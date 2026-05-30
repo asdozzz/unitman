@@ -1,24 +1,4 @@
 services:
-  postgresql:
-    extends:
-      file: common-services.yml
-      service: postgresql
-
-  temporal:
-    extends:
-      file: common-services.yml
-      service: temporal
-
-  temporal-admin-tools:
-    extends:
-      file: common-services.yml
-      service: temporal-admin-tools
-
-  temporal-ui:
-    extends:
-      file: common-services.yml
-      service: temporal-ui
-
   web:
     extends:
       file: common-services.yml
@@ -36,26 +16,10 @@ services:
       - PHP_DISPLAY_ERRORS=On
     volumes:
       - ./config/jwt:/home/containeruser/www/config/jwt
-
-  #elasticsearch:
-  #  extends:
-  #    file: common-services.yml
-  #    service: elasticsearch
-
-  #kibana:
-  #  extends:
-  #    file: common-services.yml
-  #    service: kibana
-
   postgres:
     extends:
       file: common-services.yml
       service: postgres
-
-  unitman-proxy:
-    extends:
-      file: common-services.yml
-      service: unitman-proxy
 
   unitman-front:
     image: asdozzz/unitman-front:0.0.4

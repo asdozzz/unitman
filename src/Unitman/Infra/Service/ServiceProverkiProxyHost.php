@@ -17,7 +17,7 @@ final class ServiceProverkiProxyHost
             throw new \DomainException('Proxy host is empty');
         }
 
-        $response = $this->httpClient->request('POST', $proxyHost);
+        $response = $this->httpClient->request('GET', $proxyHost);
 
         if ($response->getStatusCode() !== 200) {
             throw new \DomainException('Proxy host error: ' . $response->getStatusCode());

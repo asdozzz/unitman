@@ -48,7 +48,7 @@ final class InitializationControllerTest extends WebTestCase
         self::$container->set(\App\Initialization\Business\Port\SecurityService::class, $security);
 
         $this->client->request(
-            'POST',
+            'PUT',
             '/api/initialization/proxy_host',
             [],
             [],
@@ -71,7 +71,7 @@ final class InitializationControllerTest extends WebTestCase
         self::$container->set(\App\Initialization\Business\Port\SecurityService::class, $security);
 
         $this->client->request(
-            'POST',
+            'PUT',
             '/api/initialization/proxy_host',
             [],
             [],
