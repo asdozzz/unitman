@@ -22,14 +22,14 @@ final class Version20230217091838 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql("create table checkpoint_store
+        $this->addSql("create table if not exists checkpoint_store
             (
                 name varchar(128) not null constraint checkpoint_store_pk primary key,
                 checkpoint int default 0
             );
         ");
 
-        $this->addSql("create table account_event_store
+        $this->addSql("create table if not exists account_event_store
         (
             id                serial  not null
                 constraint account_event_store_pk
