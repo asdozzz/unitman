@@ -52,11 +52,6 @@ services:
       file: common-services.yml
       service: postgres
 
-  unitman-proxy:
-    extends:
-      file: common-services.yml
-      service: unitman-proxy
-
   unitman-front:
     image: asdozzz/unitman-front:0.0.4
     environment:
