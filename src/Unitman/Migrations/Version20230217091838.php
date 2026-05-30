@@ -19,7 +19,7 @@ final class Version20230217091838 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql("create table unitman_event_store
+        $this->addSql("create table IF NOT EXISTS unitman_event_store
         (
             id                serial  not null
                 constraint unitman_event_store_pk
@@ -35,6 +35,6 @@ final class Version20230217091838 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
-        $this->addSql('DROP TABLE unitman_event_store');
+        $this->addSql('DROP TABLE IF EXISTS unitman_event_store');
     }
 }
