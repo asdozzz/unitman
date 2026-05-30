@@ -22,7 +22,10 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Unitman/.*
-
+    - name: Initialization
+      collectors:
+        - type: directory
+          regex: ./src/Initialization/.*
   ruleset:
     Account:
     BackgroundJob:

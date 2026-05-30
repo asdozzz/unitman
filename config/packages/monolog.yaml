@@ -43,6 +43,7 @@ when@prod:
         handlers:
             main:
                 type: fingers_crossed
+                channels: ["!event", "!doctrine", "!console", "!security"]
                 action_level: error
                 handler: nested
                 excluded_http_codes: [404, 405]

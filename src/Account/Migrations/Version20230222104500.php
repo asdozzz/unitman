@@ -26,7 +26,7 @@ final class Version20230222104500 extends AbstractMigration
     {
         $registerFirstAccountUseCase = $this->container->get(RegisterFirstAccountUseCase::class);
 
-        $command = new RegisterFirstAccount('asd@asd.ru', 'asd');
+        $command = new RegisterFirstAccount('admin@admin.ru', 'admin');
         $registerFirstAccountUseCase->handle($command);
 
         $registerSystemUser = $this->container->get(RegisterSystemAccountUseCase::class);

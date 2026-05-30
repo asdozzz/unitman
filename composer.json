@@ -102,6 +102,7 @@
         "check-background-deptrac": "php deptrac.phar analyze --config-file=./src/BackgroundJob/deptrac.yaml",
         "check-runner-deptrac": "php deptrac.phar analyze --config-file=./src/Runner/deptrac.yaml",
         "check-unitman-deptrac": "php deptrac.phar analyze --config-file=./src/Unitman/deptrac.yaml",
+        "check-init-deptrac": "php deptrac.phar analyze --config-file=./src/Initialization/deptrac.yaml",
         "all-checks": [
             "@check-psalm",
             "@check-phpunit",
@@ -109,7 +110,8 @@
             "@check-account-deptrac",
             "@check-background-deptrac",
             "@check-runner-deptrac",
-            "@check-unitman-deptrac"
+            "@check-unitman-deptrac",
+            "@check-init-deptrac"
         ]
     },
     "conflict": {

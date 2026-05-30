@@ -1,5 +1,5 @@
 temporal:
-  address: 'localhost:7233'
+  address: 'temporal:7233'
   worker:
     queue: '%env(TEMPORAL_WORKER_QUEUE)%'
     data-converter:

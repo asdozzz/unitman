@@ -28,3 +28,15 @@ update:
 	docker compose -f dc.mvp.yml up -d
 	docker compose -f dc.mvp.yml exec web php bin/console doctrine:migrations:migrate
 	docker compose -f dc.mvp.yml exec web php bin/console app:jobs start
+
+
+tl:
+	docker compose -f dc.temporal.yml up -d
+tl-stop:
+	docker compose -f dc.temporal.yml down
+
+
+stop-all:
+	make local-stop
+	make tl-stop
+	make tools-stop
