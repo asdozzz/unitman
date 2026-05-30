@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM asdozzz/roadrunner:0.0.6
+FROM asdozzz/roadrunner:0.0.7
 
 COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
 RUN composer install --no-scripts --no-autoloader
