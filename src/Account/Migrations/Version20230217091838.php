@@ -45,7 +45,7 @@ final class Version20230217091838 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
-        $this->addSql('DROP TABLE checkpoint_store');
-        $this->addSql('DROP TABLE account_event_store');
+        $this->addSql('DROP TABLE if exists checkpoint_store');
+        $this->addSql('DROP TABLE if exists account_event_store');
     }
 }
