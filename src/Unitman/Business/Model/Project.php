@@ -213,7 +213,7 @@ final class Project implements AggregateRoot
         $index = null;
 
         foreach ($this->users as $i => $projectUser) {
-            if ($projectUser->userId == $userId) {
+            if ($projectUser->userId === $userId) {
                 $index = $i;
             }
         }
