@@ -6,6 +6,7 @@ use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
+use App\Unitman\Business\ReadModel\ProektHranilisha;
 use App\Unitman\Business\ReadModel\RepoTypeList;
 use App\Unitman\Business\ReadModel\VetkaProekta;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\GitlabAdapter\GitlabClientFactory;
@@ -90,6 +91,8 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
 
     public function poluchitProektiHranilisha(Repo $repo, ?string $query): array
     {
-        return [];
+        $client = $this->clientFactory->makeClient($repo);
+        $all = $client->projects()->all(['per_page' => 100, 'search' => $query, 'simple' => true, 'membership' => true]);
+        return array_map(fn(array $item) => new ProektHranilisha($item['path_with_namespace'] ?? "", $item['name_with_namespace'] ?? ""), $all);
     }
 }

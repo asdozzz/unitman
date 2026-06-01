@@ -4,7 +4,7 @@ namespace App\Unitman\Business\Command\Project;
 
 final class GetActiveProjectList
 {
-    public function __construct(public readonly int $limit = 10, public readonly int $offset = 0)
+    public function __construct(public readonly int $limit = 100, public readonly int $offset = 0)
     {
     }
 }
