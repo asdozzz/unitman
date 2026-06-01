@@ -100,10 +100,11 @@ services:
     stdin_open: true
 
   buggregator:
-    image: ghcr.io/buggregator/server:1.13.5
+    image: ghcr.io/buggregator/server:2.3
     environment:
       - VAR_DUMPER_PREVIEW_MAX_DEPTH=3
     ports:
       - 8086:8000
       - 9912:9912
       - 9913:9913
+    restart: always

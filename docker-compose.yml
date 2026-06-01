@@ -6,7 +6,7 @@ services:
     volumes:
       - '.:/home/containeruser/www'
     depends_on:
-      - buggregator
+     # - buggregator
       - beanstalk
       - centrifugo
       - postgres
@@ -41,10 +41,10 @@ services:
       file: common-services.yml
       service: redis
 
-  buggregator:
-    extends:
-      file: common-services.yml
-      service: buggregator
+  #buggregator:
+  #  extends:
+  #    file: common-services.yml
+  #    service: buggregator
 
 networks:
   default:
