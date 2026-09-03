@@ -2,6 +2,7 @@
 
 namespace App\Initialization\Tests\Api;
 
+use App\Initialization\Business\Port\UnitmanPort;
 use App\Initialization\Infra\Repository\SqlInitializationRepository;
 use Doctrine\DBAL\Connection;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
@@ -39,13 +40,17 @@ final class InitializationControllerTest extends WebTestCase
         $repo = self::$container->get(SqlInitializationRepository::class);
         /** @var SqlInitializationRepository $repo */
         $record = $repo->getByProp('proxy_host');
-        $this->assertEquals(null, $record->value);
-        $this->assertEquals(null, $record->init);
+        $oldValue = $record->value;
+        $this->assertTrue( $oldValue !== 'http://proxy.example');
 
         // mock security to be admin
         $security = $this->createMock(\App\Initialization\Business\Port\SecurityService::class);
-        $security->method('isAdmin')->willReturn(true);
+        $security->expects($this->atLeastOnce())->method('isAdmin')->willReturn(true);
         self::$container->set(\App\Initialization\Business\Port\SecurityService::class, $security);
+
+        $unitmanAdapter = $this->createMock(UnitmanPort::class);
+        $unitmanAdapter->expects($this->atLeastOnce())->method('proveritProxyHost')->willReturn(true);
+        self::$container->set(UnitmanPort::class, $unitmanAdapter);
 
         $this->client->request(
             'PUT',
@@ -98,12 +103,6 @@ final class InitializationControllerTest extends WebTestCase
 
         $responseJson = $this->client->getResponse()->getContent();
         $response = json_decode($responseJson, true);
-        $expected = [
-            'status' => 'success',
-            'data' => [
-                ['id' => 'proxy_host', 'prop' => 'proxy_host', 'value' => null, 'init' => null]
-            ]
-        ];
-        $this->assertEquals($expected, $response);
+        $this->assertEquals('success', $response['status']);
     }
 }

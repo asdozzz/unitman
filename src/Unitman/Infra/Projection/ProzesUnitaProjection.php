@@ -64,15 +64,9 @@ final class ProzesUnitaProjection extends AbstractProjection implements UnitmanP
         $eventClass = $reflect->getName();
 
         match ($eventClass) {
-            UnitSozdan::class, UnitSozdanSystemoi::class => $this->sozdan(),
             DobavlenProzesVUnit::class => $this->dobavit($event),
             default => $this->obnovlen($event)
         };
-    }
-
-    private function sozdan(): void
-    {
-        return;
     }
 
     private function obnovlen(object $event): void

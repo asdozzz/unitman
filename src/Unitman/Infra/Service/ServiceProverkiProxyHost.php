@@ -11,7 +11,7 @@ final class ServiceProverkiProxyHost
     {
     }
 
-    function proverit(string $proxyHost): bool
+    function proverit(?string $proxyHost): bool
     {
         if (empty($proxyHost)) {
             throw new \DomainException('Proxy host is empty');

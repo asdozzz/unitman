@@ -4,5 +4,5 @@ namespace App\Initialization\Business\Port;
 
 interface UnitmanPort
 {
-    function proveritProxyHost(string $proxyHost);
+    function proveritProxyHost(?string $proxyHost): bool;
 }
