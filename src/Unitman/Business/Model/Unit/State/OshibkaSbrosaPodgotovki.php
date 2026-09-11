@@ -30,7 +30,8 @@ final class OshibkaSbrosaPodgotovki extends AbstractState
             StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatObnovlenie,
             StateUserCommand::zapolnitPeremenie,
-            StateUserCommand::nachatSbrosPodgotovki
+            StateUserCommand::nachatSbrosPodgotovki,
+            StateUserCommand::proveritKonteinerUnita
         ];
 
         return $arr;

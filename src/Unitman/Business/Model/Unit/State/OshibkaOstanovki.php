@@ -29,7 +29,8 @@ final class OshibkaOstanovki extends AbstractState
         return [
             StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatOstanovku,
-            StateUserCommand::nachatSbrosPodgotovki
+            StateUserCommand::nachatSbrosPodgotovki,
+            StateUserCommand::proveritKonteinerUnita
         ];
     }
 }
