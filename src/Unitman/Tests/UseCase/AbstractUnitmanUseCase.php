@@ -9,7 +9,7 @@ use App\Unitman\Business\UseCase\Project\AddProjectUseCase;
 use App\Unitman\Business\UseCase\Repo\AddRepoUseCase;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
 
-abstract class AbstractUnitmanUseCase extends AbstractTestCaseWithTransactionWrapper
+class AbstractUnitmanUseCase extends AbstractTestCaseWithTransactionWrapper
 {
     /**
      * @param RepoType $repoType

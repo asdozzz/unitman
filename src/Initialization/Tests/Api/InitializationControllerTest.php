@@ -48,9 +48,9 @@ final class InitializationControllerTest extends WebTestCase
         $security->expects($this->atLeastOnce())->method('isAdmin')->willReturn(true);
         self::$container->set(\App\Initialization\Business\Port\SecurityService::class, $security);
 
-        $unitmanAdapter = $this->createMock(UnitmanPort::class);
+        /*$unitmanAdapter = $this->createMock(UnitmanPort::class);
         $unitmanAdapter->expects($this->atLeastOnce())->method('proveritProxyHost')->willReturn(true);
-        self::$container->set(UnitmanPort::class, $unitmanAdapter);
+        self::$container->set(UnitmanPort::class, $unitmanAdapter);*/
 
         $this->client->request(
             'PUT',

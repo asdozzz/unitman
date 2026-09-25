@@ -26,7 +26,7 @@ use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Tests\UseCase\AbstractUnitmanUseCase;
 use Ramsey\Uuid\Uuid;
 
-abstract class AbstractUnitUseCase extends AbstractUnitmanUseCase
+class AbstractUnitUseCase extends AbstractUnitmanUseCase
 {
 
     /**

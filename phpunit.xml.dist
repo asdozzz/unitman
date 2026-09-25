@@ -21,6 +21,9 @@
     <testsuites>
         <testsuite name="Project Test Suite">
             <directory suffix=".php">src/*/Tests</directory>
+            <exclude>src/Unitman/Tests/UseCase/AbstractUnitmanUseCase.php</exclude>
+            <exclude>src/Unitman/Tests/UseCase/Unit/AbstractUnitUseCase.php</exclude>
+            <exclude>src/Unitman/Tests/UseCase/Proekt/AbstractProjectUseCase.php</exclude>
         </testsuite>
     </testsuites>
 

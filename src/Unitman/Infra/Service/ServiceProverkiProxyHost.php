@@ -17,6 +17,9 @@ final class ServiceProverkiProxyHost
             throw new \DomainException('Proxy host is empty');
         }
 
+        $oldProxyHost = $proxyHost;
+        $proxyHost = str_replace("localhost", "uproxy", $oldProxyHost);
+
         $response = $this->httpClient->request('GET', $proxyHost);
 
         if ($response->getStatusCode() !== 200) {

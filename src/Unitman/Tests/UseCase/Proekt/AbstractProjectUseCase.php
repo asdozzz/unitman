@@ -17,7 +17,7 @@ use App\Unitman\Tests\UseCase\AbstractUnitmanUseCase;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
 use Ramsey\Uuid\Uuid;
 
-abstract class AbstractProjectUseCase extends AbstractUnitmanUseCase
+class AbstractProjectUseCase extends AbstractUnitmanUseCase
 {
     function addProject(string $repoId,string $projectCode, string $projectName, string $mainBranch, string $proxyHost, string $userId): string
     {

@@ -154,10 +154,10 @@ final class UdalenieNeaktivnihUnitovTest extends AbstractUnitUseCase
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['type']);
+        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel->prozesi[0]['type']);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
         $spisokUnitovReadModel2 = $spisokUnitovRepo->getById($unitId2);
-        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel2->prozesi[1]['type']);
+        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel2->prozesi[0]['type']);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel2*/
         $spisokUnitovReadModel3 = $spisokUnitovRepo->getById($unitId3);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel3*/

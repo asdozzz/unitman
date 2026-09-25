@@ -21,7 +21,8 @@ services:
       #- OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       #- OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
       #- OTEL_PHP_TRACES_PROCESSOR=simple
-
+    extra_hosts:
+      - "uproxy:host-gateway"
   postgres:
     extends:
       file: common-services.yml
