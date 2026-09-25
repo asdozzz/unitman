@@ -460,7 +460,7 @@ final class Unit implements AggregateRoot
 
     }
 
-    public static function sozdatUnitSystemoi(string $id, Account $account, SozdatUnit $command): self
+    public static function sozdatUnitSystemoi(string $id, Account $account, string $prozesId, SozdatUnit $command): self
     {
         if (empty($command->projectId)) {
             throw new DomainException('unit.projectId_is_empty');
@@ -472,6 +472,7 @@ final class Unit implements AggregateRoot
         $unit = new self(UnitId::fromString($id));
         $state = new Sozdan();
         $unit->recordThat(new UnitSozdanSystemoi($id, $account->id, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $command->memoryLimit));
+        $unit->dobavitProzesSborki($account->id, $prozesId);
         return $unit;
     }
 

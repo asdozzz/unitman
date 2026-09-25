@@ -20,7 +20,7 @@ final class UnitmanApi
         $this->obnovitStatistikuPoKonteineruUnitaUseCase->handle($command);
     }
 
-    function proveritProxyHost(string $url): bool
+    function proveritProxyHost(?string $url): bool
     {
         return $this->serviceProverkiProxyHost->proverit($url);
     }

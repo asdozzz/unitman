@@ -31,7 +31,8 @@ final class OshibkaZapuska extends AbstractState
             StateUserCommand::nachatUdalenie,
             StateUserCommand::nachatZapusk,
             StateUserCommand::nachatObnovlenie,
-            StateUserCommand::nachatSbrosPodgotovki
+            StateUserCommand::nachatSbrosPodgotovki,
+            StateUserCommand::proveritKonteinerUnita
         ];
     }
 }

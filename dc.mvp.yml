@@ -4,7 +4,6 @@ services:
       file: common-services.yml
       service: web
     depends_on:
-      - temporal
       - beanstalk
       - centrifugo
       - postgres
@@ -22,10 +21,12 @@ services:
       service: postgres
 
   unitman-front:
-    image: asdozzz/unitman-front:0.0.4
+    image: asdozzz/unitman-front:0.0.6
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      API_HOST: http://localhost:${UNITMAN_API_PORT}/api
-      CENTRIFUGE_HOST: ws://localhost:${UNITMAN_CENTRIFUGO_PORT}/connection/websocket
+      VITE_API_HOST: http://localhost:${UNITMAN_API_PORT}/api
+      VITE_CENTRIFUGE_HOST: ws://localhost:${UNITMAN_CENTRIFUGO_PORT:-8000}/connection/websocket
     ports:
       - ${UNITMAN_FRONT_PORT}:80
     depends_on:

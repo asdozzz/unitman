@@ -206,7 +206,7 @@ final class WebhookTest extends AbstractUnitUseCase
 
         $useCase = new OtpravitEventNaWebhookUseCase($webhookEventRepo, $webhookProjectRepo, $httpClient);
         $useCase->handle($webhookEvent1);
-        $useCase->handle($webhookEvent2, true);
+        $useCase->handle($webhookEvent2);
         $useCase->handle($webhookEvent3);
         $useCase->handle($webhookEvent4);
 
@@ -217,7 +217,6 @@ final class WebhookTest extends AbstractUnitUseCase
         $event3 = $webhookEventRepo->getById($webhookEvent3);
         $this->assertEquals(null , $event3->getResponse());
         $this->assertEquals('HTTP 500 returned for "http://asd.ru/".' , $event3->getError());
-
         $event4 = $webhookEventRepo->getById($webhookEvent4);
         $this->assertEquals(new WebhookEventResponse(200, 'resp4') , $event4->getResponse());
 

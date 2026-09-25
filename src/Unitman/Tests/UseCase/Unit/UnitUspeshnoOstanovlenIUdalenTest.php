@@ -240,8 +240,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $useCase->handle(new VipolnitDeistviye($unitId, 'php-console',['BIN_CONSOLE' => 'test']));
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[1]['state']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
+        $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
 
         $now = new \DateTimeImmutable('2025-12-09 17:53:40');
         $clockService->setNow($now);
@@ -254,8 +254,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['state']);
-        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
 
         $now = new \DateTimeImmutable('2025-12-09 17:53:50');
         $clockService->setNow($now);
@@ -269,8 +269,8 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
 
-        $this->assertEquals(UnitProcessState::SUCCESS->value, $spisokUnitovReadModel->prozesi[1]['state']);
-        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
+        $this->assertEquals(UnitProcessState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
         $this->assertEquals(true, $spisokUnitovReadModel->zapushen);
 
         $useCase = self::$container->get(DobavitProzesUdaleniyaUseCase::class);
@@ -279,10 +279,10 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
 
-        $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[2]['state']);
-        $this->assertEquals(RunnerJobType::OSTANOVKA->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['type']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['state']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobType::OSTANOVKA->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['type']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
 
         $now = new \DateTimeImmutable('2025-12-09 17:54:00');
         $clockService->setNow($now);
@@ -292,52 +292,52 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['state']);
-        $this->assertEquals(RunnerJobType::OSTANOVKA->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['type']);
-        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['state']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobType::OSTANOVKA->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['type']);
+        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
 
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['state']);
-        $this->assertEquals(RunnerJobType::OSTANOVKA->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['type']);
-        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[2]['jobs'][0]['state']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobType::OSTANOVKA->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['type']);
+        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
         $this->assertEquals(false, $spisokUnitovReadModel->zapushen);
 
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['state']);
-        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['jobs'][1]['state']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['jobs'][1]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
 
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['state']);
-        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[2]['jobs'][1]['state']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][1]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
 
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['state']);
-        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[2]['jobs'][1]['state']);
-        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][1]['state']);
+        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
 
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
-        $this->assertEquals(UnitProcessState::ERROR->value, $spisokUnitovReadModel->prozesi[2]['state']);
-        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[2]['jobs'][1]['state']);
-        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[2]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][1]['state']);
+        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
 
         $useCase = self::$container->get(UdalitSlomaniyUnitUseCase::class);
         $useCase->handle(new UdalitSlomaniyUnit($unitId));

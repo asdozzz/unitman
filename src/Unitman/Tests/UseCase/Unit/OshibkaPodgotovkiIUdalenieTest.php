@@ -71,16 +71,16 @@ final class OshibkaPodgotovkiIUdalenieTest extends AbstractUnitUseCase
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[1]['state']);
-        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
-        $this->assertEquals(RunnerJobType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['type']);
+        $this->assertEquals(UnitProcessState::ZADACHI_DOBAVLENI->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::NEW->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
+        $this->assertEquals(RunnerJobType::UDALENIE->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['type']);
 
         $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['state']);
-        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['state']);
+        $this->assertEquals(UnitProcessState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::PENDING->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
 
         $useCase->handle($unitId);
 

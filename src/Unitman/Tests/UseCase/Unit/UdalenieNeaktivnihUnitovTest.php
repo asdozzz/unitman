@@ -11,13 +11,16 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
+use App\Unitman\Acl\AccountAdapter;
 use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
 use App\Unitman\Business\Model\Unit\VariableValue;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
@@ -27,6 +30,8 @@ use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Utils\Service\TestClockService;
 use Psr\Clock\ClockInterface;
 use Ramsey\Uuid\Uuid;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\CommandTester;
 
 final class UdalenieNeaktivnihUnitovTest extends AbstractUnitUseCase
 {
@@ -48,7 +53,11 @@ final class UdalenieNeaktivnihUnitovTest extends AbstractUnitUseCase
         $prozesUdaleniyaId2 = Uuid::uuid7()->toString();
 
         $userId = Uuid::uuid7()->toString();
-        $this->mokaemUspehSecurity($userId);
+        $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
+        $securityService->expects($this->atLeastOnce())->method('getCurrentUserId')->willReturn($userId);
+        $securityService->expects($this->atLeastOnce())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru', false));
+        $securityService->expects($this->atLeastOnce())->method('getSystemUser')->willReturn(new Account($userId, 'asd@asd.ru', false));
+        self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $memoryRunner = new MemoryRunnerService();
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');
@@ -131,16 +140,24 @@ final class UdalenieNeaktivnihUnitovTest extends AbstractUnitUseCase
         $now = new \DateTimeImmutable('2025-10-24 15:00:01');
         $clockService->setNow($now);
 
-        $useCase = self::$container->get(UdalitNeaktivnieUnitiUseCase::class);
-        $useCase->handle(60*60*24*14);
+        $application = new Application(self::$kernel);
+        $command = $application->find('app:service:run');
+        $commandTester = new CommandTester($command);
+        $commandTester->execute([
+            'serviceName' => 'udalenie_neaktivnih_unitov'
+        ]);
+        $commandTester->assertCommandIsSuccessful();
+
+       /* $useCase = self::$container->get(UdalitNeaktivnieUnitiUseCase::class);
+        $useCase->handle(60*60*24*14);*/
 
         $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $spisokUnitovRepo */
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['type']);
+        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel->prozesi[0]['type']);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel*/
         $spisokUnitovReadModel2 = $spisokUnitovRepo->getById($unitId2);
-        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel2->prozesi[1]['type']);
+        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel2->prozesi[0]['type']);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel2*/
         $spisokUnitovReadModel3 = $spisokUnitovRepo->getById($unitId3);
         /** @var SpisokUnitovReadModel $spisokUnitovReadModel3*/

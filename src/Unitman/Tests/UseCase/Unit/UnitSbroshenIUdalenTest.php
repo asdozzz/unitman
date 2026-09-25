@@ -92,7 +92,7 @@ final class UnitSbroshenIUdalenTest extends AbstractUnitUseCase
         $useCase->handle($unitId);
 
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['type']);
-        $this->assertEquals(RunnerJobType::UDALENIE->value, $spisokUnitovReadModel->prozesi[1]['jobs'][0]['type']);
+        $this->assertEquals(UnitProcessType::UDALENIE->value, $spisokUnitovReadModel->prozesi[0]['type']);
+        $this->assertEquals(RunnerJobType::UDALENIE->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['type']);
     }
 }

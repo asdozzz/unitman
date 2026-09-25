@@ -34,16 +34,17 @@ final class SozdatUnitSystemoiUseCase
             throw new \DomainException('unit.avtosozdanie_viklucheno');
         }
         $unitName = preg_replace('/[^a-zA-Z0-9_]+/misu', '_',$vetka) ?: "";
-
-        $command = new SozdatUnit($projectId, $unitName, $vetka);
+        $memoryLimit = $project->poluchitMemoryLimit();
+        $command = new SozdatUnit($projectId, $unitName, $vetka, [], $memoryLimit);
 
         if ($this->canFindUnitDouble->isExistsDoubleByName($projectId, $command->unitName)) {
             throw new \DomainException('unit.double');
         }
 
         $systemUser = $this->securityService->getSystemUser();
-
-        $unit = Unit::sozdatUnitSystemoi($this->uuidGenerator->makeGuid(), $systemUser, $command);
+        $unitId = $this->uuidGenerator->makeGuid();
+        $prozesId = $this->uuidGenerator->makeGuid();
+        $unit = Unit::sozdatUnitSystemoi($unitId, $systemUser, $prozesId, $command);
         $this->unitRepository->save($unit);
         return $unit->getId();
     }

@@ -12,18 +12,13 @@ final class ObnovitDefoltnyiProxyHostUseCase
 {
     public function __construct(
         private InitializationRepositoryPort $repository,
-        private SecurityService $securityService,
-        private UnitmanPort $unitmanPort
+        private SecurityService $securityService
     ){}
 
     public function handle(ObnovitDefoltnyiProxyHost $command): void
     {
         if (!$this->securityService->isAdmin()) {
             throw new \DomainException('security.access_denied');
-        }
-
-        if (!$this->unitmanPort->proveritProxyHost($command->value)) {
-            throw new \DomainException('init.proxy_host_invalid');
         }
 
         $record = $this->repository->getByProp('proxy_host');

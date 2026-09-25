@@ -3,12 +3,18 @@
 namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Model\Account;
+use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
+use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
 use App\Unitman\Business\Model\Unit\VariableValue;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
+use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use Ramsey\Uuid\Uuid;
 
@@ -17,6 +23,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
     function test()
     {
         $unitId = Uuid::uuid7()->toString();
+        $prozesId = Uuid::uuid7()->toString();
         $unitId2 = Uuid::uuid7()->toString();
         $unitId3 = Uuid::uuid7()->toString();
         $userId = Uuid::uuid7()->toString();
@@ -37,7 +44,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $unitRepo = self::$container->get(UnitRepository::class);
         /** @var $unitRepo UnitRepository*/
 
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId,$unitId2,$unitId3]), $unitRepo);
+        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId,$prozesId,$unitId2,$unitId3]), $unitRepo);
         $useCase2->handle(new SozdatUnit(
             $projectId,
             'unit-1',
@@ -54,6 +61,16 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
             new VariableValue('VARIABLE_1', 'VALUE_1', 'string'),
             new VariableValue('VARIABLE_2', 'VALUE_2', 'integer'),
         ],$unit->poluchitZnacheniyaPeremenih());
+
+        $prozessRepo = self::$container->get(ProzesUnitaRepository::class);
+        /** @var $prozessRepo ProzesUnitaRepository*/
+
+        $prozesi = $prozessRepo->poluchitProzesiPoIdUnita($unitId);
+
+        $this->assertEquals(UnitProcessType::SBORKA->value, $prozesi[0]->type);
+        $this->assertEquals(RunnerJobType::SBORKA->value, $prozesi[0]->jobs[0]->type);
+        $this->assertEquals(RunnerJobType::PODGOTOVKA->value, $prozesi[0]->jobs[1]->type);
+        $this->assertEquals(RunnerJobType::ZAPUSK->value, $prozesi[0]->jobs[2]->type);
 
         $this->expectExceptionMessage('unit.name_already_exists');
         $useCase2->handle(new SozdatUnit(
@@ -75,5 +92,50 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
             'мультирасчет 23',
             'feature/123'
         ));
+    }
+
+    /**
+     * @test
+     * */
+    function avtosozdanie()
+    {
+        $unitId = Uuid::uuid7()->toString();
+        $prozesId = Uuid::uuid7()->toString();
+        $userId = Uuid::uuid7()->toString();
+        $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
+        $account = new Account($userId, 'asd@asd.ru', true);
+        $securityService->expects($this->atLeastOnce())->method('getUserById')->willReturn($account);
+        $securityService->expects($this->atLeastOnce())->method('getSystemUser')->willReturn($account);
+        self::$container->set(UnitmanSecurityService::class, $securityService);
+        $projectId = Uuid::uuid7()->toString();
+
+        $guidGenerator = new MemoryGuidGenerator([$projectId]);
+        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+
+        $project = $this->stubProekta($projectId, $userId);
+        $projectRepository = self::$container->get(ProjectRepository::class);
+        /** @var $projectRepository ProjectRepository*/
+        $projectRepository->save($project);
+
+        $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
+        /** @var SpisokUnitovRepository $spisokUnitovRepo */
+
+        $unitRepo = self::$container->get(UnitRepository::class);
+        /** @var $unitRepo UnitRepository*/
+
+        $useCase2 = new SozdatUnitSystemoiUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId, $prozesId]), $unitRepo);
+        $useCase2->handle(
+            $projectId,
+            'feature/123'
+        );
+
+        $prozessRepo = self::$container->get(ProzesUnitaRepository::class);
+        /** @var $prozessRepo ProzesUnitaRepository*/
+
+        $prozesi = $prozessRepo->poluchitProzesiPoIdUnita($unitId);
+        $this->assertEquals(UnitProcessType::SBORKA->value, $prozesi[0]->type);
+        $this->assertEquals(RunnerJobType::SBORKA->value, $prozesi[0]->jobs[0]->type);
+        $this->assertEquals(RunnerJobType::PODGOTOVKA->value, $prozesi[0]->jobs[1]->type);
+        $this->assertEquals(RunnerJobType::ZAPUSK->value, $prozesi[0]->jobs[2]->type);
     }
 }

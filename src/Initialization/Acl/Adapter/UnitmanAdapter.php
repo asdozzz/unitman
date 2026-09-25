@@ -11,7 +11,7 @@ final class UnitmanAdapter implements UnitmanPort
     {
     }
 
-    function proveritProxyHost(string $proxyHost): bool
+    function proveritProxyHost(?string $proxyHost): bool
     {
         return $this->unitmanApi->proveritProxyHost($proxyHost);
     }

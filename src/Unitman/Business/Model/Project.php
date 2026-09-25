@@ -672,4 +672,9 @@ final class Project implements AggregateRoot
         }
         return $this->ochistka->getJobId();
     }
+
+    public function poluchitMemoryLimit(): int
+    {
+        return $this->projectContainerSettings->memoryLimit;
+    }
 }

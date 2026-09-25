@@ -20,7 +20,7 @@ final class UdalitNeaktivnieUnitiUseCase
         $currentDatetime = $this->clock->now();
         $ids = $this->umeetOtbiratNeaktivnieUniti->otobratNeaktivnieUniti($currentDatetime->getTimestamp() - $period);
         foreach ($ids as $id) {
-            $this->dobavitProzesUdaleniyaUseCase->handle($id);
+            $this->dobavitProzesUdaleniyaUseCase->handleSystem($id);
         }
     }
 }
