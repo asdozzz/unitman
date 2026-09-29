@@ -2,8 +2,10 @@
 
 namespace App\Utils\EventSauce;
 
+use App\Unitman\Infra\Projection\ProzesUnitaProjection;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use App\Utils\EventSauce\Repository\CheckpointStore;
+use App\Utils\Service\LockService;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootId;
@@ -26,7 +28,8 @@ final class ProjectionsManager
         CheckpointStore          $checkpointStore,
         iterable                 $projections,
         DoctrineStreamRepository $eventsRepository,
-        string $appEnv
+        string $appEnv,
+        private LockService $lockService
     )
     {
         $this->projections = $projections;
@@ -91,6 +94,13 @@ final class ProjectionsManager
 
     public function pullProjectionByName(string $projectionName): void
     {
+        $lockFactory = $this->lockService->makeLockFactory();
+        $lock = $lockFactory->createLock('pullProjectionByName.'.$projectionName);
+
+        if (!$lock->acquire()) {
+            return;
+        }
+
         $this->connection->beginTransaction();
         try {
             $projection = $this->getProjectionByName($projectionName);
@@ -106,6 +116,8 @@ final class ProjectionsManager
         } catch (\Exception $e) {
             $this->connection->rollBack();
             throw $e;
+        } finally {
+            $lock->release();
         }
     }
 
