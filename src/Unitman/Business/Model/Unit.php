@@ -1049,7 +1049,9 @@ final class Unit implements AggregateRoot
     {
         $prozes = $this->poluchitProzesPoIdZadachi($jobId);
         $prozes->cancelJob($jobId, $e->getMessage());
-        $this->recordThat(new ZadachaUnitaOtmenena($this->getId(), $jobId, $unixtime, $prozes->toArray()));
+
+        $newState = $this->opredelitStatePosleOtmeni();
+        $this->recordThat(new ZadachaUnitaOtmenena($this->getId(), $jobId, $unixtime, $prozes->toArray(), $newState ? $newState->toArray($this) : null));
     }
 
     /**
@@ -1059,6 +1061,14 @@ final class Unit implements AggregateRoot
     {
         $prozess = UnitProcess::fromArray($fact->prozess);
         $this->obnovitProzes($prozess);
+        if ($fact->stateAsArray) {
+            $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+        } else {
+            $newState = $this->opredelitStatePosleOtmeni();
+            if ($newState) {
+                $this->state = $newState;
+            }
+        }
     }
 
     public function ustanovitOshibkuOstanovki(string $jobId, array $steps): void
@@ -1515,5 +1525,34 @@ final class Unit implements AggregateRoot
     function poluchitNastroikiContaineraUnita(): ?ContainerSettings
     {
         return $this->containerSettings;
+    }
+
+    /**
+     * @psalm-ignore-nullable-return
+     *
+     * @return AbstractState
+     */
+    private function opredelitStatePosleOtmeni(): AbstractState|null
+    {
+        if ($this->state?->getCode() === VOcherediNaObnovlenie::CODE) {
+            $newState = StateFactory::makeByCode(OshibkaObnovleniya::CODE);
+        } else if ($this->state?->getCode() === VOcherediNaOstanovku::CODE) {
+            $newState = StateFactory::makeByCode(OshibkaOstanovki::CODE);
+        } else if ($this->state?->getCode() === VOcherediNaPodgotovku::CODE) {
+            $newState = StateFactory::makeByCode(OshibkaPodgotovki::CODE);
+        } else if ($this->state?->getCode() === VOcherediNaSborku::CODE) {
+            $newState = StateFactory::makeByCode(OshibkaSborki::CODE);
+        } else if ($this->state?->getCode() === VOcherediNaSbrosPodgotovki::CODE) {
+            $newState = StateFactory::makeByCode(OshibkaSbrosaPodgotovki::CODE);
+        } else if ($this->state?->getCode() === VOcherediNaUdalenie::CODE) {
+            $newState = StateFactory::makeByCode(Sloman::CODE);
+        } else if ($this->state?->getCode() === VOcherediNaVipolnenieDeistviya::CODE) {
+            $newState = StateFactory::makeByCode(Zapushen::CODE);
+        } else if ($this->state?->getCode() === VOcherediNaZapusk::CODE) {
+            $newState = StateFactory::makeByCode(OshibkaZapuska::CODE);
+        } else {
+            $newState = $this->state;
+        }
+        return $newState;
     }
 }

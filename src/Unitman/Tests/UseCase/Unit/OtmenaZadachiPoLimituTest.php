@@ -10,6 +10,7 @@ use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
+use App\Unitman\Business\Model\Unit\State\OshibkaZapuska;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\UnitmanSecurityService;

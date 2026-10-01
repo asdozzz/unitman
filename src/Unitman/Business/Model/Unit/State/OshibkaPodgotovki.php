@@ -7,9 +7,11 @@ use App\Unitman\Business\Model\Unit;
 final class OshibkaPodgotovki extends AbstractState
 {
 
+    const CODE = 'OSHIBKA_PODGOTOVKI';
+
     public function getCode(): string
     {
-        return 'OSHIBKA_PODGOTOVKI';
+        return self::CODE;
     }
 
     public function getNextStates(): array

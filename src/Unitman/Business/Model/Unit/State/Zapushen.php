@@ -7,9 +7,11 @@ use App\Unitman\Business\Model\Unit;
 final class Zapushen extends AbstractState
 {
 
+    const CODE = 'USPESHNO_ZAPUSHEN';
+
     public function getCode(): string
     {
-        return 'USPESHNO_ZAPUSHEN';
+        return self::CODE;
     }
 
     /**

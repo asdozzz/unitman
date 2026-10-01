@@ -7,9 +7,11 @@ use App\Unitman\Business\Model\Unit;
 final class Sloman extends AbstractState
 {
 
+    const CODE = 'SLOMAN';
+
     public function getCode(): string
     {
-        return 'SLOMAN';
+        return self::CODE;
     }
 
     public function getNextStates(): array

@@ -514,10 +514,15 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleZadachaUnitaOtmenena(ZadachaUnitaOtmenena $fact): void
     {
         $readModel =$this->repository->getById($fact->unitId);
-        $readModel = $readModel->copyAndUpdateData([
+        $data = [
             'error' => true,
             'prozes' => $fact->prozess
-        ]);
+        ];
+
+        if ($fact->stateAsArray) {
+            $data['commands'] = $fact->stateAsArray['commands'];
+        }
+        $readModel = $readModel->copyAndUpdateData($data);
         $this->repository->update($readModel);
     }
 

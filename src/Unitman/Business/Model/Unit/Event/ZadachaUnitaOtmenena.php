@@ -9,6 +9,7 @@ final class ZadachaUnitaOtmenena
         public readonly string $jobId,
         public readonly int $unixtime,
         public readonly array $prozess,
+        public readonly array|null $stateAsArray
     )
     {
     }
