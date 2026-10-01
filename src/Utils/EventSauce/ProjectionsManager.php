@@ -217,7 +217,10 @@ final class ProjectionsManager
         $oldCheckpoint = $checkpoint;
 
         foreach ($events as $event) {
-            $projection->handle($event);
+            try {
+                $projection->handle($event);
+            } catch (\Throwable) {}
+
             $checkpoint++;
         }
 
