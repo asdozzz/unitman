@@ -71,7 +71,11 @@ final class ObrabotatProzesiUnitaUseCase
             }
 
         } else if ($runnerJob->isStart()) {
-            $this->resultatSborkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->resultatSborkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL);
+            }
         }
     }
 
@@ -87,7 +91,11 @@ final class ObrabotatProzesiUnitaUseCase
             }
 
         } else if ($runnerJob->isStart()) {
-            $this->resultatObnovleniyaUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->resultatObnovleniyaUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL);
+            }
         }
     }
 
@@ -104,29 +112,40 @@ final class ObrabotatProzesiUnitaUseCase
             }
 
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatPodgotovkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->ustanovitResultatPodgotovkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL);
+            }
         }
     }
 
+    const LIMIT_BEFORE_CANCEL = 30*60;
     private function zapusk(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
+        $now = $this->clock->now()->getTimestamp();
         if ($runnerJob->isNew()) {
             try {
                 $this->zapustitUnitUseCase->handle($unit->getId(), $runnerJob->getJobId());
             } catch (\Throwable $e) {
-                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
+                $unit->otmenitZadachu($e, $runnerJob->getJobId(), $now);
                 $this->unitRepository->save($unit);
             }
 
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatZapuskaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->ustanovitResultatZapuskaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL);
+            }
         }
     }
 
     private function ostanovka(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
+        $now = $this->clock->now()->getTimestamp();
         if ($runnerJob->isNew()) {
             try {
                 $this->ostanovitUnitUseCase->handle($unit->getId(), $runnerJob->getJobId());
@@ -136,7 +155,11 @@ final class ObrabotatProzesiUnitaUseCase
             }
 
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatOstanovkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->ustanovitResultatOstanovkiUnitaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL);
+            }
         }
     }
 
@@ -152,7 +175,11 @@ final class ObrabotatProzesiUnitaUseCase
             }
 
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatSbrosaPodgotovkiUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->ustanovitResultatSbrosaPodgotovkiUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL);
+            }
         }
     }
 
@@ -167,7 +194,11 @@ final class ObrabotatProzesiUnitaUseCase
                 $this->unitRepository->save($unit);
             }
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatUdaleniyaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->ustanovitResultatUdaleniyaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL);
+            }
         }
     }
 
@@ -183,7 +214,30 @@ final class ObrabotatProzesiUnitaUseCase
             }
 
         } else if ($runnerJob->isStart()) {
-            $this->ustanovitResultatDeistviyaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            try {
+                $this->ustanovitResultatDeistviyaUseCase->handle($unit->getId(), $runnerJob->getJobId());
+            } catch (\Throwable $e) {
+                $this->otmenaEsliPrevishenoVremyOjidaniyaResultata($unit, $runnerJob, $e, self::LIMIT_BEFORE_CANCEL*2);
+            }
+        }
+    }
+
+    /**
+     * @param Unit $unit
+     * @param RunnerJob $runnerJob
+     * @param \Throwable|\Exception $e
+     * @return void
+     * @throws \Throwable
+     */
+    private function otmenaEsliPrevishenoVremyOjidaniyaResultata(Unit $unit, RunnerJob $runnerJob, \Throwable|\Exception $e, int $limit): void
+    {
+        $now = $this->clock->now()->getTimestamp();
+        $prozes = $unit->poluchitProzesPoIdZadachi($runnerJob->getJobId());
+        if (!empty($prozes->getLastUnixtime()) && ($now - $prozes->getLastUnixtime() > $limit)) {
+            $unit->otmenitZadachu(new \DomainException('Превышено время обработки задания'), $runnerJob->getJobId(), $now);
+            $this->unitRepository->save($unit);
+        } else {
+            throw $e;
         }
     }
 }

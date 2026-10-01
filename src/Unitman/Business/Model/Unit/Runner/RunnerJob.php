@@ -64,6 +64,17 @@ final class RunnerJob
         $this->steps = $steps;
     }
 
+    function getLastUnixtime(): int|null
+    {
+        $result = null;
+        foreach ($this->steps as $step) {
+            if (!empty($step->unixtime)) {
+                $result = $step->unixtime;
+            }
+        }
+        return $result;
+    }
+
     public function getJobId(): string
     {
         return $this->jobId;

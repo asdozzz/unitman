@@ -21,7 +21,7 @@ services:
       service: postgres
 
   unitman-front:
-    image: asdozzz/unitman-front:0.0.7
+    image: asdozzz/unitman-front:0.0.8
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:

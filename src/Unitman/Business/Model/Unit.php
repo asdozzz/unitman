@@ -247,7 +247,7 @@ final class Unit implements AggregateRoot
         $this->prozesi = $newArray;
     }
 
-    private function poluchitProzesPoIdZadachi(string $jobId): UnitProcess
+    function poluchitProzesPoIdZadachi(string $jobId): UnitProcess
     {
         $result = null;
         foreach ($this->prozesi as $prozes) {

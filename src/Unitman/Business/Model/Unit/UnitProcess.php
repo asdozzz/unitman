@@ -144,4 +144,18 @@ final class UnitProcess
         $type = UnitProcessType::from($data['type']);
         return new self($data['id'],$data['userId'], $type, $state, $jobs);
     }
+
+    function getLastUnixtime(): int|null
+    {
+        $res = null;
+
+        foreach ($this->jobs as $job) {
+            $jobUnixtime = $job->getLastUnixtime();
+            if (!empty($jobUnixtime)) {
+                $res = $jobUnixtime;
+            }
+        }
+
+        return $res;
+    }
 }
