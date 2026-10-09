@@ -18,6 +18,7 @@ use App\Unitman\Business\Model\Unit\Event\OshibkaZapuskaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\PeremenieUnitaZapolneni;
 use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
+use App\Unitman\Business\Model\Unit\Event\PometitKakSlomanii;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
@@ -447,6 +448,20 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             'error' => true,
             'prozes' => $fact->prozess
         ]);
+        $this->repository->update($readModel);
+    }
+
+    function handlePometitKakSlomanii(PometitKakSlomanii $fact): void
+    {
+        $readModel =$this->repository->getById($fact->unitId);
+        $data = [
+            'commands' => $fact->stateAsArray['commands'],
+            'error' => true,
+        ];
+        if ($fact->prozess) {
+            $data['prozes'] = $fact->prozess;
+        }
+        $readModel = $readModel->copyAndUpdateData($data);
         $this->repository->update($readModel);
     }
 

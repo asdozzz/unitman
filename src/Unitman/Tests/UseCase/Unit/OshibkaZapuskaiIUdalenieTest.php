@@ -4,18 +4,22 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Runner\Api\RunnerApiInterface;
 
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
+use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
+use App\Unitman\Business\UseCase\Unit\DobavitProzesVipolneniyaDeistviyaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Acl\MemoryRunnerService;
+use App\Unitman\Business\UseCase\Unit\VipolnitDeistviyeUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -27,8 +31,9 @@ final class OshibkaZapuskaiIUdalenieTest extends AbstractUnitUseCase
     {
         $unitId = Uuid::uuid7()->toString();
         $prozesSborkiId = Uuid::uuid7()->toString();
+        $prozesDeistivyaId = Uuid::uuid7()->toString();
         $prozesUdaleniyaId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSborkiId, $prozesUdaleniyaId]));
+        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSborkiId, $prozesDeistivyaId, $prozesUdaleniyaId]));
 
         $userId = Uuid::uuid7()->toString();
         $this->mokaemUspehSecurity($userId);
@@ -54,6 +59,8 @@ final class OshibkaZapuskaiIUdalenieTest extends AbstractUnitUseCase
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true, $stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, 'ZAPUSK_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_ZAPUSKA, new ResultatZapuskaUnita(false, $stepsFail));
+        $memoryRunner->addResponse(MemoryRunnerService::DEISTVIE_UNITA, 'DEISTVIE_UNITA');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_DEISTVIYA, new ResultatDeistviyaUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::SBROS_PODGOTOVKI_UNITA, 'SBROS_PODGOTOVKI_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBROSA_PODGOTOVKI, new ResultatSbrosaPodgotovkiUnita(true, $stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::UDALENIE_UNITA, 'UDALENIE_UNITA');
@@ -71,9 +78,17 @@ final class OshibkaZapuskaiIUdalenieTest extends AbstractUnitUseCase
         $useCase->handle($unitId);
         $useCase->handle($unitId);
 
+        $useCaseAction = self::$container->get(DobavitProzesVipolneniyaDeistviyaUseCase::class);
+        /** @var DobavitProzesVipolneniyaDeistviyaUseCase $useCaseAction*/
+        $useCaseAction->handle(new VipolnitDeistviye($unitId, 'php-console', ['BIN_CONSOLE' => 'test']));
+
+        $useCase->handle($unitId);
+        $useCase->handle($unitId);
+        $useCase->handle($unitId);
+
         $spisokUnitovReadModel = $spisokUnitovRepo->getById($unitId);
-        $this->assertEquals(UnitProcessState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['state']);
-        $this->assertEquals(RunnerJobState::ERROR->value, $spisokUnitovReadModel->prozesi[0]['jobs'][2]['state']);
+        $this->assertEquals(UnitProcessState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['state']);
+        $this->assertEquals(RunnerJobState::SUCCESS->value, $spisokUnitovReadModel->prozesi[0]['jobs'][0]['state']);
         $this->assertEquals(true, $spisokUnitovReadModel->error);
 
         $useCase = self::$container->get(DobavitProzesUdaleniyaUseCase::class);
@@ -103,6 +118,6 @@ final class OshibkaZapuskaiIUdalenieTest extends AbstractUnitUseCase
         /** @var $prozesUnitaRepo ProzesUnitaRepository*/
         $prozesi = $prozesUnitaRepo->poluchitProzesiPoIdUnita($unitId);
 
-        $this->assertEquals(2, count($prozesi));
+        $this->assertEquals(3, count($prozesi));
     }
 }

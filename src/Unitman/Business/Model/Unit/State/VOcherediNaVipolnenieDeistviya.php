@@ -21,6 +21,7 @@ final class VOcherediNaVipolnenieDeistviya extends AbstractState
     {
         return [
             new Zapushen(),
+            new Podgotovlen(),
             new VOcherediNaUdalenie()
         ];
     }

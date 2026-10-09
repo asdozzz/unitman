@@ -15,6 +15,7 @@ readonly class KonfigDeistviya
         public string $name,
         public array $variables,
         public array $commands,
+        public bool $prepare
     )
     {
     }
@@ -48,11 +49,14 @@ readonly class KonfigDeistviya
             }
         }
 
+        $prepare = isset($config['prepare']) ? $config['prepare'] : false;
+
         return new self(
             $config['id'],
             $config['name'],
             $variables,
-            $config['commands']
+            $config['commands'],
+            $prepare
         );
     }
 
@@ -80,6 +84,7 @@ readonly class KonfigDeistviya
             'name' => $this->name,
             'variables' => array_map(fn(ConfigVariable $variable) => $variable->toArray(), $this->variables),
             'commands' => $this->commands,
+            'prepare' => $this->prepare
         );
     }
 

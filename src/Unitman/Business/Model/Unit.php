@@ -26,6 +26,7 @@ use App\Unitman\Business\Model\Unit\Event\OshibkaZapuskaUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\PeremenieUnitaZapolneni;
 use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
+use App\Unitman\Business\Model\Unit\Event\PometitKakSlomanii;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
@@ -344,9 +345,6 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.wait_runner');
         }
 
-        if (!$this->esliZapushen()) {
-            throw new DomainException('unit.unit_ne_zapushen');
-        }
 
         $state = $this->newState(new VOcherediNaVipolnenieDeistviya());
         $prozes = $this->poluchitProzesPoIdZadachi($jobId);
@@ -375,7 +373,12 @@ final class Unit implements AggregateRoot
             throw new DomainException('unit.resultat_deistviya_uge_ustanovlen');
         }
 
-        $this->state = $this->newState(new Zapushen());
+        if ($this->esliZapushen()) {
+            $this->state = $this->newState(new Zapushen());
+        } else {
+            $this->state = $this->newState(new Podgotovlen());
+        }
+
         $prozes = $this->poluchitProzesPoIdZadachi($jobId);
         $prozes->ustanovitResultatZadachi($jobId, true, $steps);
         $this->recordThat(new UspehDeistviyaUstanovlen($this->getId(), $jobId, $steps, $this->state->toArray($this), $prozes->toArray()));
@@ -1160,6 +1163,7 @@ final class Unit implements AggregateRoot
         $state = $this->newState(new Sloman());
         $this->recordThat(new OshibkaUdaleniyaUnitaUstanovlena($this->getId(), $jobId, $state->toArray($this), $prozes->toArray()));
     }
+
     /**
      * @psalm-suppress PossiblyNullReference
      */
@@ -1168,6 +1172,33 @@ final class Unit implements AggregateRoot
         $prozess = UnitProcess::fromArray($fact->prozess);
         $this->obnovitProzes($prozess);
         $this->udalenie = $this->getJobById($fact->jobId);
+        $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    public function pometitKakSlomanii(): void
+    {
+        $prozess = null;
+        if (count($this->prozesi) > 0) {
+            $last = $this->prozesi[count($this->prozesi) - 1];
+            if (!$last->isFinish()) {
+                $last->cancelAll();
+                $prozess = $last;
+            }
+        }
+        $state = new Sloman();
+        $this->recordThat(new PometitKakSlomanii($this->getId(), $state->toArray($this), $prozess ? $prozess->toArray() : null));
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function applyPometitKakSlomanii(PometitKakSlomanii $fact): void
+    {
+        if ($fact->prozess) {
+            $prozess = UnitProcess::fromArray($fact->prozess);
+            $this->obnovitProzes($prozess);
+        }
+
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
