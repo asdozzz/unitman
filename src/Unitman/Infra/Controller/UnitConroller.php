@@ -15,6 +15,7 @@ use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigIzHranilisha;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigUnita;
 use App\Unitman\Business\Command\Unit\PoluchitPeremenieUnita;
+use App\Unitman\Business\Command\Unit\PometitKakSlomanii;
 use App\Unitman\Business\Command\Unit\ProveritKonteinerUnita;
 use App\Unitman\Business\Command\Unit\SbrositPodgotovkuUnita;
 use App\Unitman\Business\Command\Unit\SobratUnit;
@@ -41,6 +42,7 @@ use App\Unitman\Business\UseCase\Unit\NaitiDubliUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigIzHranilishaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitPeremenieUnitaQuery;
+use App\Unitman\Business\UseCase\Unit\PometitKakSlomaniiUseCase;
 use App\Unitman\Business\UseCase\Unit\ProveritKonteinerUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
@@ -278,6 +280,17 @@ final class UnitConroller extends AbstractController
             $service->handle(SpisokUnitovProjection::CODE, $command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Throwable $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/pometitKakSlomanii', methods: ['POST'])]
+    public function pometitKakSlomanii(PometitKakSlomanii $command, PometitKakSlomaniiUseCase $useCase): Response
+    {
+        try {
+            $useCase->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
         }
     }

@@ -145,7 +145,7 @@ final class ObrabotatProzesiUnitaUseCase
     private function ostanovka(Unit $unit, RunnerJob $runnerJob): void
     {
         if ($runnerJob->isFinish()) return;
-        $now = $this->clock->now()->getTimestamp();
+
         if ($runnerJob->isNew()) {
             try {
                 $this->ostanovitUnitUseCase->handle($unit->getId(), $runnerJob->getJobId());
@@ -233,6 +233,7 @@ final class ObrabotatProzesiUnitaUseCase
     {
         $now = $this->clock->now()->getTimestamp();
         $prozes = $unit->poluchitProzesPoIdZadachi($runnerJob->getJobId());
+
         if (!empty($prozes->getLastUnixtime()) && ($now - $prozes->getLastUnixtime() > $limit)) {
             $unit->otmenitZadachu(new \DomainException('Превышено время обработки задания'), $runnerJob->getJobId(), $now);
             $this->unitRepository->save($unit);

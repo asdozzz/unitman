@@ -219,7 +219,11 @@ final class ProjectionsManager
         foreach ($events as $event) {
             try {
                 $projection->handle($event);
-            } catch (\Throwable) {}
+            } catch (\Throwable $e) {
+                if ($this->appEnv === "test") {
+                    throw $e;
+                }
+            }
 
             $checkpoint++;
         }

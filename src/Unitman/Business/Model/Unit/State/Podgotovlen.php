@@ -22,6 +22,8 @@ final class Podgotovlen extends AbstractState
             new VOcherediNaObnovlenie(),
             new VOcherediNaSbrosPodgotovki(),
             new VOcherediNaZapusk(),
+            new VOcherediNaVipolnenieDeistviya()
+
         ];
     }
 
@@ -33,7 +35,8 @@ final class Podgotovlen extends AbstractState
             StateUserCommand::zapolnitPeremenie,
             StateUserCommand::nachatSbrosPodgotovki,
             StateUserCommand::nachatZapusk,
-            StateUserCommand::proveritKonteinerUnita
+            StateUserCommand::proveritKonteinerUnita,
+            StateUserCommand::vipolnitDeistvie,
         ];
     }
 }

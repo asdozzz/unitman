@@ -23,7 +23,8 @@ final class OshibkaZapuska extends AbstractState
             new VOcherediNaUdalenie(),
             new VOcherediNaZapusk(),
             new VOcherediNaObnovlenie(),
-            new VOcherediNaSbrosPodgotovki()
+            new VOcherediNaSbrosPodgotovki(),
+            new VOcherediNaVipolnenieDeistviya()
         ];
     }
 
@@ -34,7 +35,8 @@ final class OshibkaZapuska extends AbstractState
             StateUserCommand::nachatZapusk,
             StateUserCommand::nachatObnovlenie,
             StateUserCommand::nachatSbrosPodgotovki,
-            StateUserCommand::proveritKonteinerUnita
+            StateUserCommand::proveritKonteinerUnita,
+            StateUserCommand::vipolnitDeistvie,
         ];
     }
 }
