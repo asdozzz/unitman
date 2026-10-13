@@ -21,12 +21,12 @@ services:
       service: postgres
 
   unitman-front:
-    image: asdozzz/unitman-front:0.0.8
+    build: https://github.com/asdozzz/unitman.git
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      VITE_API_HOST: http://localhost:${UNITMAN_API_PORT}/api
-      VITE_CENTRIFUGE_HOST: ws://localhost:${UNITMAN_CENTRIFUGO_PORT:-8000}/connection/websocket
+      VITE_API_HOST: http://web:8080/api
+      VITE_CENTRIFUGE_HOST: ws://web:8000/connection/websocket
     ports:
       - ${UNITMAN_FRONT_PORT}:80
     depends_on:
