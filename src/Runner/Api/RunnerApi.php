@@ -4,9 +4,7 @@ namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
-use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
-use App\Runner\Business\Command\NachatOchistkuProekta;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Command\NachatSborkuUnita;
@@ -33,7 +31,6 @@ use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
-use App\Runner\Infra\Workflow\NachatOchistkuProektaWorkflow;
 use App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatSborkuUnitaWorkflow;
@@ -109,18 +106,6 @@ final class RunnerApi implements RunnerApiInterface
     {
         $workflow = $this->getWorkflowById($workflowId);
         return $this->makeResult($workflow, RemoveProjectResult::class);
-    }
-
-    public function ochistitProekt(NachatOchistkuProekta $command): string
-    {
-        $workflow = $this->workflowClient->newWorkflowStub(
-            NachatOchistkuProektaWorkflow::class,
-            WorkflowOptions::new()
-                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
-                ->withWorkflowExecutionTimeout(CarbonInterval::minute(30))
-        );
-        $run = $this->workflowClient->start($workflow, $command);
-        return $run->getExecution()->getID();
     }
 
     public function poluchitResultatOchistkiProekta(string $workflowId): ?ResultatOchistkiProekta

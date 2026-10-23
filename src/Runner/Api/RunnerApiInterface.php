@@ -4,9 +4,7 @@ namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
-use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
-use App\Runner\Business\Command\NachatOchistkuProekta;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Command\NachatSborkuUnita;
@@ -35,7 +33,6 @@ interface RunnerApiInterface
     public function poluchitResultatSborkiProekta(string $workflowId): ?InitProjectResult;
     public function removeProject(RemoveProjectCommand $command): string;
     public function poluchitResultatUdaleniyaProekta(string $workflowId): ?RemoveProjectResult;
-    public function ochistitProekt(NachatOchistkuProekta $command): string;
     public function poluchitResultatOchistkiProekta(string $workflowId): ?ResultatOchistkiProekta;
     public function nachatSborkuUnita(string $workflowId, NachatSborkuUnita $command): string;
     public function poluchitResultatSborki(string $workflowId): ?ResultatSbrokiUnita;

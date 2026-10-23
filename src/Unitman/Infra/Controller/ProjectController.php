@@ -16,7 +16,6 @@ use App\Unitman\Business\Command\Project\GetProjectList;
 use App\Unitman\Business\Command\Project\GetProjectRunnerJobs;
 use App\Unitman\Business\Command\Project\GetProjectRunnerJobSteps;
 use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
-use App\Unitman\Business\Command\Project\NachatOchistkuProekta;
 use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPeremenihProekta;
@@ -39,7 +38,6 @@ use App\Unitman\Business\UseCase\Project\GetActiveProjectListQuery;
 use App\Unitman\Business\UseCase\Project\GetProjectListQuery;
 use App\Unitman\Business\UseCase\Project\GetProjectRunnerJobsQuery;
 use App\Unitman\Business\UseCase\Project\GetProjectRunnerJobStepsQuery;
-use App\Unitman\Business\UseCase\Project\NachatOshistkuProektaUseCase;
 use App\Unitman\Business\UseCase\Project\ObnovitNastroikiHukaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
@@ -249,17 +247,6 @@ final class ProjectController extends AbstractController
         try {
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
-        }
-    }
-
-    #[Route('/ochistit', methods: ['POST'])]
-    public function ochistit(#[MapRequestPayload] NachatOchistkuProekta $command, NachatOshistkuProektaUseCase $useCase): Response
-    {
-        try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
         }

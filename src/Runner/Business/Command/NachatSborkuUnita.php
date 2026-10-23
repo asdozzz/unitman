@@ -9,7 +9,7 @@ final class NachatSborkuUnita
         public readonly string $Id,
         public readonly string $Name,
         public readonly string $StorageUrl,
-        public readonly string $Branch,
+        public readonly string $Branch
     )
     {
     }

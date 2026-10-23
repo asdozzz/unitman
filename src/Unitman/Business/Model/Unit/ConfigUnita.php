@@ -4,6 +4,7 @@ namespace App\Unitman\Business\Model\Unit;
 
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigDeistviya;
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
+use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigStadiiSborki;
 use App\Unitman\Business\Model\Unit\ConfigVariable\ConfigVariableFactory;
 
 final class ConfigUnita
@@ -25,8 +26,10 @@ final class ConfigUnita
      * @var KonfigDeistviya[]
      * */
     private array $actions;
+    private KonfigStadiiSborki $konfigStadiiSborki;
 
     public function __construct(
+        KonfigStadiiSborki $konfigStadiiSborki,
         array $variables,
         array $prepare,
         array $resetPrepare,
@@ -53,6 +56,7 @@ final class ConfigUnita
         if (empty($services)) {
             throw new \DomainException('unit.config.services_is_empty');
         }
+
         $this->prepare = $prepare;
         $this->resetPrepare = $resetPrepare;
         $this->up = $up;
@@ -68,11 +72,13 @@ final class ConfigUnita
         foreach ($actions as $action) {
             $this->actions[] = KonfigDeistviya::fromArray($action);
         }
+        $this->konfigStadiiSborki = $konfigStadiiSborki;
     }
 
     function toArray(): array
     {
         return [
+            'build' => $this->konfigStadiiSborki->toArray(),
             'variables' => array_map(fn(ConfigVariable $variable): array => $variable->toArray(), $this->variables),
             'prepare' => $this->prepare,
             'reset_prepare' => $this->resetPrepare,
@@ -85,7 +91,14 @@ final class ConfigUnita
 
     static function fromArray(array $cfg): static
     {
+        if (isset($cfg['build']) && is_array($cfg['build'])) {
+            $buildCfg = KonfigStadiiSborki::fromArray($cfg['build']);
+        } else {
+            $buildCfg = KonfigStadiiSborki::makeDefault();
+        }
+
         return new static(
+            $buildCfg,
             isset($cfg['variables']) && is_array($cfg['variables'])?$cfg['variables']:[],
             isset($cfg['prepare']) && is_array($cfg['prepare'])?$cfg['prepare']:[],
             isset($cfg['reset_prepare']) && is_array($cfg['reset_prepare'])?$cfg['reset_prepare']:[],
@@ -209,7 +222,6 @@ final class ConfigUnita
         $action = $this->findActionById($id);
 
         if ($action === null) {
-            die("<pre>" . print_r($this, true) . "</pre>");
             throw new \DomainException('unit.konfig.actions');
         }
 
@@ -229,5 +241,15 @@ final class ConfigUnita
             }
         }
         return $action;
+    }
+
+    public function poluchiKonfigStadiiSbork(): KonfigStadiiSborki
+    {
+        return $this->konfigStadiiSborki;
+    }
+
+    public function setKonfigStadiiSborki(KonfigStadiiSborki $konfigStadiiSborki): void
+    {
+        $this->konfigStadiiSborki = $konfigStadiiSborki;
     }
 }

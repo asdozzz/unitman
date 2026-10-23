@@ -2,11 +2,10 @@
 
 namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
+use App\Runner\Business\Command\ImageConfig;
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
-use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
-use App\Runner\Business\Command\NachatOchistkuProekta;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Command\NachatSborkuUnita;
@@ -15,13 +14,10 @@ use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
-use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatDeistviyaiUnita;
-use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
-use App\Unitman\Business\Model\Runner\ResultatOshistkiProekta;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatSborkiProekta;
@@ -72,14 +68,6 @@ final class RunnerAdapter implements RunnerService
         return new JobId($workflowId);
     }
 
-    public function nachatOchistkuProekta(Project $project): JobId
-    {
-        $projectUrl = $this->getProjectUrl($project);
-        $command = new NachatOchistkuProekta($project->getId(), $project->getName(), $projectUrl);
-        $workflowId = $this->runnerApi->ochistitProekt($command);
-        return new JobId($workflowId);
-    }
-
     public function nachatSborkuUnita(string $jobId, Unit $unit): JobId
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
@@ -96,7 +84,12 @@ final class RunnerAdapter implements RunnerService
         $caches = $this->makeCachesListFromUnit($unit);
         $memoryLimit = $unit->poluchitNastroikiContaineraUnita()->memoryLimit ?: 0;
         $containerSettings = new NachatPodgotovkuUnita\ContainerSettings($memoryLimit .'m');
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings);
+        $konfigStadiiSborki = $unit->getConfig()?->poluchiKonfigStadiiSbork();
+        if (empty($konfigStadiiSborki)) {
+            throw new \DomainException('Конфиг не найден');
+        }
+        $imageConfig = new ImageConfig($konfigStadiiSborki->obraz, $konfigStadiiSborki->dopolnitelnieKomandi);
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings, $unit->getBranch(), $imageConfig);
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
@@ -126,7 +119,7 @@ final class RunnerAdapter implements RunnerService
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $caches = $this->makeCachesListFromUnit($unit);
-        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables, $caches);
+        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables, $caches, $unit->getBranch());
         $workflowId = $this->runnerApi->nachatZapuskUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -313,17 +306,6 @@ final class RunnerAdapter implements RunnerService
         }
 
         return new ResultatUdaleniyaProekta($result->Success, $this->convertRunnerSteps($result->Steps));
-    }
-
-    public function poluchitResultatOchistkiProekta(Project $project): ResultatOshistkiProekta
-    {
-        $result = $this->runnerApi->poluchitResultatOchistkiProekta($project->poluchitWorkflowIdDlyOchistki());
-
-        if (empty($result)) {
-            throw new \Exception('runner.ochistka_proekta_eshe_ne_zakonchena');
-        }
-
-        return new ResultatOshistkiProekta((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
     }
 
     public function poluchitResultatDeistviya(string $jobId): ResultatDeistviyaiUnita

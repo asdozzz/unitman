@@ -2,6 +2,7 @@
 
 namespace App\Account\Business\UseCase;
 
+use App\Account\Business\Command\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya;
 use App\Account\Business\Port\SecurityService;
 use App\Account\Business\Port\UmeetPoluchatSpisokVsehPolzovatelei;
 use App\Account\Business\ReadModel\AccountForManaging;
@@ -18,11 +19,11 @@ final class PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery
     /**
      * @return AccountForManaging[]
      * */
-    function handle(): array
+    function handle(PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya $command): array
     {
         if (!$this->securityService->isAdmin()) {
             throw new \Exception('security.access_denied');
         }
-        return $this->umeetPoluchatSpisokVsehPolzovatelei->poluchitSpisokVsehPolzovateleiDlyAdministrirovaniya();
+        return $this->umeetPoluchatSpisokVsehPolzovatelei->poluchitSpisokVsehPolzovateleiDlyAdministrirovaniya($command);
     }
 }

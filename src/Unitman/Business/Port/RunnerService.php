@@ -4,11 +4,8 @@ namespace App\Unitman\Business\Port;
 
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
-use App\Unitman\Business\Model\Runner\ResponseToBuildProject;
 use App\Unitman\Business\Model\Runner\ResultatDeistviyaiUnita;
-use App\Unitman\Business\Model\Runner\ResultatIzmeneniyaVetkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
-use App\Unitman\Business\Model\Runner\ResultatOshistkiProekta;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatSborkiProekta;
@@ -28,10 +25,6 @@ interface RunnerService
     public function nachatUdalenieProekta(Project $project): JobId;
 
     public function poluchitResultatUdaleniyaProekta(Project $project): ResultatUdaleniyaProekta;
-
-    public function nachatOchistkuProekta(Project $project): JobId;
-
-    public function poluchitResultatOchistkiProekta(Project $project): ResultatOshistkiProekta;
 
     public function nachatSborkuUnita(string $jobId, Unit $unit): JobId;
 

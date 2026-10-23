@@ -2,6 +2,7 @@
 
 namespace App\Account\Infra\Repository;
 
+use App\Account\Business\Command\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya;
 use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Port\CanFindDouble;
@@ -225,10 +226,15 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         return $result;
     }
 
-    function poluchitSpisokVsehPolzovateleiDlyAdministrirovaniya(): array
+    function poluchitSpisokVsehPolzovateleiDlyAdministrirovaniya(PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya $command): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table");
+        $params = ['query' => '%'.$command->query.'%'];
+        $where = '';
+        if (!empty($command->query)) {
+            $where = "WHERE email LIKE :query OR nickname LIKE :query";
+        }
+        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table $where", $params);
 
         $result = [];
         foreach ($rows as $row) {

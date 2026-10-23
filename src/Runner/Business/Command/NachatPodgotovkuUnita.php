@@ -15,7 +15,9 @@ final class NachatPodgotovkuUnita
         public readonly array $Commands,
         public readonly array $Variables,
         public readonly array $Caches,
-        public readonly ContainerSettings $ContainerSettings
+        public readonly ContainerSettings $ContainerSettings,
+        public readonly string $Branch,
+        public readonly ImageConfig $ImageConfig
     )
     {
     }

@@ -9,6 +9,7 @@ use App\Account\Business\Command\ChangeMyPassword;
 use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Command\ChangePasswordByAdmin;
 use App\Account\Business\Command\ChangeRoleByAdmin;
+use App\Account\Business\Command\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
@@ -26,6 +27,7 @@ use App\Account\Business\UseCase\RegisterAccountUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/account')]
@@ -102,9 +104,9 @@ final class AccountController extends AbstractController
     }
 
     #[Route('/poluchitVsehPolzovateleiDlyAdministrorovaniya')]
-    function poluchitVsehPolzovateleiDlyAdministrorovaniya(PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery $useCase): Response
+    function poluchitVsehPolzovateleiDlyAdministrorovaniya(#[MapRequestPayload] PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya $command, PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery $useCase): Response
     {
-        $result = $useCase->handle();
+        $result = $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($result));
     }
 

@@ -107,6 +107,7 @@ final class ObrabotatProzesiUnitaUseCase
                 $this->ustanovitDefoltniiKonfigUseCase->handleSystem($unit->getId());
                 $this->podgotovitUnitKZapuskuUseCase->handle($unit->getId(), $runnerJob->getJobId());
             } catch (\Throwable $e) {
+                die("<pre>" . print_r($e, true) . "</pre>");
                 $unit->otmenitZadachu($e, $runnerJob->getJobId(), $this->clock->now()->getTimestamp());
                 $this->unitRepository->save($unit);
             }

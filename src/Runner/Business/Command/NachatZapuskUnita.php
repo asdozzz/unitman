@@ -13,6 +13,7 @@ final class NachatZapuskUnita
         public readonly array $Commands,
         public readonly array $Variables,
         public readonly array $Caches,
+        public readonly string $Branch,
     )
     {
     }

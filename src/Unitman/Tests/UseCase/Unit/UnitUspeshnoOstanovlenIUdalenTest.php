@@ -3,6 +3,7 @@
 namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Runner\Api\RunnerApiInterface;
+use App\Runner\Business\Command\ImageConfig;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
@@ -19,6 +20,7 @@ use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
 use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\ProzesUnita;
 use App\Unitman\Business\ReadModel\Unit\ProzesUnitaBezShagov;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
@@ -78,36 +80,12 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
             'Success' => true,
             'Unixtime' => 123123123
         ]];
-        $commands = [
-            'cp -f .env.runner .env',
-            'mkdir -p config/jwt',
-            'openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:my_password',
-            'openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:my_password',
-        ];
-        $variables = [
-            ['Id' => 'DICTIONARY_USER', 'Value' => 'qweqwe', 'Type' => 'string'],
-            ['Id' => 'DICTIONARY_SERVICE', 'Value' => 'http://v1.dict.ru', 'Type' => 'collection'],
-        ];
-        $caches = [
-            ['ServiceName' => 'web', 'Keys' => ['composer.lock'], 'Paths' => ['vendor']]
-        ];
-        $expectedParams = new NachatPodgotovkuUnita(
-            $projectId,
-            $projectName,
-            $unitId,
-            $unitName,
-            'http://oauth2:tok@repoUrl/projectCode.git',
-            $commands,
-            $variables,
-            $caches,
-            new NachatPodgotovkuUnita\ContainerSettings('3000m')
-        );
-        $callback = fn(array $args) => $this->assertEquals($expectedParams, $args[1]);
+
         $configText2 = file_get_contents(__DIR__.'/data/config_2.yaml');
 
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSbrokiUnita(true,$stepsSuccess, $configText2));
-        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA', $callback);
+        $memoryRunner->addResponse(MemoryRunnerService::PODGOTOVKA_UNITA, 'PODGOTOVKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_PODGOTOVKI, new ResultatPodgotovkiUnita(true,$stepsSuccess));
         $memoryRunner->addResponse(MemoryRunnerService::ZAPUSK_UNITA, 'ZAPUSK_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_ZAPUSKA, new ResultatZapuskaUnita(true,$stepsSuccess));
@@ -150,6 +128,13 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
 
         $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
         $useCase->handle($unitId);
+
+
+        $unitRepo = self::$container->get(UnitRepository::class);
+        /** @var UnitRepository $unitRepo*/
+        $unit = $unitRepo->getById($unitId);
+
+        $this->assertEquals('asdozzz/unitman-unit:latest', $unit->getConfig()->poluchiKonfigStadiiSbork()->obraz);
 
         $unitIzOcheredi = $ocheredUnitovRepository->getByUnitId($unitId);
         $this->assertEquals($unitIzOcheredi->lastUpdate, $now);

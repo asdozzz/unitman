@@ -21,7 +21,7 @@ services:
       service: postgres
 
   unitman-front:
-    build: https://github.com/asdozzz/unitman.git
+    build: asdozzz/unitman-front:0.0.9
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:

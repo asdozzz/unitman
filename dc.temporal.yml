@@ -82,7 +82,7 @@ services:
         condition: service_healthy
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+      - TEMPORAL_CORS_ORIGINS=${TEMPORAL_CORS_ORIGINS:-http://localhost:3000}
     image: temporalio/ui:${TEMPORAL_UI_VERSION}
     ports:
       - '${TEMPORAL_UI_PORT:-8088}:8080'

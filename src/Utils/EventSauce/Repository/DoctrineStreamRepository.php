@@ -95,8 +95,13 @@ final class DoctrineStreamRepository
                 $metadata + [Header::AGGREGATE_ROOT_VERSION => ++$aggregateRootVersion]
             ));
         }, $events);
+        try {
+            $this->messageRepository->persist(...$messages);
+        } catch (\Throwable $e) {
+            //die("<pre>" . print_r($messages, true) . "</pre>");
+            throw $e;
+        }
 
-        $this->messageRepository->persist(...$messages);
     }
 
     /**

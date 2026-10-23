@@ -5,9 +5,7 @@ namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
-use App\Runner\Business\Command\NachatIzmenenieVetkiUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
-use App\Runner\Business\Command\NachatOchistkuProekta;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Command\NachatSborkuUnita;
@@ -92,15 +90,6 @@ final class MemoryRunnerService implements RunnerApiInterface
     public function removeProject(RemoveProjectCommand $command): string
     {
         $response = $this->getNextResponse(self::REMOVE_PROJECT);
-        if (!empty($response['expectedParams'])) {
-            $response['expectedParams'](func_get_args());
-        }
-        return $response['response'];
-    }
-
-    public function ochistitProekt(NachatOchistkuProekta $command): string
-    {
-        $response = $this->getNextResponse(self::OCHISTKA_PROEKTA);
         if (!empty($response['expectedParams'])) {
             $response['expectedParams'](func_get_args());
         }

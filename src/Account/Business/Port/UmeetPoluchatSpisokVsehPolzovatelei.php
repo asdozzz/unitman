@@ -2,6 +2,7 @@
 
 namespace App\Account\Business\Port;
 
+use App\Account\Business\Command\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya;
 use App\Account\Business\ReadModel\AccountForManaging;
 use App\Account\Business\ReadModel\UserList;
 
@@ -14,5 +15,5 @@ interface UmeetPoluchatSpisokVsehPolzovatelei
     /**
      * @return AccountForManaging[]
      * */
-    function poluchitSpisokVsehPolzovateleiDlyAdministrirovaniya(): array;
+    function poluchitSpisokVsehPolzovateleiDlyAdministrirovaniya(PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya $command): array;
 }
