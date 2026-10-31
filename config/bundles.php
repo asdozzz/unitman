@@ -15,4 +15,5 @@ return [
     Fresh\CentrifugoBundle\FreshCentrifugoBundle::class => ['all' => true],
     Highcore\TemporalBundle\TemporalBundle::class => ['all' => true],
     Iluckhack\XhprofBuggregatorBundle\XhprofBuggregatorBundle::class => ['dev' => true, 'test' => true],
+    Nelmio\ApiDocBundle\NelmioApiDocBundle::class => ['all' => true],
 ];

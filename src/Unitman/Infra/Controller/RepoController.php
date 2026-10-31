@@ -18,6 +18,7 @@ use App\Unitman\Business\UseCase\Repo\GetActiveRepoListQuery;
 use App\Unitman\Business\UseCase\Repo\GetRepoListQuery;
 use App\Unitman\Business\UseCase\Repo\GetRepoTypeListQuery;
 use App\Unitman\Business\UseCase\Repo\PoluchitSpisokProektovRepiUseCase;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -26,6 +27,28 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/repo')]
 final class RepoController extends AbstractController
 {
+    #[OA\Post(
+        path: '/api/repo/add',
+        summary: 'Добавить репозиторий',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddRepo')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/add', methods: ['POST'])]
     public function add(#[MapRequestPayload] AddRepo $command, AddRepoUseCase $useCase): Response
     {
@@ -33,6 +56,28 @@ final class RepoController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
+    #[OA\Post(
+        path: '/api/repo/list',
+        summary: 'Список репозиториев',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/GetRepoList')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/list', methods: ['POST'])]
     public function list(#[MapRequestPayload] GetRepoList $command, GetRepoListQuery $query): Response
     {
@@ -40,6 +85,28 @@ final class RepoController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
+    #[OA\Post(
+        path: '/api/repo/projectList',
+        summary: 'Список проектов репозитория',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PoluchitSpisokProektovRepi')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/projectList', methods: ['POST'])]
     public function projectList(#[MapRequestPayload] PoluchitSpisokProektovRepi $command, PoluchitSpisokProektovRepiUseCase $query): Response
     {
@@ -47,7 +114,28 @@ final class RepoController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
-
+    #[OA\Post(
+        path: '/api/repo/activeList',
+        summary: 'Список активных репозиториев',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/GetActiveRepoList')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/activeList', methods: ['POST'])]
     public function activeList(#[MapRequestPayload] GetActiveRepoList $command, GetActiveRepoListQuery $query): Response
     {
@@ -55,6 +143,28 @@ final class RepoController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
+    #[OA\Post(
+        path: '/api/repo/type/list',
+        summary: 'Список типов репозиториев',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/GetRepoTypeList')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/type/list', methods: ['POST'])]
     public function typeList(#[MapRequestPayload] GetRepoTypeList $command, GetRepoTypeListQuery $query): Response
     {
@@ -62,6 +172,28 @@ final class RepoController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
     }
 
+    #[OA\Post(
+        path: '/api/repo/delete',
+        summary: 'Удалить репозиторий',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/DeleteRepo')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/delete', methods: ['POST'])]
     public function delete(#[MapRequestPayload] DeleteRepo $command, DeleteRepoUseCase $useCase): Response
     {
@@ -69,6 +201,28 @@ final class RepoController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
+    #[OA\Post(
+        path: '/api/repo/changeCredentials',
+        summary: 'Изменить учётные данные репозитория',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ChangeCredentialsOfRepo')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/changeCredentials', methods: ['POST'])]
     public function changeCredentials(#[MapRequestPayload] ChangeCredentialsOfRepo $command, ChangeCredentialsOfRepoUseCase $useCase): Response
     {
@@ -76,6 +230,28 @@ final class RepoController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
+    #[OA\Post(
+        path: '/api/repo/confirm',
+        summary: 'Проверить доступ к репозиторию',
+        tags: ['Repo'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/CheckAccessToRepo')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Успешный ответ либо ошибка',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
     #[Route('/confirm', methods: ['POST'])]
     public function checkAccess(#[MapRequestPayload] CheckAccessToRepo $command, CheckAccessToRepoUseCase $useCase): Response
     {

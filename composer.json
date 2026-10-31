@@ -19,6 +19,7 @@
         "knplabs/github-api": "^3.0",
         "lexik/jwt-authentication-bundle": "^2.18",
         "m4tthumphrey/php-gitlab-api": "^11.14",
+        "nelmio/api-doc-bundle": "^5.0",
         "nelmio/cors-bundle": "^2.4",
         "nyholm/psr7": "^1.8",
         "phpdocumentor/reflection-docblock": "^5.3",
@@ -30,6 +31,7 @@
         "spiral/roadrunner-jobs": "^4",
         "spiral/roadrunner-metrics": "^3.2",
         "spiral/roadrunner-services": "^2.2",
+        "symfony/asset": "7.*",
         "symfony/console": "*",
         "symfony/dotenv": "*",
         "symfony/expression-language": "*",
@@ -53,7 +55,8 @@
         "symfony/uid": "*",
         "symfony/validator": "*",
         "symfony/yaml": "*",
-        "temporal/sdk": "2.*"
+        "temporal/sdk": "2.*",
+        "zircote/swagger-php": "^5.0"
     },
     "config": {
         "allow-plugins": {
@@ -98,6 +101,11 @@
         "check-psalm": "php vendor/bin/psalm",
         "check-phpunit": "php vendor/bin/phpunit --stop-on-failure",
         "check-deptrac": "php deptrac.phar",
+        "openapi-dump": [
+            "@php bin/console cache:clear --no-warmup",
+            "@php bin/console nelmio:apidoc:dump --format=json > docs/openapi.json"
+        ],
+        "check-openapi": "php vendor/bin/phpunit --filter=OpenApiDocumentationTest",
         "check-account-deptrac": "php deptrac.phar analyze --config-file=./src/Account/deptrac.yaml",
         "check-background-deptrac": "php deptrac.phar analyze --config-file=./src/BackgroundJob/deptrac.yaml",
         "check-runner-deptrac": "php deptrac.phar analyze --config-file=./src/Runner/deptrac.yaml",
@@ -119,7 +127,7 @@
     },
     "extra": {
         "symfony": {
-            "allow-contrib": false,
+            "allow-contrib": true,
             "require": "7.*"
         }
     },

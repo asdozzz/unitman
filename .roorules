@@ -105,6 +105,7 @@ di.php, routing.php, deptrac.yaml, .modulite.yaml (не у всех)
 
 ## 11. Тесты и качество
 
+- После правок нужно делать рестарт RoadRunner внутри контейнера с помощью rr reset
 - Тесты и проверки запускаем через контейнер docker, но перед запуском нужно обязательно чистить кэш php bin/console cache:clear
 - Если контейнер не запущен, нужно попросить запустить
 - Тесты в `src/<Module>/Tests` (phpunit suite `src/*/Tests`), bootstrap `tests/bootstrap.php`; базовые абстрактные тест-кейсы исключены из прогона.

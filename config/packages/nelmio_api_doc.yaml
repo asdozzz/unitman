@@ -1,0 +1,492 @@
+nelmio_api_doc:
+    documentation:
+        openapi: 3.1.0
+        info:
+            title: Unitman API
+            description: API сервиса автоматического создания тестовых стендов
+            version: 1.0.0
+        security:
+            - bearerAuth: []
+        tags:
+            - name: Account
+              description: Аккаунты, роли, настройки
+            - name: Initialization
+              description: Первичная инициализация системы
+            - name: Runner
+              description: Исполнитель сборки и запуска контейнеров
+            - name: Project
+              description: Проекты (Git-репозитории в Unitman)
+            - name: Repo
+              description: Учётные данные доступа к репозиториям
+            - name: Webhook
+              description: Webhook'и проектов
+            - name: Unit
+              description: Тестовые стенды
+        # Маршруты, которые создаются не контроллерами проекта, а бандлами
+        # (lexik JSON-логин), поэтому описываются декларативно.
+        paths:
+            /api/login:
+                post:
+                    tags: [Account]
+                    summary: Получить JWT-токен
+                    description: JSON-логин (lexik/jwt-authentication-bundle). Токен затем передаётся в заголовке Authorization.
+                    security: []
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    required: [username, password]
+                                    properties:
+                                        username:
+                                            type: string
+                                            format: email
+                                            example: user@example.com
+                                        password:
+                                            type: string
+                                            format: password
+                                            example: secret
+                    responses:
+                        '200':
+                            description: Токен выдан
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        required: [token]
+                                        properties:
+                                            token:
+                                                type: string
+                                                example: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+                        '401':
+                            description: Неверные учётные данные
+        components:
+            securitySchemes:
+                bearerAuth:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+            schemas:
+                SuccessEnvelope:
+                    type: object
+                    description: Успешный ответ (App\Utils\Model\Reponse\SuccessResponse)
+                    required: [status, data]
+                    properties:
+                        status:
+                            type: string
+                            enum: [success]
+                            example: success
+                        data:
+                            type: object
+                            nullable: true
+                FailEnvelope:
+                    type: object
+                    description: Ожидаемая ошибка (App\Utils\Model\Reponse\FailResponse)
+                    required: [status, data]
+                    properties:
+                        status:
+                            type: string
+                            enum: [fail]
+                            example: fail
+                        data:
+                            type: object
+                            nullable: true
+                ErrorEnvelope:
+                    type: object
+                    description: Ошибка (App\Utils\Model\Reponse\ErrorResponse), возвращается с HTTP 200
+                    required: [status, message, code]
+                    properties:
+                        status:
+                            type: string
+                            enum: [error]
+                            example: error
+                        message:
+                            type: string
+                            example: Недостаточно прав
+                        code:
+                            type: string
+                            enum: [DEFAULT, LOCK]
+                            example: DEFAULT
+                # Тела запросов, привязываемые через JsonBodySerializableInterface.
+                # Nelmio читает атрибуты только с контроллера, поэтому DTO-схемы описаны здесь.
+                RegisterAccount:
+                    type: object
+                    required: [email, password, roles, locale]
+                    properties:
+                        email:
+                            type: string
+                            format: email
+                            example: user@example.com
+                        password:
+                            type: string
+                            format: password
+                            example: secret
+                        roles:
+                            type: string
+                            description: В коде объявлено строкой, а не массивом
+                            example: ROLE_USER
+                        locale:
+                            type: string
+                            example: ru
+                        nickname:
+                            type: string
+                            nullable: true
+                            example: nickname
+                ChangeEmailByAdmin:
+                    type: object
+                    required: [accountId, newEmail]
+                    properties:
+                        accountId:
+                            type: string
+                            format: uuid
+                        newEmail:
+                            type: string
+                            format: email
+                            example: user@example.com
+                ChangeNicknameByAdmin:
+                    type: object
+                    required: [accountId, newNickname]
+                    properties:
+                        accountId:
+                            type: string
+                            format: uuid
+                        newNickname:
+                            type: string
+                            example: nickname
+                ChangePasswordByAdmin:
+                    type: object
+                    required: [accountId, newPassword]
+                    properties:
+                        accountId:
+                            type: string
+                            format: uuid
+                        newPassword:
+                            type: string
+                            format: password
+                ChangeRoleByAdmin:
+                    type: object
+                    required: [accountId, newRole]
+                    properties:
+                        accountId:
+                            type: string
+                            format: uuid
+                        newRole:
+                            type: string
+                            example: ROLE_USER
+                ChangeMyLocale:
+                    type: object
+                    required: [locale]
+                    properties:
+                        locale:
+                            type: string
+                            example: ru
+                ChangeMyNickname:
+                    type: object
+                    required: [newNickname]
+                    properties:
+                        newNickname:
+                            type: string
+                            example: nickname
+                ChangeMyPassword:
+                    type: object
+                    required: [newPassword]
+                    properties:
+                        newPassword:
+                            type: string
+                            format: password
+                BlockByAdmin:
+                    type: object
+                    required: [accountId]
+                    properties:
+                        accountId:
+                            type: string
+                            format: uuid
+                        reason:
+                            type: string
+                            nullable: true
+                            example: Нарушение правил
+                UnblockByAdmin:
+                    type: object
+                    required: [accountId]
+                    properties:
+                        accountId:
+                            type: string
+                            format: uuid
+                        reason:
+                            type: string
+                            nullable: true
+                            example: Апелляция удовлетворена
+                ObnovitDefoltnyiProxyHost:
+                    type: object
+                    required: [value]
+                    properties:
+                        value:
+                            type: string
+                            nullable: true
+                            example: http://proxy.example
+                SaveStepsCommand:
+                    type: object
+                    required: [responseId, stepsContent]
+                    properties:
+                        responseId:
+                            type: string
+                            example: b5f1f0c4-6d1e-4a1e-9a3b-1c2d3e4f5a6b
+                        stepsContent:
+                            type: string
+                            example: '{}'
+                # --- Unitman: webhook'и проектов ---
+                SozdatWebhookProekta:
+                    type: object
+                    required: [projectId, url]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        url:
+                            type: string
+                            format: uri
+                            example: https://gitlab.example/hook
+                IzmenitUrlWebhooka:
+                    type: object
+                    required: [id, newUrl]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        newUrl:
+                            type: string
+                            format: uri
+                            example: https://gitlab.example/hook
+                PoluchitSobitiyaWebhooka:
+                    type: object
+                    required: [webhookId, limit, offset]
+                    properties:
+                        webhookId:
+                            type: string
+                            format: uuid
+                        limit:
+                            type: integer
+                            example: 20
+                        offset:
+                            type: integer
+                            example: 0
+                # --- Unitman: юниты ---
+                ZnacheniePeremenoi:
+                    type: object
+                    required: [id, value, type]
+                    properties:
+                        id:
+                            type: string
+                        value:
+                            type: string
+                        type:
+                            type: string
+                            example: string
+                SozdatUnit:
+                    type: object
+                    required: [projectId, unitName, branch]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        unitName:
+                            type: string
+                            example: feature-123
+                        branch:
+                            type: string
+                            example: feature/123
+                        memoryLimit:
+                            type: integer
+                            example: 0
+                        znacheniePeremenoi:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/ZnacheniePeremenoi'
+                NaitiDubliUnita:
+                    type: object
+                    required: [projectId, branch]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        branch:
+                            type: string
+                            example: feature/123
+                GetUnitReadModelById:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                GetMyUnits:
+                    type: object
+                    properties:
+                        limit:
+                            type: integer
+                            example: 10
+                        offset:
+                            type: integer
+                            example: 0
+                SobratUnit:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                ObnovitKodUnita:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                ZapolnitPeremenieUnita:
+                    type: object
+                    required: [id, values]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        values:
+                            type: array
+                            description: Список заполняемых переменных юнита
+                            items:
+                                $ref: '#/components/schemas/ZnacheniePeremenoi'
+                PodgotovitUnitKZapusku:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                SbrositPodgotovkuUnita:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                ZapustitUnit:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                OstanovitUnit:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                UdalitUnit:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                UdalitSlomaniyUnit:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                PoluchitKonfigUnita:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                PoluchitPeremenieUnita:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                PoluchitSsylkuPoPomoschniku:
+                    type: object
+                    required: [projectId, service, port, targetUnitId]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        service:
+                            type: string
+                            example: backend
+                        port:
+                            type: integer
+                            example: 8080
+                        targetUnitId:
+                            type: string
+                            format: uuid
+                GetUnitRunnerJobs:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                PoluchitShagiZadachiUnita:
+                    type: object
+                    required: [prozesId, zadachaId]
+                    properties:
+                        prozesId:
+                            type: string
+                        zadachaId:
+                            type: string
+                VipolnitDeistviye:
+                    type: object
+                    required: [id, actionId, values]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        actionId:
+                            type: string
+                        values:
+                            type: array
+                            description: Параметры выполняемого действия
+                            items:
+                                $ref: '#/components/schemas/ZnacheniePeremenoi'
+                ProveritKonteinerUnita:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                PoluchitKonfigIzHranilisha:
+                    type: object
+                    required: [projectId, branch]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        branch:
+                            type: string
+                            example: feature/123
+                PeresobratModelSpisokUnitov:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                PometitKakSlomanii:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+    areas: # to filter documented areas
+        path_patterns:
+            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc

@@ -26,6 +26,7 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/test$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/saveSteps$, roles: PUBLIC_ACCESS }
         - { path: ^/api/initialization/list, roles: PUBLIC_ACCESS }
         - { path: ^/api/project/(.*)/hook$, roles: PUBLIC_ACCESS }

@@ -40,7 +40,6 @@ final class RegisterAccount implements JsonBodySerializableInterface
         $this->password = $password;
     }
 
-
     /**
      * @return string
      */
@@ -53,6 +52,5 @@ final class RegisterAccount implements JsonBodySerializableInterface
     {
         return $this->locale;
     }
-
 
 }
