@@ -15,6 +15,7 @@ use App\Unitman\Business\Command\Unit\PodgotovitUnitKZapusku;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigIzHranilisha;
 use App\Unitman\Business\Command\Unit\PoluchitKonfigUnita;
 use App\Unitman\Business\Command\Unit\PoluchitPeremenieUnita;
+use App\Unitman\Business\Command\Unit\PoluchitSsylkuPoPomoschniku;
 use App\Unitman\Business\Command\Unit\PometitKakSlomanii;
 use App\Unitman\Business\Command\Unit\ProveritKonteinerUnita;
 use App\Unitman\Business\Command\Unit\SbrositPodgotovkuUnita;
@@ -42,6 +43,7 @@ use App\Unitman\Business\UseCase\Unit\NaitiDubliUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigIzHranilishaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitPeremenieUnitaQuery;
+use App\Unitman\Business\UseCase\Unit\PoluchitSsylkuPoPomoschnikuQuery;
 use App\Unitman\Business\UseCase\Unit\PometitKakSlomaniiUseCase;
 use App\Unitman\Business\UseCase\Unit\ProveritKonteinerUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
@@ -214,6 +216,17 @@ final class UnitConroller extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+        }
+    }
+
+    #[Route('/poluchitSsylkuPoPomoschniku', methods: ['POST'])]
+    public function poluchitSsylkuPoPomoschniku(PoluchitSsylkuPoPomoschniku $command, PoluchitSsylkuPoPomoschnikuQuery $query): Response
+    {
+        try {
+            $data = $query->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Throwable $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
         }
     }

@@ -72,6 +72,7 @@ final class ConfigUnita
         foreach ($actions as $action) {
             $this->actions[] = KonfigDeistviya::fromArray($action);
         }
+
         $this->konfigStadiiSborki = $konfigStadiiSborki;
     }
 

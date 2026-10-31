@@ -21,6 +21,10 @@ variables:
     type: unit
     options:
         projectCode: services/orders
+    helper:
+        projectId: services/orders
+        service: web
+        port: 8080
     defaultValue: master
 
 services:

@@ -2,6 +2,8 @@
 
 namespace App\Unitman\Business\Model\Unit;
 
+use App\Unitman\Business\Model\Unit\ConfigUnita\PomoschnikSsylki;
+
 interface ConfigVariable
 {
     function toArray(): array;
@@ -14,6 +16,8 @@ interface ConfigVariable
     function getDefaultValue(): string;
 
     function getOptions(): array;
+
+    function poluchitPomoschnikaSsylki(): ?PomoschnikSsylki;
 
     function validateValue(string $value): ?string;
 }

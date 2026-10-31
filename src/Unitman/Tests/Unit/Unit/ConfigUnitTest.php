@@ -35,6 +35,20 @@ final class ConfigUnitTest extends TestCase
                             ]
                         ]
                     ],
+                ],
+                [
+                    'id' => 'ORDER_SERVICE',
+                    'label' => 'ORDER_SERVICE',
+                    'type' => 'unit',
+                    'defaultValue' => 'master',
+                    'options' => [
+                        'projectCode' => 'services/orders'
+                    ],
+                    'helper' => [
+                        'projectId' => 'services/orders',
+                        'service' => 'web',
+                        'port' => 8080
+                    ]
                 ]
             ],
             'prepare' => [
@@ -117,12 +131,18 @@ final class ConfigUnitTest extends TestCase
             new VariableValue('INTEGER',"10"),
             new VariableValue('FLOAT', "10.5"),
             new VariableValue('STRING', "123123"),
-            new VariableValue('COLLECTION', '1')
+            new VariableValue('COLLECTION', '1'),
+            new VariableValue('ORDER_SERVICE', 'master')
         ]);
 
         $this->assertEquals([], $errs);
 
         $this->assertEquals('/test', $config->getServices()[0]->ports[0]->startUri);
+
+        $pomoschnik = $config->getVariables()[4]->poluchitPomoschnikaSsylki();
+        $this->assertEquals('services/orders', $pomoschnik?->projectId);
+        $this->assertEquals('web', $pomoschnik?->service);
+        $this->assertEquals(8080, $pomoschnik?->port);
 
         $arr = $config->toArray();
 
@@ -146,5 +166,91 @@ final class ConfigUnitTest extends TestCase
                 'name' => 'nginx name'
             ]
         ]], $arr['actions'][1]['variables'][0]['options']);
+
+        $this->assertEquals([
+            'projectId' => 'services/orders',
+            'service' => 'web',
+            'port' => 8080
+        ], $arr['variables'][4]['helper']);
+        $this->assertNull($arr['variables'][0]['helper']);
+    }
+
+    /**
+     * @test
+     * */
+    function config_bez_pomoschnika()
+    {
+        $configAsArray = [
+            'variables' => [],
+            'prepare' => [
+                'ls -la'
+            ],
+            'reset_prepare' => [
+                'ls -la'
+            ],
+            'up' => [
+                'ls -la'
+            ],
+            'down' => [
+                'ls -la'
+            ],
+            'services' => [
+                'web' => [
+                    'ports' => [
+                        ['port' => 8081, 'type' => 'http', 'startUri' => '/test']
+                    ]
+                ],
+            ],
+        ];
+
+        $config = ConfigUnita::fromArray($configAsArray);
+        $this->assertEquals([], $config->getVariables());
+    }
+
+    /**
+     * @test
+     * */
+    function nevalidnii_pomoschnik_bez_projectCode()
+    {
+        $configAsArray = [
+            'variables' => [
+                [
+                    'id' => 'ORDER_SERVICE',
+                    'label' => 'ORDER_SERVICE',
+                    'type' => 'unit',
+                    'defaultValue' => 'master',
+                    'options' => [
+                        'projectCode' => 'services/orders'
+                    ],
+                    'helper' => [
+                        'service' => 'web',
+                        'port' => 8080
+                    ]
+                ]
+            ],
+            'prepare' => [
+                'ls -la'
+            ],
+            'reset_prepare' => [
+                'ls -la'
+            ],
+            'up' => [
+                'ls -la'
+            ],
+            'down' => [
+                'ls -la'
+            ],
+            'services' => [
+                'web' => [
+                    'ports' => [
+                        ['port' => 8081, 'type' => 'http', 'startUri' => '/test']
+                    ]
+                ],
+            ],
+        ];
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.config.pomoschnik.projectId_is_empty');
+        ConfigUnita::fromArray($configAsArray);
     }
 }

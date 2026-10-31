@@ -29,3 +29,11 @@
 .phpunit.result.cache
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json
+config/packages/property_info.yaml~
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json
+config/packages/property_info.yaml~
+.gitignore
+graphify-out

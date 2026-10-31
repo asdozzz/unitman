@@ -1,0 +1,129 @@
+# Unitman — правила проекта
+
+## 1. О проекте
+
+Unitman — сервис автоматического создания тестовых стендов («юнитов») для тестировщиков.
+Отслеживает ветки в GitLab/GitHub, автоматически собирает и запускает стенды, позволяет
+настраивать параметры юнитов и направлять юниты друг на друга (кросс-сервисное тестирование).
+Ключевые сущности: **Project** (Git-репозиторий), **Repo** (учётные данные доступа), **Unit** (стенд), **Runner** (исполнитель сборки/запуска контейнеров).
+
+## 2. Технологический стек
+
+- PHP >= 8.2, Symfony 7 (micro-kernel, см. `src/Kernel.php`), `strict_types=1`, `final` классы
+- RoadRunner: HTTP + Jobs (`.rr.yaml`, воркер `php bin/console app:jobs`, бандл `fluffydiscord/roadrunner-symfony-bundle`)
+- Temporal: воркфлоу/активити (`temporal/sdk`, реестр workflow — `config/workflows.php`)
+- EventSauce: event sourcing (агрегаты, события, проекции, checkpoint store)
+- Doctrine **DBAL** (без ORM-сущностей — репозитории пишут SQL напрямую)
+- JWT-аутентификация (`lexik/jwt-authentication-bundle`), Centrifugo (realtime)
+- Качество: PHPUnit 11, Psalm 6, deptrac, modulite
+
+## 3. Структура модулей (модульный монолит)
+
+```
+src/
+  Account/         — пользователи: регистрация, роли, JWT, настройки
+  Unitman/         — ядро системы: проекты, репо, юниты, webhook'и (основная бизнес-логика)
+  Runner/          — сборка/запуск/управление контейнерами через Golang-runner + Temporal
+  BackgroundJob/   — фоновые задачи (очередь RoadRunner Jobs)
+  Initialization/  — первичная инициализация системы
+  App/             — общая инфраструктура (workflow client, event-store decorators)
+  Utils/           — разделяемые утилиты (EventSauce-инфраструктура, конвертеры, Response, сервисы)
+```
+
+Каждый модуль (кроме App/Utils) имеет внутреннюю структуру:
+
+```
+Api/           — публичный API модуля (единственная точка входа для ДРУГИХ модулей)
+Acl/           — адаптеры к чужим модулям (антикоррупционный слой)
+Business/
+  Command/     — DTO команд/запросов
+  Model/       — доменные агрегаты, Value Objects, Event/
+  Port/        — интерфейсы (репозитории, внешние сервисы) — контракт бизнес-слоя
+  ReadModel/   — read-модели для запросов
+  UseCase/     — обработчики: XxxUseCase (команды), XxxQuery (запросы)
+  Utils/       — вспомогательное для бизнес-слоя
+Infra/
+  Adapter/     — реализации портов
+  Controller/  — HTTP-контроллеры (Symfony #[Route])
+  Repository/  — SQL-репозитории (Doctrine DBAL)
+  Projection/  — проекции event sourcing
+  Jobs/        — обработчики фоновых задач
+  Service/     — инфраструктурные сервисы
+  Workflow/    — Temporal workflow/activity (модуль Runner)
+Migrations/    — миграции модуля
+Tests/         — тесты модуля
+di.php, routing.php, deptrac.yaml, .modulite.yaml (не у всех)
+```
+
+## 4. Архитектурные правила (deptrac — обязательны)
+
+- Корневой `deptrac.yaml`: модули изолированы. `Account` и `BackgroundJob` не зависят ни от кого; `Runner` и `Unitman` зависят **только** от `BackgroundJob`.
+- Внутри модуля (`src/*/deptrac.yaml`): Domain (Business) не зависит ни от чего; Infrastructure зависит от Domain; Api/Acl зависят от Domain + Infrastructure.
+- **Запрещено** импортировать внутренние классы чужого модуля напрямую — только через `Api\*Api` модуля или через собственный `Acl/`-адаптер.
+- Проверка: `composer run check-deptrac` + пер-модульные `check-*-deptrac` (см. scripts в `composer.json`).
+
+## 5. Соглашения по именованию
+
+- Значительная часть имён — **транслит с русского** (исторически сложилось): `Sozdat…` (создать), `Poluchit…` (получить), `Udalit…` (удалить), `Dobavit…` (добавить), `Ustanovit…` (установить), `Nachat…` (начать), `Sobitie…` (событие), `Obrabotat…` (обработать).
+- Следуй стилю соседнего кода внутри одной фичи: не смешивай English/транслит произвольно.
+- UseCase: `XxxUseCase` с методом `handle(Command $cmd)`. Запросы: `XxxQuery` (либо `…UseCase` для query) возвращают ReadModel.
+- Порты (интерфейсы) в `Business/Port`: `UnitRepository`, `CanGenerateGuid`, `UmeetPoluchat…` («умеет получать…»).
+- События — прошедшее время: `UnitSozdan`, `AccountWasRegistered`, `PasswordWasChanged`.
+- Команды — императив: `SozdatUnit`, `NachatSborkuUnita`, `RegisterAccount`.
+- Классы `final`, свойства через constructor property promotion.
+
+## 6. Event Sourcing (EventSauce) — как писать
+
+- Агрегат: `Business/Model/Xxx.php` implements `AggregateRoot` + trait `AggregateRootBehaviour`. Публичные методы-команды валидируют и вызывают `recordThat(new Event(...))`; применение — приватный `apply<ИмяСобытия>(Event $e)`.
+- События иммутабельны, в `Business/Model/Event/`.
+- Проекции: `Infra/Projection/XxxProjection` на базе `App\Utils\EventSauce\AbstractProjection`, тег `sync_projection`, регистрируются в `di.php` модуля (`tagged_iterator`).
+- Event store — таблица `<module>_event_store`; вся сборка (serializer, repository, decorators, projections_manager, event_store) — именованные сервисы `<module>.…` в `di.php`. Эталон: `src/Account/di.php`.
+- Read-модели строятся проекциями; их репозитории — в `Infra/Repository`.
+
+## 7. HTTP API
+
+- Контроллеры: `Infra/Controller`, `#[Route('/api/...')]`, метод возвращает JSON-конверт `App\Utils\Model\Reponse\Response::success()/error()` (опечатка `Reponse` — устоявшийся контракт, **не исправлять**).
+- Тела запросов: DTO implements `App\Utils\Converter\JsonBodySerializableInterface` (резолвится `JsonBodySerializableConverter`), либо `#[MapRequestPayload]`.
+- Авторизация: JWT; роли `ROLE_USER` / `ROLE_ADMIN` / `ROLE_SYSTEM`. Права проверяются **внутри UseCase** через `Port\SecurityService` (`isAdmin()` и т.п.), а не в контроллере.
+- Публичные (без JWT) эндпоинты перечислены в `config/packages/security.yaml` (webhook-хуки, `runner/saveSteps`, `initialization/list`).
+
+## 8. DI и регистрация
+
+- `src/Kernel.php` автоматически импортирует `src/**/{di}.php` и `src/**/{routing}.php` — новый модуль = папка с `di.php` + `routing.php`.
+- Автозагрузка: `$services->load('App\\Module\\', './{Business,Infra,Acl,Api}')` с исключениями `Command/Model/ReadModel/Migrations/Tests`.
+- Роутинг модуля: `routing.php` импортирует атрибуты `./Infra/Controller`.
+
+## 9. Temporal (workflow/activity)
+
+- Workflows: `src/Runner/Infra/Workflow/*Workflow.php` (`#[WorkflowInterface]`, `#[WorkflowMethod]`), обязательная регистрация в `config/workflows.php`.
+- Activities: рядом в `Infra/`, очередь — `WorkflowClientFactory::runnerQueueName`.
+- Результаты активностей — DTO в `Business/Model/GolangRunner/*`.
+
+## 10. Фоновые задачи
+
+- RoadRunner Jobs: воркер `php bin/console app:jobs` (см. Makefile), обработчики в `src/BackgroundJob` и в `Infra/Jobs` модулей.
+
+## 11. Тесты и качество
+
+- Тесты и проверки запускаем через контейнер docker, но перед запуском нужно обязательно чистить кэш php bin/console cache:clear
+- Если контейнер не запущен, нужно попросить запустить
+- Тесты в `src/<Module>/Tests` (phpunit suite `src/*/Tests`), bootstrap `tests/bootstrap.php`; базовые абстрактные тест-кейсы исключены из прогона.
+- Проверки: `composer run all-checks` (psalm + phpunit + все deptrac).
+- Psalm level 1 (`psalm.xml`); не добавлять новые `@psalm-suppress` без необходимости.
+- Покрытие считается по `src/*/Business/Model` — держи доменную логику там.
+
+
+## 12. Инфраструктура
+
+- Docker Compose: `docker-compose.yml` (local), `dc.mvp.yml` (MVP/прод-подобный), `dc.temporal.yml` (temporal), `dc.tools.yml` (инструменты). Команды — через `Makefile`.
+- Миграции: `doctrine:migrations:migrate`; SQL-инициализация event store — `config/scripts/`.
+- Окружение: копировать `.env.dist`; секреты не коммитить (см. `.rooignore`, JWT-ключи в `config/jwt/`).
+
+## 13. Что нельзя делать
+
+- Не создавать циклические зависимости между модулями и не тянуть `Infra` чужого модуля.
+- Не использовать ORM-сущности — проект работает с DBAL напрямую.
+- Не переименовывать namespace `App\Utils\Model\Reponse` и класс Response-конверта.
+- Не класть бизнес-логику в контроллеры и репозитории — только в `UseCase`/`Model`.
+- Не добавлять новые зависимости в `composer.json` без необходимости.
+- Не коммитить `.env`, `config/jwt/*.pem`, `var/`, `vendor/`.
