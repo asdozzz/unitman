@@ -9,6 +9,7 @@ use App\Account\Business\Command\ChangeMyPassword;
 use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Command\ChangePasswordByAdmin;
 use App\Account\Business\Command\ChangeRoleByAdmin;
+use App\Account\Business\Command\ObnovitToken;
 use App\Account\Business\Command\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya;
 use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Command\UnblockByAdmin;
@@ -20,6 +21,7 @@ use App\Account\Business\UseCase\ChangeMyPasswordUseCase;
 use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
 use App\Account\Business\UseCase\ChangeRoleByAdminUseCase;
+use App\Account\Business\UseCase\ObnovitTokenUseCase;
 use App\Account\Business\UseCase\PoluchitNastroikiAccountaUseCase;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiQuery;
@@ -418,6 +420,50 @@ final class AccountController extends AbstractController
     {
         $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[OA\Post(
+        path: '/api/account/refreshToken',
+        summary: 'Обновить пару токенов по refresh-токену',
+        tags: ['Account'],
+        description: 'Публичный эндпоинт. Refresh-токен одноразовый: после успешного обновления старый отзывается.',
+        security: [],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ObnovitToken')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Новая пара токенов',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            required: ['token', 'refreshToken'],
+                            properties: [
+                                new OA\Property(property: 'token', type: 'string', example: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...'),
+                                new OA\Property(property: 'refreshToken', type: 'string', example: 'a1b2c3...'),
+                            ],
+                            type: 'object'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/refreshToken', methods: ['POST'])]
+    function refreshToken(ObnovitToken $command, ObnovitTokenUseCase $useCase): Response
+    {
+        $result = $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success([
+            'token' => $result->token,
+            'refreshToken' => $result->refreshToken,
+        ]));
     }
 
     #[OA\Get(

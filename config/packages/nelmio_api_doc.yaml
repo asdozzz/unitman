@@ -54,11 +54,17 @@ nelmio_api_doc:
                                 application/json:
                                     schema:
                                         type: object
-                                        required: [token]
+                                        required: [token, refreshToken]
                                         properties:
                                             token:
                                                 type: string
                                                 example: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+                                            refreshToken:
+                                                type: string
+                                                description: Одноразовый токен для /api/account/refreshToken
+                                                example: a1b2c3d4e5f6...
+                                            user:
+                                                $ref: '#/components/schemas/AccountLoginUser'
                         '401':
                             description: Неверные учётные данные
         components:
@@ -195,6 +201,32 @@ nelmio_api_doc:
                         newPassword:
                             type: string
                             format: password
+                ObnovitToken:
+                    type: object
+                    required: [refreshToken]
+                    properties:
+                        refreshToken:
+                            type: string
+                            description: Ранее выданный refresh-токен (одноразовый)
+                            example: a1b2c3d4e5f6...
+                AccountLoginUser:
+                    type: object
+                    description: Данные аутентифицированного пользователя в ответе /api/login
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        email:
+                            type: string
+                            format: email
+                        roles:
+                            type: array
+                            items:
+                                type: string
+                            example: [ROLE_USER]
+                        locale:
+                            type: string
+                            example: ru
                 BlockByAdmin:
                     type: object
                     required: [accountId]

@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace App\Account;
 
 use App\Account\Business\Model\Account;
+use App\Account\Business\Port\CanGenerateRefreshToken;
+use App\Account\Business\Port\CanIssueAccessToken;
+use App\Account\Business\Port\RefreshTokenRepository;
 use App\Account\Business\Port\UuidGenerator;
 use App\Account\Business\Utils\EventTypeMapFactory;
+use App\Account\Infra\Adapter\LexikAccessTokenIssuer;
 use App\Account\Infra\Adapter\RamseyUuidGenerator;
+use App\Account\Infra\Adapter\RandomRefreshTokenGenerator;
 use App\Account\Infra\Repository\SqlAccountRepository;
+use App\Account\Infra\Repository\SqlRefreshTokenRepository;
 use App\App\Infra\EventStore\AuthorMessageDecorator;
 use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
@@ -34,13 +40,17 @@ return function (ContainerConfigurator $configuration) {
         ->autowire()
         ->autoconfigure()
         ->bind('$appEnv','%env(APP_ENV)%')
-        ->bind('$defaultLocale','%env(DEFAULT_LOCALE)%');
+        ->bind('$defaultLocale','%env(DEFAULT_LOCALE)%')
+        ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%');
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
         ->exclude(['./{di.php,di_test.php, routing.php, Migrations, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
         ->public();
 
     $services->set(UuidGenerator::class, RamseyUuidGenerator::class);
+    $services->set(RefreshTokenRepository::class, SqlRefreshTokenRepository::class);
+    $services->set(CanGenerateRefreshToken::class, RandomRefreshTokenGenerator::class);
+    $services->set(CanIssueAccessToken::class, LexikAccessTokenIssuer::class);
 
     $services->set('account.event_type_mapper', ExplicitlyMappedClassNameInflector::class)
         ->factory([service(EventTypeMapFactory::class), 'getMap']);
