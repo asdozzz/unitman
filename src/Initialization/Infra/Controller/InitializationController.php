@@ -27,12 +27,14 @@ final class InitializationController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: defoltnyi proxy host обновлён. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: defoltnyi proxy host обновлён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
@@ -56,12 +58,19 @@ final class InitializationController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Параметры инициализации. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Параметры инициализации',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/InitializationRecord')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
         ],

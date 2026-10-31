@@ -45,15 +45,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Идентификатор созданного аккаунта',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/IdHolder'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/register', methods: ['POST'])]
@@ -74,15 +77,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: пароль изменён',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: пароль изменён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/changePasswordByAdmin', methods: ['POST'])]
@@ -103,15 +109,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: свой пароль изменён',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: свой пароль изменён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/changeMyPassword', methods: ['POST'])]
@@ -132,15 +141,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: никнейм изменён',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: никнейм изменён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/changeNicknameByAdmin', methods: ['POST'])]
@@ -161,15 +173,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: роль изменена',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: роль изменена'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/changeRoleByAdmin', methods: ['POST'])]
@@ -190,15 +205,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: свой никнейм изменён',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: свой никнейм изменён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/changeMyNickname', methods: ['POST'])]
@@ -219,15 +237,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: email изменён',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: email изменён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/changeEmailByAdmin', methods: ['POST'])]
@@ -248,15 +269,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: аккаунт заблокирован',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: аккаунт заблокирован'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/blockByAdmin', methods: ['POST'])]
@@ -277,15 +301,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: аккаунт разблокирован',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: аккаунт разблокирован'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/unblockByAdmin', methods: ['POST'])]
@@ -302,15 +329,23 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Список всех пользователей',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Список всех пользователей',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/AccountUser')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitVsehPolzovatelei', methods: ['GET'])]
@@ -327,15 +362,23 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Список пользователей с данными для администрирования',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Список пользователей с данными для администрирования',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ManagedAccount')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitVsehPolzovateleiDlyAdministrorovaniya', methods: ['POST'])]
@@ -356,15 +399,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: локаль изменена',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: локаль изменена'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/changeMyLocale', methods: ['POST'])]
@@ -381,15 +427,18 @@ final class AccountController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Настройки текущего пользователя',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/AccountSettings'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitNastroikiPolzovatelya', methods: ['GET'])]

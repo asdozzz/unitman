@@ -76,15 +76,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Список проектов, ограниченный фильтрами запроса',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Список проектов, ограниченный фильтрами запроса',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectListItem')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/list', methods: ['POST'])]
@@ -104,15 +112,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Проект по идентификатору',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/ProjectListItem'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/read/{id}', methods: ['POST'])]
@@ -133,15 +144,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Список активных проектов',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Список активных проектов',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectListItem')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/activeList', methods: ['POST'])]
@@ -162,15 +181,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Проекты текущего пользователя',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Проекты текущего пользователя',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectListItem')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/my', methods: ['POST'])]
@@ -190,15 +217,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Проекты указанного пользователя',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Проекты указанного пользователя',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectListItem')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/user/{id}', methods: ['POST'])]
@@ -219,15 +254,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проект добавлен',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проект добавлен'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/add', methods: ['POST'])]
@@ -249,15 +287,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: данные проекта обновлены',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: данные проекта обновлены'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/updateData', methods: ['POST'])]
@@ -278,15 +319,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проект поставлен в очередь на удаление. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проект поставлен в очередь на удаление'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/remove', methods: ['POST'])]
@@ -312,15 +356,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проект удалён принудительно',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проект удалён принудительно'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/forceRemove', methods: ['POST'])]
@@ -341,15 +388,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проект включён',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проект включён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/enable', methods: ['POST'])]
@@ -370,15 +420,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проект выключен',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проект выключен'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/disable', methods: ['POST'])]
@@ -399,15 +452,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пользователи проекта',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Пользователи проекта',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectUser')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/usersList', methods: ['POST'])]
@@ -428,15 +489,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: пользователь добавлен в проект',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: пользователь добавлен в проект'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/addUser', methods: ['POST'])]
@@ -457,15 +521,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: пользователь удалён из проекта',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: пользователь удалён из проекта'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/removeUser', methods: ['POST'])]
@@ -486,15 +553,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Переменные проекта',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Переменные проекта',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectVariable')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/spisokPeremenihProekta', methods: ['POST'])]
@@ -515,15 +590,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: переменная добавлена в проект',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: переменная добавлена в проект'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/dobavitPeremenuyu', methods: ['POST'])]
@@ -544,15 +622,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: переменная удалена из проекта',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: переменная удалена из проекта'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/udalitPeremenuyu', methods: ['POST'])]
@@ -573,15 +654,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: значение переменной проекта изменено',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: значение переменной проекта изменено'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/izmenitPeremenuyu', methods: ['POST'])]
@@ -602,15 +686,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проект поставлен в очередь на сборку',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проект поставлен в очередь на сборку'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/build', methods: ['POST'])]
@@ -631,15 +718,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: настройки webhook проекта обновлены',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: настройки webhook проекта обновлены'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/obnovitNastroikiHuka', methods: ['POST'])]
@@ -660,15 +750,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Ветки проекта в хранилище',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Ветки проекта в хранилище',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectBranch')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/branchesList', methods: ['POST'])]
@@ -695,17 +793,15 @@ final class ProjectController extends AbstractController
                 response: 200,
                 description: 'Идентификатор сохранённого события',
                 content: new OA\JsonContent(
+                    required: ['status', 'data'],
                     properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [new OA\Property(property: 'eventId', type: 'string')],
-                            type: 'object'
-                        ),
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/EventIdHolder'),
                     ],
                     type: 'object'
                 )
             ),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ],
         security: []
     )]
@@ -723,15 +819,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Статистика единиц по проектам',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Статистика единиц по проектам',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectStatistics')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/statistikaPoProektam', methods: ['POST'])]
@@ -751,15 +855,23 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Задания runner по проекту без шагов. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Задания runner по проекту без шагов',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectRunnerJob')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitVipolnenieZadachiRunnera', methods: ['POST'])]
@@ -784,15 +896,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Задание runner по проекту с шагами. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/ProjectRunnerJobDetailed'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitShagiZadachiRunnera', methods: ['POST'])]
@@ -817,15 +932,18 @@ final class ProjectController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Результат проверки доступности proxy host. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/ProxyHostCheckResult'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/proverkaProxyHost', methods: ['POST'])]

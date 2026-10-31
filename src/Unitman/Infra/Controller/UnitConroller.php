@@ -72,15 +72,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: команда создания юнита принята. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: команда создания юнита принята'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/sozdat', methods: ['POST'])]
@@ -105,15 +108,23 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Массив юнитов, ограниченный параметрами filter, limit и offset',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Список юнитов; пустой массив, если ничего не найдено',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/UnitListItem')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/list', methods: ['POST'])]
@@ -134,15 +145,23 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Дубли юнитов по проекту и ветке; пустой массив, если дублей нет',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Дубли юнитов по проекту и ветке; пустой массив, если дублей нет',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/UnitListItem')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/naitiDubliUnita', methods: ['POST'])]
@@ -163,15 +182,21 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Один юнит по его идентификатору',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/UnitListItem'
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Юнит не найден либо ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/obnovit', methods: ['POST'])]
@@ -192,15 +217,23 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Массив юнитов текущего пользователя',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Список юнитов текущего пользователя; пустой массив, если юнитов нет',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/UnitListItem')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/moi', methods: ['POST'])]
@@ -221,15 +254,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: сборка юнита поставлена в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: сборка юнита поставлена в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/sobrat', methods: ['POST'])]
@@ -254,15 +290,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: обновление кода юнита поставлено в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: обновление кода юнита поставлено в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/obnovitKodUnita', methods: ['POST'])]
@@ -287,15 +326,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: значения переменных сохранены. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: значения переменных сохранены'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/zapolnitPeremenie', methods: ['POST'])]
@@ -320,15 +362,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: подготовка юнита поставлена в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: подготовка юнита поставлена в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/podgotovit', methods: ['POST'])]
@@ -353,15 +398,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: сброс подготовки поставлен в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: сброс подготовки поставлен в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/sbrositPodgotovku', methods: ['POST'])]
@@ -386,15 +434,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: запуск юнита поставлен в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: запуск юнита поставлен в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/zapustit', methods: ['POST'])]
@@ -419,15 +470,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: остановка юнита поставлена в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: остановка юнита поставлена в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/ostanovit', methods: ['POST'])]
@@ -452,15 +506,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: удаление юнита поставлено в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: удаление юнита поставлено в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/udalit', methods: ['POST'])]
@@ -485,15 +542,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: сломанный юнит удалён. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: сломанный юнит удалён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/udalitSlomaniyUnit', methods: ['POST'])]
@@ -518,15 +578,25 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Конфигурация юнита; пустой массив, если конфигурация не задана. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Конфигурация юнита; пустой массив, если конфигурация не задана',
+                            oneOf: [
+                                new OA\Schema(ref: '#/components/schemas/UnitConfig'),
+                                new OA\Schema(type: 'array', maxItems: 0),
+                            ],
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitKonfigUnita', methods: ['POST'])]
@@ -551,15 +621,23 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Переменные конфигурации с текущими значениями. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Переменные конфигурации с текущими значениями',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/UnitVariable')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitPeremenieUnita', methods: ['POST'])]
@@ -584,15 +662,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Ссылка на сервис юнита, вычисленная по помощнику ссылки. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/UnitLinkHolder'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitSsylkuPoPomoschniku', methods: ['POST'])]
@@ -617,15 +698,23 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Процессы юнита с задачами без шагов; пустой массив, если процессов нет. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Процессы юнита с задачами без шагов; пустой массив, если процессов нет',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/UnitProcessBrief')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitVipolnenieZadachiRunnera', methods: ['POST'])]
@@ -650,15 +739,23 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Шаги задачи runner по юниту. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Шаги задачи runner по юниту',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/RunnerJobStep')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitShagiZadachiRunnera', methods: ['POST'])]
@@ -683,15 +780,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: действие поставлено в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: действие поставлено в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/vipolnitDeistviye', methods: ['POST'])]
@@ -716,15 +816,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проверка контейнера поставлена в очередь. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проверка контейнера поставлена в очередь'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/proveritKonteinerUnita', methods: ['POST'])]
@@ -749,15 +852,23 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Переменные конфигурации, полученной из хранилища. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Переменные конфигурации, полученной из хранилища',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/UnitVariable')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitKonfigIzHranilisha', methods: ['POST'])]
@@ -782,15 +893,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: проекция списка юнитов пересобрана. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проекция списка юнитов пересобрана'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/rebuildSpisokUnitov', methods: ['POST'])]
@@ -815,15 +929,18 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: юнит помечен как сломанный. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: юнит помечен как сломанный'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/pometitKakSlomanii', methods: ['POST'])]

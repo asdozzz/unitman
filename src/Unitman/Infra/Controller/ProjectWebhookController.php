@@ -33,15 +33,18 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Идентификатор созданного webhook. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/IdHolder'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/dobavit', methods: ['POST'])]
@@ -65,15 +68,23 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Webhook проектов; пустой массив, если webhook нет. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Webhook проектов; пустой массив, если webhook нет',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectWebhook')
+                        ),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/{projectId}/spisok', methods: ['POST'])]
@@ -96,15 +107,18 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: webhook отключён. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: webhook отключён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/{id}/otkluchit', methods: ['POST'])]
@@ -128,15 +142,18 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: webhook включён. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: webhook включён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/{id}/vkluchit', methods: ['POST'])]
@@ -160,15 +177,18 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: webhook удалён. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: webhook удалён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/{id}/udalit', methods: ['POST'])]
@@ -192,15 +212,18 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Webhook по идентификатору. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/ProjectWebhook'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/{id}/read', methods: ['POST'])]
@@ -224,15 +247,18 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Пустой ответ: URL webhook изменён. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: URL webhook изменён'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/obnovit', methods: ['POST'])]
@@ -257,15 +283,18 @@ final class ProjectWebhookController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Успешный ответ либо ошибка',
+                description: 'Страница событий webhook. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/SuccessEnvelope'),
-                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
-                    ]
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/WebhookEventPage'),
+                    ],
+                    type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/poluchitSobitiyaWebhooka', methods: ['POST'])]

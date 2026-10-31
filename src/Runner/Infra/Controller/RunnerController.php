@@ -23,11 +23,13 @@ final class RunnerController extends AbstractController
                 response: 200,
                 description: 'Состояние раннера',
                 content: new OA\JsonContent(
+                    required: ['active'],
                     properties: [new OA\Property(property: 'active', type: 'boolean')],
                     type: 'object'
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/getDefaultRunnerActive', methods: ['POST'])]
@@ -42,8 +44,13 @@ final class RunnerController extends AbstractController
         summary: 'Диагностическое состояние раннера',
         tags: ['Runner'],
         responses: [
-            new OA\Response(response: 200, description: 'Состояние раннера'),
+            new OA\Response(
+                response: 200,
+                description: 'Текущее состояние раннера по умолчанию',
+                content: new OA\JsonContent(ref: '#/components/schemas/RunnerState')
+            ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
     #[Route('/test', methods: ['GET'])]

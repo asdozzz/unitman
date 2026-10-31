@@ -487,6 +487,760 @@ nelmio_api_doc:
                         id:
                             type: string
                             format: uuid
+                # --- Unitman: ответы со списком/карточкой юнита ---
+                # Единая схема элемента, которую возвращают /api/unit/list, /api/unit/moi
+                # (массив) и /api/unit/obnovit (один объект). Источник полей —
+                # SpisokUnitovReadModel и проекция SpisokUnitovProjection.
+                UnitListItem:
+                    type: object
+                    description: Элемент списка юнитов (payload read-модели spisok_unitov)
+                    required: [id, authorId, authorName, name, projectId, projectName, branch, commands, prozesi, error, zapushen, links, peremenie, unitSozdanSystemoi, deistviya]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        authorId:
+                            type: string
+                        authorName:
+                            type: string
+                            description: Email или никнейм автора юнита
+                            example: user@example.com
+                        name:
+                            type: string
+                            example: feature-123
+                        projectId:
+                            type: string
+                        projectName:
+                            type: string
+                            example: my-app
+                        branch:
+                            type: string
+                            example: feature/123
+                        commands:
+                            type: array
+                            description: Команды, доступные пользователю в текущем состоянии юнита
+                            items:
+                                type: string
+                                enum: [nachatSborku, nachatObnovlenie, zapolnitPeremenie, nachatPodgotovku, ustanovitResultatPodgotovki, nachatSbrosPodgotovki, nachatZapusk, nachatOstanovku, nachatUdalenie, udalitVruchnuyu, nachatObnovleniePosleZapuska, nachatUdaleniePosleZapuska, vipolnitDeistvie, ustanovitResultatDeistviya, proveritKonteinerUnita]
+                        prozesi:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitProcess'
+                        error:
+                            type: boolean
+                        zapushen:
+                            type: boolean
+                        links:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitLink'
+                        unixtimePoslednegoObnovleniyaUnita:
+                            type: integer
+                            nullable: true
+                            example: 1730000000
+                        unixtimePoslednegoObnovleniyaVHranilishe:
+                            type: integer
+                            nullable: true
+                            example: 1730000000
+                        peremenie:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitVariableValue'
+                        unitSozdanSystemoi:
+                            type: boolean
+                        deistviya:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitAction'
+                        statistikaKonteinera:
+                            oneOf:
+                                - $ref: '#/components/schemas/ContainerStats'
+                                - type: 'null'
+                UnitProcess:
+                    type: object
+                    description: Процесс юнита (UnitProcess::toArray)
+                    required: [id, userId, type, state, jobs]
+                    properties:
+                        id:
+                            type: string
+                        unitId:
+                            type: string
+                            description: Объявлено в read-модели, но проекция сохраняет процесс без этого поля
+                        userId:
+                            type: string
+                        type:
+                            type: string
+                            enum: [SBORKA, OBNOVLENIE, PODGOTOVKA, ZAPUSK, OSTANOVKA, SBROS_PODGOTOVKI, UDALENIE, DEISTVIE]
+                        state:
+                            type: string
+                            enum: [NEW, ZADACHI_DOBAVLENI, PENDING, SUCCESS, ERROR, CANCLED]
+                        jobs:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitProcessJob'
+                UnitProcessJob:
+                    type: object
+                    required: [id, type, state, steps]
+                    properties:
+                        id:
+                            type: string
+                        type:
+                            type: string
+                            enum: [SBORKA, OBNOVLENIE, PODGOTOVKA, ZAPUSK, OSTANOVKA, SBROS_PODGOTOVKI, UDALENIE, DEISTVIE]
+                        state:
+                            type: string
+                            enum: [NEW, PENDING, CANCLED, SUCCESS, ERROR]
+                        steps:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitProcessJobStep'
+                UnitProcessJobStep:
+                    type: object
+                    required: [command, response, success, unixtime]
+                    properties:
+                        command:
+                            type: string
+                        response:
+                            type: string
+                        success:
+                            type: boolean
+                        unixtime:
+                            type: integer
+                            example: 1730000000
+                UnitLink:
+                    type: object
+                    description: Ссылка на сервис запущенного юнита
+                    required: [service, path, port, protocol]
+                    properties:
+                        service:
+                            type: string
+                            example: backend
+                        path:
+                            type: string
+                            example: http://8080.feature-123.my-app.proxy.example
+                        port:
+                            type: integer
+                            example: 8080
+                        protocol:
+                            type: string
+                            example: http
+                        startUri:
+                            type: string
+                            nullable: true
+                            example: /api/health
+                UnitVariableValue:
+                    type: object
+                    required: [id, value]
+                    properties:
+                        id:
+                            type: string
+                        value:
+                            type: string
+                UnitAction:
+                    type: object
+                    description: Действие, доступное для юнита (KonfigDeistviya::toArray)
+                    required: [id, name, variables, commands, prepare]
+                    properties:
+                        id:
+                            type: string
+                        name:
+                            type: string
+                        variables:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitActionVariable'
+                        commands:
+                            type: array
+                            items:
+                                type: string
+                        prepare:
+                            type: boolean
+                UnitActionVariable:
+                    type: object
+                    required: [id, label, type, defaultValue, options, helper]
+                    properties:
+                        id:
+                            type: string
+                        label:
+                            type: string
+                        type:
+                            type: string
+                            enum: [string, integer, float, collection, unit]
+                        defaultValue:
+                            type: string
+                        options:
+                            type: object
+                            nullable: true
+                        helper:
+                            type: object
+                            nullable: true
+                ContainerStats:
+                    type: object
+                    description: Статистика контейнера юнита
+                    required: [cpuPercent, memoryPercent, memoryUsage, netIO]
+                    properties:
+                        cpuPercent:
+                            type: string
+                            example: '12.5'
+                        memoryPercent:
+                            type: string
+                            example: '34.1'
+                        memoryUsage:
+                            type: string
+                            example: 120MiB / 512MiB
+                        netIO:
+                            type: string
+                            example: 1.2kB / 3.4kB
+                # --- Unitman: конфигурация юнита (ConfigUnita::toArray) ---
+                UnitConfig:
+                    type: object
+                    description: Конфигурация юнита; пустой массив, если конфигурация ещё не задана
+                    required: [build, variables, prepare, reset_prepare, up, down, services, actions]
+                    properties:
+                        build:
+                            $ref: '#/components/schemas/UnitConfigBuild'
+                        variables:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitConfigVariable'
+                        prepare:
+                            type: array
+                            items:
+                                type: string
+                        reset_prepare:
+                            type: array
+                            items:
+                                type: string
+                        up:
+                            type: array
+                            items:
+                                type: string
+                        down:
+                            type: array
+                            items:
+                                type: string
+                        services:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitConfigService'
+                        actions:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitAction'
+                UnitConfigBuild:
+                    type: object
+                    description: Стадия сборки юнита (KonfigStadiiSborki::toArray)
+                    required: [image, commands]
+                    properties:
+                        image:
+                            type: string
+                            example: asdozzz/unitman-unit:latest
+                        commands:
+                            type: array
+                            items:
+                                type: string
+                UnitConfigService:
+                    type: object
+                    description: Сервис юнита (KonfigServisa::toArray)
+                    required: [name, ports, cache]
+                    properties:
+                        name:
+                            type: string
+                            nullable: true
+                            example: backend
+                        ports:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitConfigServicePort'
+                        cache:
+                            description: Пустой массив, если кеш не настроен
+                            oneOf:
+                                - $ref: '#/components/schemas/UnitConfigServiceCache'
+                                - type: array
+                                  maxItems: 0
+                UnitConfigServicePort:
+                    type: object
+                    description: Порт сервиса (PortServisa::toArray)
+                    required: [type, port, startUri]
+                    properties:
+                        type:
+                            type: string
+                            nullable: true
+                            example: http
+                        port:
+                            type: integer
+                            nullable: true
+                            example: 8080
+                        startUri:
+                            type: string
+                            nullable: true
+                            example: /api/health
+                UnitConfigServiceCache:
+                    type: object
+                    description: Настройки кеширования сервиса (CacheServisa::toArray)
+                    required: [files, paths]
+                    properties:
+                        files:
+                            type: array
+                            items:
+                                type: string
+                        paths:
+                            type: array
+                            items:
+                                type: string
+                UnitConfigVariable:
+                    type: object
+                    description: Переменная конфигурации юнита (AbstractConfigVariable::toArray)
+                    required: [id, label, type, defaultValue, options, helper]
+                    properties:
+                        id:
+                            type: string
+                        label:
+                            type: string
+                        type:
+                            type: string
+                            enum: [string, integer, float, collection, unit]
+                        defaultValue:
+                            type: string
+                        options:
+                            description: Параметры выбора; пустой объект, если опций нет
+                            type: object
+                            nullable: true
+                        helper:
+                            description: Помощник подстановки ссылки на сервис другого юнита, null если не задан
+                            oneOf:
+                                - $ref: '#/components/schemas/ConfigVariableHelper'
+                                - type: 'null'
+                ConfigVariableHelper:
+                    type: object
+                    description: Помощник ссылки (PomoschnikSsylki::toArray)
+                    required: [projectId, service, port]
+                    properties:
+                        projectId:
+                            type: string
+                            nullable: true
+                        service:
+                            type: string
+                            nullable: true
+                        port:
+                            type: integer
+                            nullable: true
+                UnitVariable:
+                    type: object
+                    description: Значение переменной юнита (PeremenyaUnita::toArray)
+                    required: [konfig, value]
+                    properties:
+                        konfig:
+                            $ref: '#/components/schemas/UnitConfigVariable'
+                        value:
+                            type: string
+                # --- Unitman: процессы юнита без шагов задач ---
+                UnitProcessBrief:
+                    type: object
+                    description: Процесс юнита без шагов задач (ProzesUnitaBezShagov)
+                    required: [id, unitId, userId, type, state, jobs]
+                    properties:
+                        id:
+                            type: string
+                        unitId:
+                            type: string
+                        userId:
+                            type: string
+                        type:
+                            type: string
+                            enum: [SBORKA, OBNOVLENIE, PODGOTOVKA, ZAPUSK, OSTANOVKA, SBROS_PODGOTOVKI, UDALENIE, DEISTVIE]
+                        state:
+                            type: string
+                            enum: [NEW, ZADACHI_DOBAVLENI, PENDING, SUCCESS, ERROR, CANCLED]
+                        jobs:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UnitProcessBriefJob'
+                UnitProcessBriefJob:
+                    type: object
+                    description: Задача процесса юнита без шагов (ZadachaProzesaUnitaBezShagovZadachi)
+                    required: [id, type, state]
+                    properties:
+                        id:
+                            type: string
+                        type:
+                            type: string
+                            enum: [SBORKA, OBNOVLENIE, PODGOTOVKA, ZAPUSK, OSTANOVKA, SBROS_PODGOTOVKI, UDALENIE, DEISTVIE]
+                        state:
+                            type: string
+                            enum: [NEW, PENDING, CANCLED, SUCCESS, ERROR]
+                # --- Unitman: проекты ---
+                ProjectListItem:
+                    type: object
+                    description: Проект (read-модель ProjectList)
+                    required: [id, repoId, code, name, mainBranch, isActive, state, nastroikiHukaProekta, proxyHost, users, variables, waitResultRunner, memoryLimit]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        repoId:
+                            type: string
+                        code:
+                            type: string
+                            example: my-app
+                        name:
+                            type: string
+                            example: my-app
+                        mainBranch:
+                            type: string
+                            example: master
+                        isActive:
+                            type: boolean
+                        state:
+                            type: string
+                            enum: [NEW, BUILD_PENDING, BUILD_SUCCESS, BUILD_ERROR, REMOVE_PENDING, REMOVE_ERROR]
+                        nastroikiHukaProekta:
+                            $ref: '#/components/schemas/ProjectHookSettings'
+                        proxyHost:
+                            type: string
+                            nullable: true
+                            example: proxy.example
+                        users:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/ProjectUser'
+                        variables:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/ProjectVariable'
+                        waitResultRunner:
+                            type: boolean
+                        memoryLimit:
+                            type: integer
+                            example: 3072
+                ProjectHookSettings:
+                    type: object
+                    description: Настройки webhook проекта (NastroikiHukaProekta)
+                    required: [avtosozdanie, avtoobnovlenie, avtoudalenie, obnovlenieBezSbrosaPodgotovki]
+                    properties:
+                        avtosozdanie:
+                            type: boolean
+                        avtoobnovlenie:
+                            type: boolean
+                        avtoudalenie:
+                            type: boolean
+                        obnovlenieBezSbrosaPodgotovki:
+                            type: boolean
+                ProjectUser:
+                    type: object
+                    description: Пользователь проекта (ProjectUsersList)
+                    required: [userId, role]
+                    properties:
+                        userId:
+                            type: string
+                        role:
+                            type: string
+                ProjectVariable:
+                    type: object
+                    description: Переменная проекта (ProjectListVariable)
+                    required: [tip, code, value]
+                    properties:
+                        tip:
+                            type: string
+                        code:
+                            type: string
+                        value:
+                            type: string
+                ProjectBranch:
+                    type: object
+                    description: Ветка проекта (VetkaProekta)
+                    required: [name]
+                    properties:
+                        name:
+                            type: string
+                            example: feature/123
+                ProjectWebhook:
+                    type: object
+                    description: Webhook проекта (ProjectWebhookReadModel)
+                    required: [id, projectId, url, isActive]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        projectId:
+                            type: string
+                        url:
+                            type: string
+                            format: uri
+                        isActive:
+                            type: boolean
+                WebhookEvent:
+                    type: object
+                    description: Событие webhook (WebhookEventDlySpiska)
+                    required: [id, type, payload, response, unixtime, sent]
+                    properties:
+                        id:
+                            type: string
+                        type:
+                            type: string
+                        payload:
+                            type: string
+                            description: JSON-строка тела события
+                        response:
+                            type: string
+                            nullable: true
+                        unixtime:
+                            type: integer
+                            example: 1730000000
+                        sent:
+                            type: boolean
+                WebhookEventPage:
+                    type: object
+                    description: Страница событий webhook
+                    required: [list, totalRecords]
+                    properties:
+                        list:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/WebhookEvent'
+                        totalRecords:
+                            type: integer
+                            example: 42
+                ProjectRunnerJob:
+                    type: object
+                    description: Задание раннера по проекту без шагов (ProjectRunnerJobWithoutSteps)
+                    required: [id, projectId, jobType, success]
+                    properties:
+                        id:
+                            type: string
+                        projectId:
+                            type: string
+                        jobType:
+                            type: string
+                            enum: [SBORKA_PROEKTA, UDALENIE_PROEKTA, OCHISTKA_PROEKTA]
+                        success:
+                            type: boolean
+                ProjectRunnerJobDetailed:
+                    type: object
+                    description: Задание раннера по проекту с шагами (ProjectRunnerJob)
+                    required: [id, projectId, jobType, success, steps]
+                    properties:
+                        id:
+                            type: string
+                        projectId:
+                            type: string
+                        jobType:
+                            type: string
+                            enum: [SBORKA_PROEKTA, UDALENIE_PROEKTA, OCHISTKA_PROEKTA]
+                        success:
+                            type: boolean
+                        steps:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/RunnerJobStep'
+                RunnerJobStep:
+                    type: object
+                    description: Шаг выполнения задания (RunnerJobStep::toArray)
+                    required: [command, response, success, unixtime]
+                    properties:
+                        command:
+                            type: string
+                        response:
+                            type: string
+                        success:
+                            type: boolean
+                        unixtime:
+                            type: integer
+                            example: 1730000000
+                ProjectStatistics:
+                    type: object
+                    description: Статистика по проекту (StatistikaPoProektu)
+                    required: [projectId, projectName, total, active, deleted]
+                    properties:
+                        projectId:
+                            type: string
+                        projectName:
+                            type: string
+                        total:
+                            type: integer
+                        active:
+                            type: integer
+                        deleted:
+                            type: integer
+                Repo:
+                    type: object
+                    description: Репозиторий (RepoList)
+                    required: [id, type, name, repoUrl, token, confirmed]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        type:
+                            type: string
+                            example: gitlab
+                        name:
+                            type: string
+                        repoUrl:
+                            type: string
+                            format: uri
+                        token:
+                            type: string
+                        confirmed:
+                            type: boolean
+                RepoType:
+                    type: object
+                    description: Тип репозитория (RepoTypeList)
+                    required: [code, name]
+                    properties:
+                        code:
+                            type: string
+                            example: gitlab
+                        name:
+                            type: string
+                            example: GitLab
+                RepoProject:
+                    type: object
+                    description: Проект репозитория (ProektHranilisha)
+                    required: [value, name]
+                    properties:
+                        value:
+                            type: string
+                        name:
+                            type: string
+                AccountUser:
+                    type: object
+                    description: Пользователь (UserList)
+                    required: [id, email, isBlocked, nickname]
+                    properties:
+                        id:
+                            type: string
+                        email:
+                            type: string
+                            format: email
+                        isBlocked:
+                            type: boolean
+                        nickname:
+                            type: string
+                            nullable: true
+                ManagedAccount:
+                    type: object
+                    description: Аккаунт для администрирования (AccountForManaging)
+                    required: [id, email, isBlocked, roles, password, nickname]
+                    properties:
+                        id:
+                            type: string
+                        email:
+                            type: string
+                            format: email
+                        isBlocked:
+                            type: boolean
+                        roles:
+                            type: string
+                        password:
+                            type: string
+                        nickname:
+                            type: string
+                            nullable: true
+                AccountSettings:
+                    type: object
+                    description: Настройки пользователя (AccountSettingsReadModel)
+                    required: [nickname]
+                    properties:
+                        nickname:
+                            type: string
+                            nullable: true
+                InitializationRecord:
+                    type: object
+                    description: Параметр инициализации (InitializationRecord)
+                    required: [id, prop, value, init]
+                    properties:
+                        id:
+                            type: string
+                        prop:
+                            type: string
+                        value:
+                            type: string
+                            nullable: true
+                        init:
+                            type: integer
+                            nullable: true
+                # --- Вспомогательные тела ответов ---
+                IdHolder:
+                    type: object
+                    description: Идентификатор созданной сущности
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                EventIdHolder:
+                    type: object
+                    description: Идентификатор обработанного события webhook
+                    required: [eventId]
+                    properties:
+                        eventId:
+                            type: string
+                UnitLinkHolder:
+                    type: object
+                    description: Ссылка на сервис юнита
+                    required: [link]
+                    properties:
+                        link:
+                            type: string
+                            format: uri
+                ProxyHostCheckResult:
+                    type: object
+                    description: Результат проверки доступности proxy host
+                    required: [result]
+                    properties:
+                        result:
+                            type: boolean
+                # --- Runner: диагностическое состояние ---
+                RunnerState:
+                    type: object
+                    description: Состояние раннера (RunnerState::jsonSerialize)
+                    required: [id, taskQueue, active, dockerStats, memoryInfo]
+                    properties:
+                        id:
+                            type: string
+                        taskQueue:
+                            type: string
+                            example: unitman-runner-queue
+                        active:
+                            type: boolean
+                        dockerStats:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/RunnerContainerStats'
+                        memoryInfo:
+                            $ref: '#/components/schemas/RunnerMemoryInfo'
+                RunnerContainerStats:
+                    type: object
+                    description: Статистика контейнера раннера (DockerContainerStats)
+                    required: [containerId, containerName, cpuPercent, memoryPercent, memoryUsage, netIO]
+                    properties:
+                        containerId:
+                            type: string
+                        containerName:
+                            type: string
+                        cpuPercent:
+                            type: string
+                            example: '12.5'
+                        memoryPercent:
+                            type: string
+                            example: '34.1'
+                        memoryUsage:
+                            type: string
+                            example: 120MiB / 512MiB
+                        netIO:
+                            type: string
+                            example: 1.2kB / 3.4kB
+                RunnerMemoryInfo:
+                    type: object
+                    description: Информация о памяти раннера (MemoryInfo)
+                    required: [totalAsKb, freeAsKb]
+                    properties:
+                        totalAsKb:
+                            type: integer
+                            example: 16777216
+                        freeAsKb:
+                            type: integer
+                            example: 8388608
     areas: # to filter documented areas
         path_patterns:
             - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
