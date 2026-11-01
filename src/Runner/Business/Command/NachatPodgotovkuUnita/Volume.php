@@ -5,8 +5,9 @@ namespace App\Runner\Business\Command\NachatPodgotovkuUnita;
 /**
  * Том юнита, который нужно смонтировать в контейнер при подготовке.
  *
- * Если том приходит из медиатеки, то `Url` содержит временную ссылку
- * на скачивание zip-архива, а `FileName` — исходное имя архива.
+ * Если том приходит из медиатеки, то `FileId` содержит идентификатор
+ * архива в медиатеке, `Url` — временную ссылку на скачивание zip-архива,
+ * а `FileName` — исходное имя архива.
  */
 final class Volume
 {
@@ -14,7 +15,8 @@ final class Volume
         public readonly string $Dir,
         public readonly string $Name,
         public readonly ?string $Url = null,
-        public readonly ?string $FileName = null
+        public readonly ?string $FileName = null,
+        public readonly ?string $FileId = null
     )
     {
     }

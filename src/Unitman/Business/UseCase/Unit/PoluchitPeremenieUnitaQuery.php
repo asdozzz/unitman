@@ -55,7 +55,7 @@ final class PoluchitPeremenieUnitaQuery
 
         $volumes = [];
         foreach ($config->getVolumes() as $volumeConfig) {
-            $volumes[] = UnitVolume::fromConfig($volumeConfig, $volumeValuesByDir, $znacheniePeremenihMap)->toArray();
+            $volumes[] = UnitVolume::fromConfig($volumeConfig, $volumeValuesByDir)->toArray();
         }
 
         return ['peremenie' => $peremenie, 'volumes' => $volumes];

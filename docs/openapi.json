@@ -925,8 +925,8 @@
                 "tags": [
                     "Mediateka"
                 ],
-                "summary": "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c zip-\u0430\u0440\u0445\u0438\u0432 \u0438 \u043f\u0440\u0438\u043a\u0440\u0435\u043f\u0438\u0442\u044c \u0435\u0433\u043e \u043a \u044e\u043d\u0438\u0442\u0443",
-                "description": "\u041f\u0440\u0438\u043d\u0438\u043c\u0430\u0435\u0442 multipart/form-data. \u0414\u043e\u043f\u0443\u0441\u043a\u0430\u044e\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e zip-\u0430\u0440\u0445\u0438\u0432\u044b \u0440\u0430\u0437\u043c\u0435\u0440\u043e\u043c \u043d\u0435 \u0431\u043e\u043b\u0435\u0435 MEDIATEKA_MAX_FILE_SIZE (\u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e 200 \u041c\u0411). \u041f\u043e\u043b\u0435 name \u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e: \u043f\u0440\u0438 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0438\u0438 \u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0438\u043c\u044f \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u043e\u0433\u043e \u0444\u0430\u0439\u043b\u0430.",
+                "summary": "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c zip-\u0430\u0440\u0445\u0438\u0432",
+                "description": "\u041f\u0440\u0438\u043d\u0438\u043c\u0430\u0435\u0442 multipart/form-data. \u0414\u043e\u043f\u0443\u0441\u043a\u0430\u044e\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e zip-\u0430\u0440\u0445\u0438\u0432\u044b \u0440\u0430\u0437\u043c\u0435\u0440\u043e\u043c \u043d\u0435 \u0431\u043e\u043b\u0435\u0435 MEDIATEKA_MAX_FILE_SIZE (\u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e 200 \u041c\u0411). \u041f\u043e\u043b\u0435 unitId \u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e: \u0431\u0435\u0437 \u043d\u0435\u0433\u043e \u0444\u0430\u0439\u043b \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442\u0441\u044f \u043a\u0430\u043a \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a (unitId = null) \u0438 \u043f\u0440\u0438\u0432\u044f\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u043a \u044e\u043d\u0438\u0442\u0443 \u043e\u0442\u0434\u0435\u043b\u044c\u043d\u044b\u043c \u0437\u0430\u043f\u0440\u043e\u0441\u043e\u043c /api/mediateka/prikrepit \u043b\u0438\u0431\u043e \u043f\u0440\u0438 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u0438 \u044e\u043d\u0438\u0442\u0430. \u041f\u043e\u043b\u0435 name \u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e: \u043f\u0440\u0438 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0438\u0438 \u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0438\u043c\u044f \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u043e\u0433\u043e \u0444\u0430\u0439\u043b\u0430.",
                 "operationId": "post_app_mediateka_infra_mediateka_upload",
                 "requestBody": {
                     "required": true,
@@ -934,13 +934,15 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "unitId",
                                     "file"
                                 ],
                                 "properties": {
                                     "unitId": {
-                                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u044e\u043d\u0438\u0442\u0430",
-                                        "type": "string",
+                                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u044e\u043d\u0438\u0442\u0430; \u043d\u0435 \u043f\u0435\u0440\u0435\u0434\u0430\u0451\u0442\u0441\u044f \u043f\u0440\u0438 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0435 \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u0430",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
                                         "format": "uuid"
                                     },
                                     "name": {
@@ -981,6 +983,87 @@
                                                 },
                                                 "data": {
                                                     "$ref": "#/components/schemas/MediatekaFaylUnita"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ErrorEnvelope"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    }
+                }
+            }
+        },
+        "/api/mediateka/prikrepit": {
+            "post": {
+                "tags": [
+                    "Mediateka"
+                ],
+                "summary": "\u041f\u0440\u0438\u043a\u0440\u0435\u043f\u0438\u0442\u044c \u0440\u0430\u043d\u0435\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u044b\u0435 \u0444\u0430\u0439\u043b\u044b \u043a \u044e\u043d\u0438\u0442\u0443",
+                "description": "\u041f\u0440\u0438\u0432\u044f\u0437\u044b\u0432\u0430\u0435\u0442 \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u0438 (\u0444\u0430\u0439\u043b\u044b, \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u044b\u0435 \u0431\u0435\u0437 unitId) \u043a \u044e\u043d\u0438\u0442\u0443. \u0424\u0430\u0439\u043b, \u0443\u0436\u0435 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u043d\u043d\u044b\u0439 \u043a \u0434\u0440\u0443\u0433\u043e\u043c\u0443 \u044e\u043d\u0438\u0442\u0443, \u043f\u0440\u0438\u043d\u044f\u0442\u044c \u043d\u0435\u043b\u044c\u0437\u044f. \u041e\u0431\u044a\u0435\u043a\u0442 \u0432 MinIO \u043d\u0435 \u043a\u043e\u043f\u0438\u0440\u0443\u0435\u0442\u0441\u044f \u2014 \u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u0437\u0430\u043f\u0438\u0441\u044c \u0432 \u0440\u0435\u0435\u0441\u0442\u0440\u0435.",
+                "operationId": "post_app_mediateka_infra_mediateka_prikrepit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "unitId",
+                                    "fileIds"
+                                ],
+                                "properties": {
+                                    "unitId": {
+                                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u044e\u043d\u0438\u0442\u0430",
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "fileIds": {
+                                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440\u044b \u0444\u0430\u0439\u043b\u043e\u0432",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0424\u0430\u0439\u043b\u044b \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u043d\u044b (SuccessEnvelope) \u043b\u0438\u0431\u043e \u043e\u0448\u0438\u0431\u043a\u0430 (ErrorEnvelope) \u2014 \u0432 \u043e\u0431\u043e\u0438\u0445 \u0441\u043b\u0443\u0447\u0430\u044f\u0445 HTTP 200",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "required": [
+                                                "status",
+                                                "data"
+                                            ],
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "success"
+                                                    ],
+                                                    "example": "success"
+                                                },
+                                                "data": {
+                                                    "description": "\u041f\u0440\u0438\u0432\u044f\u0437\u0430\u043d\u043d\u044b\u0435 \u0444\u0430\u0439\u043b\u044b",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MediatekaFaylUnita"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -4426,7 +4509,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u043c\u0438 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f\u043c\u0438. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
+                        "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u043c\u0438 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f\u043c\u0438 \u0438 \u0442\u043e\u043c\u0430 \u044e\u043d\u0438\u0442\u0430 (unitman_volumes). \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4443,11 +4526,27 @@
                                             "example": "success"
                                         },
                                         "data": {
-                                            "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u043c\u0438 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f\u043c\u0438",
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/UnitVariable"
-                                            }
+                                            "required": [
+                                                "peremenie",
+                                                "volumes"
+                                            ],
+                                            "properties": {
+                                                "peremenie": {
+                                                    "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u043c\u0438 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f\u043c\u0438",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/UnitVariable"
+                                                    }
+                                                },
+                                                "volumes": {
+                                                    "description": "\u0422\u043e\u043c\u0430 \u044e\u043d\u0438\u0442\u0430 \u0438\u0437 \u0431\u043b\u043e\u043a\u0430 \u043a\u043e\u043d\u0444\u0438\u0433\u0430 unitman_volumes \u0441 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u043d\u043d\u044b\u043c\u0438 \u0444\u0430\u0439\u043b\u0430\u043c\u0438 \u043c\u0435\u0434\u0438\u0430\u0442\u0435\u043a\u0438",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/UnitVolume"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -4758,7 +4857,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438, \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u043e\u0439 \u0438\u0437 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
+                        "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u0438 \u0442\u043e\u043c\u0430 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438, \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u043e\u0439 \u0438\u0437 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4775,11 +4874,27 @@
                                             "example": "success"
                                         },
                                         "data": {
-                                            "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438, \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u043e\u0439 \u0438\u0437 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430",
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/UnitVariable"
-                                            }
+                                            "required": [
+                                                "peremenie",
+                                                "volumes"
+                                            ],
+                                            "properties": {
+                                                "peremenie": {
+                                                    "description": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438, \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u043e\u0439 \u0438\u0437 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/UnitVariable"
+                                                    }
+                                                },
+                                                "volumes": {
+                                                    "description": "\u0422\u043e\u043c\u0430 \u0438\u0437 \u0431\u043b\u043e\u043a\u0430 unitman_volumes; fileId \u0435\u0449\u0451 \u043d\u0435 \u0437\u0430\u0434\u0430\u043d (\u044e\u043d\u0438\u0442 \u043d\u0435 \u0441\u043e\u0437\u0434\u0430\u043d)",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/UnitVolume"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -5341,6 +5456,38 @@
                         "items": {
                             "$ref": "#/components/schemas/ZnacheniePeremenoi"
                         }
+                    },
+                    "volumes": {
+                        "description": "\u0422\u043e\u043c\u0430 \u044e\u043d\u0438\u0442\u0430. \u0417\u043d\u0430\u0447\u0435\u043d\u0438\u044f `dir` \u0438 `name` \u0431\u0435\u0440\u0443\u0442\u0441\u044f \u0438\u0437 \u043e\u0442\u0432\u0435\u0442\u0430 `poluchitKonfigIzHranilisha`, `fileId` \u2014 \u0438\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0444\u0430\u0439\u043b\u0430, \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u043e\u0433\u043e \u0432 \u043c\u0435\u0434\u0438\u0430\u0442\u0435\u043a\u0443 \u043a\u0430\u043a \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a (\u043c\u043e\u0436\u0435\u0442 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u043e\u0432\u0430\u0442\u044c)",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SozdatUnitVolume"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "SozdatUnitVolume": {
+                "required": [
+                    "dir",
+                    "name"
+                ],
+                "properties": {
+                    "dir": {
+                        "type": "string",
+                        "example": "/var/www/uploads"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "uploads"
+                    },
+                    "fileId": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0444\u0430\u0439\u043b\u0430-\u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u0430 \u0432 \u043c\u0435\u0434\u0438\u0430\u0442\u0435\u043a\u0435. \u0415\u0441\u043b\u0438 \u043d\u0435 \u043f\u0435\u0440\u0435\u0434\u0430\u043d \u2014 \u0442\u043e\u043c \u043e\u043f\u0438\u0441\u044b\u0432\u0430\u0435\u0442 \u043a\u0430\u0442\u0430\u043b\u043e\u0433 \u0431\u0435\u0437 \u0444\u0430\u0439\u043b\u0430",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
                     }
                 },
                 "type": "object"
@@ -5413,8 +5560,7 @@
             },
             "ZapolnitPeremenieUnita": {
                 "required": [
-                    "id",
-                    "values"
+                    "id"
                 ],
                 "properties": {
                     "id": {
@@ -5422,11 +5568,39 @@
                         "format": "uuid"
                     },
                     "values": {
-                        "description": "\u0421\u043f\u0438\u0441\u043e\u043a \u0437\u0430\u043f\u043e\u043b\u043d\u044f\u0435\u043c\u044b\u0445 \u043f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445 \u044e\u043d\u0438\u0442\u0430",
+                        "description": "\u0421\u043f\u0438\u0441\u043e\u043a \u0437\u0430\u043f\u043e\u043b\u043d\u044f\u0435\u043c\u044b\u0445 \u043f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0445 \u044e\u043d\u0438\u0442\u0430. \u041c\u043e\u0436\u043d\u043e \u043d\u0435 \u043f\u0435\u0440\u0435\u0434\u0430\u0432\u0430\u0442\u044c, \u0435\u0441\u043b\u0438 \u0437\u0430\u043f\u043e\u043b\u043d\u044f\u044e\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u0442\u043e\u043c\u0430",
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ZnacheniePeremenoi"
                         }
+                    },
+                    "volumes": {
+                        "description": "\u0422\u043e\u043c\u0430 \u044e\u043d\u0438\u0442\u0430, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u043d\u0443\u0436\u043d\u043e \u0437\u0430\u043f\u043e\u043b\u043d\u0438\u0442\u044c. `dir` \u043e\u0431\u044f\u0437\u0430\u043d \u043f\u0440\u0438\u0441\u0443\u0442\u0441\u0442\u0432\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u043b\u043e\u043a\u0435 `unitman_volumes` \u043a\u043e\u043d\u0444\u0438\u0433\u0430 \u044e\u043d\u0438\u0442\u0430; \u0438\u043c\u044f \u0442\u043e\u043c\u0430 \u0431\u0435\u0440\u0451\u0442\u0441\u044f \u0438\u0437 \u043a\u043e\u043d\u0444\u0438\u0433\u0430",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ZapolnitPeremenieUnitaVolume"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ZapolnitPeremenieUnitaVolume": {
+                "required": [
+                    "dir"
+                ],
+                "properties": {
+                    "dir": {
+                        "description": "\u0423\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u043a\u043b\u044e\u0447 \u0442\u043e\u043c\u0430 \u0438\u0437 \u0431\u043b\u043e\u043a\u0430 `unitman_volumes`",
+                        "type": "string",
+                        "example": "config"
+                    },
+                    "fileId": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0430\u0440\u0445\u0438\u0432\u0430, \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u043e\u0433\u043e \u0432 \u043c\u0435\u0434\u0438\u0430\u0442\u0435\u043a\u0443. \u0415\u0441\u043b\u0438 \u043f\u043e\u043b\u0435 \u043d\u0435 \u043f\u0435\u0440\u0435\u0434\u0430\u043d\u043e \u2014 \u0442\u0435\u043a\u0443\u0449\u0438\u0439 \u0444\u0430\u0439\u043b \u0442\u043e\u043c\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442\u0441\u044f; `null` \u2014 \u0444\u0430\u0439\u043b \u0442\u043e\u043c\u0430 \u043e\u0447\u0438\u0449\u0430\u0435\u0442\u0441\u044f",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
                     }
                 },
                 "type": "object"
@@ -6083,7 +6257,8 @@
                     "up",
                     "down",
                     "services",
-                    "actions"
+                    "actions",
+                    "unitman_volumes"
                 ],
                 "properties": {
                     "build": {
@@ -6129,6 +6304,13 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/UnitAction"
+                        }
+                    },
+                    "unitman_volumes": {
+                        "description": "\u0422\u043e\u043c\u0430 \u044e\u043d\u0438\u0442\u0430. `dir` \u2014 \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u043a\u043b\u044e\u0447 \u0442\u043e\u043c\u0430. \u0424\u0430\u0439\u043b \u0442\u043e\u043c\u0430 (zip-\u0430\u0440\u0445\u0438\u0432) \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442\u0441\u044f \u0432 \u043c\u0435\u0434\u0438\u0430\u0442\u0435\u043a\u0443, \u0435\u0433\u043e \u0438\u0434 \u043f\u0435\u0440\u0435\u0434\u0430\u0451\u0442\u0441\u044f \u0432 `volumes` \u043f\u0440\u0438 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u0438 \u044e\u043d\u0438\u0442\u0430 \u0438\u043b\u0438 \u0432 `zapolnitPeremenie`",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UnitVolumeConfig"
                         }
                     }
                 },
@@ -6344,6 +6526,54 @@
                     },
                     "value": {
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "UnitVolume": {
+                "description": "\u0422\u043e\u043c \u044e\u043d\u0438\u0442\u0430 \u2014 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0438\u0437 \u0431\u043b\u043e\u043a\u0430 unitman_volumes \u043f\u043b\u044e\u0441 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u043d\u043d\u044b\u0439 \u0444\u0430\u0439\u043b \u043c\u0435\u0434\u0438\u0430\u0442\u0435\u043a\u0438 (UnitVolume::toArray)",
+                "required": [
+                    "dir",
+                    "name",
+                    "fileId"
+                ],
+                "properties": {
+                    "dir": {
+                        "description": "\u0423\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u043a\u043b\u044e\u0447 \u0442\u043e\u043c\u0430 \u0432\u043d\u0443\u0442\u0440\u0438 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u0430 \u044e\u043d\u0438\u0442\u0430",
+                        "type": "string",
+                        "example": "config"
+                    },
+                    "name": {
+                        "description": "\u0418\u043c\u044f \u0442\u043e\u043c\u0430",
+                        "type": "string",
+                        "example": "config-volume"
+                    },
+                    "fileId": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u043d\u043d\u043e\u0433\u043e \u0444\u0430\u0439\u043b\u0430 \u043c\u0435\u0434\u0438\u0430\u0442\u0435\u043a\u0438; null, \u043f\u043e\u043a\u0430 \u0444\u0430\u0439\u043b \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    }
+                },
+                "type": "object"
+            },
+            "UnitVolumeConfig": {
+                "description": "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0442\u043e\u043c\u0430 \u0438\u0437 \u0431\u043b\u043e\u043a\u0430 unitman_volumes \u0432 \u043a\u043e\u043d\u0444\u0438\u0433\u0435 \u044e\u043d\u0438\u0442\u0430 (VolumeConfig::toArray)",
+                "required": [
+                    "dir",
+                    "name"
+                ],
+                "properties": {
+                    "dir": {
+                        "description": "\u0423\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u043a\u043b\u044e\u0447 \u0442\u043e\u043c\u0430",
+                        "type": "string",
+                        "example": "config"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "config-volume"
                     }
                 },
                 "type": "object"
@@ -6977,7 +7207,6 @@
                 "description": "\u041c\u0435\u0442\u0430\u0434\u0430\u043d\u043d\u044b\u0435 \u0444\u0430\u0439\u043b\u0430 \u044e\u043d\u0438\u0442\u0430 (FaylUnita::toArray)",
                 "required": [
                     "id",
-                    "unitId",
                     "name",
                     "size",
                     "mimeType",
@@ -6991,8 +7220,11 @@
                         "format": "uuid"
                     },
                     "unitId": {
-                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u044e\u043d\u0438\u0442\u0430, \u043a \u043a\u043e\u0442\u043e\u0440\u043e\u043c\u0443 \u043f\u0440\u0438\u043a\u0440\u0435\u043f\u043b\u0451\u043d \u0444\u0430\u0439\u043b",
-                        "type": "string",
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u044e\u043d\u0438\u0442\u0430, \u043a \u043a\u043e\u0442\u043e\u0440\u043e\u043c\u0443 \u043f\u0440\u0438\u043a\u0440\u0435\u043f\u043b\u0451\u043d \u0444\u0430\u0439\u043b; null \u0434\u043b\u044f \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u0430 (\u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d \u0434\u043e \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u044e\u043d\u0438\u0442\u0430)",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "format": "uuid"
                     },
                     "name": {

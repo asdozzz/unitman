@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Business\Command\Unit;
 
+use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
 use App\Unitman\Business\Command\Unit\SozdatUnit\ZnacheniePeremenoi;
 use App\Utils\Converter\JsonBodySerializableInterface;
 
@@ -13,15 +14,16 @@ final class SozdatUnit implements JsonBodySerializableInterface
     public readonly array $znacheniePeremenoi;
 
     /**
-     * Идентификаторы файлов, загруженных до создания юнита (черновики медиатеки).
+     * Тома юнита, выбранные клиентом по ответу `poluchitKonfigIzHranilisha`.
+     * Файлы грузятся до создания юнита как черновики медиатеки.
      *
-     * @var string[] $fileIds
+     * @var VolumeZapros[] $volumes
      */
-    public readonly array $fileIds;
+    public readonly array $volumes;
 
     /**
      * @param ZnacheniePeremenoi[] $znacheniePeremenoi
-     * @param string[] $fileIds
+     * @param VolumeZapros[] $volumes
      * */
     public function __construct(
         public readonly string $projectId,
@@ -29,10 +31,10 @@ final class SozdatUnit implements JsonBodySerializableInterface
         public readonly string $branch,
         array $znacheniePeremenoi = [],
         public readonly int $memoryLimit = 0,
-        array $fileIds = []
+        array $volumes = []
     )
     {
         $this->znacheniePeremenoi = $znacheniePeremenoi;
-        $this->fileIds = $fileIds;
+        $this->volumes = $volumes;
     }
 }

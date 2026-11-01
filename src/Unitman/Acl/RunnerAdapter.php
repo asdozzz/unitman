@@ -259,7 +259,8 @@ final class RunnerAdapter implements RunnerService
     }
 
     /**
-     * Тома юнита для передачи в activity: файлы медиатеки отдаются временной ссылкой.
+     * Тома юнита для передачи в activity: файлы медиатеки отдаются
+     * идентификатором архива и временной ссылкой на скачивание.
      *
      * @return Volume[]
      */
@@ -273,13 +274,20 @@ final class RunnerAdapter implements RunnerService
                 continue;
             }
 
-            $file = $this->mediatekaService->poluchitFaylDlyaVoluma((string) $volumeValue->getFileId(), $unit->getId());
+            $fileId = (string) $volumeValue->getFileId();
+            $file = $this->mediatekaService->poluchitFaylDlyaVoluma($fileId, $unit->getId());
 
             if ($file === null) {
                 throw new \DomainException('unit.volumes.file_not_found');
             }
 
-            $result[] = new Volume($volumeValue->getDir(), $volumeValue->getName(), $file['url'], $file['name']);
+            $result[] = new Volume(
+                $volumeValue->getDir(),
+                $volumeValue->getName(),
+                $file['url'],
+                $file['name'],
+                $fileId
+            );
         }
 
         return $result;

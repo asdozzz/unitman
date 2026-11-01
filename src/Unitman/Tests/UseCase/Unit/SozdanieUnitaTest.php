@@ -99,6 +99,74 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
     }
 
     /**
+     * Тома из запроса на создание юнита связываются с медиатекой по `fileId`.
+     * Тома без файла (только каталог) медиатеку не затрагивают.
+     *
+     * @test
+     * */
+    function toma_privyazivayutsya_k_mediateke_po_fileId()
+    {
+        $unitId = Uuid::uuid7()->toString();
+        $prozesId = Uuid::uuid7()->toString();
+        $userId = Uuid::uuid7()->toString();
+        $securityService = $this->mokaemUspehSecurity($userId);
+        $projectId = Uuid::uuid7()->toString();
+
+        $guidGenerator = new MemoryGuidGenerator([$projectId]);
+        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+
+        $project = $this->stubProekta($projectId, $userId);
+        $projectRepository = self::$container->get(ProjectRepository::class);
+        /** @var $projectRepository ProjectRepository*/
+        $projectRepository->save($project);
+
+        $spisokUnitovRepo = self::$container->get(SpisokUnitovRepository::class);
+        /** @var SpisokUnitovRepository $spisokUnitovRepo */
+
+        $unitRepo = self::$container->get(UnitRepository::class);
+        /** @var $unitRepo UnitRepository*/
+
+        $mediatekaService = $this->getMockBuilder(MediatekaService::class)->getMock();
+        $mediatekaService->expects($this->once())
+            ->method('vseFaylyDostupnyDlyaPrivyazki')
+            ->with(['file-1', 'file-2'])
+            ->willReturn(true);
+        $mediatekaService->expects($this->once())
+            ->method('prikrepitFaylyKUnitu')
+            ->with(['file-1', 'file-2'], $unitId);
+
+        $useCase = new SozdatUnitUseCase(
+            $spisokUnitovRepo,
+            $projectRepository,
+            $securityService,
+            new MemoryGuidGenerator([$unitId, $prozesId]),
+            $unitRepo,
+            $mediatekaService
+        );
+
+        $useCase->handle(new SozdatUnit(
+            $projectId,
+            'unit-with-volumes',
+            'feature/123',
+            [],
+            3000,
+            [
+                new SozdatUnit\VolumeZapros('/var/www/db', 'БД', 'file-1'),
+                new SozdatUnit\VolumeZapros('/var/www/web', 'Фронт', 'file-2'),
+                new SozdatUnit\VolumeZapros('/var/www/logs', 'Логи'),
+            ]
+        ));
+
+        $unit = $unitRepo->getById($unitId);
+        $volumes = $unit->poluchitVolumeUnita();
+
+        $this->assertCount(3, $volumes);
+        $this->assertSame('file-1', $volumes[0]->getFileId());
+        $this->assertSame('file-2', $volumes[1]->getFileId());
+        $this->assertNull($volumes[2]->getFileId());
+    }
+
+    /**
      * @test
      * */
     function avtosozdanie()

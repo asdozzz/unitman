@@ -337,12 +337,26 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/ZnacheniePeremenoi'
-                        fileIds:
+                        volumes:
                             type: array
-                            description: Идентификаторы файлов, загруженных в медиатеку до создания юнита (черновики). Привязываются к созданному юниту
+                            description: Тома юнита. Значения `dir` и `name` берутся из ответа `poluchitKonfigIzHranilisha`, `fileId` — идентификатор файла, загруженного в медиатеку как черновик (может отсутствовать)
                             items:
-                                type: string
-                                format: uuid
+                                $ref: '#/components/schemas/SozdatUnitVolume'
+                SozdatUnitVolume:
+                    type: object
+                    required: [dir, name]
+                    properties:
+                        dir:
+                            type: string
+                            example: /var/www/uploads
+                        name:
+                            type: string
+                            example: uploads
+                        fileId:
+                            type: string
+                            format: uuid
+                            nullable: true
+                            description: Идентификатор файла-черновика в медиатеке. Если не передан — том описывает каталог без файла
                 NaitiDubliUnita:
                     type: object
                     required: [projectId, branch]
@@ -385,16 +399,34 @@ nelmio_api_doc:
                             format: uuid
                 ZapolnitPeremenieUnita:
                     type: object
-                    required: [id, values]
+                    required: [id]
                     properties:
                         id:
                             type: string
                             format: uuid
                         values:
                             type: array
-                            description: Список заполняемых переменных юнита
+                            description: Список заполняемых переменных юнита. Можно не передавать, если заполняются только тома
                             items:
                                 $ref: '#/components/schemas/ZnacheniePeremenoi'
+                        volumes:
+                            type: array
+                            description: Тома юнита, которые нужно заполнить. `dir` обязан присутствовать в блоке `unitman_volumes` конфига юнита; имя тома берётся из конфига
+                            items:
+                                $ref: '#/components/schemas/ZapolnitPeremenieUnitaVolume'
+                ZapolnitPeremenieUnitaVolume:
+                    type: object
+                    required: [dir]
+                    properties:
+                        dir:
+                            type: string
+                            description: Уникальный ключ тома из блока `unitman_volumes`
+                            example: config
+                        fileId:
+                            type: string
+                            format: uuid
+                            nullable: true
+                            description: Идентификатор архива, загруженного в медиатеку. Если поле не передано — текущий файл тома сохраняется; `null` — файл тома очищается
                 PodgotovitUnitKZapusku:
                     type: object
                     required: [id]
@@ -774,7 +806,7 @@ nelmio_api_doc:
                                 $ref: '#/components/schemas/UnitAction'
                         unitman_volumes:
                             type: array
-                            description: Тома юнита. Если блок не пуст, для каждого тома с переменной нужно загрузить zip-файл в медиатеку и передать его ид в значении этой переменной
+                            description: Тома юнита. `dir` — уникальный ключ тома. Файл тома (zip-архив) загружается в медиатеку, его ид передаётся в `volumes` при создании юнита или в `zapolnitPeremenie`
                             items:
                                 $ref: '#/components/schemas/UnitVolumeConfig'
                 UnitConfigBuild:
@@ -891,21 +923,16 @@ nelmio_api_doc:
                 UnitVolume:
                     type: object
                     description: Том юнита — описание из блока unitman_volumes плюс привязанный файл медиатеки (UnitVolume::toArray)
-                    required: [dir, name, variable, fileId]
+                    required: [dir, name, fileId]
                     properties:
                         dir:
                             type: string
-                            description: Каталог тома внутри контейнера юнита
+                            description: Уникальный ключ тома внутри контейнера юнита
                             example: config
                         name:
                             type: string
                             description: Имя тома
                             example: config-volume
-                        variable:
-                            type: string
-                            nullable: true
-                            description: Идентификатор переменной конфига, в которой хранится ид файла медиатеки; null если том не привязан к переменной
-                            example: VOLUME_FILE
                         fileId:
                             type: string
                             format: uuid
@@ -918,14 +945,11 @@ nelmio_api_doc:
                     properties:
                         dir:
                             type: string
+                            description: Уникальный ключ тома
                             example: config
                         name:
                             type: string
                             example: config-volume
-                        variable:
-                            type: string
-                            description: Идентификатор переменной конфига, в которой хранится ид файла медиатеки
-                            example: VOLUME_FILE
                 # --- Unitman: процессы юнита без шагов задач ---
                 UnitProcessBrief:
                     type: object

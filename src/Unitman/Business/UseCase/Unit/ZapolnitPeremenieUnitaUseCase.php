@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
-use App\Unitman\Business\Model\Unit;
-use App\Unitman\Business\Model\Unit\VariableValuesNormalizer;
+use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita\VolumeZapros;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
@@ -32,8 +31,8 @@ final class ZapolnitPeremenieUnitaUseCase
         $userId = $this->securityService->getCurrentUserId();
         $projectUser = $project->getProjectUserById($userId);
         $unit->proverkaPrav($projectUser);
-        $this->proveritFaylyVolumes($unit, $command->values);
-        $unit->zapolnitPeremenie($command->values);
+        $this->proveritFaylyVolumes($command->volumes, $unit->getId());
+        $unit->zapolnitPeremenie($command->values, $command->volumes);
         if ($unit->esliZapushen() || $unit->esliPodgotovlen()) {
             $prozesId = $this->canGeneateGuid->makeGuid();
             $unit->dobavitProzesObnovleniya($userId, $prozesId, true, $project->poluchitNastroikiHuka()->obnovlenieBezSbrosaPodgotovki);
@@ -42,44 +41,31 @@ final class ZapolnitPeremenieUnitaUseCase
     }
 
     /**
-     * Файлы, указанные в значениях переменных томов `unitman_volumes`,
-     * должны существовать и быть прикреплены именно к этому юниту.
+     * Файлы, переданные для томов `unitman_volumes`, должны существовать
+     * и быть прикреплены именно к этому юниту. Наличие `dir` в конфиге
+     * валидирует сам агрегат.
      *
-     * @param array<array-key, mixed> $values
+     * @param VolumeZapros[] $volumes
      */
-    private function proveritFaylyVolumes(Unit $unit, array $values): void
+    private function proveritFaylyVolumes(array $volumes, string $unitId): void
     {
-        $config = $unit->getConfig();
-
-        if ($config === null || !$config->esliEstVolumes()) {
-            return;
-        }
-
-        $normalizedValues = VariableValuesNormalizer::toMap($values);
         $fileIds = [];
 
-        foreach ($config->getVolumes() as $volume) {
-            $variableId = $volume->getVariable();
+        foreach ($volumes as $volume) {
+            $fileId = $volume->fileId;
 
-            if ($variableId === null) {
+            if ($fileId === null || trim($fileId) === '') {
                 continue;
             }
 
-            $value = $normalizedValues[$variableId] ?? null;
-
-            if ($value === null || $value === '') {
-                // Отсутствие значения валидирует сам агрегат.
-                continue;
-            }
-
-            $fileIds[$value] = $value;
+            $fileIds[$fileId] = $fileId;
         }
 
         if (empty($fileIds)) {
             return;
         }
 
-        if (!$this->mediatekaService->vseFaylyPrinadlezhatUnitu(array_values($fileIds), $unit->getId())) {
+        if (!$this->mediatekaService->vseFaylyPrinadlezhatUnitu(array_values($fileIds), $unitId)) {
             throw new \DomainException('unit.volumes.file_not_found');
         }
     }

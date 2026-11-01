@@ -98,36 +98,6 @@ final class ConfigUnita
         }
 
         $this->konfigStadiiSborki = $konfigStadiiSborki;
-
-        $this->validateVolumesVariables();
-    }
-
-    /**
-     * Переменная, объявленная в томе, должна существовать в конфиге.
-     */
-    private function validateVolumesVariables(): void
-    {
-        if (empty($this->volumes)) {
-            return;
-        }
-
-        $variableIds = [];
-
-        foreach ($this->variables as $variable) {
-            $variableIds[$variable->getId()] = true;
-        }
-
-        foreach ($this->volumes as $volume) {
-            $variableId = $volume->getVariable();
-
-            if ($variableId === null) {
-                continue;
-            }
-
-            if (!isset($variableIds[$variableId])) {
-                throw new \DomainException('unit.config.volumes.variable_not_found');
-            }
-        }
     }
 
     function toArray(): array

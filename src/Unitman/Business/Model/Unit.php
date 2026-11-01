@@ -3,7 +3,9 @@
 namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
 use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
+use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita\VolumeZapros as VolumeZaprosZapolneniya;
 use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Runner\JobId;
@@ -455,7 +457,18 @@ final class Unit implements AggregateRoot
             }
         }
         ContainerSettings::validateMemory($command->memoryLimit);
-        $unit->recordThat(new UnitSozdan($id, $authorId, $command->projectId, $command->unitName, $command->branch, $state->toArray($unit), $peremenie, $command->memoryLimit));
+        $volumes = self::makeVolumeCollectionByZapros($command->volumes);
+        $unit->recordThat(new UnitSozdan(
+            $id,
+            $authorId,
+            $command->projectId,
+            $command->unitName,
+            $command->branch,
+            $state->toArray($unit),
+            $peremenie,
+            $command->memoryLimit,
+            array_map(fn(VolumeValue $volume): array => $volume->toArray(), $volumes)
+        ));
         $unit->dobavitProzesSborki($authorId, $prozesId);
         return $unit;
     }
@@ -473,6 +486,7 @@ final class Unit implements AggregateRoot
         $this->variableValues = array_map(function (array $item) {
             return new VariableValue($item['id'], $item['value'], $item['type']);
         }, $fact->values);
+        $this->volumeValues = $this->makeVolumeCollectionFromEvent($fact->volumes);
         $this->containerSettings = new ContainerSettings($fact->memoryLimit);
 
     }
@@ -530,41 +544,67 @@ final class Unit implements AggregateRoot
     }
 
     /**
-     * Собирает тома юнита из блока конфига `unitman_volumes` и заполненных значений:
-     * ид файла медиатеки берётся из переменной, объявленной в томе.
+     * Собирает тома юнита по блоку конфига `unitman_volumes`.
      *
-     * @param array<array-key, mixed> $values канонический map `id => value`
+     * `dir` тома — уникальный ключ. Тома, которых нет в запросе, сохраняют
+     * текущее значение; `fileId: null` в запросе очищает файл тома.
+     * Имя тома всегда берётся из конфига.
+     *
+     * @param array<array-key, VolumeZaprosZapolneniya> $volumes
+     * @param VolumeValue[] $currentVolumes текущие значения томов юнита
      * @return VolumeValue[]
      */
-    private function makeVolumeCollectionByArray(array $values): array
+    private function makeVolumeCollectionFromZapros(array $volumes, array $currentVolumes): array
     {
         $config = $this->checkIssetConfig();
 
-        if (!$config->esliEstVolumes()) {
-            return [];
+        $configVolumeByDir = [];
+        foreach ($config->getVolumes() as $volumeConfig) {
+            $configVolumeByDir[$volumeConfig->getDir()] = $volumeConfig;
         }
 
-        $normalizedValues = VariableValuesNormalizer::toMap($values);
-        $volumes = [];
+        $currentByDir = [];
+        foreach ($currentVolumes as $currentVolume) {
+            $currentByDir[$currentVolume->getDir()] = $currentVolume;
+        }
 
-        foreach ($config->getVolumes() as $volumeConfig) {
-            $variableId = $volumeConfig->getVariable();
-            $fileId = null;
+        $requestedByDir = [];
+        foreach ($volumes as $volumeZapros) {
+            $dir = trim($volumeZapros->dir);
 
-            if ($variableId !== null) {
-                $value = $normalizedValues[$variableId] ?? null;
-
-                if ($value === null || $value === '') {
-                    throw new DomainException('unit.volumes.file_not_set');
-                }
-
-                $fileId = $value;
+            if ($dir === '') {
+                throw new DomainException('unit.volumes.dir_is_empty');
             }
 
-            $volumes[] = new VolumeValue($volumeConfig->getDir(), $volumeConfig->getName(), $fileId);
+            if (isset($requestedByDir[$dir])) {
+                throw new DomainException('unit.volumes.dir_is_not_unique');
+            }
+
+            if (!isset($configVolumeByDir[$dir])) {
+                throw new DomainException('unit.volumes.dir_not_found');
+            }
+
+            $requestedByDir[$dir] = $volumeZapros;
         }
 
-        return $volumes;
+        $result = [];
+        foreach ($config->getVolumes() as $volumeConfig) {
+            $dir = $volumeConfig->getDir();
+
+            if (isset($requestedByDir[$dir])) {
+                $result[] = new VolumeValue($dir, $volumeConfig->getName(), $requestedByDir[$dir]->fileId);
+                continue;
+            }
+
+            if (isset($currentByDir[$dir])) {
+                $result[] = $currentByDir[$dir];
+                continue;
+            }
+
+            $result[] = new VolumeValue($dir, $volumeConfig->getName());
+        }
+
+        return $result;
     }
 
     private function newState(AbstractState $state): AbstractState
@@ -685,10 +725,20 @@ final class Unit implements AggregateRoot
     }
 
     /**
+     * Заполняет значения переменных и тома юнита.
+     *
+     * Значения переменных и тома независимы: значения можно не передавать
+     * вовсе, если заполняются только тома (тогда сохраняются текущие
+     * значения переменных).
+     *
+     * В событие всегда пишется полный снимок значений переменных — этого
+     * требует replay (`applyPeremenieUnitaZapolneni`).
+     *
      * @param array<array-key, mixed> $values канонический map `id => value`
      *        либо список объектов `{id, value, type}`
+     * @param array<array-key, VolumeZaprosZapolneniya> $volumes тома из запроса
      */
-    public function zapolnitPeremenie(array $values): void
+    public function zapolnitPeremenie(array $values, array $volumes = []): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
@@ -701,6 +751,14 @@ final class Unit implements AggregateRoot
         $config = $this->checkIssetConfig();
 
         $normalizedValues = VariableValuesNormalizer::toMap($values);
+
+        if (empty($normalizedValues)) {
+            $normalizedValues = [];
+            foreach ($this->variableValues as $variableValue) {
+                $normalizedValues[$variableValue->getId()] = $variableValue->getValue();
+            }
+        }
+
         $tmpVariables = $this->makeVariableCollectionByArray($normalizedValues);
 
         $errs = $config->validateValues($tmpVariables);
@@ -708,7 +766,7 @@ final class Unit implements AggregateRoot
             throw new DomainException(join(', ', $errs));
         }
 
-        $tmpVolumes = $this->makeVolumeCollectionByArray($normalizedValues);
+        $tmpVolumes = $this->makeVolumeCollectionFromZapros($volumes, $this->volumeValues);
 
         $this->variableValues = $tmpVariables;
         $this->volumeValues = $tmpVolumes;
@@ -746,6 +804,32 @@ final class Unit implements AggregateRoot
     private function makeVolumeCollectionFromEvent(array $volumes): array
     {
         return array_map(fn(array $volume): VolumeValue => VolumeValue::fromArray($volume), $volumes);
+    }
+
+    /**
+     * Собирает тома, выбранные клиентом при создании юнита.
+     * Каталог тома (`dir`) должен быть уникальным в пределах юнита.
+     *
+     * @param array<array-key, VolumeZapros> $volumes
+     * @return VolumeValue[]
+     */
+    private static function makeVolumeCollectionByZapros(array $volumes): array
+    {
+        $result = [];
+        $usedDirs = [];
+
+        foreach ($volumes as $volume) {
+            $volumeValue = new VolumeValue($volume->dir, $volume->name, $volume->fileId);
+
+            if (isset($usedDirs[$volumeValue->getDir()])) {
+                throw new DomainException('unit.volumes.dir_is_not_unique');
+            }
+
+            $usedDirs[$volumeValue->getDir()] = true;
+            $result[] = $volumeValue;
+        }
+
+        return $result;
     }
 
     public function esliConfigZapolnenPravilon(): bool

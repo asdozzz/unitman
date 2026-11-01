@@ -263,7 +263,7 @@ final class ConfigUnitTest extends TestCase
     function neobazatelnii_blok_unitman_volumes_razbiraetsya()
     {
         $configAsArray = $this->configSVolumes([
-            ['dir' => 'db', 'name' => 'БД', 'variable' => 'DB_FILE'],
+            ['dir' => 'db', 'name' => 'БД'],
             ['dir' => 'web', 'name' => 'Что то ещё'],
         ]);
 
@@ -275,13 +275,11 @@ final class ConfigUnitTest extends TestCase
         $this->assertCount(2, $volumes);
         $this->assertSame('db', $volumes[0]->getDir());
         $this->assertSame('БД', $volumes[0]->getName());
-        $this->assertSame('DB_FILE', $volumes[0]->getVariable());
         $this->assertSame('web', $volumes[1]->getDir());
         $this->assertSame('Что то ещё', $volumes[1]->getName());
-        $this->assertNull($volumes[1]->getVariable());
 
         $this->assertSame([
-            ['dir' => 'db', 'name' => 'БД', 'variable' => 'DB_FILE'],
+            ['dir' => 'db', 'name' => 'БД'],
             ['dir' => 'web', 'name' => 'Что то ещё'],
         ], $config->toArray()['unitman_volumes']);
     }
@@ -314,17 +312,20 @@ final class ConfigUnitTest extends TestCase
     }
 
     /**
+     * Поле `variable` в описании тома больше не поддерживается и игнорируется.
+     *
      * @test
      * */
-    function tom_ssilaetsya_na_neizvestnuyu_peremennuyu()
+    function pole_variable_v_tome_ignoriruetsya()
     {
-        $configAsArray = $this->configSVolumes([
+        $config = ConfigUnita::fromArray($this->configSVolumes([
             ['dir' => 'db', 'name' => 'БД', 'variable' => 'UNKNOWN_FILE'],
-        ]);
+        ]));
 
-        $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage('unit.config.volumes.variable_not_found');
-        ConfigUnita::fromArray($configAsArray);
+        $this->assertSame(
+            [['dir' => 'db', 'name' => 'БД']],
+            $config->toArray()['unitman_volumes']
+        );
     }
 
     /**

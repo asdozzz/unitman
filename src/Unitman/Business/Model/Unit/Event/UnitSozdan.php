@@ -4,6 +4,9 @@ namespace App\Unitman\Business\Model\Unit\Event;
 
 final class UnitSozdan
 {
+    /**
+     * @param array<int, array<string, mixed>> $volumes тома юнита (VolumeValue::toArray())
+     */
     public function __construct(
         public readonly string $id,
         public readonly string $authorId,
@@ -12,7 +15,8 @@ final class UnitSozdan
         public readonly string $branch,
         public readonly array $stateAsArray,
         public readonly array $values = [],
-        public readonly int $memoryLimit = 3072
+        public readonly int $memoryLimit = 3072,
+        public readonly array $volumes = []
     )
     {
     }

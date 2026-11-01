@@ -130,7 +130,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             $fact->branch,
             commands: $fact->stateAsArray['commands'],
             prozesi:[],
-            peremenie: $peremenie
+            peremenie: $peremenie,
+            volumes: $fact->volumes
         );
         $this->repository->insert($readModel);
     }

@@ -3,6 +3,7 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\MediatekaService;
@@ -39,7 +40,7 @@ final class SozdatUnitUseCase
 
         $userId = $this->securityService->getCurrentUserId();
 
-        $fileIds = $this->normalizeFileIds($command->fileIds);
+        $fileIds = $this->extractFileIds($command->volumes);
 
         // Файлы загружаются до создания юнита как черновики медиатеки.
         // Проверяем их до сохранения юнита, чтобы не создавать юнит,
@@ -61,15 +62,20 @@ final class SozdatUnitUseCase
     }
 
     /**
-     * @param string[] $fileIds
+     * Клиент передаёт тома парами `{dir, name, fileId}`, где `fileId` может
+     * отсутствовать — тогда том описывает только каталог без файла.
+     *
+     * @param VolumeZapros[] $volumes
      * @return string[]
      */
-    private function normalizeFileIds(array $fileIds): array
+    private function extractFileIds(array $volumes): array
     {
         $result = [];
 
-        foreach ($fileIds as $fileId) {
-            if (!is_string($fileId)) {
+        foreach ($volumes as $volume) {
+            $fileId = $volume->fileId;
+
+            if ($fileId === null) {
                 continue;
             }
 
