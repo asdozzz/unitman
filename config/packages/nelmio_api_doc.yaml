@@ -459,6 +459,11 @@ nelmio_api_doc:
                         targetUnitId:
                             type: string
                             format: uuid
+                        suffix:
+                            description: Суффикс, добавляемый в конец ссылки на юнит; null или пустая строка, если не задан
+                            type: string
+                            nullable: true
+                            example: /api/v1
                 GetUnitRunnerJobs:
                     type: object
                     required: [id]
@@ -846,7 +851,7 @@ nelmio_api_doc:
                 ConfigVariableHelper:
                     type: object
                     description: Помощник ссылки (PomoschnikSsylki::toArray)
-                    required: [projectId, service, port]
+                    required: [projectId, service, port, suffix]
                     properties:
                         projectId:
                             type: string
@@ -856,6 +861,10 @@ nelmio_api_doc:
                             nullable: true
                         port:
                             type: integer
+                            nullable: true
+                        suffix:
+                            description: Суффикс, добавляемый в конец ссылки на юнит, null если не задан
+                            type: string
                             nullable: true
                 UnitVariable:
                     type: object

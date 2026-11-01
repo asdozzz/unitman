@@ -47,7 +47,8 @@ final class ConfigUnitTest extends TestCase
                     'helper' => [
                         'projectId' => 'services/orders',
                         'service' => 'web',
-                        'port' => 8080
+                        'port' => 8080,
+                        'suffix' => '/api/v1'
                     ]
                 ]
             ],
@@ -143,6 +144,7 @@ final class ConfigUnitTest extends TestCase
         $this->assertEquals('services/orders', $pomoschnik?->projectId);
         $this->assertEquals('web', $pomoschnik?->service);
         $this->assertEquals(8080, $pomoschnik?->port);
+        $this->assertEquals('/api/v1', $pomoschnik?->suffix);
 
         $arr = $config->toArray();
 
@@ -170,7 +172,8 @@ final class ConfigUnitTest extends TestCase
         $this->assertEquals([
             'projectId' => 'services/orders',
             'service' => 'web',
-            'port' => 8080
+            'port' => 8080,
+            'suffix' => '/api/v1'
         ], $arr['variables'][4]['helper']);
         $this->assertNull($arr['variables'][0]['helper']);
     }

@@ -7,8 +7,9 @@ final class PomoschnikSsylki
     public readonly string $projectId;
     public readonly string $service;
     public readonly int $port;
+    public readonly ?string $suffix;
 
-    public function __construct(?string $projectId, ?string $service, ?int $port)
+    public function __construct(?string $projectId, ?string $service, ?int $port, ?string $suffix = null)
     {
         if (empty($projectId)) {
             throw new \DomainException('unit.config.pomoschnik.projectId_is_empty');
@@ -25,6 +26,7 @@ final class PomoschnikSsylki
         $this->projectId = $projectId;
         $this->service = $service;
         $this->port = $port;
+        $this->suffix = $suffix;
     }
 
     static function fromArray(array $data): self
@@ -33,6 +35,7 @@ final class PomoschnikSsylki
             $data['projectId'] ?? null,
             $data['service'] ?? null,
             $data['port'] ?? null,
+            $data['suffix'] ?? null,
         );
     }
 
@@ -42,6 +45,7 @@ final class PomoschnikSsylki
             'projectId' => $this->projectId,
             'service' => $this->service,
             'port' => $this->port,
+            'suffix' => $this->suffix,
         ];
     }
 }

@@ -57,6 +57,9 @@ final class PoluchitSsylkuPoPomoschnikuQueryTest extends AbstractUnitUseCase
         $result = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId));
         $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru/asd'], $result);
 
+        $resultWithSuffix = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId, '/api/v1'));
+        $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru/asd/api/v1'], $resultWithSuffix);
+
         try {
             $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdA, 'web', 9999, $unitAId));
             $this->fail('Expected DomainException was not thrown');

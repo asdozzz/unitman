@@ -32,7 +32,7 @@ final class PoluchitSsylkuPoPomoschnikuQuery
                 && $link['protocol'] === 'http'
                 && (int)$link['port'] === $command->port
             ) {
-                return ['link' => $link['path']];
+                return ['link' => $link['path'].($command->suffix ?? '')];
             }
         }
 

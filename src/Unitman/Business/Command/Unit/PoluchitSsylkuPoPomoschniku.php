@@ -10,7 +10,8 @@ final class PoluchitSsylkuPoPomoschniku implements JsonBodySerializableInterface
         public readonly string $projectId,
         public readonly string $service,
         public readonly int $port,
-        public readonly string $targetUnitId
+        public readonly string $targetUnitId,
+        public readonly ?string $suffix = null
     )
     {
     }
