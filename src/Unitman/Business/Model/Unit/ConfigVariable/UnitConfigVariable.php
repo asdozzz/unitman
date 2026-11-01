@@ -30,7 +30,7 @@ final class UnitConfigVariable extends AbstractConfigVariable
 
     function validateValue(string $value): ?string
     {
-        if (empty($value)) {
+        if ($value === '') {
             return sprintf('value for variable with id=%s is empty', $this->getId());
         }
 

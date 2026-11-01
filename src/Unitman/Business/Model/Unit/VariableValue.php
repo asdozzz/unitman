@@ -14,14 +14,14 @@ final class VariableValue
         string $type = 'string'
     )
     {
-        if (empty($id)) {
+        if ($id === '') {
             throw new \DomainException('unit.variable_value.id_is_empty');
         }
 
-        if (empty($value)) {
+        if ($value === '') {
             throw new \DomainException('unit.variable_value.value_is_empty');
         }
-        if (empty($type)) {
+        if ($type === '') {
             throw new \DomainException('unit.variable_value.type_is_empty');
         }
         $this->id = $id;

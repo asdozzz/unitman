@@ -79,6 +79,7 @@ use App\Unitman\Business\Model\Unit\UnitName;
 use App\Unitman\Business\Model\Unit\UnitProcess;
 use App\Unitman\Business\Model\Unit\UnitProject;
 use App\Unitman\Business\Model\Unit\VariableValue;
+use App\Unitman\Business\Model\Unit\VariableValuesNormalizer;
 use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
@@ -315,13 +316,20 @@ final class Unit implements AggregateRoot
 
         $this->provrkaNeobrabotanihProzesov();
 
+        $normalizedValues = VariableValuesNormalizer::toMap($command->values);
+
         $prozes = UnitProcess::make($prozesId,$userId, UnitProcess\UnitProcessType::DEISTVIE);
         $jobId = Uuid::uuid7()->toString();
         $prozes->dobavitZadachiVProzess([
             RunnerJob::make($jobId, RunnerJobType::DEISTVIE),
         ]);
         $this->dobavitProzes($prozes);
-        $this->recordThat(new DeistviePrikreplenoKJobe($this->getId(), $jobId, $command->actionId, $command->values));
+        $this->recordThat(new DeistviePrikreplenoKJobe(
+            $this->getId(),
+            $jobId,
+            $command->actionId,
+            $normalizedValues
+        ));
     }
 
     /**
@@ -494,15 +502,19 @@ final class Unit implements AggregateRoot
     }
 
     /**
-     * @param array $values
-     * @return array
+     * Принимает как канонический map `id => value`, так и публичный список
+     * объектов `{id, value, type}` (формат `ZnacheniePeremenoi`).
+     *
+     * @param array<array-key, mixed> $values
+     * @return VariableValue[]
      */
     private function makeVariableCollectionByArray(array $values): array
     {
         $config = $this->checkIssetConfig();
         $tmpVariables = [];
         $typeMap = $config->getVariableTypeMap();
-        foreach ($values as $id => $value) {
+
+        foreach (VariableValuesNormalizer::toMap($values) as $id => $value) {
             if (empty($typeMap[$id])) {
                 throw new DomainException('unit.config.type_for_variable_not_found');
             }
@@ -628,6 +640,10 @@ final class Unit implements AggregateRoot
         return $errors;
     }
 
+    /**
+     * @param array<array-key, mixed> $values канонический map `id => value`
+     *        либо список объектов `{id, value, type}`
+     */
     public function zapolnitPeremenie(array $values): void
     {
         if ($this->isDeleted) {
@@ -640,7 +656,8 @@ final class Unit implements AggregateRoot
 
         $config = $this->checkIssetConfig();
 
-        $tmpVariables = $this->makeVariableCollectionByArray($values);
+        $normalizedValues = VariableValuesNormalizer::toMap($values);
+        $tmpVariables = $this->makeVariableCollectionByArray($normalizedValues);
 
         $errs = $config->validateValues($tmpVariables);
         if (!empty($errs)) {
@@ -655,7 +672,9 @@ final class Unit implements AggregateRoot
             $state = $this->state;
         }
 
-        $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $values, $state->toArray($this)));
+        // В событие пишется нормализованный map: проекции и replay
+        // (applyPeremenieUnitaZapolneni) работают именно с ним.
+        $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $normalizedValues, $state->toArray($this)));
     }
 
     /**

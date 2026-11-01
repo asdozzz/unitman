@@ -26,7 +26,7 @@ final class IntegerConfigVariable extends AbstractConfigVariable implements Conf
      * */
     function validateValue(string $value): ?string
     {
-        if (empty($value)) {
+        if ($value === '') {
             return sprintf('value for variable with id=%s is empty', $this->getId());
         }
 

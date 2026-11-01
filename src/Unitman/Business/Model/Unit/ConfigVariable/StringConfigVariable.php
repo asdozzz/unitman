@@ -23,7 +23,7 @@ final class StringConfigVariable extends AbstractConfigVariable implements Confi
 
     function validateValue(string $value): ?string
     {
-        if (empty($value)) {
+        if ($value === '') {
             return sprintf('value for variable with id=%s is empty', $this->getId());
         }
 

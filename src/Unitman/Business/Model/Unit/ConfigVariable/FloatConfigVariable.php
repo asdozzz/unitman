@@ -25,7 +25,7 @@ final class FloatConfigVariable extends AbstractConfigVariable implements Config
      * */
     function validateValue(string $value): ?string
     {
-        if (empty($value)) {
+        if ($value === '') {
             return sprintf('value for variable with id=%s is empty', $this->getId());
         }
 
