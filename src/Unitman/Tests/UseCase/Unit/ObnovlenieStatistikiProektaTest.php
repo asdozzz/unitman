@@ -5,6 +5,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
@@ -44,7 +45,9 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
 
 
         $unitRepo = self::$container->get(UnitRepository::class);
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator($guidGeneratorArr), $unitRepo);
+        /** @var MediatekaService $mediatekaService */
+        $mediatekaService = $this->getMockBuilder(MediatekaService::class)->getMock();
+        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator($guidGeneratorArr), $unitRepo, $mediatekaService);
         $id = $useCase2->handle(new SozdatUnit(
             $projectId,
             'unit-1',

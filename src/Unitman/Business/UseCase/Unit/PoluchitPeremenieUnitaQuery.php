@@ -6,7 +6,9 @@ use App\Unitman\Business\Command\Unit\PoluchitPeremenieUnita;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\Model\Unit\VolumeValue;
 use App\Unitman\Business\ReadModel\Unit\PeremenyaUnita;
+use App\Unitman\Business\ReadModel\Unit\UnitVolume;
 
 final class PoluchitPeremenieUnitaQuery
 {
@@ -17,6 +19,9 @@ final class PoluchitPeremenieUnitaQuery
     {
     }
 
+    /**
+     * @return array{peremenie: array<int, array<string, mixed>>, volumes: array<int, array<string, mixed>>}
+     */
     function handle(PoluchitPeremenieUnita $command): array
     {
         $unit = $this->unitRepository->getById($command->id);
@@ -36,12 +41,23 @@ final class PoluchitPeremenieUnitaQuery
             $znacheniePeremenihMap[$item->getId()] = $item->getValue();
         }
 
-        $result = [];
+        $peremenie = [];
         foreach ($config->getVariables() as $variable) {
             $value = $znacheniePeremenihMap[$variable->getId()] ?? "";
-            $result[] = (new PeremenyaUnita($variable, $value))->toArray();
+            $peremenie[] = (new PeremenyaUnita($variable, $value))->toArray();
         }
 
-        return $result;
+        $volumeValuesByDir = [];
+        foreach ($unit->poluchitVolumeUnita() as $volumeValue) {
+            /** @var VolumeValue $volumeValue */
+            $volumeValuesByDir[$volumeValue->getDir()] = $volumeValue;
+        }
+
+        $volumes = [];
+        foreach ($config->getVolumes() as $volumeConfig) {
+            $volumes[] = UnitVolume::fromConfig($volumeConfig, $volumeValuesByDir, $znacheniePeremenihMap)->toArray();
+        }
+
+        return ['peremenie' => $peremenie, 'volumes' => $volumes];
     }
 }

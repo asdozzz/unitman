@@ -621,16 +621,29 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Переменные конфигурации с текущими значениями. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
+                description: 'Переменные конфигурации с текущими значениями и тома юнита (unitman_volumes). При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
                     required: ['status', 'data'],
                     properties: [
                         new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
                         new OA\Property(
                             property: 'data',
-                            description: 'Переменные конфигурации с текущими значениями',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/UnitVariable')
+                            required: ['peremenie', 'volumes'],
+                            properties: [
+                                new OA\Property(
+                                    property: 'peremenie',
+                                    description: 'Переменные конфигурации с текущими значениями',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/UnitVariable')
+                                ),
+                                new OA\Property(
+                                    property: 'volumes',
+                                    description: 'Тома юнита из блока конфига unitman_volumes с привязанными файлами медиатеки',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/UnitVolume')
+                                ),
+                            ],
+                            type: 'object'
                         ),
                     ],
                     type: 'object'
@@ -852,16 +865,29 @@ final class UnitConroller extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Переменные конфигурации, полученной из хранилища. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
+                description: 'Переменные и тома конфигурации, полученной из хранилища. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
                     required: ['status', 'data'],
                     properties: [
                         new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
                         new OA\Property(
                             property: 'data',
-                            description: 'Переменные конфигурации, полученной из хранилища',
-                            type: 'array',
-                            items: new OA\Items(ref: '#/components/schemas/UnitVariable')
+                            required: ['peremenie', 'volumes'],
+                            properties: [
+                                new OA\Property(
+                                    property: 'peremenie',
+                                    description: 'Переменные конфигурации, полученной из хранилища',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/UnitVariable')
+                                ),
+                                new OA\Property(
+                                    property: 'volumes',
+                                    description: 'Тома из блока unitman_volumes; fileId ещё не задан (юнит не создан)',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/UnitVolume')
+                                ),
+                            ],
+                            type: 'object'
                         ),
                     ],
                     type: 'object'

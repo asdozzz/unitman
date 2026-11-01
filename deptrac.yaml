@@ -26,10 +26,17 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Initialization/.*
+    - name: Mediateka
+      collectors:
+        - type: directory
+          regex: ./src/Mediateka/.*
   ruleset:
     Account:
     BackgroundJob:
+    Mediateka:
+      - Account
     Runner:
       - BackgroundJob
     Unitman:
       - BackgroundJob
+      - Mediateka

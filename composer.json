@@ -111,6 +111,7 @@
         "check-runner-deptrac": "php deptrac.phar analyze --config-file=./src/Runner/deptrac.yaml",
         "check-unitman-deptrac": "php deptrac.phar analyze --config-file=./src/Unitman/deptrac.yaml",
         "check-init-deptrac": "php deptrac.phar analyze --config-file=./src/Initialization/deptrac.yaml",
+        "check-mediateka-deptrac": "php deptrac.phar analyze --config-file=./src/Mediateka/deptrac.yaml",
         "all-checks": [
             "@check-psalm",
             "@check-phpunit",
@@ -119,7 +120,8 @@
             "@check-background-deptrac",
             "@check-runner-deptrac",
             "@check-unitman-deptrac",
-            "@check-init-deptrac"
+            "@check-init-deptrac",
+            "@check-mediateka-deptrac"
         ]
     },
     "conflict": {

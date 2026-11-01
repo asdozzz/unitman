@@ -99,6 +99,62 @@ services:
     tty: true
     stdin_open: true
 
+  # Официальные образы minio/minio и minio/mc удалены из Docker Hub,
+  # quay.io/minio/* требует авторизации, поэтому используется публичное
+  # legacy-зеркало Bitnami. Контракт авторизации сохранён:
+  # MINIO_ROOT_USER / MINIO_ROOT_PASSWORD (см. .env.dist / .env.local).
+  minio:
+    image: bitnamilegacy/minio:2025.4.22-debian-12-r1
+    container_name: minio
+    restart: always
+    # root нужен только на старте: setup.sh выставляет владельца каталога данных,
+    # дальше процесс запускается от непривилегированного пользователя minio
+    user: root
+    environment:
+      # Авторизация MinIO задаётся только через env (см. .env.dist / .env.local)
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_BROWSER_REDIRECT_URL=${MINIO_PUBLIC_ENDPOINT_CONSOLE}
+      # Образ Bitnami запускает minio через run.sh, поэтому каталог данных
+      # и порты задаются переменными (по умолчанию /bitnami/minio/data)
+      - MINIO_DATA_DIR=/data
+      - MINIO_API_PORT_NUMBER=9000
+      - MINIO_CONSOLE_PORT_NUMBER=9001
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - ./var/volume/minio:/data
+    healthcheck:
+      # liveness-эндпоинт самого MinIO: в образе Bitnami нет
+      # предварительно настроенного alias `local` для `mc ready local`
+      test: [ "CMD", "curl", "-fsS", "http://127.0.0.1:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  minio-init:
+    # mc из того же legacy-зеркала Bitnami (официальный minio/mc недоступен)
+    image: bitnamilegacy/minio-client:latest
+    container_name: minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MEDIATEKA_BUCKET=${MEDIATEKA_BUCKET}
+    # entrypoint образа переопределяется на sh, поэтому конфиг-каталог mc
+    # (по умолчанию /.mc, недоступен для записи) задаётся явно
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - >
+        mc --config-dir /tmp/.mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" &&
+        mc --config-dir /tmp/.mc mb --ignore-existing "local/$$MEDIATEKA_BUCKET" &&
+        echo "bucket $$MEDIATEKA_BUCKET is ready"
+
   buggregator:
     image: ghcr.io/buggregator/server:2.3
     environment:

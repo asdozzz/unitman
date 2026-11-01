@@ -22,6 +22,8 @@ nelmio_api_doc:
               description: Webhook'и проектов
             - name: Unit
               description: Тестовые стенды
+            - name: Mediateka
+              description: Файлы юнитов (zip-архивы в MinIO)
         # Маршруты, которые создаются не контроллерами проекта, а бандлами
         # (lexik JSON-логин), поэтому описываются декларативно.
         paths:
@@ -335,6 +337,12 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/ZnacheniePeremenoi'
+                        fileIds:
+                            type: array
+                            description: Идентификаторы файлов, загруженных в медиатеку до создания юнита (черновики). Привязываются к созданному юниту
+                            items:
+                                type: string
+                                format: uuid
                 NaitiDubliUnita:
                     type: object
                     required: [projectId, branch]
@@ -732,7 +740,7 @@ nelmio_api_doc:
                 UnitConfig:
                     type: object
                     description: Конфигурация юнита; пустой массив, если конфигурация ещё не задана
-                    required: [build, variables, prepare, reset_prepare, up, down, services, actions]
+                    required: [build, variables, prepare, reset_prepare, up, down, services, actions, unitman_volumes]
                     properties:
                         build:
                             $ref: '#/components/schemas/UnitConfigBuild'
@@ -764,6 +772,11 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/UnitAction'
+                        unitman_volumes:
+                            type: array
+                            description: Тома юнита. Если блок не пуст, для каждого тома с переменной нужно загрузить zip-файл в медиатеку и передать его ид в значении этой переменной
+                            items:
+                                $ref: '#/components/schemas/UnitVolumeConfig'
                 UnitConfigBuild:
                     type: object
                     description: Стадия сборки юнита (KonfigStadiiSborki::toArray)
@@ -875,6 +888,44 @@ nelmio_api_doc:
                             $ref: '#/components/schemas/UnitConfigVariable'
                         value:
                             type: string
+                UnitVolume:
+                    type: object
+                    description: Том юнита — описание из блока unitman_volumes плюс привязанный файл медиатеки (UnitVolume::toArray)
+                    required: [dir, name, variable, fileId]
+                    properties:
+                        dir:
+                            type: string
+                            description: Каталог тома внутри контейнера юнита
+                            example: config
+                        name:
+                            type: string
+                            description: Имя тома
+                            example: config-volume
+                        variable:
+                            type: string
+                            nullable: true
+                            description: Идентификатор переменной конфига, в которой хранится ид файла медиатеки; null если том не привязан к переменной
+                            example: VOLUME_FILE
+                        fileId:
+                            type: string
+                            format: uuid
+                            nullable: true
+                            description: Идентификатор привязанного файла медиатеки; null, пока файл не загружен
+                UnitVolumeConfig:
+                    type: object
+                    description: Описание тома из блока unitman_volumes в конфиге юнита (VolumeConfig::toArray)
+                    required: [dir, name]
+                    properties:
+                        dir:
+                            type: string
+                            example: config
+                        name:
+                            type: string
+                            example: config-volume
+                        variable:
+                            type: string
+                            description: Идентификатор переменной конфига, в которой хранится ид файла медиатеки
+                            example: VOLUME_FILE
                 # --- Unitman: процессы юнита без шагов задач ---
                 UnitProcessBrief:
                     type: object
@@ -1200,6 +1251,55 @@ nelmio_api_doc:
                         init:
                             type: integer
                             nullable: true
+                # --- Mediateka: файлы юнитов ---
+                MediatekaFaylUnita:
+                    type: object
+                    description: Метаданные файла юнита (FaylUnita::toArray)
+                    required: [id, name, size, mimeType, uploadedBy, createdAt]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                            description: Идентификатор файла
+                        unitId:
+                            type: string
+                            format: uuid
+                            nullable: true
+                            description: Идентификатор юнита, к которому прикреплён файл; null для черновика (загружен до создания юнита)
+                        name:
+                            type: string
+                            maxLength: 255
+                            description: Отображаемое имя файла
+                            example: logs.zip
+                        size:
+                            type: integer
+                            minimum: 1
+                            description: Размер файла в байтах
+                            example: 1048576
+                        mimeType:
+                            type: string
+                            enum: [application/zip]
+                            example: application/zip
+                        uploadedBy:
+                            type: string
+                            format: uuid
+                            nullable: true
+                            description: Идентификатор загрузившего пользователя
+                        createdAt:
+                            type: integer
+                            description: Момент загрузки, unix timestamp (секунды)
+                            example: 1762000000
+                MediatekaFaylUnitaSoSsylkoy:
+                    allOf:
+                        - $ref: '#/components/schemas/MediatekaFaylUnita'
+                        - type: object
+                          required: [url]
+                          properties:
+                              url:
+                                  type: string
+                                  format: uri
+                                  description: Подписанная (presigned) ссылка на скачивание из MinIO
+                                  example: http://minio:9000/unitman-mediateka/units/1/file.zip?X-Amz-Signature=...
                 # --- Вспомогательные тела ответов ---
                 IdHolder:
                     type: object

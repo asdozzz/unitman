@@ -5,6 +5,7 @@ namespace App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigDeistviya;
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
 use App\Unitman\Business\Model\Unit\ConfigUnita\KonfigStadiiSborki;
+use App\Unitman\Business\Model\Unit\ConfigUnita\VolumeConfig;
 use App\Unitman\Business\Model\Unit\ConfigVariable\ConfigVariableFactory;
 
 final class ConfigUnita
@@ -26,6 +27,10 @@ final class ConfigUnita
      * @var KonfigDeistviya[]
      * */
     private array $actions;
+    /**
+     * @var VolumeConfig[]
+     * */
+    private array $volumes;
     private KonfigStadiiSborki $konfigStadiiSborki;
 
     public function __construct(
@@ -36,7 +41,8 @@ final class ConfigUnita
         array $up,
         array $down,
         array $services,
-        array $actions = []
+        array $actions = [],
+        array $volumes = []
     )
     {
         //TODO вынести вызов фабрики в тест кейс и использовать DI
@@ -73,7 +79,55 @@ final class ConfigUnita
             $this->actions[] = KonfigDeistviya::fromArray($action);
         }
 
+        $this->volumes = [];
+        $usedDirs = [];
+
+        foreach ($volumes as $volumeData) {
+            if (!is_array($volumeData)) {
+                throw new \DomainException('unit.config.volumes.invalid_item');
+            }
+
+            $volume = VolumeConfig::fromArray($volumeData);
+
+            if (isset($usedDirs[$volume->getDir()])) {
+                throw new \DomainException('unit.config.volumes.dir_is_not_unique');
+            }
+
+            $usedDirs[$volume->getDir()] = true;
+            $this->volumes[] = $volume;
+        }
+
         $this->konfigStadiiSborki = $konfigStadiiSborki;
+
+        $this->validateVolumesVariables();
+    }
+
+    /**
+     * Переменная, объявленная в томе, должна существовать в конфиге.
+     */
+    private function validateVolumesVariables(): void
+    {
+        if (empty($this->volumes)) {
+            return;
+        }
+
+        $variableIds = [];
+
+        foreach ($this->variables as $variable) {
+            $variableIds[$variable->getId()] = true;
+        }
+
+        foreach ($this->volumes as $volume) {
+            $variableId = $volume->getVariable();
+
+            if ($variableId === null) {
+                continue;
+            }
+
+            if (!isset($variableIds[$variableId])) {
+                throw new \DomainException('unit.config.volumes.variable_not_found');
+            }
+        }
     }
 
     function toArray(): array
@@ -87,6 +141,7 @@ final class ConfigUnita
             'down' => $this->down,
             'services' => array_map(fn(KonfigServisa $service): array => $service->toArray(), $this->services),
             'actions' => array_map(fn(KonfigDeistviya $action): array => $action->toArray(), $this->actions),
+            'unitman_volumes' => array_map(fn(VolumeConfig $volume): array => $volume->toArray(), $this->volumes),
         ];
     }
 
@@ -107,6 +162,7 @@ final class ConfigUnita
             isset($cfg['down']) && is_array($cfg['down'])?$cfg['down']:[],
             isset($cfg['services']) && is_array($cfg['services'])?$cfg['services']:[],
             isset($cfg['actions']) && is_array($cfg['actions'])?$cfg['actions']:[],
+            isset($cfg['unitman_volumes']) && is_array($cfg['unitman_volumes'])?$cfg['unitman_volumes']:[],
         );
     }
 
@@ -216,6 +272,19 @@ final class ConfigUnita
     public function getServices(): array
     {
         return $this->services;
+    }
+
+    /**
+     * @return VolumeConfig[]
+     * */
+    public function getVolumes(): array
+    {
+        return $this->volumes;
+    }
+
+    public function esliEstVolumes(): bool
+    {
+        return !empty($this->volumes);
     }
 
     public function getActionById(string $id): KonfigDeistviya

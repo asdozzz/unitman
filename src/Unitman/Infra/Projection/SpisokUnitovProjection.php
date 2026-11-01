@@ -261,7 +261,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
-            'peremenie' => $peremenie
+            'peremenie' => $peremenie,
+            'volumes' => $fact->volumes
         ]);
         $this->repository->update($readModel);
     }

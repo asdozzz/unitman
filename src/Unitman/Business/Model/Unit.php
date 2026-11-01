@@ -80,6 +80,7 @@ use App\Unitman\Business\Model\Unit\UnitProcess;
 use App\Unitman\Business\Model\Unit\UnitProject;
 use App\Unitman\Business\Model\Unit\VariableValue;
 use App\Unitman\Business\Model\Unit\VariableValuesNormalizer;
+use App\Unitman\Business\Model\Unit\VolumeValue;
 use DomainException;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
@@ -112,6 +113,11 @@ final class Unit implements AggregateRoot
      * @var array<VariableValue>
      * */
     private array $variableValues = [];
+
+    /**
+     * @var array<VolumeValue>
+     * */
+    private array $volumeValues = [];
     private ?RunnerJob $sborka = null;
     private ?RunnerJob $podgotovka = null;
     private ?RunnerJob $obnovlenie = null;
@@ -523,6 +529,44 @@ final class Unit implements AggregateRoot
         return $tmpVariables;
     }
 
+    /**
+     * Собирает тома юнита из блока конфига `unitman_volumes` и заполненных значений:
+     * ид файла медиатеки берётся из переменной, объявленной в томе.
+     *
+     * @param array<array-key, mixed> $values канонический map `id => value`
+     * @return VolumeValue[]
+     */
+    private function makeVolumeCollectionByArray(array $values): array
+    {
+        $config = $this->checkIssetConfig();
+
+        if (!$config->esliEstVolumes()) {
+            return [];
+        }
+
+        $normalizedValues = VariableValuesNormalizer::toMap($values);
+        $volumes = [];
+
+        foreach ($config->getVolumes() as $volumeConfig) {
+            $variableId = $volumeConfig->getVariable();
+            $fileId = null;
+
+            if ($variableId !== null) {
+                $value = $normalizedValues[$variableId] ?? null;
+
+                if ($value === null || $value === '') {
+                    throw new DomainException('unit.volumes.file_not_set');
+                }
+
+                $fileId = $value;
+            }
+
+            $volumes[] = new VolumeValue($volumeConfig->getDir(), $volumeConfig->getName(), $fileId);
+        }
+
+        return $volumes;
+    }
+
     private function newState(AbstractState $state): AbstractState
     {
         if (empty($this->state)) {
@@ -664,7 +708,10 @@ final class Unit implements AggregateRoot
             throw new DomainException(join(', ', $errs));
         }
 
+        $tmpVolumes = $this->makeVolumeCollectionByArray($normalizedValues);
+
         $this->variableValues = $tmpVariables;
+        $this->volumeValues = $tmpVolumes;
 
         if (empty($this->state)) {
             $state = new Sozdan();
@@ -674,7 +721,12 @@ final class Unit implements AggregateRoot
 
         // В событие пишется нормализованный map: проекции и replay
         // (applyPeremenieUnitaZapolneni) работают именно с ним.
-        $this->recordThat(new PeremenieUnitaZapolneni($this->getId(), $normalizedValues, $state->toArray($this)));
+        $this->recordThat(new PeremenieUnitaZapolneni(
+            $this->getId(),
+            $normalizedValues,
+            $state->toArray($this),
+            array_map(fn(VolumeValue $volume): array => $volume->toArray(), $tmpVolumes)
+        ));
     }
 
     /**
@@ -683,7 +735,17 @@ final class Unit implements AggregateRoot
     private function applyPeremenieUnitaZapolneni(PeremenieUnitaZapolneni $fact): void
     {
         $this->variableValues = $this->makeVariableCollectionByArray($fact->values);
+        $this->volumeValues = $this->makeVolumeCollectionFromEvent($fact->volumes);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $volumes
+     * @return VolumeValue[]
+     */
+    private function makeVolumeCollectionFromEvent(array $volumes): array
+    {
+        return array_map(fn(array $volume): VolumeValue => VolumeValue::fromArray($volume), $volumes);
     }
 
     public function esliConfigZapolnenPravilon(): bool
@@ -1323,6 +1385,14 @@ final class Unit implements AggregateRoot
     public function poluchitZnacheniyaPeremenih(): array
     {
         return $this->variableValues;
+    }
+
+    /**
+     * @return VolumeValue[]
+     */
+    public function poluchitVolumeUnita(): array
+    {
+        return $this->volumeValues;
     }
 
     /**

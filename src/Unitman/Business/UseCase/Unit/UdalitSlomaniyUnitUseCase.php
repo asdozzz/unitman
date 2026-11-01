@@ -3,6 +3,7 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\UdalitSlomaniyUnit;
+use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -12,7 +13,8 @@ final class UdalitSlomaniyUnitUseCase
     public function __construct(
         private UnitRepository $unitRepository,
         private ProjectRepository $projectRepository,
-        private UnitmanSecurityService $securityService
+        private UnitmanSecurityService $securityService,
+        private MediatekaService $mediatekaService
     )
     {
     }
@@ -25,5 +27,8 @@ final class UdalitSlomaniyUnitUseCase
         $unit->proverkaPrav($projectUser);
         $unit->udalitSlomaniyUnit();
         $this->unitRepository->save($unit);
+
+        // Сломанный юнит удалён — его файлы в медиатеке больше не нужны.
+        $this->mediatekaService->udaliFayliUnita($command->id);
     }
 }

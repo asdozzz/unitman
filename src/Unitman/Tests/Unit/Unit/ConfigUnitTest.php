@@ -256,4 +256,150 @@ final class ConfigUnitTest extends TestCase
         $this->expectExceptionMessage('unit.config.pomoschnik.projectId_is_empty');
         ConfigUnita::fromArray($configAsArray);
     }
+
+    /**
+     * @test
+     * */
+    function neobazatelnii_blok_unitman_volumes_razbiraetsya()
+    {
+        $configAsArray = $this->configSVolumes([
+            ['dir' => 'db', 'name' => 'БД', 'variable' => 'DB_FILE'],
+            ['dir' => 'web', 'name' => 'Что то ещё'],
+        ]);
+
+        $config = ConfigUnita::fromArray($configAsArray);
+
+        $this->assertTrue($config->esliEstVolumes());
+
+        $volumes = $config->getVolumes();
+        $this->assertCount(2, $volumes);
+        $this->assertSame('db', $volumes[0]->getDir());
+        $this->assertSame('БД', $volumes[0]->getName());
+        $this->assertSame('DB_FILE', $volumes[0]->getVariable());
+        $this->assertSame('web', $volumes[1]->getDir());
+        $this->assertSame('Что то ещё', $volumes[1]->getName());
+        $this->assertNull($volumes[1]->getVariable());
+
+        $this->assertSame([
+            ['dir' => 'db', 'name' => 'БД', 'variable' => 'DB_FILE'],
+            ['dir' => 'web', 'name' => 'Что то ещё'],
+        ], $config->toArray()['unitman_volumes']);
+    }
+
+    /**
+     * @test
+     * */
+    function blok_unitman_volumes_neobazatelen()
+    {
+        $config = ConfigUnita::fromArray($this->minimalniiConfig());
+
+        $this->assertFalse($config->esliEstVolumes());
+        $this->assertSame([], $config->getVolumes());
+        $this->assertSame([], $config->toArray()['unitman_volumes']);
+    }
+
+    /**
+     * @test
+     * */
+    function povtornii_dir_v_unitman_volumes_otklonyaetsya()
+    {
+        $configAsArray = $this->configSVolumes([
+            ['dir' => 'db', 'name' => 'БД'],
+            ['dir' => 'db', 'name' => 'ещё БД'],
+        ]);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.config.volumes.dir_is_not_unique');
+        ConfigUnita::fromArray($configAsArray);
+    }
+
+    /**
+     * @test
+     * */
+    function tom_ssilaetsya_na_neizvestnuyu_peremennuyu()
+    {
+        $configAsArray = $this->configSVolumes([
+            ['dir' => 'db', 'name' => 'БД', 'variable' => 'UNKNOWN_FILE'],
+        ]);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.config.volumes.variable_not_found');
+        ConfigUnita::fromArray($configAsArray);
+    }
+
+    /**
+     * @test
+     * */
+    function tom_bez_dir_otklonyaetsya()
+    {
+        $configAsArray = $this->configSVolumes([
+            ['dir' => '   ', 'name' => 'БД'],
+        ]);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.config.volumes.dir_is_empty');
+        ConfigUnita::fromArray($configAsArray);
+    }
+
+    /**
+     * @test
+     * */
+    function tom_bez_imeni_otklonyaetsya()
+    {
+        $configAsArray = $this->configSVolumes([
+            ['dir' => 'db'],
+        ]);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.config.volumes.name_is_empty');
+        ConfigUnita::fromArray($configAsArray);
+    }
+
+    /**
+     * @test
+     * */
+    function nevalidnii_element_unitman_volumes_otklonyaetsya()
+    {
+        $configAsArray = $this->minimalniiConfig();
+        $configAsArray['unitman_volumes'] = ['db'];
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.config.volumes.invalid_item');
+        ConfigUnita::fromArray($configAsArray);
+    }
+
+    /**
+     * Конфиг без переменных и без томов — годится как основа для негативных кейсов.
+     */
+    private function minimalniiConfig(): array
+    {
+        return [
+            'variables' => [],
+            'prepare' => ['ls -la'],
+            'reset_prepare' => ['ls -la'],
+            'up' => ['ls -la'],
+            'down' => ['ls -la'],
+            'services' => [
+                'web' => [
+                    'ports' => [
+                        ['port' => 8081, 'type' => 'http', 'startUri' => '/test'],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $volumes
+     */
+    private function configSVolumes(array $volumes): array
+    {
+        $configAsArray = $this->minimalniiConfig();
+        $configAsArray['variables'] = [
+            ['id' => 'DB_FILE', 'label' => 'DB_FILE', 'type' => 'string', 'defaultValue' => ''],
+        ];
+        $configAsArray['unitman_volumes'] = $volumes;
+
+        return $configAsArray;
+    }
 }

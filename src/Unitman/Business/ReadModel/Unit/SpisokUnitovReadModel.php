@@ -26,6 +26,7 @@ final class SpisokUnitovReadModel
      * @param bool $unitSozdanSystemoi
      * @param array $deistviya
      * @param ProjectListContainerStats|null $statistikaKonteinera
+     * @param array $volumes
      */
     public function __construct(
         public readonly string $id,
@@ -45,7 +46,8 @@ final class SpisokUnitovReadModel
         public readonly array $peremenie = [],
         public readonly bool $unitSozdanSystemoi = false,
         public readonly array $deistviya = [],
-        public readonly ?ProjectListContainerStats $statistikaKonteinera = null
+        public readonly ?ProjectListContainerStats $statistikaKonteinera = null,
+        public readonly array $volumes = []
     )
     {
     }
@@ -97,6 +99,7 @@ final class SpisokUnitovReadModel
         $unitSozdanSystemoi = isset($props['unitSozdanSystemoi'])?$props['unitSozdanSystemoi']:$this->unitSozdanSystemoi;
         $deistviya = isset($props['deistviya'])?$props['deistviya']:$this->deistviya;
         $statistikaKonteinera = isset($props['statistikaKonteinera'])?$props['statistikaKonteinera']:$this->statistikaKonteinera;
+        $volumes = array_key_exists('volumes', $props)?$props['volumes']:$this->volumes;
 
         if (isset($props['prozesi'])) {
             $prozesi = $props['prozesi'];
@@ -124,7 +127,8 @@ final class SpisokUnitovReadModel
             $peremenie,
             $unitSozdanSystemoi,
             $deistviya,
-            $statistikaKonteinera
+            $statistikaKonteinera,
+            $volumes
         );
     }
 }

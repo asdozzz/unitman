@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Unitman;
 
 use App\App\Infra\EventStore\AuthorMessageDecorator;
+use App\Unitman\Acl\MediatekaAdapter;
 use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\BackgroundJob\StatistikaPoProektu\StatistikaPoProektuBackgroundJob;
@@ -46,6 +48,7 @@ return function (ContainerConfigurator $configuration) {
         ->public();
 
     $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class);
+    $services->set(MediatekaService::class, MediatekaAdapter::class);
 
     $services->set('unitman.event_type_mapper', ExplicitlyMappedClassNameInflector::class)
         ->factory([service(ClassNameMapFactory::class), 'getMap']);

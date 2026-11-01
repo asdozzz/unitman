@@ -26,7 +26,9 @@ use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaProekta;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
+use App\Runner\Business\Command\NachatPodgotovkuUnita\Volume;
 use App\Unitman\Business\Model\Unit;
+use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Infra\Adapter\StorageApiAdapterFactory;
@@ -38,7 +40,8 @@ final class RunnerAdapter implements RunnerService
         private readonly RunnerApiInterface $runnerApi,
         private readonly RepoRepository $repoRepository,
         private SqlProjectEventsRepository $projectEventsRepository,
-        private StorageApiAdapterFactory $storageApiAdapterFactory
+        private StorageApiAdapterFactory $storageApiAdapterFactory,
+        private readonly MediatekaService $mediatekaService
     )
     {
     }
@@ -82,6 +85,7 @@ final class RunnerAdapter implements RunnerService
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $caches = $this->makeCachesListFromUnit($unit);
+        $volumes = $this->makeVolumesListFromUnit($unit);
         $memoryLimit = $unit->poluchitNastroikiContaineraUnita()->memoryLimit ?: 0;
         $containerSettings = new NachatPodgotovkuUnita\ContainerSettings($memoryLimit .'m');
         $konfigStadiiSborki = $unit->getConfig()?->poluchiKonfigStadiiSbork();
@@ -89,7 +93,7 @@ final class RunnerAdapter implements RunnerService
             throw new \DomainException('Конфиг не найден');
         }
         $imageConfig = new ImageConfig($konfigStadiiSborki->obraz, $konfigStadiiSborki->dopolnitelnieKomandi);
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings, $unit->getBranch(), $imageConfig);
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings, $unit->getBranch(), $imageConfig, $volumes);
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
@@ -252,6 +256,33 @@ final class RunnerAdapter implements RunnerService
         }
 
         return $variables;
+    }
+
+    /**
+     * Тома юнита для передачи в activity: файлы медиатеки отдаются временной ссылкой.
+     *
+     * @return Volume[]
+     */
+    private function makeVolumesListFromUnit(Unit $unit): array
+    {
+        $result = [];
+
+        foreach ($unit->poluchitVolumeUnita() as $volumeValue) {
+            if (!$volumeValue->esliSFaylom()) {
+                $result[] = new Volume($volumeValue->getDir(), $volumeValue->getName());
+                continue;
+            }
+
+            $file = $this->mediatekaService->poluchitFaylDlyaVoluma((string) $volumeValue->getFileId(), $unit->getId());
+
+            if ($file === null) {
+                throw new \DomainException('unit.volumes.file_not_found');
+            }
+
+            $result[] = new Volume($volumeValue->getDir(), $volumeValue->getName(), $file['url'], $file['name']);
+        }
+
+        return $result;
     }
 
     private function makeCachesListFromUnit(Unit $unit): array

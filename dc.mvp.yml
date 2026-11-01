@@ -7,6 +7,8 @@ services:
       - beanstalk
       - centrifugo
       - postgres
+      - minio
+      - minio-init
     environment:
       - APP_ENV=prod
       - PHP_OPCACHE_ENABLE=1
@@ -46,6 +48,16 @@ services:
     extends:
       file: common-services.yml
       service: redis
+
+  minio:
+    extends:
+      file: common-services.yml
+      service: minio
+
+  minio-init:
+    extends:
+      file: common-services.yml
+      service: minio-init
 
 networks:
   default:

@@ -3,9 +3,13 @@
 namespace App\Runner\Business\Command;
 
 use App\Runner\Business\Command\NachatPodgotovkuUnita\ContainerSettings;
+use App\Runner\Business\Command\NachatPodgotovkuUnita\Volume;
 
 final class NachatPodgotovkuUnita
 {
+    /**
+     * @param Volume[] $Volumes
+     */
     public function __construct(
         public readonly string $ProjectId,
         public readonly string $ProjectName,
@@ -17,7 +21,8 @@ final class NachatPodgotovkuUnita
         public readonly array $Caches,
         public readonly ContainerSettings $ContainerSettings,
         public readonly string $Branch,
-        public readonly ImageConfig $ImageConfig
+        public readonly ImageConfig $ImageConfig,
+        public readonly array $Volumes = []
     )
     {
     }
