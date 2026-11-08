@@ -18,20 +18,20 @@ build:
   image: asdozzz/dind-unit:latest
 
 prepare:
-  - cp -f .env.dist .env.local
+  - cp -f .env.dist .env
   - mkdir -p config/jwt
   - openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:asd243815
   - openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:asd243815
 
 reset_prepare:
-  - rm -rf .env.local
+  - rm -rf .env
 
 up:
   - docker compose -f dc.temporal.yml up -d
-  - docker compose -f docker-compose.unitman.yml up -d --build
+  - docker compose up -d --build
 
 down:
-  - docker compose -f docker-compose.unitman.yml down
+  - docker compose down
   - docker compose -f dc.temporal.yml down
 
 actions:
