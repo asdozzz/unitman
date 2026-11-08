@@ -1,13 +1,7 @@
 variables:
-  - FIRST_SERVICE_HOST:
-      label: Название сервиса 1
-      type: string
-
-build:
-  - cp -f .env.runner .env
-  - mkdir -p config/jwt
-  - openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:asd243815
-  - openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:asd243815
+  - id: FIRST_SERVICE_HOST:
+    label: Название сервиса 1
+    type: string
 
 services:
     web:
@@ -20,6 +14,18 @@ services:
         - port: 8000
           type: 'ws'
 
+build:
+  image: asdozzz/dind-unit:latest
+
+prepare:
+  - cp -f .env.dist .env.local
+  - mkdir -p config/jwt
+  - openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:asd243815
+  - openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:asd243815
+
+reset_prepare:
+  - rm -rf .env.local
+
 up:
   - make tl
   - make local
@@ -27,3 +33,37 @@ up:
 down:
   - make local-stop
   - make tl-stop
+
+actions:
+  - id: docker-compose-logs
+    name: "podman-compose logs"
+    variables:
+      - id: SERVICE_NAME
+        label: SERVICE_NAME
+        type: collection
+        defaultValue: web
+        options:
+          options:
+            - id: web
+              name: web
+
+            - id: postgres
+              name: postgres
+
+            - id: beanstalk
+              name: beanstalk
+
+            - id: centrifugo
+              name: centrifugo
+
+            - id: redis
+              name: redis
+
+            - id: minio
+              name: minio
+
+            - id: minio-init
+              name: minio-init
+    commands:
+      - docker-compose logs ${UNITMAN_ACTION_SERVICE_NAME}
+    prepare: true
