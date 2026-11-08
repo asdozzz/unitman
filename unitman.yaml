@@ -9,6 +9,17 @@ build:
   - openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:asd243815
   - openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:asd243815
 
+services:
+    web:
+      ports:
+        - port: 8082
+          type: 'http'
+          startUri: '/api/doc'
+    centrifugo:
+      ports:
+        - port: 8000
+          type: 'ws'
+
 up:
   - make tl
   - make local
