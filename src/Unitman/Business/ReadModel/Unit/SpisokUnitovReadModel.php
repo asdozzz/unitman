@@ -27,6 +27,8 @@ final class SpisokUnitovReadModel
      * @param array $deistviya
      * @param ProjectListContainerStats|null $statistikaKonteinera
      * @param array $volumes
+     * @param array $svyazi связи переменных с юнитами, выбранными через хелпер:
+     *        `{variableId, targetUnitId, projectId, service, port, suffix}`
      */
     public function __construct(
         public readonly string $id,
@@ -47,7 +49,8 @@ final class SpisokUnitovReadModel
         public readonly bool $unitSozdanSystemoi = false,
         public readonly array $deistviya = [],
         public readonly ?ProjectListContainerStats $statistikaKonteinera = null,
-        public readonly array $volumes = []
+        public readonly array $volumes = [],
+        public readonly array $svyazi = []
     )
     {
     }
@@ -100,6 +103,8 @@ final class SpisokUnitovReadModel
         $deistviya = isset($props['deistviya'])?$props['deistviya']:$this->deistviya;
         $statistikaKonteinera = isset($props['statistikaKonteinera'])?$props['statistikaKonteinera']:$this->statistikaKonteinera;
         $volumes = array_key_exists('volumes', $props)?$props['volumes']:$this->volumes;
+        // Пустой массив валиден: связи должны очищаться, поэтому !empty использовать нельзя.
+        $svyazi = array_key_exists('svyazi', $props)?$props['svyazi']:$this->svyazi;
 
         if (isset($props['prozesi'])) {
             $prozesi = $props['prozesi'];
@@ -128,7 +133,8 @@ final class SpisokUnitovReadModel
             $unitSozdanSystemoi,
             $deistviya,
             $statistikaKonteinera,
-            $volumes
+            $volumes,
+            $svyazi
         );
     }
 }

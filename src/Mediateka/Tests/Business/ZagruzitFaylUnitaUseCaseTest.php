@@ -238,6 +238,44 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
     /**
      * @test
      */
+    public function imya_fayla_privoditsya_k_pravilam_docker_volume(): void
+    {
+        $content = "PK\x03\x04" . str_repeat('a', 96);
+
+        $file = $this->useCase->handle(new ZagruzitFaylUnita(
+            'unit-1',
+            'Дамп БД (v2).ZIP',
+            strlen($content),
+            null,
+            'user-1',
+            $this->potok($content)
+        ));
+
+        $this->assertSame('damp-bd-v2.zip', $file->getName());
+    }
+
+    /**
+     * @test
+     */
+    public function imya_bez_rasshireniya_dopolnyaetsya_zip(): void
+    {
+        $content = "PK\x03\x04" . str_repeat('a', 96);
+
+        $file = $this->useCase->handle(new ZagruzitFaylUnita(
+            'unit-1',
+            'Дамп БД',
+            strlen($content),
+            null,
+            'user-1',
+            $this->potok($content)
+        ));
+
+        $this->assertSame('damp-bd.zip', $file->getName());
+    }
+
+    /**
+     * @test
+     */
     public function chernovik_privyazyvaetsya_k_unitu_bez_kopirovaniya_v_hranilishche(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);

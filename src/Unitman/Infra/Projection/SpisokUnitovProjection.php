@@ -42,6 +42,7 @@ use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
+use App\Unitman\Business\Utils\SvyaziPeremenihUtil;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
@@ -131,7 +132,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             commands: $fact->stateAsArray['commands'],
             prozesi:[],
             peremenie: $peremenie,
-            volumes: $fact->volumes
+            volumes: $fact->volumes,
+            svyazi: SvyaziPeremenihUtil::sobratSvyaziDlyaReadModel($fact->svyazi, null)
         );
         $this->repository->insert($readModel);
     }
@@ -245,7 +247,10 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
 
         $readModel = $readModel->copyAndUpdateData([
             'links' => $links,
-            'deistviya' => $deistviya
+            'deistviya' => $deistviya,
+            // Реконсиляция: связи переменных без хелпера отбрасываются,
+            // остальные обогащаются данными хелпера.
+            'svyazi' => SvyaziPeremenihUtil::sobratSvyaziPoKonfigu($readModel->svyazi, $fact->configUnita)
         ]);
         $this->repository->update($readModel);
 
@@ -263,7 +268,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'peremenie' => $peremenie,
-            'volumes' => $fact->volumes
+            'volumes' => $fact->volumes,
+            'svyazi' => SvyaziPeremenihUtil::sobratSvyaziDlyaReadModel($fact->svyazi, null)
         ]);
         $this->repository->update($readModel);
     }

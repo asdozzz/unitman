@@ -7,6 +7,7 @@ use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\VolumeType\VolumeTypeFileRepository;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
@@ -14,6 +15,7 @@ use App\Unitman\Business\UseCase\Unit\DobavitProzesSborkiUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitStatistikuPoKonteineruUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ProverkaFaylovVolumov;
+use App\Unitman\Business\UseCase\Unit\ProverkaSvyazeyPeremenih;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -57,7 +59,9 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
             new MemoryGuidGenerator($guidGeneratorArr),
             $unitRepo,
             $mediatekaService,
-            new ProverkaFaylovVolumov($mediatekaService, $volumeTypeFileRepository)
+            new ProverkaFaylovVolumov($mediatekaService, $volumeTypeFileRepository),
+            new ProverkaSvyazeyPeremenih($spisokUnitovRepo),
+            $this->stubDostupnieProekti([$projectId])
         );
         $id = $useCase2->handle(new SozdatUnit(
             $projectId,
@@ -84,5 +88,21 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
 
         $readModel = $spisokUnitovRepo->getById($unitId);
         $this->assertEquals($readModel->statistikaKonteinera, new ProjectListContainerStats('10%', '20%', '2gb', '20/30'));
+    }
+
+    /**
+     * @param string[] $projectIds
+     */
+    private function stubDostupnieProekti(array $projectIds): UmeetPoluchatSpisokProektovDlyPolzovatelya
+    {
+        $stub = $this->getMockBuilder(UmeetPoluchatSpisokProektovDlyPolzovatelya::class)->getMock();
+        $stub->expects($this->any())
+            ->method('poluchitSpisokProektovDlyPolzovatelya')
+            ->willReturn(array_map(
+                static fn(string $projectId): array => ['id' => $projectId],
+                $projectIds
+            ));
+
+        return $stub;
     }
 }

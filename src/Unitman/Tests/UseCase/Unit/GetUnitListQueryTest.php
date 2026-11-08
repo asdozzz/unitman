@@ -12,6 +12,7 @@ use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
+use App\Unitman\Infra\Repository\Unit\SvyaziUnitovRepository;
 
 final class GetUnitListQueryTest extends AbstractUnitUseCase
 {
@@ -30,6 +31,16 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         yield [new GetUnitListFilter(branch:  '001'), '6', ['6', '5','4','3']];
         yield [new GetUnitListFilter(projectId:  'pr1'), '6', ['4', '3','2','1']];
         yield [new GetUnitListFilter(), '6', ['6', '5','4','3','2','1']];
+
+        // Фильтр по unitIds расширяется связанными юнитами в обе стороны.
+        // Связи: 3 -> 5 (pr2), 5 -> 2 (pr1), 7 (pr3) -> 1 (pr1).
+        yield 'сам юнит и его связь' => [new GetUnitListFilter(unitIds: ['3']), '6', ['5', '3']];
+        yield 'связь в обе стороны' => [new GetUnitListFilter(unitIds: ['5']), '6', ['5', '3', '2']];
+        yield 'два юнита в фильтре' => [new GetUnitListFilter(unitIds: ['3', '4']), '6', ['5', '4', '3']];
+        yield 'входящая связь' => [new GetUnitListFilter(unitIds: ['2']), '6', ['5', '2']];
+        yield 'юнит без связей' => [new GetUnitListFilter(unitIds: ['6']), '6', ['6']];
+        yield 'источник в недоступном проекте' => [new GetUnitListFilter(unitIds: ['7']), '6', ['1']];
+        yield 'только переданный юнит' => [new GetUnitListFilter(unitIds: ['1']), '6', ['1']];
     }
 
     /**
@@ -55,6 +66,14 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         $readModelRepo->insert($unit6);
         $unit6 = new SpisokUnitovReadModel('7', '7', 'www@asd.ru', '007', 'pr3', 'prName2', 'feature/001', [], []);
         $readModelRepo->insert($unit6);
+
+        $svyaziRepo = self::$container->get(SvyaziUnitovRepository::class);
+        /** @var SvyaziUnitovRepository $svyaziRepo */
+        $svyaziRepo->init();
+        $svyaziRepo->truncate();
+        $svyaziRepo->replaceForUnit('3', [['variableId' => 'VAR_1', 'targetUnitId' => '5', 'projectId' => 'pr2']]);
+        $svyaziRepo->replaceForUnit('5', [['variableId' => 'VAR_1', 'targetUnitId' => '2', 'projectId' => 'pr1']]);
+        $svyaziRepo->replaceForUnit('7', [['variableId' => 'VAR_1', 'targetUnitId' => '1', 'projectId' => 'pr1']]);
 
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($currentUserId);

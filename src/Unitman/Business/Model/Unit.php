@@ -76,6 +76,7 @@ use App\Unitman\Business\Model\Unit\State\VOcherediNaZapusk;
 use App\Unitman\Business\Model\Unit\State\Zapushen;
 use App\Unitman\Business\Model\Unit\StatistikaKonteinera;
 use App\Unitman\Business\Model\Unit\UnitBranch;
+use App\Unitman\Business\Model\Unit\PeremennayaSvyaz;
 use App\Unitman\Business\Model\Unit\UnitId;
 use App\Unitman\Business\Model\Unit\UnitName;
 use App\Unitman\Business\Model\Unit\UnitProcess;
@@ -120,6 +121,14 @@ final class Unit implements AggregateRoot
      * @var array<VolumeValue>
      * */
     private array $volumeValues = [];
+
+    /**
+     * Связи переменных конфига с юнитами, выбранными пользователем
+     * через хелпер переменной (PomoschnikSsylki).
+     *
+     * @var array<PeremennayaSvyaz>
+     * */
+    private array $svyaziPeremenih = [];
     private ?RunnerJob $sborka = null;
     private ?RunnerJob $podgotovka = null;
     private ?RunnerJob $obnovlenie = null;
@@ -449,13 +458,19 @@ final class Unit implements AggregateRoot
         $unit = new self(UnitId::fromString($id));
         $state = new Sozdan();
         $peremenie = [];
+        $svyazi = [];
         foreach ($command->znacheniePeremenoi as $peremenaya) {
             try {
                 $variable = new VariableValue($peremenaya->id, $peremenaya->value, $peremenaya->type);
                 $peremenie[] = $variable->toArray();
             } catch (\Exception) {
             }
+
+            if ($peremenaya->targetUnitId !== null && trim($peremenaya->targetUnitId) !== '') {
+                $svyazi[] = new PeremennayaSvyaz($peremenaya->id, $peremenaya->targetUnitId);
+            }
         }
+        $svyazi = $unit->makeSvyaziCollection($svyazi);
         ContainerSettings::validateMemory($command->memoryLimit);
         $volumes = self::makeVolumeCollectionByZapros($command->volumes);
         $unit->recordThat(new UnitSozdan(
@@ -467,7 +482,8 @@ final class Unit implements AggregateRoot
             $state->toArray($unit),
             $peremenie,
             $command->memoryLimit,
-            array_map(fn(VolumeValue $volume): array => $volume->toArray(), $volumes)
+            array_map(fn(VolumeValue $volume): array => $volume->toArray(), $volumes),
+            array_map(fn(PeremennayaSvyaz $svyaz): array => $svyaz->toArray(), $svyazi)
         ));
         $unit->dobavitProzesSborki($authorId, $prozesId);
         return $unit;
@@ -487,6 +503,7 @@ final class Unit implements AggregateRoot
             return new VariableValue($item['id'], $item['value'], $item['type']);
         }, $fact->values);
         $this->volumeValues = $this->makeVolumeCollectionFromEvent($fact->volumes);
+        $this->svyaziPeremenih = $this->makeSvyaziCollectionFromEvent($fact->svyazi);
         $this->containerSettings = new ContainerSettings($fact->memoryLimit);
 
     }
@@ -737,8 +754,10 @@ final class Unit implements AggregateRoot
      * @param array<array-key, mixed> $values канонический map `id => value`
      *        либо список объектов `{id, value, type}`
      * @param array<array-key, VolumeZaprosZapolneniya> $volumes тома из запроса
+     * @param PeremennayaSvyaz[] $svyazi связи переменных с выбранными юнитами.
+     *        Пустой массив — связи не меняются; непустой — полная замена набора.
      */
-    public function zapolnitPeremenie(array $values, array $volumes = []): void
+    public function zapolnitPeremenie(array $values, array $volumes = [], array $svyazi = []): void
     {
         if ($this->isDeleted) {
             throw new DomainException('unit.udalen');
@@ -771,6 +790,11 @@ final class Unit implements AggregateRoot
         $this->variableValues = $tmpVariables;
         $this->volumeValues = $tmpVolumes;
 
+        $tmpSvyazi = $this->svyaziPeremenih;
+        if (!empty($svyazi)) {
+            $tmpSvyazi = $this->makeSvyaziCollection($svyazi);
+        }
+
         if (empty($this->state)) {
             $state = new Sozdan();
         } else {
@@ -783,7 +807,8 @@ final class Unit implements AggregateRoot
             $this->getId(),
             $normalizedValues,
             $state->toArray($this),
-            array_map(fn(VolumeValue $volume): array => $volume->toArray(), $tmpVolumes)
+            array_map(fn(VolumeValue $volume): array => $volume->toArray(), $tmpVolumes),
+            array_map(fn(PeremennayaSvyaz $svyaz): array => $svyaz->toArray(), $tmpSvyazi)
         ));
     }
 
@@ -794,6 +819,7 @@ final class Unit implements AggregateRoot
     {
         $this->variableValues = $this->makeVariableCollectionByArray($fact->values);
         $this->volumeValues = $this->makeVolumeCollectionFromEvent($fact->volumes);
+        $this->svyaziPeremenih = $this->makeSvyaziCollectionFromEvent($fact->svyazi);
         $this->state = StateFactory::makeByCode($fact->stateAsArray['code']);
     }
 
@@ -804,6 +830,54 @@ final class Unit implements AggregateRoot
     private function makeVolumeCollectionFromEvent(array $volumes): array
     {
         return array_map(fn(array $volume): VolumeValue => VolumeValue::fromArray($volume), $volumes);
+    }
+
+    /**
+     * Нормализует связи переменных с выбранными юнитами.
+     *
+     * Инварианты: на одну переменную — не более одной связи;
+     * юнит не может ссылаться на самого себя.
+     *
+     * @param array<array-key, PeremennayaSvyaz> $svyazi
+     * @return PeremennayaSvyaz[]
+     */
+    private function makeSvyaziCollection(array $svyazi): array
+    {
+        $result = [];
+        $usedVariables = [];
+
+        foreach ($svyazi as $svyaz) {
+            if (!$svyaz instanceof PeremennayaSvyaz) {
+                throw new DomainException('unit.svyaz.invalid_type');
+            }
+
+            $variableId = $svyaz->getVariableId();
+
+            if (isset($usedVariables[$variableId])) {
+                throw new DomainException('unit.svyaz.variable_is_not_unique');
+            }
+
+            if ($svyaz->getTargetUnitId() === $this->getId()) {
+                throw new DomainException('unit.svyaz.self_link_is_forbidden');
+            }
+
+            $usedVariables[$variableId] = true;
+            $result[] = $svyaz;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $svyazi
+     * @return PeremennayaSvyaz[]
+     */
+    private function makeSvyaziCollectionFromEvent(array $svyazi): array
+    {
+        return array_map(
+            fn(array $svyaz): PeremennayaSvyaz => PeremennayaSvyaz::fromArray($svyaz),
+            $svyazi
+        );
     }
 
     /**
@@ -1474,6 +1548,14 @@ final class Unit implements AggregateRoot
     /**
      * @return VolumeValue[]
      */
+    /**
+     * @return PeremennayaSvyaz[]
+     */
+    public function poluchitSvyaziPeremenih(): array
+    {
+        return $this->svyaziPeremenih;
+    }
+
     public function poluchitVolumeUnita(): array
     {
         return $this->volumeValues;

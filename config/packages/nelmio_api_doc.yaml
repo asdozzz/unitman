@@ -317,6 +317,21 @@ nelmio_api_doc:
                         type:
                             type: string
                             example: string
+                        targetUnitId:
+                            type: string
+                            nullable: true
+                            description: Идентификатор юнита, выбранного пользователем через хелпер переменной. Для переменных без хелпера игнорируется; `null` — хелпер не использовался
+                SvyazPeremenoi:
+                    type: object
+                    description: Связь переменной конфига юнита с юнитом, выбранным через хелпер
+                    required: [variableId, targetUnitId]
+                    properties:
+                        variableId:
+                            type: string
+                            description: Идентификатор переменной конфига юнита
+                        targetUnitId:
+                            type: string
+                            description: Идентификатор выбранного юнита. Должен существовать, быть доступен по проекту и отличаться от самого юнита
                 SozdatUnit:
                     type: object
                     required: [projectId, unitName, branch]
@@ -374,6 +389,42 @@ nelmio_api_doc:
                         id:
                             type: string
                             format: uuid
+                # Описывается вручную, чтобы `unitIds` остался строгим
+                # `array<string>`: выводимая из DTO схема разворачивает
+                # нетипизированный `array` в `oneOf(array, object)`.
+                GetUnitListFilter:
+                    type: object
+                    properties:
+                        onlyMine:
+                            type: boolean
+                            default: false
+                            description: Вернуть только юниты текущего пользователя
+                        name:
+                            type: string
+                            nullable: true
+                            default: null
+                            description: Подстрока имени юнита
+                        branch:
+                            type: string
+                            nullable: true
+                            default: null
+                            description: Подстрока имени ветки
+                        projectId:
+                            type: string
+                            nullable: true
+                            default: null
+                            description: Ограничить выборку одним проектом. Должен быть доступен пользователю, иначе результат пустой
+                        unitId:
+                            type: string
+                            nullable: true
+                            default: null
+                            description: Идентификатор конкретного юнита
+                        unitIds:
+                            type: array
+                            default: []
+                            description: Вернуть переданные юниты и связанные с ними (связи через хелпер переменной, в обе стороны)
+                            items:
+                                type: string
                 GetMyUnits:
                     type: object
                     properties:
@@ -414,6 +465,11 @@ nelmio_api_doc:
                             description: Тома юнита, которые нужно заполнить. `dir` обязан присутствовать в блоке `unitman_volumes` конфига юнита; имя тома берётся из конфига
                             items:
                                 $ref: '#/components/schemas/ZapolnitPeremenieUnitaVolume'
+                        svyazi:
+                            type: array
+                            description: Связи переменных с юнитами, выбранными через хелпер. Пустой массив — связи не меняются; непустой список — полная замена набора связей юнита
+                            items:
+                                $ref: '#/components/schemas/SvyazPeremenoi'
                 ZapolnitPeremenieUnitaVolume:
                     type: object
                     required: [dir]
@@ -500,7 +556,7 @@ nelmio_api_doc:
                             type: string
                             format: uuid
                         suffix:
-                            description: Суффикс, добавляемый в конец ссылки на юнит; null или пустая строка, если не задан
+                            description: Суффикс, подставляемый в конец ссылки вместо startUri из конфига юнита; null или пустая строка — ссылка без суффикса
                             type: string
                             nullable: true
                             example: /api/v1
@@ -629,6 +685,11 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/UnitAction'
+                        svyazi:
+                            type: array
+                            description: Связи переменных юнита с юнитами, выбранными через хелпер. Заполняется из проекции `svyazi_unitov` и реконсилируется при изменении конфига
+                            items:
+                                $ref: '#/components/schemas/UnitSvyaz'
                         statistikaKonteinera:
                             oneOf:
                                 - $ref: '#/components/schemas/ContainerStats'
@@ -713,6 +774,32 @@ nelmio_api_doc:
                             type: string
                         value:
                             type: string
+                UnitSvyaz:
+                    type: object
+                    description: Связь переменной юнита с юнитом, выбранным через хелпер (проекция svyazi_unitov)
+                    required: [variableId, targetUnitId, projectId]
+                    properties:
+                        variableId:
+                            type: string
+                            description: Идентификатор переменной конфига юнита, для которой использован хелпер
+                        targetUnitId:
+                            type: string
+                            description: Идентификатор юнита, выбранного через хелпер
+                        projectId:
+                            type: string
+                            description: Идентификатор проекта целевого юнита (денормализован для фильтрации списка)
+                        service:
+                            type: string
+                            nullable: true
+                            description: Сервис из конфигурации хелпера переменной
+                        port:
+                            type: integer
+                            nullable: true
+                            description: Порт из конфигурации хелпера переменной
+                        suffix:
+                            type: string
+                            nullable: true
+                            description: Суффикс из конфигурации хелпера переменной
                 UnitAction:
                     type: object
                     description: Действие, доступное для юнита (KonfigDeistviya::toArray)
@@ -1412,7 +1499,7 @@ nelmio_api_doc:
                         name:
                             type: string
                             maxLength: 255
-                            description: Отображаемое имя файла
+                            description: 'Имя файла, нормализованное под правила docker-тома: латиница в нижнем регистре, разрешены только a-z, 0-9, _, ., -, кириллица транслитерируется, расширение .zip добавляется при отсутствии'
                             example: logs.zip
                         size:
                             type: integer

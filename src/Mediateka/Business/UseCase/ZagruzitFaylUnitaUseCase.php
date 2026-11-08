@@ -9,6 +9,7 @@ use App\Mediateka\Business\Model\FaylUnita;
 use App\Mediateka\Business\Port\CanGenerateGuid;
 use App\Mediateka\Business\Port\FaylUnitaRepository;
 use App\Mediateka\Business\Port\FileStorage;
+use App\Mediateka\Business\Utils\ImyaFaylaDlyaDockerVolume;
 use App\Mediateka\Business\Utils\ZipArhivValidator;
 use DomainException;
 
@@ -40,6 +41,8 @@ final class ZagruzitFaylUnitaUseCase
         if (mb_strlen($name) > self::NAME_MAX_LENGTH) {
             throw new DomainException('mediateka.upload.name_is_too_long');
         }
+
+        $name = $this->normalizovatImya($name);
 
         $this->proveritRazmer($command);
 
@@ -82,6 +85,16 @@ final class ZagruzitFaylUnitaUseCase
         if ($command->size > $this->maxFileSize) {
             throw new DomainException('mediateka.upload.file_is_too_large');
         }
+    }
+
+    /**
+     * Имя файла используется как имя тома при подготовке юнита, поэтому
+     * приводим его к правилам docker-тома (`^[a-zA-Z0-9][a-zA-Z0-9_.-]+$`).
+     * Расширение `.zip` сохраняется: по нему архив распознаётся в раннере.
+     */
+    private function normalizovatImya(string $name): string
+    {
+        return ImyaFaylaDlyaDockerVolume::normalizovatImyaArhiva($name);
     }
 
     /**

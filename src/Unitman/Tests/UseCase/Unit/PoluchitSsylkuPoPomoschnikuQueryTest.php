@@ -54,11 +54,17 @@ final class PoluchitSsylkuPoPomoschnikuQueryTest extends AbstractUnitUseCase
         $useCase->handle($unitBId);
 
         $query = self::$container->get(PoluchitSsylkuPoPomoschnikuQuery::class);
+        // startUri из конфига ('/asd') больше не подмешивается: без suffix ссылка чистая
         $result = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId));
-        $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru/asd'], $result);
+        $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru'], $result);
 
+        // suffix подставляется вместо startUri
         $resultWithSuffix = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId, '/api/v1'));
-        $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru/asd/api/v1'], $resultWithSuffix);
+        $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru/api/v1'], $resultWithSuffix);
+
+        // suffix без ведущего слеша нормализуется
+        $resultWithSuffixNoSlash = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId, 'api/v2'));
+        $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru/api/v2'], $resultWithSuffixNoSlash);
 
         try {
             $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdA, 'web', 9999, $unitAId));

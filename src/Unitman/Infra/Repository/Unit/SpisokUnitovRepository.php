@@ -12,6 +12,7 @@ use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
 use App\Unitman\Business\Port\Unit\UmeetOtbiratNeaktivnieUniti;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
 
@@ -107,10 +108,15 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         return !empty($row);
     }
 
+    /**
+     * @param string[] $projectIds проекты, доступные пользователю
+     * @return array<int, array<string, mixed>>
+     */
     function getList(GetUnitList $query, string $currentUserId, array $projectIds): array
     {
         $table = self::TABLE;
         $params = ['limit' => $query->limit, 'offset' => $query->offset];
+        $types = [];
         $whereArr = [];
 
         if ($query->filter->unitId) {
@@ -133,17 +139,17 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
             $params['branch'] = '%'.$query->filter->branch.'%';
         }
 
-        if (!empty($query->filter->projectId)) {
-            $whereArr[] = "payload->>'projectId' = :projectId";
-            $params['projectId'] = $query->filter->projectId;
-        } else {
-            $whereArr[] = "payload->>'projectId' in ('".join("','", $projectIds)."')";
-        }
+        $this->dobavitUsloviePoProektam($whereArr, $params, $types, $projectIds, $query->filter->projectId);
+
+        $this->dobavitUsloviePoSvyazyam($whereArr, $params, $types, $query->filter->unitIds);
 
         $where = "WHERE ".join(' AND ', $whereArr);
 
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table $where ORDER BY id desc LIMIT :limit OFFSET :offset",
-            $params);
+        $rows = $this->connection->fetchAllAssociative(
+            "SELECT * FROM $table $where ORDER BY id desc LIMIT :limit OFFSET :offset",
+            $params,
+            $types
+        );
 
         $result = [];
         foreach ($rows as $row) {
@@ -229,6 +235,81 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         }
 
         return $result;
+    }
+
+    /**
+     * Ограничение выборки доступными пользователю проектами.
+     *
+     * Пустой $projectIds не должен превращаться в "без фильтра" — иначе пользователь
+     * без доступа получил бы все юниты.
+     *
+     * @param string[] $whereArr
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $types
+     * @param string[] $projectIds
+     */
+    private function dobavitUsloviePoProektam(
+        array &$whereArr,
+        array &$params,
+        array &$types,
+        array $projectIds,
+        ?string $projectId
+    ): void {
+        if ($projectId !== null && $projectId !== '') {
+            if (!in_array($projectId, $projectIds, true)) {
+                $whereArr[] = '1 = 0';
+
+                return;
+            }
+
+            $whereArr[] = "payload->>'projectId' = :projectId";
+            $params['projectId'] = $projectId;
+
+            return;
+        }
+
+        if ($projectIds === []) {
+            $whereArr[] = '1 = 0';
+
+            return;
+        }
+
+        $whereArr[] = "payload->>'projectId' in (:projectIds)";
+        $params['projectIds'] = array_values($projectIds);
+        $types['projectIds'] = ArrayParameterType::STRING;
+    }
+
+    /**
+     * Юниты, переданные в фильтре, плюс связанные с ними через хелпер переменной
+     * (связи учитываются в обе стороны).
+     *
+     * @param string[] $whereArr
+     * @param array<string, mixed> $params
+     * @param array<string, mixed> $types
+     * @param string[] $unitIds
+     */
+    private function dobavitUsloviePoSvyazyam(
+        array &$whereArr,
+        array &$params,
+        array &$types,
+        array $unitIds
+    ): void {
+        if ($unitIds === []) {
+            return;
+        }
+
+        $svyaziTable = SvyaziUnitovRepository::TABLE;
+
+        $whereArr[] = "(
+            payload->>'id' in (:unitIds)
+            or exists (
+                select 1 from $svyaziTable s
+                where (s.unit_id in (:unitIds) and s.target_unit_id = payload->>'id')
+                   or (s.target_unit_id in (:unitIds) and s.unit_id = payload->>'id')
+            )
+        )";
+        $params['unitIds'] = array_values($unitIds);
+        $types['unitIds'] = ArrayParameterType::STRING;
     }
 
     /**

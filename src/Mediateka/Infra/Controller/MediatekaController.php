@@ -30,7 +30,7 @@ final class MediatekaController extends AbstractController
     #[OA\Post(
         path: '/api/mediateka/upload',
         summary: 'Загрузить zip-архив',
-        description: 'Принимает multipart/form-data. Допускаются только zip-архивы размером не более MEDIATEKA_MAX_FILE_SIZE (по умолчанию 200 МБ). Владелец файла ровно один: unitId — файл юнита, projectId — архив каталога типов томов проекта (общий, к юниту не привязывается). Без обоих полей файл сохраняется как черновик (unitId = null, projectId = null) и привязывается к юниту отдельным запросом /api/mediateka/prikrepit либо при создании юнита. Одновременная передача unitId и projectId — ошибка. Поле name необязательно: при отсутствии берётся имя загруженного файла.',
+        description: 'Принимает multipart/form-data. Допускаются только zip-архивы размером не более MEDIATEKA_MAX_FILE_SIZE (по умолчанию 200 МБ). Владелец файла ровно один: unitId — файл юнита, projectId — архив каталога типов томов проекта (общий, к юниту не привязывается). Без обоих полей файл сохраняется как черновик (unitId = null, projectId = null) и привязывается к юниту отдельным запросом /api/mediateka/prikrepit либо при создании юнита. Одновременная передача unitId и projectId — ошибка. Поле name необязательно: при отсутствии берётся имя загруженного файла. Имя всегда нормализуется: латиница в нижнем регистре, только символы a-z, 0-9, _, ., -, так как оно используется как имя docker-тома; кириллица транслитерируется, недопустимые символы заменяются на дефис, расширение .zip добавляется при отсутствии.',
         tags: ['Mediateka'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -57,7 +57,8 @@ final class MediatekaController extends AbstractController
                             property: 'name',
                             type: 'string',
                             maxLength: 255,
-                            description: 'Отображаемое имя файла; по умолчанию — имя загруженного файла'
+                            description: 'Отображаемое имя файла; по умолчанию — имя загруженного файла. Приводится к правилам docker-тома: латиница в нижнем регистре, разрешены только a-z, 0-9, _, ., -, кириллица транслитерируется, расширение .zip добавляется при отсутствии',
+                            example: 'dump-bd.zip'
                         ),
                         new OA\Property(
                             property: 'file',
