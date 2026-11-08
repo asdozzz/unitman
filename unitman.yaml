@@ -28,10 +28,10 @@ reset_prepare:
 
 up:
   - docker compose -f dc.temporal.yml up -d
-  - docker compose up -d --build
+  - docker compose -f docker-compose.unitman.yml up -d --build
 
 down:
-  - docker compose down
+  - docker compose -f docker-compose.unitman.yml down
   - docker compose -f dc.temporal.yml down
 
 actions:
