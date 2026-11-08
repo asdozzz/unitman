@@ -27,6 +27,7 @@ reset_prepare:
   - rm -rf .env
 
 up:
+  - docker network create unitman_default
   - docker compose -f dc.temporal.yml up -d
   - docker compose up -d --build
 
