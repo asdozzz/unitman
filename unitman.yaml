@@ -27,12 +27,12 @@ reset_prepare:
   - rm -rf .env.local
 
 up:
-  - make tl
-  - make local
+  - docker compose -f dc.temporal.yml up -d
+  - docker compose up -d --build
 
 down:
-  - make local-stop
-  - make tl-stop
+  - docker compose down
+  - docker compose -f dc.temporal.yml down
 
 actions:
   - id: docker-compose-logs
