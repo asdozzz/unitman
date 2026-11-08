@@ -560,6 +560,11 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             example: /api/v1
+                        type:
+                            description: Протокол искомого порта целевого юнита; null или пустая строка — `http`
+                            type: string
+                            nullable: true
+                            example: ws
                 GetUnitRunnerJobs:
                     type: object
                     required: [id]
@@ -800,6 +805,11 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             description: Суффикс из конфигурации хелпера переменной
+                        type:
+                            type: string
+                            nullable: true
+                            description: Протокол из конфигурации хелпера переменной; по умолчанию `http`
+                            example: ws
                 UnitAction:
                     type: object
                     description: Действие, доступное для юнита (KonfigDeistviya::toArray)
@@ -985,7 +995,7 @@ nelmio_api_doc:
                 ConfigVariableHelper:
                     type: object
                     description: Помощник ссылки (PomoschnikSsylki::toArray)
-                    required: [projectId, service, port, suffix]
+                    required: [projectId, service, port, suffix, type]
                     properties:
                         projectId:
                             type: string
@@ -1000,6 +1010,10 @@ nelmio_api_doc:
                             description: Суффикс, добавляемый в конец ссылки на юнит, null если не задан
                             type: string
                             nullable: true
+                        type:
+                            description: Протокол ссылки на сервис; по умолчанию `http`, для websocket — `ws`
+                            type: string
+                            example: http
                 UnitVariable:
                     type: object
                     description: Значение переменной юнита (PeremenyaUnita::toArray)

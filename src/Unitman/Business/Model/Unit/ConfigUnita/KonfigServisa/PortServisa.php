@@ -11,7 +11,8 @@ final class PortServisa
 
     public function __construct(?string $type, ?int $port, ?string $startUri)
     {
-        if (empty($type)) {
+        $type = strtolower(trim((string)$type));
+        if ($type === '') {
             throw new \Exception('unit.config.port.type.is_empty');
         }
 

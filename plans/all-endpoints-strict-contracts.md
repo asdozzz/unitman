@@ -78,7 +78,7 @@ content: new OA\JsonContent(
 | `UnitConfigServicePort` | `PortServisa::toArray` | type, port, startUri |
 | `UnitConfigServiceCache` | `CacheServisa::toArray` | files, paths |
 | `UnitConfigVariable` | `AbstractConfigVariable::toArray` | id, label, type, defaultValue, options, helper |
-| `ConfigVariableHelper` | `PomoschnikSsylki::toArray` | projectId, service, port |
+| `ConfigVariableHelper` | `PomoschnikSsylki::toArray` | projectId, service, port, suffix, type |
 | `UnitVariable` | `PeremenyaUnita::toArray` | konfig, value |
 | `UnitProcessBrief` | `ProzesUnitaBezShagov` | id, unitId, userId, type, state, jobs[] |
 | `UnitProcessBriefJob` | `ZadachaProzesaUnitaBezShagovZadachi` | id, type, state |

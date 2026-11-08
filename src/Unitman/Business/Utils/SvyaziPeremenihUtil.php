@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Unitman\Business\Utils;
 
+use App\Unitman\Business\Model\Unit\ConfigUnita\PomoschnikSsylki;
+
 /**
  * Работа со связями «переменная конфига → юнит, выбранный через хелпер».
  *
@@ -16,7 +18,7 @@ final class SvyaziPeremenihUtil
      * Переменные конфига, у которых настроен хелпер ссылки.
      *
      * @param array<array-key, mixed> $configUnita конфиг юнита в виде массива
-     * @return array<string, array{projectId: string, service: string, port: int, suffix: ?string}>
+     * @return array<string, array{projectId: string, service: string, port: int, suffix: ?string, type: string}>
      */
     static function poluchitPomoschnikiPoPeremennim(array $configUnita): array
     {
@@ -41,11 +43,14 @@ final class SvyaziPeremenihUtil
                 continue;
             }
 
+            $type = strtolower(trim((string)($helper['type'] ?? '')));
+
             $result[$variableId] = [
                 'projectId' => (string)$helper['projectId'],
                 'service' => (string)($helper['service'] ?? ''),
                 'port' => (int)($helper['port'] ?? 0),
                 'suffix' => isset($helper['suffix']) ? (string)$helper['suffix'] : null,
+                'type' => $type === '' ? PomoschnikSsylki::DEFAULT_TYPE : $type,
             ];
         }
 
@@ -59,7 +64,7 @@ final class SvyaziPeremenihUtil
      * @param array<int, array<string, mixed>> $svyazi связи из события
      *        (`variableId`, `targetUnitId`, опционально `projectId`)
      * @param array<array-key, mixed> $configUnita конфиг юнита в виде массива
-     * @return array<int, array{variableId: string, targetUnitId: string, projectId: string, service: string, port: int, suffix: ?string}>
+     * @return array<int, array{variableId: string, targetUnitId: string, projectId: string, service: string, port: int, suffix: ?string, type: string}>
      */
     static function sobratSvyaziPoKonfigu(array $svyazi, array $configUnita): array
     {
@@ -86,6 +91,7 @@ final class SvyaziPeremenihUtil
                 'service' => $pomoschnik['service'],
                 'port' => $pomoschnik['port'],
                 'suffix' => $pomoschnik['suffix'],
+                'type' => $pomoschnik['type'],
             ];
         }
 
@@ -109,6 +115,8 @@ final class SvyaziPeremenihUtil
 
         if ($configUnita === null || $configUnita === []) {
             return array_values(array_map(static function (array $svyaz): array {
+                $type = strtolower(trim((string)($svyaz['type'] ?? '')));
+
                 return [
                     'variableId' => (string)($svyaz['variableId'] ?? ''),
                     'targetUnitId' => (string)($svyaz['targetUnitId'] ?? ''),
@@ -116,6 +124,7 @@ final class SvyaziPeremenihUtil
                     'service' => (string)($svyaz['service'] ?? ''),
                     'port' => (int)($svyaz['port'] ?? 0),
                     'suffix' => isset($svyaz['suffix']) ? (string)$svyaz['suffix'] : null,
+                    'type' => $type === '' ? PomoschnikSsylki::DEFAULT_TYPE : $type,
                 ];
             }, $svyazi));
         }

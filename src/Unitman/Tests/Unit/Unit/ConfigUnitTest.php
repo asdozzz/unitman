@@ -145,6 +145,7 @@ final class ConfigUnitTest extends TestCase
         $this->assertEquals('web', $pomoschnik?->service);
         $this->assertEquals(8080, $pomoschnik?->port);
         $this->assertEquals('/api/v1', $pomoschnik?->suffix);
+        $this->assertEquals('http', $pomoschnik?->type);
 
         $arr = $config->toArray();
 
@@ -173,9 +174,89 @@ final class ConfigUnitTest extends TestCase
             'projectId' => 'services/orders',
             'service' => 'web',
             'port' => 8080,
-            'suffix' => '/api/v1'
+            'suffix' => '/api/v1',
+            'type' => 'http',
         ], $arr['variables'][4]['helper']);
         $this->assertNull($arr['variables'][0]['helper']);
+    }
+
+    /**
+     * @test
+     * */
+    function pomoschnik_ssylki_s_protokolom_ws()
+    {
+        $configAsArray = $this->minimalniiConfig();
+        $configAsArray['variables'] = [
+            [
+                'id' => 'WS_SERVICE',
+                'label' => 'WS_SERVICE',
+                'type' => 'unit',
+                'defaultValue' => 'master',
+                'options' => [
+                    'projectCode' => 'services/ws',
+                ],
+                'helper' => [
+                    'projectId' => 'services/ws',
+                    'service' => 'web',
+                    'port' => 8080,
+                    'type' => 'WS',
+                ],
+            ],
+        ];
+
+        $config = ConfigUnita::fromArray($configAsArray);
+        $pomoschnik = $config->getVariables()[0]->poluchitPomoschnikaSsylki();
+
+        // протокол приводится к нижнему регистру
+        $this->assertEquals('ws', $pomoschnik?->type);
+        $this->assertSame('ws', $config->toArray()['variables'][0]['helper']['type']);
+    }
+
+    /**
+     * @test
+     * */
+    function pomoschnik_ssylki_s_nekorrektnim_protokolom_otklonyaetsya()
+    {
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.config.pomoschnik.type_invalid');
+
+        $configAsArray = $this->minimalniiConfig();
+        $configAsArray['variables'] = [
+            [
+                'id' => 'BAD_SERVICE',
+                'label' => 'BAD_SERVICE',
+                'type' => 'unit',
+                'defaultValue' => 'master',
+                'options' => [
+                    'projectCode' => 'services/bad',
+                ],
+                'helper' => [
+                    'projectId' => 'services/bad',
+                    'service' => 'web',
+                    'port' => 8080,
+                    'type' => '1http',
+                ],
+            ],
+        ];
+
+        ConfigUnita::fromArray($configAsArray);
+    }
+
+    /**
+     * @test
+     * */
+    function tip_porta_normalizuyetsya()
+    {
+        $configAsArray = $this->minimalniiConfig();
+        $configAsArray['services']['web']['ports'] = [
+            ['port' => 8080, 'type' => ' WS '],
+        ];
+
+        $config = ConfigUnita::fromArray($configAsArray);
+
+        $this->assertCount(1, $config->getServices());
+        $this->assertSame('ws', $config->getServices()[0]->ports[0]->type);
+        $this->assertSame('ws', $config->toArray()['services'][0]['ports'][0]['type']);
     }
 
     /**

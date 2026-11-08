@@ -308,6 +308,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
                     'service' => '',
                     'port' => 0,
                     'suffix' => null,
+                    'type' => 'http',
                 ],
             ]),
             $this->uporyadochennieSvyazi($sourceReadModel->svyazi)

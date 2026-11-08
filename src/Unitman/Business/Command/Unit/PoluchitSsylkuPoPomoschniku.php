@@ -6,12 +6,16 @@ use App\Utils\Converter\JsonBodySerializableInterface;
 
 final class PoluchitSsylkuPoPomoschniku implements JsonBodySerializableInterface
 {
+    /**
+     * @param string|null $type протокол искомого порта; null или пустая строка — `http`
+     */
     public function __construct(
         public readonly string $projectId,
         public readonly string $service,
         public readonly int $port,
         public readonly string $targetUnitId,
-        public readonly ?string $suffix = null
+        public readonly ?string $suffix = null,
+        public readonly ?string $type = null
     )
     {
     }

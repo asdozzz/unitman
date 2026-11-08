@@ -72,6 +72,7 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
                     'service' => '',
                     'port' => 0,
                     'suffix' => null,
+                    'type' => 'http',
                 ],
             ]),
             $this->uporyadochennieSvyazi($readModel->svyazi)

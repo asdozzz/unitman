@@ -1,0 +1,40 @@
+variables:
+  - id: AUTH_TOKEN
+    label: Токен авторизации
+    type: string
+    defaultValue: asdasd
+
+  - id: SOCKET_SERVICE
+    label: Сервис сокетов
+    type: unit
+    options:
+        projectCode: services/socket
+    helper:
+        projectId: services/socket
+        service: web
+        port: 8080
+        type: ws
+    defaultValue: master
+
+services:
+  web:
+    ports:
+      - port: 80
+        type: 'http'
+      - port: 8080
+        type: 'ws'
+        startUri: '/socket'
+      - port: 5043
+        type: 'tcp'
+
+prepare:
+  - cp -f .env.runner .env
+
+reset_prepare:
+  - rm -f .env
+
+up:
+  - docker-compose up -d --build
+
+down:
+  - docker-compose down
