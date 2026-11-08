@@ -30,6 +30,7 @@ up:
   - docker network create unitman_default
   - docker compose -f dc.temporal.yml up -d
   - docker compose up -d --build
+  - docker compose exec web php bin/console app:jobs start
 
 down:
   - docker compose down
