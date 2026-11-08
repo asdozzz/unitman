@@ -3,7 +3,6 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
-use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\MediatekaService;
@@ -22,6 +21,7 @@ final class SozdatUnitUseCase
         private CanGeneateGuid         $uuidGenerator,
         private UnitRepository         $unitRepository,
         private MediatekaService       $mediatekaService,
+        private ProverkaFaylovVolumov  $proverkaFaylovVolumov,
     )
     {
     }
@@ -40,53 +40,19 @@ final class SozdatUnitUseCase
 
         $userId = $this->securityService->getCurrentUserId();
 
-        $fileIds = $this->extractFileIds($command->volumes);
-
-        // Файлы загружаются до создания юнита как черновики медиатеки.
-        // Проверяем их до сохранения юнита, чтобы не создавать юнит,
-        // который затем не удастся связать с файлами.
-        if ($fileIds !== [] && !$this->mediatekaService->vseFaylyDostupnyDlyaPrivyazki($fileIds)) {
-            throw new \DomainException('unit.files.not_found');
-        }
+        // Проверяем файлы томов до сохранения юнита: черновики будут привязаны
+        // к новому юниту, архивы каталога проекта остаются общими.
+        $chernoviki = $this->proverkaFaylovVolumov->proverit($command->projectId, $command->volumes);
 
         $unitId = $this->uuidGenerator->makeGuid();
         $prozesId = $this->uuidGenerator->makeGuid();
         $unit = Unit::sozdatUnit($unitId, $userId, $prozesId, $command);
         $this->unitRepository->save($unit);
 
-        if ($fileIds !== []) {
-            $this->mediatekaService->prikrepitFaylyKUnitu($fileIds, $unitId);
+        if ($chernoviki !== []) {
+            $this->mediatekaService->prikrepitFaylyKUnitu($chernoviki, $unitId);
         }
 
         return $unit->getId();
-    }
-
-    /**
-     * Клиент передаёт тома парами `{dir, name, fileId}`, где `fileId` может
-     * отсутствовать — тогда том описывает только каталог без файла.
-     *
-     * @param VolumeZapros[] $volumes
-     * @return string[]
-     */
-    private function extractFileIds(array $volumes): array
-    {
-        $result = [];
-
-        foreach ($volumes as $volume) {
-            $fileId = $volume->fileId;
-
-            if ($fileId === null) {
-                continue;
-            }
-
-            $fileId = trim($fileId);
-            if ($fileId === '') {
-                continue;
-            }
-
-            $result[$fileId] = $fileId;
-        }
-
-        return array_values($result);
     }
 }

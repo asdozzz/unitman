@@ -20,6 +20,13 @@ interface FaylUnitaRepository
     public function najtiPoUnitu(string $unitId): array;
 
     /**
+     * Архивы каталога проекта (unit_id is null, project_id = $projectId).
+     *
+     * @return FaylUnita[]
+     */
+    public function najtiPoProektu(string $projectId): array;
+
+    /**
      * Привязывает файл (в том числе черновик) к юниту. Ключ в хранилище не меняется.
      */
     public function prikrepitKUnitu(string $fileId, string $unitId): void;

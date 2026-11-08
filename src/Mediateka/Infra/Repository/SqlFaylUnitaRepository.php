@@ -22,6 +22,7 @@ final class SqlFaylUnitaRepository implements FaylUnitaRepository
         $this->connection->insert(self::TABLE, [
             'id' => $file->getId(),
             'unit_id' => $file->getUnitId(),
+            'project_id' => $file->getProjectId(),
             'name' => $file->getName(),
             'size' => $file->getSize(),
             'mime_type' => $file->getMimeType(),
@@ -61,6 +62,20 @@ final class SqlFaylUnitaRepository implements FaylUnitaRepository
         $rows = $this->connection->fetchAllAssociative(
             'SELECT * FROM ' . self::TABLE . ' WHERE unit_id = :unit_id ORDER BY created_at ASC',
             ['unit_id' => $unitId]
+        );
+
+        return array_map(static fn (array $row): FaylUnita => FaylUnita::fromRow($row), $rows);
+    }
+
+    /**
+     * @return FaylUnita[]
+     */
+    public function najtiPoProektu(string $projectId): array
+    {
+        /** @var array<int, array<string, mixed>> $rows */
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT * FROM ' . self::TABLE . ' WHERE project_id = :project_id ORDER BY created_at ASC',
+            ['project_id' => $projectId]
         );
 
         return array_map(static fn (array $row): FaylUnita => FaylUnita::fromRow($row), $rows);

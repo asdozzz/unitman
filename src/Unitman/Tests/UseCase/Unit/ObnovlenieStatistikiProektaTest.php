@@ -8,10 +8,12 @@ use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\VolumeType\VolumeTypeFileRepository;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesSborkiUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitStatistikuPoKonteineruUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
+use App\Unitman\Business\UseCase\Unit\ProverkaFaylovVolumov;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -47,7 +49,16 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
         $unitRepo = self::$container->get(UnitRepository::class);
         /** @var MediatekaService $mediatekaService */
         $mediatekaService = $this->getMockBuilder(MediatekaService::class)->getMock();
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator($guidGeneratorArr), $unitRepo, $mediatekaService);
+        $volumeTypeFileRepository = $this->getMockBuilder(VolumeTypeFileRepository::class)->getMock();
+        $useCase2 = new SozdatUnitUseCase(
+            $spisokUnitovRepo,
+            $projectRepository,
+            $securityService,
+            new MemoryGuidGenerator($guidGeneratorArr),
+            $unitRepo,
+            $mediatekaService,
+            new ProverkaFaylovVolumov($mediatekaService, $volumeTypeFileRepository)
+        );
         $id = $useCase2->handle(new SozdatUnit(
             $projectId,
             'unit-1',

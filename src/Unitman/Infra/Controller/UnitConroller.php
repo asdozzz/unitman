@@ -588,7 +588,7 @@ final class UnitConroller extends AbstractController
                             description: 'Конфигурация юнита; пустой массив, если конфигурация не задана',
                             oneOf: [
                                 new OA\Schema(ref: '#/components/schemas/UnitConfig'),
-                                new OA\Schema(type: 'array', maxItems: 0),
+                                new OA\Schema(type: 'array', maxItems: 0, items: new OA\Items(type: 'object')),
                             ],
                         ),
                     ],

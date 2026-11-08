@@ -50,6 +50,20 @@ final class InMemoryFaylUnitaRepository implements FaylUnitaRepository
         ));
     }
 
+    /**
+     * Архивы каталога проекта: `unitId` отсутствует, `projectId` совпадает.
+     *
+     * @return FaylUnita[]
+     */
+    public function najtiPoProektu(string $projectId): array
+    {
+        return array_values(array_filter(
+            $this->files,
+            fn(FaylUnita $file): bool => $file->getUnitId() === null
+                && $file->getProjectId() === $projectId
+        ));
+    }
+
     public function prikrepitKUnitu(string $fileId, string $unitId): void
     {
         $file = $this->findById($fileId);

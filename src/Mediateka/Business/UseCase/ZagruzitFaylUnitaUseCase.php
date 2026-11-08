@@ -26,7 +26,12 @@ final class ZagruzitFaylUnitaUseCase
 
     public function handle(ZagruzitFaylUnita $command): FaylUnita
     {
-        $unitId = $this->opredelitUnitId($command->unitId);
+        $unitId = $this->normalizovatId($command->unitId);
+        $projectId = $this->normalizovatId($command->projectId);
+
+        if ($unitId !== null && $projectId !== null) {
+            throw new DomainException('mediateka.upload.owner_is_ambiguous');
+        }
 
         $name = trim($command->name);
         if ($name === '') {
@@ -43,7 +48,7 @@ final class ZagruzitFaylUnitaUseCase
         }
 
         $id = $this->canGenerateGuid->makeGuid();
-        $storageKey = $this->makeStorageKey($unitId, $id);
+        $storageKey = $this->makeStorageKey($unitId, $projectId, $id);
 
         $this->fileStorage->save($storageKey, $command->stream, $command->size, FaylUnita::MIME_TYPE_ZIP);
 
@@ -55,7 +60,8 @@ final class ZagruzitFaylUnitaUseCase
             FaylUnita::MIME_TYPE_ZIP,
             $storageKey,
             $command->uploadedBy,
-            time()
+            time(),
+            $projectId
         );
 
         $this->faylUnitaRepository->save($file);
@@ -82,19 +88,23 @@ final class ZagruzitFaylUnitaUseCase
      * Файл можно загрузить до создания юнита — тогда он становится черновиком
      * и привязывается к юниту позже (см. PrikrepitFaylyKUnituUseCase).
      */
-    private function opredelitUnitId(string $unitId): ?string
+    private function normalizovatId(string $id): ?string
     {
-        $unitId = trim($unitId);
+        $id = trim($id);
 
-        return $unitId === '' ? null : $unitId;
+        return $id === '' ? null : $id;
     }
 
-    private function makeStorageKey(?string $unitId, string $fileId): string
+    private function makeStorageKey(?string $unitId, ?string $projectId, string $fileId): string
     {
-        if ($unitId === null) {
-            return sprintf('drafts/%s.zip', $fileId);
+        if ($unitId !== null) {
+            return sprintf('units/%s/%s.zip', $unitId, $fileId);
         }
 
-        return sprintf('units/%s/%s.zip', $unitId, $fileId);
+        if ($projectId !== null) {
+            return sprintf('projects/%s/%s.zip', $projectId, $fileId);
+        }
+
+        return sprintf('drafts/%s.zip', $fileId);
     }
 }

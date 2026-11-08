@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace App\Unitman;
 
 use App\App\Infra\EventStore\AuthorMessageDecorator;
+use App\Mediateka\Business\Port\FileLinkChecker;
 use App\Unitman\Acl\MediatekaAdapter;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\MediatekaService;
+use App\Unitman\Business\Port\VolumeType\VolumeTypeFileRepository;
+use App\Unitman\Business\Port\VolumeType\VolumeTypeRepository;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeFileRepository;
+use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeRepository;
+use App\Unitman\Infra\Service\VolumeTypeFileLinkChecker;
 use App\Unitman\Infra\BackgroundJob\StatistikaPoProektu\StatistikaPoProektuBackgroundJob;
 use App\Unitman\Infra\BackgroundJob\WebhookEvent\WebhookEventProjectionPuller;
 use App\Unitman\Infra\BackgroundJob\WebsocketUnitEvent\WebsocketUnitEventJob;
@@ -49,6 +55,11 @@ return function (ContainerConfigurator $configuration) {
 
     $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class);
     $services->set(MediatekaService::class, MediatekaAdapter::class);
+    $services->set(VolumeTypeRepository::class, SqlVolumeTypeRepository::class);
+    $services->set(VolumeTypeFileRepository::class, SqlVolumeTypeFileRepository::class);
+
+    $services->set(VolumeTypeFileLinkChecker::class)
+        ->tag(FileLinkChecker::TAG);
 
     $services->set('unitman.event_type_mapper', ExplicitlyMappedClassNameInflector::class)
         ->factory([service(ClassNameMapFactory::class), 'getMap']);

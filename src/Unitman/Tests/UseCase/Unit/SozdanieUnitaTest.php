@@ -12,6 +12,8 @@ use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\Port\VolumeType\VolumeTypeFileRepository;
+use App\Unitman\Business\UseCase\Unit\ProverkaFaylovVolumov;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
@@ -47,8 +49,17 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
 
         /** @var MediatekaService $mediatekaService */
         $mediatekaService = $this->getMockBuilder(MediatekaService::class)->getMock();
+        $volumeTypeFileRepository = $this->getMockBuilder(VolumeTypeFileRepository::class)->getMock();
 
-        $useCase2 = new SozdatUnitUseCase($spisokUnitovRepo, $projectRepository, $securityService, new MemoryGuidGenerator([$unitId,$prozesId,$unitId2,$unitId3]), $unitRepo, $mediatekaService);
+        $useCase2 = new SozdatUnitUseCase(
+            $spisokUnitovRepo,
+            $projectRepository,
+            $securityService,
+            new MemoryGuidGenerator([$unitId,$prozesId,$unitId2,$unitId3]),
+            $unitRepo,
+            $mediatekaService,
+            new ProverkaFaylovVolumov($mediatekaService, $volumeTypeFileRepository)
+        );
         $useCase2->handle(new SozdatUnit(
             $projectId,
             'unit-1',
@@ -128,12 +139,21 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
 
         $mediatekaService = $this->getMockBuilder(MediatekaService::class)->getMock();
         $mediatekaService->expects($this->once())
-            ->method('vseFaylyDostupnyDlyaPrivyazki')
+            ->method('poluchitVladelcevFaylov')
             ->with(['file-1', 'file-2'])
-            ->willReturn(true);
+            ->willReturn([
+                'file-1' => ['unitId' => null, 'projectId' => null],
+                'file-2' => ['unitId' => null, 'projectId' => null],
+            ]);
         $mediatekaService->expects($this->once())
             ->method('prikrepitFaylyKUnitu')
             ->with(['file-1', 'file-2'], $unitId);
+
+        $volumeTypeFileRepository = $this->getMockBuilder(VolumeTypeFileRepository::class)->getMock();
+        $volumeTypeFileRepository->expects($this->once())
+            ->method('najtiKodyTipovPoFaylam')
+            ->with($projectId, ['file-1', 'file-2'])
+            ->willReturn([]);
 
         $useCase = new SozdatUnitUseCase(
             $spisokUnitovRepo,
@@ -141,7 +161,8 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
             $securityService,
             new MemoryGuidGenerator([$unitId, $prozesId]),
             $unitRepo,
-            $mediatekaService
+            $mediatekaService,
+            new ProverkaFaylovVolumov($mediatekaService, $volumeTypeFileRepository)
         );
 
         $useCase->handle(new SozdatUnit(

@@ -78,6 +78,53 @@ final class MediatekaApi
     }
 
     /**
+     * Архив каталога проекта: `project_id` совпадает, к юниту не привязан.
+     */
+    public function poluchitFaylProektaPoImProekta(string $fileId, string $projectId): ?FaylUnita
+    {
+        $file = $this->faylUnitaRepository->findById($fileId);
+        if ($file === null || $file->getProjectId() !== $projectId) {
+            return null;
+        }
+
+        return $file;
+    }
+
+    /**
+     * Владельцы файлов для проверки допустимости `fileId` в томе юнита.
+     *
+     * @param string[] $fileIds
+     *
+     * @return array<string, array{unitId: ?string, projectId: ?string}>
+     */
+    public function poluchitVladelcevFaylov(array $fileIds): array
+    {
+        $result = [];
+        foreach ($fileIds as $fileId) {
+            $fileId = trim($fileId);
+            $file = $this->faylUnitaRepository->findById($fileId);
+            if ($file === null) {
+                continue;
+            }
+
+            $result[$fileId] = [
+                'unitId' => $file->getUnitId(),
+                'projectId' => $file->getProjectId(),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return FaylUnita[]
+     */
+    public function poluchitFaylyProekta(string $projectId): array
+    {
+        return $this->faylUnitaRepository->najtiPoProektu($projectId);
+    }
+
+    /**
      * Проверяет, что файлы можно прикрепить к юниту: они существуют
      * и ещё не привязаны к другому юниту (то есть являются черновиками).
      *

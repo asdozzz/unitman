@@ -10,9 +10,12 @@ use DomainException;
  * Файл медиатеки. Источник истины — хранилище (MinIO),
  * эта модель — реестр метаданных.
  *
- * Файл может быть черновиком: он загружен до создания юнита и ещё не привязан
- * ни к одному юниту (`unitId === null`). Такой файл привязывается к юниту
- * отдельным шагом — при создании юнита либо явным вызовом привязки.
+ * Владелец файла ровно один:
+ * - черновик: `unitId === null` и `projectId === null` — загружен до создания
+ *   юнита и привязывается к нему отдельным шагом;
+ * - файл юнита: `unitId !== null` — удаляется вместе с юнитом;
+ * - архив проекта: `projectId !== null` — общий архив каталога типов томов,
+ *   переиспользуется юнитами и не привязывается к ним.
  */
 final class FaylUnita
 {
@@ -26,13 +29,20 @@ final class FaylUnita
         private readonly string $mimeType,
         private readonly string $storageKey,
         private readonly ?string $uploadedBy,
-        private readonly int $createdAt
+        private readonly int $createdAt,
+        private readonly ?string $projectId = null
     ) {
         if (trim($this->id) === '') {
             throw new DomainException('mediateka.file.id_is_empty');
         }
         if ($this->unitId !== null && trim($this->unitId) === '') {
             throw new DomainException('mediateka.file.unit_id_is_empty');
+        }
+        if ($this->projectId !== null && trim($this->projectId) === '') {
+            throw new DomainException('mediateka.file.project_id_is_empty');
+        }
+        if ($this->unitId !== null && $this->projectId !== null) {
+            throw new DomainException('mediateka.file.owner_is_ambiguous');
         }
         if (trim($this->storageKey) === '') {
             throw new DomainException('mediateka.file.storage_key_is_empty');
@@ -50,6 +60,7 @@ final class FaylUnita
         return [
             'id' => $this->id,
             'unitId' => $this->unitId,
+            'projectId' => $this->projectId,
             'name' => $this->name,
             'size' => $this->size,
             'mimeType' => $this->mimeType,
@@ -64,6 +75,7 @@ final class FaylUnita
     public static function fromRow(array $row): self
     {
         $unitId = $row['unit_id'] ?? null;
+        $projectId = $row['project_id'] ?? null;
 
         return new self(
             (string) $row['id'],
@@ -73,7 +85,8 @@ final class FaylUnita
             (string) $row['mime_type'],
             (string) $row['storage_key'],
             isset($row['uploaded_by']) ? (string) $row['uploaded_by'] : null,
-            (int) $row['created_at']
+            (int) $row['created_at'],
+            $projectId === null || $projectId === '' ? null : (string) $projectId
         );
     }
 
@@ -87,6 +100,10 @@ final class FaylUnita
             throw new DomainException('mediateka.file.unit_id_is_empty');
         }
 
+        if ($this->projectId !== null) {
+            throw new DomainException('mediateka.file.is_project_file');
+        }
+
         return new self(
             $this->id,
             $unitId,
@@ -95,7 +112,8 @@ final class FaylUnita
             $this->mimeType,
             $this->storageKey,
             $this->uploadedBy,
-            $this->createdAt
+            $this->createdAt,
+            null
         );
     }
 
@@ -109,12 +127,25 @@ final class FaylUnita
         return $this->unitId;
     }
 
+    public function getProjectId(): ?string
+    {
+        return $this->projectId;
+    }
+
     /**
-     * Черновик: файл загружен, но ещё не привязан к юниту.
+     * Черновик: файл загружен, но ещё не привязан ни к юниту, ни к проекту.
      */
     public function esliChernovik(): bool
     {
-        return $this->unitId === null;
+        return $this->unitId === null && $this->projectId === null;
+    }
+
+    /**
+     * Архив каталога типов томов — принадлежит проекту, а не юниту.
+     */
+    public function esliFaylProekta(): bool
+    {
+        return $this->projectId !== null;
     }
 
     public function getName(): string

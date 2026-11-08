@@ -339,7 +339,7 @@ nelmio_api_doc:
                                 $ref: '#/components/schemas/ZnacheniePeremenoi'
                         volumes:
                             type: array
-                            description: Тома юнита. Значения `dir` и `name` берутся из ответа `poluchitKonfigIzHranilisha`, `fileId` — идентификатор файла, загруженного в медиатеку как черновик (может отсутствовать)
+                            description: Тома юнита. Значения `dir` и `name` берутся из ответа `poluchitKonfigIzHranilisha`, `fileId` — идентификатор файла из медиатеки (может отсутствовать)
                             items:
                                 $ref: '#/components/schemas/SozdatUnitVolume'
                 SozdatUnitVolume:
@@ -356,7 +356,7 @@ nelmio_api_doc:
                             type: string
                             format: uuid
                             nullable: true
-                            description: Идентификатор файла-черновика в медиатеке. Если не передан — том описывает каталог без файла
+                            description: 'Идентификатор файла из медиатеки: либо черновик, загруженный пользователем, либо архив каталога проекта, привязанный к типу тома с `code` = `dir`. Арбитражные файлы проекта отклоняются. Если не передан — том описывает каталог без файла'
                 NaitiDubliUnita:
                     type: object
                     required: [projectId, branch]
@@ -840,6 +840,8 @@ nelmio_api_doc:
                                 - $ref: '#/components/schemas/UnitConfigServiceCache'
                                 - type: array
                                   maxItems: 0
+                                  items:
+                                      type: object
                 UnitConfigServicePort:
                     type: object
                     description: Порт сервиса (PortServisa::toArray)
@@ -927,7 +929,7 @@ nelmio_api_doc:
                     properties:
                         dir:
                             type: string
-                            description: Уникальный ключ тома внутри контейнера юнита
+                            description: Уникальный ключ тома внутри контейнера юнита; соответствует `code` типа тома в каталоге проекта
                             example: config
                         name:
                             type: string
@@ -937,7 +939,7 @@ nelmio_api_doc:
                             type: string
                             format: uuid
                             nullable: true
-                            description: Идентификатор привязанного файла медиатеки; null, пока файл не загружен
+                            description: Идентификатор привязанного файла медиатеки (черновик юнита либо архив каталога проекта); null, пока файл не загружен
                 UnitVolumeConfig:
                     type: object
                     description: Описание тома из блока unitman_volumes в конфиге юнита (VolumeConfig::toArray)
@@ -945,11 +947,123 @@ nelmio_api_doc:
                     properties:
                         dir:
                             type: string
-                            description: Уникальный ключ тома
+                            description: Уникальный ключ тома; соответствует `code` типа тома в каталоге проекта (`/api/volumeType/list`)
                             example: config
                         name:
                             type: string
                             example: config-volume
+                # --- Unitman: каталог типов томов проекта ---
+                VolumeTypeListRequest:
+                    type: object
+                    required: [projectId]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                            description: Идентификатор проекта
+                VolumeTypeList:
+                    type: object
+                    description: Тип тома проекта с привязанными архивами (VolumeTypeList::toArray)
+                    required: [code, name, files]
+                    properties:
+                        code:
+                            type: string
+                            maxLength: 100
+                            description: Код типа тома; должен совпадать с `dir` тома
+                            example: config
+                        name:
+                            type: string
+                            maxLength: 255
+                            description: Отображаемое название типа
+                            example: Конфигурация
+                        files:
+                            type: array
+                            description: Архивы каталога, привязанные к типу
+                            items:
+                                $ref: '#/components/schemas/UnitmanVolumeTypeFile'
+                UnitmanVolumeTypeFile:
+                    type: object
+                    description: Архив, привязанный к типу тома (VolumeTypeFileItem::toArray)
+                    required: [fileId, name, size, createdAt]
+                    properties:
+                        fileId:
+                            type: string
+                            format: uuid
+                            description: Идентификатор файла в медиатеке
+                        name:
+                            type: string
+                            maxLength: 255
+                            example: config.zip
+                        size:
+                            type: integer
+                            minimum: 1
+                            description: Размер файла в байтах
+                            example: 1048576
+                        createdAt:
+                            type: integer
+                            description: Момент привязки, unix timestamp (секунды)
+                            example: 1762000000
+                AddVolumeType:
+                    type: object
+                    required: [projectId, code, name]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        code:
+                            type: string
+                            maxLength: 100
+                            description: Код типа тома; должен совпадать с `dir` тома
+                            example: config
+                        name:
+                            type: string
+                            maxLength: 255
+                            example: Конфигурация
+                DeleteVolumeType:
+                    type: object
+                    required: [projectId, code]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        code:
+                            type: string
+                            maxLength: 100
+                            description: Код типа тома. Удаление запрещено, если к типу привязаны архивы
+                            example: config
+                AddVolumeTypeFile:
+                    type: object
+                    required: [projectId, code, fileId]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        code:
+                            type: string
+                            maxLength: 100
+                            example: config
+                        fileId:
+                            type: string
+                            format: uuid
+                            description: Идентификатор архива проекта, загруженного в медиатеку
+                DeleteVolumeTypeFile:
+                    type: object
+                    required: [projectId, code, fileId]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        code:
+                            type: string
+                            maxLength: 100
+                            example: config
+                        fileId:
+                            type: string
+                            format: uuid
+                        udalitFayl:
+                            type: boolean
+                            default: false
+                            description: Если true — файл удаляется из медиатеки вместе с отвязкой (при условии, что он не привязан к другим типам)
                 # --- Unitman: процессы юнита без шагов задач ---
                 UnitProcessBrief:
                     type: object
@@ -1289,7 +1403,12 @@ nelmio_api_doc:
                             type: string
                             format: uuid
                             nullable: true
-                            description: Идентификатор юнита, к которому прикреплён файл; null для черновика (загружен до создания юнита)
+                            description: 'Идентификатор юнита, к которому прикреплён файл. null для черновика (загружен до создания юнита) и для архива каталога проекта'
+                        projectId:
+                            type: string
+                            format: uuid
+                            nullable: true
+                            description: 'Идентификатор проекта-владельца. Заполняется для архива каталога томов проекта; null для черновика и файлов юнита. Ровно один владелец: unitId либо projectId'
                         name:
                             type: string
                             maxLength: 255

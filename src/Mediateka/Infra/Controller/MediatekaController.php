@@ -30,7 +30,7 @@ final class MediatekaController extends AbstractController
     #[OA\Post(
         path: '/api/mediateka/upload',
         summary: 'Загрузить zip-архив',
-        description: 'Принимает multipart/form-data. Допускаются только zip-архивы размером не более MEDIATEKA_MAX_FILE_SIZE (по умолчанию 200 МБ). Поле unitId необязательно: без него файл сохраняется как черновик (unitId = null) и привязывается к юниту отдельным запросом /api/mediateka/prikrepit либо при создании юнита. Поле name необязательно: при отсутствии берётся имя загруженного файла.',
+        description: 'Принимает multipart/form-data. Допускаются только zip-архивы размером не более MEDIATEKA_MAX_FILE_SIZE (по умолчанию 200 МБ). Владелец файла ровно один: unitId — файл юнита, projectId — архив каталога типов томов проекта (общий, к юниту не привязывается). Без обоих полей файл сохраняется как черновик (unitId = null, projectId = null) и привязывается к юниту отдельным запросом /api/mediateka/prikrepit либо при создании юнита. Одновременная передача unitId и projectId — ошибка. Поле name необязательно: при отсутствии берётся имя загруженного файла.',
         tags: ['Mediateka'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -44,7 +44,14 @@ final class MediatekaController extends AbstractController
                             type: 'string',
                             format: 'uuid',
                             nullable: true,
-                            description: 'Идентификатор юнита; не передаётся при загрузке черновика'
+                            description: 'Идентификатор юнита; не передаётся при загрузке черновика или проектного архива'
+                        ),
+                        new OA\Property(
+                            property: 'projectId',
+                            type: 'string',
+                            format: 'uuid',
+                            nullable: true,
+                            description: 'Идентификатор проекта для архива каталога типов томов; не передаётся одновременно с unitId'
                         ),
                         new OA\Property(
                             property: 'name',
@@ -97,6 +104,7 @@ final class MediatekaController extends AbstractController
             }
 
             $unitId = (string) $request->request->get('unitId', '');
+            $projectId = (string) $request->request->get('projectId', '');
             $name = (string) $request->request->get('name', $uploadedFile->getClientOriginalName());
 
             $stream = fopen($uploadedFile->getPathname(), 'rb');
@@ -111,7 +119,8 @@ final class MediatekaController extends AbstractController
                     (int) $uploadedFile->getSize(),
                     $this->poluchitContentLength($request),
                     $currentUserProvider->getCurrentUserId(),
-                    $stream
+                    $stream,
+                    $projectId
                 ));
             } finally {
                 fclose($stream);

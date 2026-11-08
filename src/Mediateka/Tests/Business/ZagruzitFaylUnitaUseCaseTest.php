@@ -188,6 +188,56 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
     /**
      * @test
      */
+    public function arhiv_proekta_sohranyaetsya_v_papke_proekta(): void
+    {
+        $content = "PK\x03\x04" . str_repeat('a', 96);
+
+        $file = $this->useCase->handle(new ZagruzitFaylUnita(
+            '',
+            'volume-db.zip',
+            strlen($content),
+            null,
+            'user-1',
+            $this->potok($content),
+            'project-1'
+        ));
+
+        $this->assertNull($file->getUnitId());
+        $this->assertSame('project-1', $file->getProjectId());
+        $this->assertFalse($file->esliChernovik());
+        $this->assertTrue($file->esliFaylProekta());
+        $this->assertSame('projects/project-1/file-id-1.zip', $file->getStorageKey());
+        $this->assertArrayHasKey('projects/project-1/file-id-1.zip', $this->fileStorage->saved);
+        $this->assertSame(
+            'projects/project-1/file-id-1.zip',
+            $this->repository->getById('file-id-1')->getStorageKey()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function odnovremenno_unit_i_proekt_otklonyaetsya(): void
+    {
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('mediateka.upload.owner_is_ambiguous');
+
+        $content = "PK\x03\x04" . str_repeat('a', 96);
+
+        $this->useCase->handle(new ZagruzitFaylUnita(
+            'unit-1',
+            'dump.zip',
+            strlen($content),
+            null,
+            'user-1',
+            $this->potok($content),
+            'project-1'
+        ));
+    }
+
+    /**
+     * @test
+     */
     public function chernovik_privyazyvaetsya_k_unitu_bez_kopirovaniya_v_hranilishche(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);

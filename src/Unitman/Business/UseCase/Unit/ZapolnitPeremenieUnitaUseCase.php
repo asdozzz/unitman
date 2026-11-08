@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
-use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita\VolumeZapros;
 use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
@@ -19,7 +18,8 @@ final class ZapolnitPeremenieUnitaUseCase
         private ProjectRepository $projectRepository,
         private UnitmanSecurityService $securityService,
         private CanGeneateGuid $canGeneateGuid,
-        private MediatekaService $mediatekaService
+        private MediatekaService $mediatekaService,
+        private ProverkaFaylovVolumov $proverkaFaylovVolumov,
     )
     {
     }
@@ -31,42 +31,21 @@ final class ZapolnitPeremenieUnitaUseCase
         $userId = $this->securityService->getCurrentUserId();
         $projectUser = $project->getProjectUserById($userId);
         $unit->proverkaPrav($projectUser);
-        $this->proveritFaylyVolumes($command->volumes, $unit->getId());
+
+        // Файлы томов: черновики прикрепляются к юниту, архивы каталога проекта
+        // используются повторно, файлы этого юнита разрешены без перепривязки.
+        // Наличие `dir` в конфиге валидирует сам агрегат.
+        $chernoviki = $this->proverkaFaylovVolumov->proverit($unit->getProjectId(), $command->volumes, $unit->getId());
+
         $unit->zapolnitPeremenie($command->values, $command->volumes);
         if ($unit->esliZapushen() || $unit->esliPodgotovlen()) {
             $prozesId = $this->canGeneateGuid->makeGuid();
             $unit->dobavitProzesObnovleniya($userId, $prozesId, true, $project->poluchitNastroikiHuka()->obnovlenieBezSbrosaPodgotovki);
         }
         $this->unitRepository->save($unit);
-    }
 
-    /**
-     * Файлы, переданные для томов `unitman_volumes`, должны существовать
-     * и быть прикреплены именно к этому юниту. Наличие `dir` в конфиге
-     * валидирует сам агрегат.
-     *
-     * @param VolumeZapros[] $volumes
-     */
-    private function proveritFaylyVolumes(array $volumes, string $unitId): void
-    {
-        $fileIds = [];
-
-        foreach ($volumes as $volume) {
-            $fileId = $volume->fileId;
-
-            if ($fileId === null || trim($fileId) === '') {
-                continue;
-            }
-
-            $fileIds[$fileId] = $fileId;
-        }
-
-        if (empty($fileIds)) {
-            return;
-        }
-
-        if (!$this->mediatekaService->vseFaylyPrinadlezhatUnitu(array_values($fileIds), $unitId)) {
-            throw new \DomainException('unit.volumes.file_not_found');
+        if ($chernoviki !== []) {
+            $this->mediatekaService->prikrepitFaylyKUnitu($chernoviki, $unit->getId());
         }
     }
 }

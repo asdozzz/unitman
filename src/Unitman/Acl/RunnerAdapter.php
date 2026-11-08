@@ -85,7 +85,7 @@ final class RunnerAdapter implements RunnerService
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $caches = $this->makeCachesListFromUnit($unit);
-        $volumes = $this->makeVolumesListFromUnit($unit);
+        $volumes = $this->makeVolumesListFromUnit($unit, $project);
         $memoryLimit = $unit->poluchitNastroikiContaineraUnita()->memoryLimit ?: 0;
         $containerSettings = new NachatPodgotovkuUnita\ContainerSettings($memoryLimit .'m');
         $konfigStadiiSborki = $unit->getConfig()?->poluchiKonfigStadiiSbork();
@@ -262,9 +262,12 @@ final class RunnerAdapter implements RunnerService
      * Тома юнита для передачи в activity: файлы медиатеки отдаются
      * идентификатором архива и временной ссылкой на скачивание.
      *
+     * Файл тома может быть черновиком/файлом юнита либо общим архивом
+     * каталога проекта — тогда ссылка строится по владельцу-проекту.
+     *
      * @return Volume[]
      */
-    private function makeVolumesListFromUnit(Unit $unit): array
+    private function makeVolumesListFromUnit(Unit $unit, Project $project): array
     {
         $result = [];
 
@@ -275,7 +278,8 @@ final class RunnerAdapter implements RunnerService
             }
 
             $fileId = (string) $volumeValue->getFileId();
-            $file = $this->mediatekaService->poluchitFaylDlyaVoluma($fileId, $unit->getId());
+            $file = $this->mediatekaService->poluchitFaylDlyaVoluma($fileId, $unit->getId())
+                ?? $this->mediatekaService->poluchitFaylProektaDlyaVoluma($fileId, $project->getId());
 
             if ($file === null) {
                 throw new \DomainException('unit.volumes.file_not_found');

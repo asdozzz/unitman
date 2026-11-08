@@ -8,7 +8,9 @@ use App\Mediateka\Acl\Adapter\AccountAdapter;
 use App\Mediateka\Business\Port\CanGenerateGuid;
 use App\Mediateka\Business\Port\CurrentUserProvider;
 use App\Mediateka\Business\Port\FaylUnitaRepository;
+use App\Mediateka\Business\Port\FileLinkChecker;
 use App\Mediateka\Business\Port\FileStorage;
+use App\Mediateka\Business\UseCase\UdalitFaylUseCase;
 use App\Mediateka\Infra\Adapter\MinioFileStorage;
 use App\Mediateka\Infra\Adapter\RamseyGuidGenerator;
 use App\Mediateka\Infra\Repository\SqlFaylUnitaRepository;
@@ -16,6 +18,7 @@ use App\Mediateka\Infra\S3\S3Settings;
 use App\Mediateka\Infra\S3\SigV4Signer;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return function (ContainerConfigurator $configuration) {
     $services = $configuration->services()
@@ -47,6 +50,10 @@ return function (ContainerConfigurator $configuration) {
         ->arg('$accessKey', '%env(MINIO_ROOT_USER)%')
         ->arg('$secretKey', '%env(MINIO_ROOT_PASSWORD)%')
         ->arg('$region', '%env(MINIO_REGION)%');
+
+    // Связи «файл ↔ внешняя сущность» регистрируют другие модули под этим тегом.
+    $services->set(UdalitFaylUseCase::class)
+        ->arg('$linkCheckers', tagged_iterator(FileLinkChecker::TAG));
 
     $services->set(FileStorage::class, MinioFileStorage::class);
     $services->set(FaylUnitaRepository::class, SqlFaylUnitaRepository::class);
