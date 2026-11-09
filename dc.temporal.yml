@@ -72,8 +72,7 @@ services:
       - DEFAULT_NAMESPACE=default
     volumes:
       - ./scripts:/scripts
-    entrypoint: ["/bin/sh"]
-    command: /scripts/create-namespace.sh
+    entrypoint: ["/bin/sh","/scripts/create-namespace.sh"]
 
   temporal-ui:
     container_name: temporal-ui
