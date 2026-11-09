@@ -69,3 +69,30 @@ actions:
     commands:
       - docker-compose logs ${UNITMAN_ACTION_SERVICE_NAME}
     prepare: true
+
+  - id: temporal-logs
+    name: "docker-compose temporal logs"
+    variables:
+      - id: SERVICE_NAME
+        label: SERVICE_NAME
+        type: collection
+        defaultValue: web
+        options:
+          options:
+            - id: temporal
+              name: temporal
+
+            - id: postgresql
+              name: postgresql
+
+            - id: temporal-admin-tools
+              name: temporal-admin-tools
+
+            - id: temporal-create-namespace
+              name: temporal-create-namespace
+
+            - id: temporal-ui
+              name: temporal-ui
+    commands:
+      - docker-compose -f dc.temporal.yml logs ${UNITMAN_ACTION_SERVICE_NAME}
+    prepare: true  
