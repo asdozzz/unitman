@@ -31,8 +31,9 @@ services:
       - POSTGRES_SEEDS=postgresql
       - SQL_PASSWORD=temporal
     volumes:
-      - ./scripts:/scripts:Z
-    entrypoint: ["/bin/sh", "/scripts/setup-postgres.sh"]
+      - ./scripts:/scripts
+    entrypoint: ["/bin/sh"]
+    command: /scripts/setup-postgres.sh
 
   temporal:
     image: temporalio/server:${TEMPORAL_VERSION}
@@ -70,8 +71,9 @@ services:
       - TEMPORAL_ADDRESS=temporal:7233
       - DEFAULT_NAMESPACE=default
     volumes:
-      - ./scripts:/scripts:Z
-    entrypoint: ["/bin/sh","/scripts/create-namespace.sh"]
+      - ./scripts:/scripts
+    entrypoint: ["/bin/sh"]
+    command: /scripts/create-namespace.sh
 
   temporal-ui:
     container_name: temporal-ui
