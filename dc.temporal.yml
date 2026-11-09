@@ -32,8 +32,7 @@ services:
       - SQL_PASSWORD=temporal
     volumes:
       - ./scripts:/scripts
-    entrypoint: ["/bin/sh"]
-    command: /scripts/setup-postgres.sh
+    entrypoint: ["/bin/sh", "/scripts/setup-postgres.sh"]
 
   temporal:
     image: temporalio/server:${TEMPORAL_VERSION}
