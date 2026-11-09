@@ -70,7 +70,7 @@ services:
       - TEMPORAL_ADDRESS=temporal:7233
       - DEFAULT_NAMESPACE=default
     volumes:
-      - ./scripts:/scripts
+      - ./scripts:/scripts:Z
     entrypoint: ["/bin/sh","/scripts/create-namespace.sh"]
 
   temporal-ui:
