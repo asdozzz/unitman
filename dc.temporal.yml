@@ -34,8 +34,6 @@ services:
       - ./scripts:/scripts
     entrypoint: ["/bin/sh"]
     command: /scripts/setup-postgres.sh
-    stdin_open: true
-    tty: true
 
   temporal:
     image: temporalio/server:${TEMPORAL_VERSION}
