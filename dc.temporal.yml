@@ -33,7 +33,7 @@ services:
     volumes:
       - ./scripts:/scripts
     entrypoint: ["/bin/sh"]
-    command: /app/scripts/setup-postgres.sh
+    command: /scripts/setup-postgres.sh
 
   temporal:
     image: temporalio/server:${TEMPORAL_VERSION}
@@ -73,7 +73,7 @@ services:
     volumes:
       - ./scripts:/scripts
     entrypoint: ["/bin/sh"]
-    command: /app/scripts/create-namespace.sh
+    command: /scripts/create-namespace.sh
 
   temporal-ui:
     container_name: temporal-ui
