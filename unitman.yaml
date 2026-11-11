@@ -14,9 +14,6 @@ services:
         - port: 8000
           type: 'ws'
 
-build:
-  image: asdozzz/dind-unit:latest
-
 prepare:
   - cp -f .env.dist .env
   - mkdir -p config/jwt
