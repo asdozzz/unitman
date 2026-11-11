@@ -2,6 +2,7 @@ variables:
   - id: FIRST_SERVICE_HOST:
     label: Название сервиса 1
     type: string
+    defaultValue: "test"
 
 services:
     web:
