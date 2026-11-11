@@ -27,9 +27,9 @@ final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
             try {
                 $this->ocheredUnitovActivity->obrabotatZadachu($zadacha);
             } catch (\Throwable $e) {
-                echo "AAAAAAAAA:".$e->getMessage()."\n";
-                //$this->logger->error($e->getMessage());
-                //continue;
+                //echo "AAAAAAAAA:".$e->getMessage()."\n";
+                $this->logger->error($e->getMessage());
+                continue;
             }
         }
 

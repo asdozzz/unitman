@@ -126,7 +126,7 @@ final class ProjectionsManager
         $this->connection->beginTransaction();
         try {
             foreach ($this->projections as $projection) {
-                if (!$projection->isAllowedRebuild()) return;
+                if (!$projection->isAllowedRebuild()) continue;
                 $this->checkpointStore->resetCheckpoint($projection->getProjectionName());
                 $projection->init();
                 $projection->reset();
@@ -217,13 +217,7 @@ final class ProjectionsManager
         $oldCheckpoint = $checkpoint;
 
         foreach ($events as $event) {
-            try {
-                $projection->handle($event);
-            } catch (\Throwable $e) {
-                if ($this->appEnv === "test") {
-                    throw $e;
-                }
-            }
+            $projection->handle($event);
 
             $checkpoint++;
         }
