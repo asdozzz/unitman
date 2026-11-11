@@ -6,9 +6,7 @@ variables:
 
   - id: SOCKET_SERVICE
     label: Сервис сокетов
-    type: unit
-    options:
-        projectCode: services/socket
+    type: string
     helper:
         projectId: services/socket
         service: web

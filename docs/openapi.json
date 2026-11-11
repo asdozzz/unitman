@@ -6631,8 +6631,7 @@
                             "string",
                             "integer",
                             "float",
-                            "collection",
-                            "unit"
+                            "collection"
                         ]
                     },
                     "defaultValue": {
@@ -6886,8 +6885,7 @@
                             "string",
                             "integer",
                             "float",
-                            "collection",
-                            "unit"
+                            "collection"
                         ]
                     },
                     "defaultValue": {

@@ -283,7 +283,7 @@ Append under `components.schemas`:
                             type: string
                         type:
                             type: string
-                            enum: [string, integer, float, collection, unit]
+                            enum: [string, integer, float, collection]
                         defaultValue:
                             type: string
                         options:

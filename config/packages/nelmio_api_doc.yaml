@@ -839,7 +839,7 @@ nelmio_api_doc:
                             type: string
                         type:
                             type: string
-                            enum: [string, integer, float, collection, unit]
+                            enum: [string, integer, float, collection]
                         defaultValue:
                             type: string
                         options:
@@ -980,7 +980,7 @@ nelmio_api_doc:
                             type: string
                         type:
                             type: string
-                            enum: [string, integer, float, collection, unit]
+                            enum: [string, integer, float, collection]
                         defaultValue:
                             type: string
                         options:

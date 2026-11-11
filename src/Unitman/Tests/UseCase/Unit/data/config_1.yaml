@@ -18,9 +18,7 @@ variables:
 
   - id: ORDER_SERVICE
     label: Сервис заказов
-    type: unit
-    options:
-        projectCode: services/orders
+    type: string
     helper:
         projectId: services/orders
         service: web

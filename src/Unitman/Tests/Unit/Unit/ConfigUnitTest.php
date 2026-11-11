@@ -39,11 +39,8 @@ final class ConfigUnitTest extends TestCase
                 [
                     'id' => 'ORDER_SERVICE',
                     'label' => 'ORDER_SERVICE',
-                    'type' => 'unit',
+                    'type' => 'string',
                     'defaultValue' => 'master',
-                    'options' => [
-                        'projectCode' => 'services/orders'
-                    ],
                     'helper' => [
                         'projectId' => 'services/orders',
                         'service' => 'web',
@@ -190,11 +187,8 @@ final class ConfigUnitTest extends TestCase
             [
                 'id' => 'WS_SERVICE',
                 'label' => 'WS_SERVICE',
-                'type' => 'unit',
+                'type' => 'string',
                 'defaultValue' => 'master',
-                'options' => [
-                    'projectCode' => 'services/ws',
-                ],
                 'helper' => [
                     'projectId' => 'services/ws',
                     'service' => 'web',
@@ -225,11 +219,8 @@ final class ConfigUnitTest extends TestCase
             [
                 'id' => 'BAD_SERVICE',
                 'label' => 'BAD_SERVICE',
-                'type' => 'unit',
+                'type' => 'string',
                 'defaultValue' => 'master',
-                'options' => [
-                    'projectCode' => 'services/bad',
-                ],
                 'helper' => [
                     'projectId' => 'services/bad',
                     'service' => 'web',
@@ -294,18 +285,15 @@ final class ConfigUnitTest extends TestCase
     /**
      * @test
      * */
-    function nevalidnii_pomoschnik_bez_projectCode()
+    function nevalidnii_pomoschnik_bez_projectId()
     {
         $configAsArray = [
             'variables' => [
                 [
                     'id' => 'ORDER_SERVICE',
                     'label' => 'ORDER_SERVICE',
-                    'type' => 'unit',
+                    'type' => 'string',
                     'defaultValue' => 'master',
-                    'options' => [
-                        'projectCode' => 'services/orders'
-                    ],
                     'helper' => [
                         'service' => 'web',
                         'port' => 8080

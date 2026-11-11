@@ -287,7 +287,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
             'source-unit',
             'feature/123',
             [
-                new SozdatUnit\ZnacheniePeremenoi('ORDER_SERVICE', $targetUnitId, 'unit', $targetUnitId),
+                new SozdatUnit\ZnacheniePeremenoi('ORDER_SERVICE', $targetUnitId, 'string', $targetUnitId),
             ],
             500
         ));
