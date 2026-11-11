@@ -48,7 +48,7 @@ final class RunnerHealthCheckWorkflowJob implements BackgroundJobInterface
 
     function getDelay(): int
     {
-        return 30;
+        return 300;
     }
 
     function getProcessNum(): int
