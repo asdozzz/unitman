@@ -14,6 +14,7 @@ use App\Unitman\Business\UseCase\Project\Webhook\PoluchitSpisokWebhookovProektaD
 use App\Unitman\Business\UseCase\Project\Webhook\UdalitWebhookProektaUseCase;
 use App\Unitman\Business\UseCase\Project\Webhook\VkluchitWebhookProektaUseCase;
 use App\Unitman\Business\UseCase\Unit\WebhookEvent\PoluchitSobitiyaWebhookaUseCase;
+use App\Utils\Service\ExceptionTranslator;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,6 +23,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/project/webhook')]
 final class ProjectWebhookController extends AbstractController
 {
+    public function __construct(private ExceptionTranslator $exceptionTranslator)
+    {
+    }
+
     #[OA\Post(
         path: '/api/project/webhook/dobavit',
         summary: "Добавить webhook проекту",
@@ -54,7 +59,7 @@ final class ProjectWebhookController extends AbstractController
             $id = $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success(['id' => $id]));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -93,7 +98,7 @@ final class ProjectWebhookController extends AbstractController
         try {
             return $this->json(\App\Utils\Model\Reponse\Response::success($useCase->handle($projectId)));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -128,7 +133,7 @@ final class ProjectWebhookController extends AbstractController
             $useCase->handle($id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -163,7 +168,7 @@ final class ProjectWebhookController extends AbstractController
             $useCase->handle($id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -198,7 +203,7 @@ final class ProjectWebhookController extends AbstractController
             $useCase->handle($id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -232,7 +237,7 @@ final class ProjectWebhookController extends AbstractController
         try {
             return $this->json(\App\Utils\Model\Reponse\Response::success($repository->getReadModelById($id)));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -268,7 +273,7 @@ final class ProjectWebhookController extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -303,7 +308,7 @@ final class ProjectWebhookController extends AbstractController
         try {
             return $this->json(\App\Utils\Model\Reponse\Response::success($useCase->handle($command)));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 }

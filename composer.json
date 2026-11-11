@@ -106,6 +106,7 @@
             "@php bin/console nelmio:apidoc:dump --format=json > docs/openapi.json"
         ],
         "check-openapi": "php vendor/bin/phpunit --filter=OpenApiDocumentationTest",
+        "check-translations": "php bin/console app:translations:audit",
         "check-account-deptrac": "php deptrac.phar analyze --config-file=./src/Account/deptrac.yaml",
         "check-background-deptrac": "php deptrac.phar analyze --config-file=./src/BackgroundJob/deptrac.yaml",
         "check-runner-deptrac": "php deptrac.phar analyze --config-file=./src/Runner/deptrac.yaml",
@@ -115,6 +116,7 @@
         "all-checks": [
             "@check-psalm",
             "@check-phpunit",
+            "@check-translations",
             "@check-deptrac",
             "@check-account-deptrac",
             "@check-background-deptrac",

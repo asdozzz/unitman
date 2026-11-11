@@ -3,6 +3,7 @@
 namespace App\Account\Business\Model;
 
 use App\Account\Business\Model\Account\Role;
+use App\Utils\Model\Locale\SupportedLocale;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
@@ -14,21 +15,22 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
         private string $password,
         private array $roles,
         private bool $isBlocked = false,
-        private string $locale = 'ru',
+        private string $locale = SupportedLocale::CANON_VALUE,
         private ?string $nickname = null
     )
     {
     }
 
-    public static function createFromPayload($username, array $payload)
+    public static function createFromPayload($username, array $payload): self
     {
         return new self(
             $payload['id'],
             $username,
             $payload['password'],
             $payload['roles'],
-            $payload['isBlocked'],
-            $payload['nickname'] ?? ""
+            (bool) ($payload['isBlocked'] ?? false),
+            SupportedLocale::normalize($payload['locale'] ?? null),
+            $payload['nickname'] ?? null,
         );
     }
 

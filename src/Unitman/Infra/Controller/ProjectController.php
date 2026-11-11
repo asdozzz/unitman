@@ -54,6 +54,7 @@ use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
 use App\Unitman\Infra\Service\ServiceProverkiProxyHost;
+use App\Utils\Service\ExceptionTranslator;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -65,6 +66,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/project')]
 final class ProjectController extends AbstractController
 {
+    public function __construct(private ExceptionTranslator $exceptionTranslator)
+    {
+    }
+
     #[OA\Post(
         path: '/api/project/list',
         summary: 'Список проектов',
@@ -340,7 +345,7 @@ final class ProjectController extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
 
     }
@@ -881,7 +886,7 @@ final class ProjectController extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -917,7 +922,7 @@ final class ProjectController extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -952,7 +957,7 @@ final class ProjectController extends AbstractController
         try {
             return $this->json(\App\Utils\Model\Reponse\Response::success(['result' => $service->proverit($command->proxyHost)]));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 }

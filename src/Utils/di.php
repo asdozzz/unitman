@@ -16,6 +16,7 @@ return function (ContainerConfigurator $configuration) {
         ->autowire()
         ->autoconfigure()
         ->bind('$projectDir','%kernel.project_dir%')
+        ->bind('$defaultLocale','%env(DEFAULT_LOCALE)%')
     ;
 
     $services->load('App\\Utils\\', './')

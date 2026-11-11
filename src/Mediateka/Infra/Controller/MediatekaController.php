@@ -16,6 +16,7 @@ use App\Mediateka\Business\UseCase\UdalitFaylUseCase;
 use App\Mediateka\Business\UseCase\ZagruzitFaylUnitaUseCase;
 use App\Utils\Model\Reponse\ErrorResponse\ErrorCodeEnum;
 use App\Utils\Model\Reponse\Response;
+use App\Utils\Service\ExceptionTranslator;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,6 +28,10 @@ use Throwable;
 #[Route('/api/mediateka')]
 final class MediatekaController extends AbstractController
 {
+    public function __construct(private ExceptionTranslator $exceptionTranslator)
+    {
+    }
+
     #[OA\Post(
         path: '/api/mediateka/upload',
         summary: 'Загрузить zip-архив',
@@ -101,7 +106,7 @@ final class MediatekaController extends AbstractController
         try {
             $uploadedFile = $request->files->get('file');
             if ($uploadedFile === null) {
-                return new JsonResponse(Response::error('mediateka.upload.file_is_missing', ErrorCodeEnum::DEFAULT));
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.upload.file_is_missing'), ErrorCodeEnum::DEFAULT));
             }
 
             $unitId = (string) $request->request->get('unitId', '');
@@ -110,7 +115,7 @@ final class MediatekaController extends AbstractController
 
             $stream = fopen($uploadedFile->getPathname(), 'rb');
             if ($stream === false) {
-                return new JsonResponse(Response::error('mediateka.upload.file_is_unreadable'));
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.upload.file_is_unreadable')));
             }
 
             try {
@@ -129,7 +134,7 @@ final class MediatekaController extends AbstractController
 
             return $this->json(Response::success($this->fileToArray($file)));
         } catch (Throwable $e) {
-            return new JsonResponse(Response::error($e->getMessage()));
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
         }
     }
 
@@ -194,17 +199,17 @@ final class MediatekaController extends AbstractController
         try {
             $body = json_decode($request->getContent(), true);
             if (!is_array($body)) {
-                return new JsonResponse(Response::error('mediateka.bind.body_format_invalid'));
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.body_format_invalid')));
             }
 
             $unitId = $body['unitId'] ?? '';
             if (!is_string($unitId)) {
-                return new JsonResponse(Response::error('mediateka.bind.body_format_invalid'));
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.body_format_invalid')));
             }
 
             $fileIds = $body['fileIds'] ?? [];
             if (!is_array($fileIds)) {
-                return new JsonResponse(Response::error('mediateka.bind.file_ids_format_invalid'));
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.file_ids_format_invalid')));
             }
 
             $files = $useCase->handle(new PrikrepitFaylyKUnitu($unitId, $fileIds));
@@ -213,7 +218,7 @@ final class MediatekaController extends AbstractController
                 array_map(fn (FaylUnita $file): array => $this->fileToArray($file), $files)
             ));
         } catch (Throwable $e) {
-            return new JsonResponse(Response::error($e->getMessage()));
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
         }
     }
 
@@ -260,7 +265,7 @@ final class MediatekaController extends AbstractController
         try {
             $file = $poluchitFaylQuery->handle($id);
             if ($file === null) {
-                return new JsonResponse(Response::error('mediateka.file.not_found'));
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.file.not_found')));
             }
 
             return $this->json(Response::success([
@@ -268,7 +273,7 @@ final class MediatekaController extends AbstractController
                 'url' => $ssylkaQuery->handle($file->getId()),
             ]));
         } catch (Throwable $e) {
-            return new JsonResponse(Response::error($e->getMessage()));
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
         }
     }
 
@@ -322,7 +327,7 @@ final class MediatekaController extends AbstractController
 
             return $this->json(Response::success($files));
         } catch (Throwable $e) {
-            return new JsonResponse(Response::error($e->getMessage()));
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
         }
     }
 
@@ -369,7 +374,7 @@ final class MediatekaController extends AbstractController
 
             return $this->json(Response::successStub());
         } catch (Throwable $e) {
-            return new JsonResponse(Response::error($e->getMessage()));
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
         }
     }
 

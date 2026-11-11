@@ -18,7 +18,6 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     container_name: exporter
-    hostname: exporter
     command:
       - --path.procfs=/host/proc
       - --path.sysfs=/host/sys
@@ -35,7 +34,6 @@ services:
     volumes:
       - ./.docker/prometheus:/etc/prometheus/
     container_name: prometheus
-    hostname: prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     ports:
@@ -55,7 +53,6 @@ services:
     #volumes:
     #  - ./var/volume/grafana:/var/lib/grafana
     container_name: grafana
-    hostname: grafana
     restart: unless-stopped
     environment:
       TZ: "Europe/Moscow"

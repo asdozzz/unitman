@@ -55,7 +55,7 @@ final class ObrabotatProzesiUnitaUseCase
             RunnerJobType::SBROS_PODGOTOVKI => $this->sbrosPodgotovki($unit, $job),
             RunnerJobType::UDALENIE => $this->udalenie($unit, $job),
             RunnerJobType::DEISTVIE => $this->deistvie($unit, $job),
-            default => throw new \DomainException('unit.obrabotka_prozesa.tip_ne_opredelen.'.$job->getType()->value),
+            default => throw new \DomainException('unit.obrabotka_prozesa.tip_ne_opredelen: '.$job->getType()->value),
         };
     }
 

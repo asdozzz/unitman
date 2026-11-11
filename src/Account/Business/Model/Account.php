@@ -21,6 +21,7 @@ use App\Account\Business\Model\Event\PasswordWasChangedByAdmin;
 use App\Account\Business\Model\Event\RoleWasChangedByAdmin;
 use App\Account\Business\Model\Event\SystemAccountWasRegistered;
 use App\Utils\Exception\TranslatorKeyword;
+use App\Utils\Model\Locale\SupportedLocale;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 use EventSauce\EventSourcing\AggregateRootId;
@@ -88,6 +89,10 @@ final class Account implements AggregateRoot
 
     public function changeMyLocale(ChangeMyLocale $command): void
     {
+        if (!SupportedLocale::isSupported($command->locale)) {
+            throw new \DomainException('account.locale_not_supported');
+        }
+
         if ($this->locale === $command->locale) {
             throw new \DomainException('account.old_locale_equal_new_locale');
         }

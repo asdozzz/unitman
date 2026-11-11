@@ -6,6 +6,7 @@ use App\Initialization\Business\Command\ObnovitDefoltnyiProxyHost;
 use App\Initialization\Business\Port\InitializationRepository;
 use App\Initialization\Business\UseCase\ObnovitDefoltnyiProxyHostUseCase;
 use App\Initialization\Infra\Repository\SqlInitializationRepository;
+use App\Utils\Service\ExceptionTranslator;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,6 +17,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/initialization')]
 final class InitializationController extends AbstractController
 {
+    public function __construct(private ExceptionTranslator $exceptionTranslator)
+    {
+    }
+
     #[OA\Put(
         path: '/api/initialization/proxy_host',
         summary: 'Обновить defoltnый proxy host',
@@ -47,7 +52,7 @@ final class InitializationController extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Throwable $e) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($e->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($e)));
         }
     }
 
@@ -82,7 +87,7 @@ final class InitializationController extends AbstractController
         try {
             return $this->json(\App\Utils\Model\Reponse\Response::success($repository->getAll()));
         } catch (\Throwable $e) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($e->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($e)));
         }
     }
 }

@@ -51,6 +51,7 @@ use App\Unitman\Business\UseCase\Unit\UdalitSlomaniyUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
 use App\Unitman\Infra\Projection\SpisokUnitovProjection;
 use App\Unitman\Infra\Service\RebuildService;
+use App\Utils\Service\ExceptionTranslator;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -61,6 +62,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/unit')]
 final class UnitConroller extends AbstractController
 {
+    public function __construct(private ExceptionTranslator $exceptionTranslator)
+    {
+    }
+
     #[OA\Post(
         path: '/api/unit/sozdat',
         summary: 'Создать юнит',
@@ -93,7 +98,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -275,7 +280,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -311,7 +316,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -347,7 +352,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -383,7 +388,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -419,7 +424,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -455,7 +460,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -491,7 +496,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -527,7 +532,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -563,7 +568,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -606,7 +611,7 @@ final class UnitConroller extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -660,7 +665,7 @@ final class UnitConroller extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -696,7 +701,7 @@ final class UnitConroller extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Throwable $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -737,7 +742,7 @@ final class UnitConroller extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -778,7 +783,7 @@ final class UnitConroller extends AbstractController
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -814,7 +819,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -850,7 +855,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -904,7 +909,7 @@ final class UnitConroller extends AbstractController
             $data = $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -940,7 +945,7 @@ final class UnitConroller extends AbstractController
             $service->handle(SpisokUnitovProjection::CODE, $command->id);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Throwable $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 
@@ -976,7 +981,7 @@ final class UnitConroller extends AbstractController
             $useCase->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::successStub());
         } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($error->getMessage()));
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
     }
 }

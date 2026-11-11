@@ -40,7 +40,7 @@ return function (ContainerConfigurator $configuration) {
         ->autowire()
         ->autoconfigure()
         ->bind('$appEnv','%env(APP_ENV)%')
-        ->bind('$defaultLocale','%env(DEFAULT_LOCALE)%')
+        ->bind('$defaultLocale','%env(ACCOUNT_DEFAULT_LOCALE)%')
         ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%');
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')

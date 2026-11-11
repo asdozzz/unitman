@@ -42,7 +42,6 @@ services:
   beanstalk:
     container_name: beanstalk
     image: touchify/beanstalkd
-    hostname: beanstalk
     restart: always
     volumes:
       - ./var/volume/beanstalk:/var/cache/beanstalkd

@@ -10,12 +10,13 @@ namespace App\Utils\Converter;
 
 use App\App\Exception\Dump;
 use App\Utils\Service\DoctrineReconnectHelper;
+use App\Utils\Service\ExceptionTranslator;
 use \Exception;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 
 /**
@@ -25,8 +26,11 @@ use Throwable;
 #[AsEventListener(event: ExceptionEvent::class, method: 'onKernelException')]
 class BaseExceptionListener
 {
-    public function __construct(private TranslatorInterface $translator, private DoctrineReconnectHelper $doctrineReconnectHelper)
-    {
+    public function __construct(
+        private ExceptionTranslator $exceptionTranslator,
+        private DoctrineReconnectHelper $doctrineReconnectHelper,
+        private RequestStack $requestStack,
+    ) {
     }
 
     /**
@@ -62,15 +66,13 @@ class BaseExceptionListener
 
     function makeFail(\Throwable $exception): JsonResponse
     {
-        $message = $exception->getMessage();
-        $this->translator->trans($message);
+        $message = $this->translate($exception);
         return new JsonResponse(\App\Utils\Model\Reponse\Response::fail(['message' => $message]));
     }
 
     function makeError(\Throwable $exception): JsonResponse
     {
-        $message = $exception->getMessage();
-        $this->translator->trans($message);
+        $message = $this->translate($exception);
         return new JsonResponse(\App\Utils\Model\Reponse\Response::error($message));
     }
 
@@ -78,5 +80,12 @@ class BaseExceptionListener
     {
         $this->doctrineReconnectHelper->reconnectIfNeed();
         return $this->makeError($exception);
+    }
+
+    private function translate(\Throwable $exception): string
+    {
+        $locale = $this->requestStack->getCurrentRequest()?->getLocale();
+
+        return $this->exceptionTranslator->translateThrowable($exception, $locale);
     }
 }//end class
