@@ -1,0 +1,78 @@
+services:
+  web:
+    extends:
+      file: common-services.yml
+      service: web
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    depends_on:
+      buggregator:
+        condition: service_started
+      beanstalk:
+        condition: service_started
+      centrifugo:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      - PHP_OPCACHE_ENABLE=0
+      - PHP_OPCACHE_ENABLE_CLI=0
+      - PHP_ERROR_REPORTING="E_ALL"
+      - PHP_DISPLAY_ERRORS=On
+      # RoadRunner KV (kv.redis в .rr.yaml) читает эти переменные из окружения
+      # процесса, а не из .env через Symfony Dotenv.
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    extra_hosts:
+      - "uproxy:host-gateway"
+      
+  postgres:
+    extends:
+      file: common-services.yml
+      service: postgres
+
+  beanstalk:
+    extends:
+      file: common-services.yml
+      service: beanstalk
+
+  centrifugo:
+    extends:
+      file: common-services.yml
+      service: centrifugo
+
+  redis:
+    extends:
+      file: common-services.yml
+      service: redis
+
+  minio:
+    extends:
+      file: common-services.yml
+      service: minio
+
+  minio-init:
+    extends:
+      file: common-services.yml
+      service: minio-init
+
+  # Buggregator принимает Ray/VarDumper (9912) и Monolog socket (9913).
+  # Без объявления сервиса depends_on: buggregator в web не разрешается.
+  buggregator:
+    extends:
+      file: common-services.yml
+      service: buggregator
+
+networks:
+  default:
+    external: true
+    name: unitman_default
+
+
