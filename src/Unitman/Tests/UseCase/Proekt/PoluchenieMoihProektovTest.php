@@ -13,7 +13,7 @@ use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Repo\RepoType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\ProjectList;
@@ -26,13 +26,12 @@ use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\UstanovitResultatSborkiProektaUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Acl\MemoryRunnerService;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function poluchenie_moih_proektov()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -42,7 +41,7 @@ final class PoluchenieMoihProektovTest extends AbstractProjectUseCase
         $projectId = Uuid::uuid7()->toString();
         $projectId2 = Uuid::uuid7()->toString();
         $projectId3 = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId, $projectId, $projectId2, $projectId3]));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$repoId, $projectId, $projectId2, $projectId3]));
 
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);

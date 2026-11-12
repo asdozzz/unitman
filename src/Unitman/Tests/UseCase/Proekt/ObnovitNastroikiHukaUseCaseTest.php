@@ -7,13 +7,12 @@ use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\ProjectList\NastroikiHukaProekta;
 use App\Unitman\Business\UseCase\Project\ObnovitNastroikiHukaUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class ObnovitNastroikiHukaUseCaseTest extends AbstractProjectUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function nastroiki_huka_obnovleni()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -24,7 +23,7 @@ final class ObnovitNastroikiHukaUseCaseTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
 
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
         /** @var $projectListRepo SqlProjectListRepository*/

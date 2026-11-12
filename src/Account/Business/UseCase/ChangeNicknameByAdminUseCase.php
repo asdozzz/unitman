@@ -2,7 +2,6 @@
 
 namespace App\Account\Business\UseCase;
 
-use App\Account\Business\Command\ChangeEmailByAdmin;
 use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Port\AccountRepository;
 use App\Account\Business\Port\CanFindDouble;

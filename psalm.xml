@@ -1,4 +1,15 @@
 <?xml version="1.0"?>
+<!--
+    Psalm level 1.
+
+    Правило проекта: не добавлять новые @psalm-suppress без необходимости.
+    Ниже оставлены только те подавления, которые действительно скрывают
+    существующие срабатывания (проверено прогоном с пустым <issueHandlers>:
+    640 находок). Всё, что не находило ни одного срабатывания, удалено:
+      * TooManyTemplateParams      — 0 срабатываний;
+      * LessSpecificReturnType     — 0 срабатываний;
+      * findUnusedBaselineEntry    — baseline-файла в проекте нет.
+-->
 <psalm
     level="1"
     resolveFromConfigFile="true"
@@ -6,7 +17,6 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
-    findUnusedBaselineEntry="true"
     findUnusedCode="false"
 >
     <projectFiles>
@@ -16,21 +26,62 @@
             <directory name="tests" />
             <directory name="src/*/Tests" />
             <directory name="src/*/Migrations" />
+            <!--
+                Единственное исключение файла. MigrationFactoryDecorator —
+                это декоратор doctrine.migrations.migrations_factory, и внедрение
+                ContainerInterface здесь является смыслом паттерна, а не ошибкой:
+                Psalm-правило ContainerDependency рассчитано на бизнес-сервисы.
+                Проверено: без исключения файл даёт 6 находок, из которых 5 —
+                следствие одной ложной (ContainerDependency), а UndefinedDocblockClass
+                на трейте MigrationWithContainer — ложное срабатывание Psalm на
+                @var-докблоке с трейтом. Файл покрыт интеграционным прогоном
+                миграций (doctrine:migrations:migrate).
+            -->
             <file name="./src/Utils/Service/MigrationFactoryDecorator.php"/>
-            <file name="./src/Unitman/Infra/Controller/TestController.php"/>
         </ignoreFiles>
     </projectFiles>
     <plugins>
         <pluginClass class="Psalm\SymfonyPsalmPlugin\Plugin"/>
     </plugins>
     <issueHandlers>
-        <RiskyTruthyFalsyComparison errorLevel="suppress"/>
-        <TooManyTemplateParams errorLevel="suppress"/>
+        <!--
+            494 срабатывания. Psalm 6 требует #[Override] на каждом
+            переопределённом методе (getUserIdentifier, __toString, execute,
+            configure и т.д.). Массовая простановка атрибута — отдельная
+            механическая задача, она не должна блокировать текущие проверки.
+            TODO: включить правило и проставить #[Override] по коду.
+        -->
         <MissingOverrideAttribute errorLevel="suppress" />
+        <!--
+            79 срабатываний: сравнения вида if ($value) для null|string.
+            Часть из них — реальные риски (пустая строка трактуется как false),
+            но исправление требует пересмотра поведения в 79 местах и должно
+            делаться отдельным этапом с тестами на пустые значения.
+        -->
+        <RiskyTruthyFalsyComparison errorLevel="suppress"/>
+        <!--
+            32 срабатывания: классы без final, которые никто не наследует.
+            Пометка final безопасна, но затрагивает события, команды и
+            Value Object'ы — выносится отдельной задачей, чтобы не смешивать
+            с текущими правками.
+        -->
         <ClassMustBeFinal errorLevel="suppress" />
+        <!--
+            19 срабатываний: передача string туда, где ожидается non-empty-string
+            (RPC::create, AccountId::fromString). Требует явных проверок
+            непустоты в местах вызова — отдельная задача.
+        -->
         <ArgumentTypeCoercion errorLevel="suppress" />
+        <!--
+            6 срабатываний: конструкторы, инициализирующие свойства не в __construct
+            (наследие старого кода с отдельным init()).
+        -->
         <MissingConstructor errorLevel="suppress" />
-        <LessSpecificReturnType errorLevel="suppress" />
+        <!--
+            5 + 5 срабатываний: расхождение заявленного и выведенного типа
+            возврата (non-empty-string vs string) в Value Object'ах Account.
+            Исправляется простановкой явного приведения типа — отдельная задача.
+        -->
         <LessSpecificReturnStatement errorLevel="suppress" />
         <MoreSpecificReturnType errorLevel="suppress" />
      </issueHandlers>

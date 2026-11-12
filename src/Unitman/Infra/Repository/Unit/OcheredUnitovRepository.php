@@ -4,7 +4,6 @@ namespace App\Unitman\Infra\Repository\Unit;
 
 use App\Unitman\Business\ReadModel\Unit\OcheredUnitovReadModel;
 use Doctrine\DBAL\Connection;
-use Symfony\Component\Serializer\Serializer;
 
 final class OcheredUnitovRepository
 {

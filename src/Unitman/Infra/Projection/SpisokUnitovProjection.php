@@ -40,15 +40,12 @@ use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
-use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\Utils\SvyaziPeremenihUtil;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
-use App\Unitman\Infra\Repository\Unit\SqlUnitEventsRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
-use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 final class SpisokUnitovProjection extends AbstractProjection implements UnitmanProjection
 {

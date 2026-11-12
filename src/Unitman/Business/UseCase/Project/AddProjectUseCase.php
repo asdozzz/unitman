@@ -4,7 +4,7 @@ namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Model\Project;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\CanFindProjectDouble;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -13,7 +13,7 @@ final class AddProjectUseCase
 {
     public function __construct(
         private CanFindProjectDouble $canFindDouble,
-        private CanGeneateGuid $canGeneateGuid,
+        private CanGenerateGuid $canGenerateGuid,
         private ProjectRepository $projectRepository,
         private UnitmanSecurityService $securityService
     )
@@ -30,7 +30,7 @@ final class AddProjectUseCase
             throw new \DomainException('project.double');
         }
 
-        $projectId = $this->canGeneateGuid->makeGuid();
+        $projectId = $this->canGenerateGuid->makeGuid();
 
         $project = Project::addProject($projectId, $command, $this->securityService->getCurrentUserId());
         $this->projectRepository->save($project);

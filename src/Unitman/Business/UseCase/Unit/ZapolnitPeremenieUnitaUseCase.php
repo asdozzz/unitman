@@ -7,7 +7,7 @@ namespace App\Unitman\Business\UseCase\Unit;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita;
 use App\Unitman\Business\Command\Unit\ZapolnitPeremenieUnita\SvyazPeremenoi;
 use App\Unitman\Business\Model\Unit\PeremennayaSvyaz;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
@@ -20,7 +20,7 @@ final class ZapolnitPeremenieUnitaUseCase
         private UnitRepository $unitRepository,
         private ProjectRepository $projectRepository,
         private UnitmanSecurityService $securityService,
-        private CanGeneateGuid $canGeneateGuid,
+        private CanGenerateGuid $canGenerateGuid,
         private MediatekaService $mediatekaService,
         private ProverkaFaylovVolumov $proverkaFaylovVolumov,
         private ProverkaSvyazeyPeremenih $proverkaSvyazeyPeremenih,
@@ -61,7 +61,7 @@ final class ZapolnitPeremenieUnitaUseCase
 
         $unit->zapolnitPeremenie($command->values, $command->volumes, $svyazi);
         if ($unit->esliZapushen() || $unit->esliPodgotovlen()) {
-            $prozesId = $this->canGeneateGuid->makeGuid();
+            $prozesId = $this->canGenerateGuid->makeGuid();
             $unit->dobavitProzesObnovleniya($userId, $prozesId, true, $project->poluchitNastroikiHuka()->obnovlenieBezSbrosaPodgotovki);
         }
         $this->unitRepository->save($unit);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Unitman\Infra\BackgroundJob\OtpravkaZadachVOchered;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
@@ -10,16 +12,18 @@ use Spiral\RoadRunner\Jobs\Jobs;
 
 final class OtpravkaZadachVOcheredBackgroundJob extends AbstractBackgroundJob
 {
-    public function __construct(private ZadachaDlyOcherediRepository $zadachaDlyOcherediRepository)
-    {
+    public function __construct(
+        private ZadachaDlyOcherediRepository $zadachaDlyOcherediRepository,
+        private string $roadRunnerRpcAddress,
+    ) {
     }
 
-    function getName(): string
+    public function getName(): string
     {
         return 'otpravkaZadachVOchered';
     }
 
-    function run(): bool
+    public function run(): bool
     {
         $zadachi = $this->zadachaDlyOcherediRepository->poluchitZadachiNaObrabotku(200);
 
@@ -29,7 +33,7 @@ final class OtpravkaZadachVOcheredBackgroundJob extends AbstractBackgroundJob
             $tree[$zadacha->queueName][] = $zadacha;
         }
 
-        $jobs = new Jobs(RPC::create('tcp://127.0.0.1:6001'));
+        $jobs = new Jobs(RPC::create($this->roadRunnerRpcAddress));
 
         foreach ($tree as $queueName => $tasks) {
             $queue = $jobs->connect($queueName);

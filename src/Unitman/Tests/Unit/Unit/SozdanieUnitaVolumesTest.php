@@ -9,6 +9,7 @@ use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\VolumeValue;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -17,9 +18,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class SozdanieUnitaVolumesTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function toma_iz_zaprosa_popadayut_v_event_i_v_agregat(): void
     {
         $unit = $this->sozdatUnit([
@@ -49,9 +48,7 @@ final class SozdanieUnitaVolumesTest extends TestCase
         $this->assertFalse($volumes[1]->esliSFaylom());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function bez_tomov_sobitie_soderzhit_pustoi_massiv(): void
     {
         $unit = $this->sozdatUnit();
@@ -60,9 +57,7 @@ final class SozdanieUnitaVolumesTest extends TestCase
         $this->assertSame([], $unit->poluchitVolumeUnita());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function dublikat_dir_otklonyaetsya(): void
     {
         $this->expectException(\DomainException::class);
@@ -74,9 +69,7 @@ final class SozdanieUnitaVolumesTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoie_imia_toma_otklonyaetsya(): void
     {
         $this->expectException(\DomainException::class);

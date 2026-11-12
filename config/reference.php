@@ -1727,23 +1727,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         temporal?: TemporalConfig,
  *         nelmio_api_doc?: NelmioApiDocConfig,
  *     },
- *     "when@eee"?: array{
- *         imports?: ImportsConfig,
- *         parameters?: ParametersConfig,
- *         services?: ServicesConfig,
- *         framework?: FrameworkConfig,
- *         twig?: TwigConfig,
- *         security?: SecurityConfig,
- *         monolog?: MonologConfig,
- *         doctrine?: DoctrineConfig,
- *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
- *         doctrine_migrations?: DoctrineMigrationsConfig,
- *         nelmio_cors?: NelmioCorsConfig,
- *         fluffy_discord_road_runner?: FluffyDiscordRoadRunnerConfig,
- *         fresh_centrifugo?: FreshCentrifugoConfig,
- *         temporal?: TemporalConfig,
- *         nelmio_api_doc?: NelmioApiDocConfig,
- *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1862,7 +1845,6 @@ namespace Symfony\Component\Routing\Loader\Configurator;
  * }
  * @psalm-type RoutesConfig = array{
  *     "when@dev"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
- *     "when@eee"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     "when@prod"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     "when@test"?: array<string, RouteConfig|ImportConfig|AliasConfig>,
  *     ...<string, RouteConfig|ImportConfig|AliasConfig>

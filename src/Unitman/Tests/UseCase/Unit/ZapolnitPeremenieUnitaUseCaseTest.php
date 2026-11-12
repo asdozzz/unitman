@@ -28,6 +28,7 @@ use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SvyaziUnitovRepository;
 use App\Unitman\Infra\Service\RebuildService;
 use EventSauce\EventSourcing\Message;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Yaml\Yaml;
 
@@ -43,9 +44,8 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
 {
     /**
      * Связь фиксируется в агрегате, в read-модели списка и в проекции.
-     *
-     * @test
      */
+    #[Test]
     function svyazi_fiksiruyutsya_pri_zapolnenii_peremenih()
     {
         $stend = $this->stend();
@@ -89,9 +89,8 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
 
     /**
      * Пустой список связей означает «связи не меняются».
-     *
-     * @test
      */
+    #[Test]
     function pustoy_spisok_svyazey_sohranyaet_tekushie()
     {
         $stend = $this->stend();
@@ -124,9 +123,8 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
 
     /**
      * Непустой список связей полностью заменяет набор связей юнита.
-     *
-     * @test
      */
+    #[Test]
     function neupustoy_spisok_svyazey_zamenyaet_nabor()
     {
         $stend = $this->stend();
@@ -159,9 +157,7 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
         ], $stend['svyaziRepo']->poluchitPoIdUnita($stend['unitId']));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     function zapret_ssylki_na_sebya()
     {
         $stend = $this->stend(false);
@@ -179,9 +175,7 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     function zapret_ssylki_na_nedostupniy_proekt()
     {
         $stend = $this->stend(false, []);
@@ -199,9 +193,7 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
         }
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     function oshibka_pri_otsutstvuyuschem_celevom_unite()
     {
         $stend = $this->stend(false);
@@ -222,9 +214,8 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
 
     /**
      * При смене конфига связи переменных без хелпера отбрасываются.
-     *
-     * @test
      */
+    #[Test]
     function svyazi_ubirautsya_pri_rekonciliacii_s_konfigom_bez_helpera()
     {
         $stend = $this->stend();
@@ -262,9 +253,8 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
 
     /**
      * Пересборка проекции по id юнита восстанавливает связи из события.
-     *
-     * @test
      */
+    #[Test]
     function peresborka_proekcii_vosstanavlivaet_svyazi()
     {
         $stend = $this->stend();

@@ -18,8 +18,7 @@ final class WebhookEventProjectionPuller extends AbstractBackgroundJob
 
     function run(): bool
     {
-        $this->projectionsManager->pullProjectionByName(WebhookEventProjection::PROJECTION_NAME);
-
-        return true;
+        // false пробрасываем наружу: заблокированная проекция — не успех.
+        return $this->projectionsManager->pullProjectionByName(WebhookEventProjection::PROJECTION_NAME);
     }
 }

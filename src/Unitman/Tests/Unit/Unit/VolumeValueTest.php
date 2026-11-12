@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Unitman\Tests\Unit\Unit;
 
 use App\Unitman\Business\Model\Unit\VolumeValue;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -12,9 +13,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class VolumeValueTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function tom_bez_fayla_sozdaetsya(): void
     {
         $volume = new VolumeValue('db', 'БД');
@@ -25,9 +24,7 @@ final class VolumeValueTest extends TestCase
         $this->assertFalse($volume->esliSFaylom());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tom_s_faylom_sozdaetsya(): void
     {
         $volume = new VolumeValue('db', 'БД', 'file-1');
@@ -40,9 +37,7 @@ final class VolumeValueTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function dir_i_name_obrezayutsya(): void
     {
         $volume = new VolumeValue('  db  ', '  БД  ', '  file-1  ');
@@ -52,9 +47,7 @@ final class VolumeValueTest extends TestCase
         $this->assertSame('file-1', $volume->getFileId());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_dir_otklonyaetsya(): void
     {
         $this->expectException(\DomainException::class);
@@ -63,9 +56,7 @@ final class VolumeValueTest extends TestCase
         new VolumeValue('   ', 'БД');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoe_imya_otklonyaetsya(): void
     {
         $this->expectException(\DomainException::class);
@@ -74,9 +65,7 @@ final class VolumeValueTest extends TestCase
         new VolumeValue('db', '');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_id_fayla_otklonyaetsya(): void
     {
         $this->expectException(\DomainException::class);
@@ -85,9 +74,7 @@ final class VolumeValueTest extends TestCase
         new VolumeValue('db', 'БД', '  ');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function vosstanovlenie_iz_massiva_s_faylom(): void
     {
         $volume = VolumeValue::fromArray(['dir' => 'web', 'name' => 'Фронт', 'fileId' => 'file-2']);
@@ -97,9 +84,7 @@ final class VolumeValueTest extends TestCase
         $this->assertSame('file-2', $volume->getFileId());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function vosstanovlenie_iz_massiva_bez_fayla(): void
     {
         // Совместимость с событиями, записанными до появления volumes.
@@ -109,9 +94,7 @@ final class VolumeValueTest extends TestCase
         $this->assertFalse($volume->esliSFaylom());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function vosstanovlenie_bez_dir_otklonyaetsya(): void
     {
         $this->expectException(\DomainException::class);
@@ -120,9 +103,7 @@ final class VolumeValueTest extends TestCase
         VolumeValue::fromArray(['name' => 'Фронт']);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function krughovoi_cikl_toarray_fromarray(): void
     {
         $volume = new VolumeValue('db', 'БД', 'file-1');

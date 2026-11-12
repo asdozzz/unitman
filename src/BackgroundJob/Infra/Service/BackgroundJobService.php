@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\BackgroundJob\Infra\Service;
 
 use App\BackgroundJob\Infra\Repository\JobRepository;
@@ -9,30 +11,41 @@ use Spiral\RoadRunner\Services\Manager;
 
 final class BackgroundJobService
 {
+    /**
+     * Сколько секунд RoadRunner ждёт перед перезапуском упавшего сервиса.
+     * Значение должно совпадать с restart_sec в .rr.yaml для статически
+     * объявленного сервиса unit_runner_jobs, иначе поведение после падения
+     * отличается в зависимости от способа запуска.
+     */
+    private const RESTART_SEC = 10;
+
     private Manager $manager;
-    public function __construct(private JobRepository $jobRepository)
-    {
-        $this->manager = new Manager(RPC::create('tcp://127.0.0.1:6001'));
+
+    public function __construct(
+        private JobRepository $jobRepository,
+        string $roadRunnerRpcAddress,
+    ) {
+        // Адрес RPC-сокета берётся из RR_RPC (.env): он же используется
+        // в .rr.yaml (rpc.listen) и в LockService/RedisService.
+        $this->manager = new Manager(RPC::create($roadRunnerRpcAddress));
     }
 
-    function init(): void
-    {
-        $this->jobRepository->init();
-    }
-
+    /**
+     * RoadRunner возвращает список статусов процесса (по одному на процесс
+     * сервиса), поэтому это list, а не ассоциативный массив.
+     *
+     * @return list<array<string, mixed>>
+     */
     private function getStatus(BackgroundJobInterface $job): array
     {
         try {
-            $status = $this->manager->statuses(name: $job->getName());
-
-            return $status;
+            return $this->manager->statuses(name: $job->getName());
         } catch (ServiceException) {
             return [];
         }
-
     }
 
-    function start(BackgroundJobInterface $job): void
+    public function start(BackgroundJobInterface $job): void
     {
         $status = $this->getStatus($job);
 
@@ -43,20 +56,19 @@ final class BackgroundJobService
                 name: $job->getName(),
                 command: 'php bin/console app:service:start '.$job->getName(),
                 remainAfterExit: true,
-                restartSec: 10,
+                restartSec: self::RESTART_SEC,
                 processNum: $job->getProcessNum(),
             );
 
             if (!$result) {
-                throw new ServiceException('Service creation failed.');
+                throw new ServiceException('Failed to create RoadRunner service '.$job->getName());
             }
         }
 
         $this->jobRepository->start($job->getName(), $job->getName());
-
     }
 
-    function stop(BackgroundJobInterface $job): void
+    public function stop(BackgroundJobInterface $job): void
     {
         $status = $this->getStatus($job);
 
@@ -64,11 +76,10 @@ final class BackgroundJobService
             $result = $this->manager->terminate(name: $job->getName());
 
             if (!$result) {
-                throw new ServiceException('Service termination failed.');
+                throw new ServiceException('Failed to terminate RoadRunner service '.$job->getName());
             }
         }
 
         $this->jobRepository->stop($job->getName());
-
     }
 }

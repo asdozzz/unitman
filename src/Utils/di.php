@@ -17,18 +17,18 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure()
         ->bind('$projectDir','%kernel.project_dir%')
         ->bind('$defaultLocale','%env(DEFAULT_LOCALE)%')
+        ->bind('$roadRunnerRpcAddress','%env(RR_RPC)%')
     ;
 
     $services->load('App\\Utils\\', './')
-        ->exclude(['./{di.php, routing.php, Tests}','./Model/','./EventSauce'])
+        ->exclude(['./{di.php,di_test.php,routing.php,Tests}', './Model/', './EventSauce/', './Exception/'])
         ->public();
-
-
 
     $services->set(Serializer::class, Serializer::class)
         ->factory(service(SerializerFactory::class));
 
+    // Декоратор объявлен атрибутом #[AsDecorator] на самом классе — здесь задаём только аргументы,
+    // потому что ContainerInterface не автовайрится.
     $services->set(MigrationFactoryDecorator::class)
-        ->decorate('doctrine.migrations.migrations_factory')
-        ->args([service('.inner'), service('service_container')]);
+        ->args([service(MigrationFactoryDecorator::class . '.inner'), service('service_container')]);
 };

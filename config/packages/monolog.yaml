@@ -2,15 +2,32 @@ monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
 
-when@eee:
+when@dev:
     monolog:
         handlers:
+            # Опечатка when@eee приводила к тому, что в dev-окружении не регистрировался
+            # ни один обработчик и логи не писались вообще (var/log оставался пустым).
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                channels: ["!event"]
+            # Отправка в buggregator необязательна: сервис не поднимается вместе с web
+            # (см. docker-compose.yml), а Monolog\Handler\SocketHandler при недоступном
+            # хосте бросает UnexpectedValueException прямо из Logger::addRecord(),
+            # что превращается в 500. whatfailuregroup глушит сбой этого обработчика,
+            # не затрагивая остальные.
             socket:
+                type: whatfailuregroup
+                members: [buggregator]
+            buggregator:
                 type: socket
                 connection_string: '%env(MONOLOG_SOCKET_HOST)%'
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["!event", "!doctrine", "!console", "!security"]
+                connection_timeout: 1.0
+                timeout: 1.0
             # uncomment to get logging in your browser
             # you may have to allow bigger header sizes in your Web server configuration
             #firephp:
@@ -19,10 +36,6 @@ when@eee:
             #chromephp:
             #    type: chromephp
             #    level: info
-            console:
-                type: console
-                process_psr_3_messages: false
-                channels: ["!event", "!doctrine", "!console"]
 
 when@test:
     monolog:

@@ -2,26 +2,22 @@ deptrac:
   paths:
     - ./src
   exclude_files:
-    - '#.*test.*#'
-    - '#Acl\.*#'
-    - '#Tests\.*#'
+    # Тесты модулей не являются частью продакшн-кода и не проверяются на связность.
+    # Регексп без учёта регистра: в проекте встречаются и `test`, и `Tests`.
+    - '#(?i).*tests?.*#'
   layers:
     - name: Account
       collectors:
         - type: directory
           regex: ./src/Account/.*
+    - name: App
+      collectors:
+        - type: directory
+          regex: ./src/App/.*
     - name: BackgroundJob
       collectors:
         - type: directory
           regex: ./src/BackgroundJob/.*
-    - name: Runner
-      collectors:
-        - type: directory
-          regex: ./src/Runner/.*
-    - name: Unitman
-      collectors:
-        - type: directory
-          regex: ./src/Unitman/.*
     - name: Initialization
       collectors:
         - type: directory
@@ -30,13 +26,50 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Mediateka/.*
+    - name: Runner
+      collectors:
+        - type: directory
+          regex: ./src/Runner/.*
+    - name: Unitman
+      collectors:
+        - type: directory
+          regex: ./src/Unitman/.*
+    - name: Utils
+      collectors:
+        - type: directory
+          regex: ./src/Utils/.*
   ruleset:
+    # Utils — общая библиотека без знания о доменных модулях (лист графа зависимостей).
+    Utils: ~
+    # App — инфраструктура приложения: использует Utils, но не доменные модули.
+    App:
+      - Utils
+    # Account — самостоятельный модуль: свои EventSauce-декораторы из App и утилиты.
     Account:
-    BackgroundJob:
+      - App
+      - Utils
+    # BackgroundJob — независимый примитив, ни от кого не зависит.
+    BackgroundJob: ~
+    # Mediateka — файлы: только Account (автор файла) и Utils.
     Mediateka:
       - Account
+      - Utils
+    # Initialization — первичная инициализация: читает настройки Unitman и текущего пользователя.
+    Initialization:
+      - Account
+      - Unitman
+      - Utils
+    # Runner управляет контейнерами и обращается к Unitman через Acl\\UnitmanAdapter.
     Runner:
+      - App
       - BackgroundJob
+      - Unitman
+      - Utils
+    # Unitman — ядро: оперирует сущностями всех остальных модулей через порты и Acl-адаптеры.
     Unitman:
+      - Account
+      - App
       - BackgroundJob
       - Mediateka
+      - Runner
+      - Utils

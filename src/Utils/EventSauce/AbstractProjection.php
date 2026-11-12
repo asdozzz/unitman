@@ -3,7 +3,6 @@
 namespace App\Utils\EventSauce;
 
 use EventSauce\EventSourcing\Message;
-use EventSauce\EventSourcing\MessageConsumer;
 
 abstract class AbstractProjection implements CanProjectEvents
 {

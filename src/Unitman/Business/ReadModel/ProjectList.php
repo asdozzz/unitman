@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Business\ReadModel;
 
-use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\ReadModel\ProjectList\NastroikiHukaProekta;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListVariable;

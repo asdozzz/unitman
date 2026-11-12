@@ -8,6 +8,5 @@ doctrine_migrations:
         'App\Unitman\Migrations': '%kernel.project_dir%/src/Unitman/Migrations'
         'App\Initialization\Migrations': '%kernel.project_dir%/src/Initialization/Migrations'
         'App\Mediateka\Migrations': '%kernel.project_dir%/src/Mediateka/Migrations'
+        'App\BackgroundJob\Migrations': '%kernel.project_dir%/src/BackgroundJob/Migrations'
     enable_profiler: false
-    services:
-        'Doctrine\Migrations\Version\MigrationFactory': 'App\Utils\Service\MigrationFactoryDecorator'

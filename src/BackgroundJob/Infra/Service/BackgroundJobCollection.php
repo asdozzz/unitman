@@ -36,7 +36,6 @@ final class BackgroundJobCollection
 
     public function startAll(): void
     {
-        $this->backgroundJobService->init();
         foreach ($this->collection as $job) {
             $this->backgroundJobService->start($job);
         }
@@ -44,7 +43,6 @@ final class BackgroundJobCollection
 
     public function stopAll(): void
     {
-        $this->backgroundJobService->init();
         foreach ($this->collection as $job) {
             $this->backgroundJobService->stop($job);
         }

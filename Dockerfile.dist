@@ -3,8 +3,10 @@ FROM ghcr.io/roadrunner-server/roadrunner:3.0.0 AS roadrunner
 
 FROM ghcr.io/spiral/php-grpc:8.2
 
+# pcntl обязателен: app:service:start подписывается на SIGTERM/SIGINT
+# (RoadrunnerServiceCommand::getSubscribedSignals), без расширения это фатальная ошибка.
 RUN --mount=type=bind,from=mlocati/php-extension-installer:2.12.0,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-     install-php-extensions pdo_pgsql pgsql xdebug xhprof && \
+     install-php-extensions pdo_pgsql pgsql pcntl xdebug xhprof && \
      apk del --no-cache ${PHPIZE_DEPS} ${BUILD_DEPENDS}
 
 COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
@@ -21,19 +23,24 @@ RUN adduser containeruser root
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Единственный сервис на образе — RoadRunner. Порт HTTP-пула (см. .rr.yaml).
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 USER containeruser
 WORKDIR /home/containeruser/www
 
-ENV COMPOSER_ALLOW_SUPERUSER=1
+# Слой зависимостей отдельно от исходников: правка кода не инвалидирует composer install.
+COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
+RUN composer install --no-scripts --no-autoloader --no-interaction
 
-#COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
-#RUN composer install --no-scripts --no-autoloader
-#
-#COPY --chown=containeruser:groupcontainer . .
-#RUN composer dump-autoload --optimize && \
-#    #composer run-script post-install-cmd && \
-#    composer check-platform-reqs
-#    #php bin/console cache:warmup
-#
-#CMD ["rr", "serve","-c",".rr.yaml"]
-#ENTRYPOINT ["tail", "-f", "/dev/null"]
+COPY --chown=containeruser:groupcontainer . .
+RUN composer dump-autoload --optimize && \
+    composer check-platform-reqs
+
+EXPOSE 8080
+
+# Точка входа выполняет миграции и передаёт управление RoadRunner через exec,
+# поэтому `rr` остаётся PID 1 и корректно получает SIGTERM от `docker stop`.
+COPY --chown=containeruser:groupcontainer --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["rr", "serve", "-c", ".rr.yaml"]

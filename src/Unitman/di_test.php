@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Unitman;
 
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -15,7 +15,7 @@ return function (ContainerConfigurator $configuration) {
     $services = $configuration->services();
 
     $services->set(UnitmanSecurityService::class)->public();
-    $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class)->public();
+    $services->set(CanGenerateGuid::class, RamseyGuidGenerator::class)->public();
     $services->set(CanCheckAccessToRepo::class)->public();
     //$services->set(RunnerService::class)->public();
 };

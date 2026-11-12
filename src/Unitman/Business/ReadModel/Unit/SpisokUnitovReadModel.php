@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Business\ReadModel\Unit;
 
-use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 
 final class SpisokUnitovReadModel
 {

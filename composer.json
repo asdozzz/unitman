@@ -8,6 +8,7 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-json": "*",
+        "ext-pcntl": "*",
         "ext-pdo": "*",
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "eventsauce/eventsauce": "*",
@@ -97,7 +98,7 @@
         "post-update-cmd": [
             "@auto-scripts"
         ],
-        "coverage": "XDEBUG_MODE=coverage php bin/phpunit --coverage-html ./var/coverage --path-coverage",
+        "coverage": "XDEBUG_MODE=coverage php vendor/bin/phpunit --coverage-html ./var/coverage --path-coverage",
         "check-psalm": "php vendor/bin/psalm",
         "check-phpunit": "php vendor/bin/phpunit --stop-on-failure",
         "check-deptrac": "php deptrac.phar",
@@ -116,6 +117,7 @@
         "all-checks": [
             "@check-psalm",
             "@check-phpunit",
+            "@check-openapi",
             "@check-translations",
             "@check-deptrac",
             "@check-account-deptrac",

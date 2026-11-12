@@ -2,7 +2,7 @@
 
 namespace dev;
 
-use App\App\Exception\Dump;
+use App\Utils\Exception\Dump;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 

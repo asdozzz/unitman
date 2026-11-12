@@ -13,7 +13,7 @@ use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;

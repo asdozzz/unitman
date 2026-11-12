@@ -7,6 +7,7 @@ namespace App\Unitman\Tests\Unit\VolumeType;
 use App\Unitman\Business\Command\VolumeType\OtkrepitFaylOtTipaVoluma;
 use App\Unitman\Business\UseCase\VolumeType\OtkrepitFaylOtTipaVolumaUseCase;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Отвязка архива от типа тома.
@@ -27,9 +28,7 @@ final class OtkrepitFaylOtTipaVolumaUseCaseTest extends AbstractKatalogUseCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function svyaz_udalyayetsya_fayl_ostayotsya_v_mediateke(): void
     {
         $type = $this->tipSFaylom('logs', 'file-1');
@@ -41,9 +40,7 @@ final class OtkrepitFaylOtTipaVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertArrayHasKey('file-1', $this->mediatekaService->vladelcy);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function udalit_fayl_udalyayet_arhiv_iz_mediateki(): void
     {
         $type = $this->tipSFaylom('logs', 'file-1');
@@ -55,9 +52,7 @@ final class OtkrepitFaylOtTipaVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertArrayNotHasKey('file-1', $this->mediatekaService->vladelcy);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_file_id_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -68,9 +63,7 @@ final class OtkrepitFaylOtTipaVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new OtkrepitFaylOtTipaVoluma(self::PROJECT_ID, 'logs', '  '));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function otsutstvuyushchaya_svyaz_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -81,9 +74,7 @@ final class OtkrepitFaylOtTipaVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new OtkrepitFaylOtTipaVoluma(self::PROJECT_ID, 'logs', 'file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function neizvestnyi_tip_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -92,9 +83,7 @@ final class OtkrepitFaylOtTipaVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new OtkrepitFaylOtTipaVoluma(self::PROJECT_ID, 'logs', 'file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function ne_admin_otklonyaetsya(): void
     {
         $this->tipSFaylom('logs', 'file-1');

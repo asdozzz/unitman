@@ -25,11 +25,9 @@ use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
 use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\PayloadSerializerSupportingObjectMapperAndSerializablePayload;
-use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use EventSauce\IdEncoding\StringIdEncoder;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineMessageRepository;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
-use EventSauce\UuidEncoding\StringUuidEncoder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -44,7 +42,7 @@ return function (ContainerConfigurator $configuration) {
         ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%');
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
-        ->exclude(['./{di.php,di_test.php, routing.php, Migrations, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
+        ->exclude(['./{di.php,di_test.php,routing.php,Migrations,Tests}', './Business/Command', './Business/Model', './Business/ReadModel'])
         ->public();
 
     $services->set(UuidGenerator::class, RamseyUuidGenerator::class);

@@ -16,6 +16,7 @@ use App\Account\Business\UseCase\RegisterAccountUseCase;
 use App\Account\Business\UseCase\VipustitRefreshTokenUseCase;
 use App\Account\Infra\Repository\JWTUserRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
+use PHPUnit\Framework\Attributes\Test;
 
 final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
 {
@@ -48,9 +49,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         return $refreshToken;
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function refresh_token_was_issued_for_account(): void
     {
         $accountId = $this->registerAccount('refresh_issued@asd.ru');
@@ -71,9 +70,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertNotEquals($refreshTokenValue, $storedToken->getTokenHash(), 'В БД не должен попадать сам токен');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function token_pair_was_refreshed_and_old_token_was_revoked(): void
     {
         $accountId = $this->registerAccount('refresh_pair@asd.ru');
@@ -102,9 +99,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals($accountId, $newToken->getAccountId());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function revoked_token_cannot_be_used_again(): void
     {
         $accountId = $this->registerAccount('refresh_reuse@asd.ru');
@@ -120,9 +115,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $sut->handle(new ObnovitToken($refreshTokenValue));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function unknown_token_is_rejected(): void
     {
         $sut = self::$container->get(ObnovitTokenUseCase::class);
@@ -134,9 +127,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $sut->handle(new ObnovitToken('unknown-refresh-token-value'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function empty_token_is_rejected(): void
     {
         $sut = self::$container->get(ObnovitTokenUseCase::class);
@@ -148,9 +139,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $sut->handle(new ObnovitToken(''));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function expired_token_is_rejected(): void
     {
         $accountId = $this->registerAccount('refresh_expired@asd.ru');
@@ -172,9 +161,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $sut->handle(new ObnovitToken($value));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function token_cannot_be_refreshed_for_blocked_account(): void
     {
         $accountId = $this->registerAccount('refresh_blocked@asd.ru');
@@ -194,9 +181,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $sut->handle(new ObnovitToken($refreshTokenValue));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function blocking_account_revokes_all_refresh_tokens(): void
     {
         $accountId = $this->registerAccount('refresh_block_revoke@asd.ru');

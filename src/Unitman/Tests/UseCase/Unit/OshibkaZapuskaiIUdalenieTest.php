@@ -14,7 +14,7 @@ use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesVipolneniyaDeistviyaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
@@ -33,7 +33,7 @@ final class OshibkaZapuskaiIUdalenieTest extends AbstractUnitUseCase
         $prozesSborkiId = Uuid::uuid7()->toString();
         $prozesDeistivyaId = Uuid::uuid7()->toString();
         $prozesUdaleniyaId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSborkiId, $prozesDeistivyaId, $prozesUdaleniyaId]));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSborkiId, $prozesDeistivyaId, $prozesUdaleniyaId]));
 
         $userId = Uuid::uuid7()->toString();
         $this->mokaemUspehSecurity($userId);

@@ -2,10 +2,7 @@
 
 namespace App\Runner\Infra\Workflow;
 use App\App\Infra\Workflow\WorkflowClientFactory;
-use App\Runner\Business\Model\GolangRunner\Runner\RunnerHealthCheckResult;
-use Carbon\CarbonInterval;
 use Temporal\Activity\ActivityOptions;
-use Temporal\Common\RetryOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\WorkflowInterface;
 use Temporal\Workflow\WorkflowMethod;

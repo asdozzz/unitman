@@ -6,7 +6,7 @@ use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Business\Command\Unit\PoluchitSsylkuPoPomoschniku;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitSsylkuPoPomoschnikuQuery;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
@@ -22,7 +22,7 @@ final class PoluchitSsylkuPoPomoschnikuQueryTest extends AbstractUnitUseCase
         $prozesBId = Uuid::uuid7()->toString();
         $unitCId = Uuid::uuid7()->toString();
         $prozesCId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([
             $unitAId, $prozesAId,
             $unitBId, $prozesBId,
             $unitCId, $prozesCId,

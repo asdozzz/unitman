@@ -4,8 +4,6 @@ namespace App\Unitman\Infra\Projection;
 
 use App\Unitman\Business\Model\Unit\Event\DobavlenProzesVUnit;
 
-use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
-use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\ReadModel\Unit\ProzesUnita;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;

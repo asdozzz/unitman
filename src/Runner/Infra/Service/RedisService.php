@@ -8,10 +8,12 @@ use Spiral\RoadRunner\KeyValue\Factory;
 final class RedisService
 {
     private Factory $factory;
-    public function __construct()
+
+    public function __construct(string $roadRunnerRpcAddress)
     {
-        $rpc = RPC::create('tcp://127.0.0.1:6001');
-        $this->factory = new Factory($rpc);
+        // Адрес RPC-сокета RoadRunner берётся из RR_RPC (.env) и совпадает
+        // с rpc.listen в .rr.yaml.
+        $this->factory = new Factory(RPC::create($roadRunnerRpcAddress));
     }
 
     function set(string $key, string $value): void

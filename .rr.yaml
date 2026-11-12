@@ -19,7 +19,10 @@ logs:
 #  endpoint: collector:4318
 
 rpc:
-  listen: tcp://127.0.0.1:6001
+  # Адрес RPC-сокета должен совпадать с тем, к которому подключаются
+  # BackgroundJobService и LockService (Spiral\Goridge\RPC::create).
+  # Значение берётся из окружения, чтобы смена порта не требовала правки кода.
+  listen: ${RR_RPC:-tcp://127.0.0.1:6001}
 
 http:
   address: 0.0.0.0:8080
@@ -49,11 +52,17 @@ service:
     exec_timeout: 0s
     remain_after_exit: true
     service_name_in_log: false
-    restart_sec: 1
+    # Должно совпадать с restartSec, который передаёт BackgroundJobService::start()
+    # при динамическом создании сервиса через RPC.
+    restart_sec: 10
 
 metrics:
   address: 0.0.0.0:2112
 
+# Адрес брокера задаётся на уровне сервиса beanstalk: RR v3 читает его отсюда
+# и применяет ко всем пайплайнам с driver: beanstalk (проверено по активным
+# TCP-соединениям web -> beanstalk:11300). В pipelines.<name>.config остаются
+# только параметры конкретной очереди (priority).
 beanstalk:
   addr: tcp://beanstalk:11300
 
@@ -90,6 +99,10 @@ kv:
     config:
       addrs:
         - "redis:6379"
+      # Пользователь unitman создаётся в ACL с паролем REDIS_USER_PASSWORD
+      # (см. common-services.yml), поэтому для KV нужен именно он.
+      # Пользователь default в ACL явно отключён (user default off -@all),
+      # поэтому REDIS_PASSWORD больше не используется.
       username: ${REDIS_USER}
-      password: ${REDIS_PASSWORD}
+      password: ${REDIS_USER_PASSWORD}
 

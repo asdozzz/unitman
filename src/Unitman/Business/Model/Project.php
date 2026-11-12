@@ -3,7 +3,6 @@
 namespace App\Unitman\Business\Model;
 
 use App\Unitman\Business\Command\Project\AddProject;
-use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Project\DobavitPeremenuyuVProekt;
 use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
 use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;

@@ -2,7 +2,6 @@
 
 namespace App\App\Infra\Workflow;
 
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Temporal\Api\Common\V1\Payload;
 use Temporal\DataConverter\Converter;

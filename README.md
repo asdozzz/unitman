@@ -331,10 +331,10 @@ reset_prepare:
   - rm -f .env
 
 up:
-  - docker-compose up -d --build
+  - docker compose up -d --build
 
 down:
-  - docker-compose down
+  - docker compose down
 
 services:
   web:

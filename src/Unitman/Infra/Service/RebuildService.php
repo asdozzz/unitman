@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Infra\Service;
 
-use App\Unitman\Infra\Projection\SpisokUnitovProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
 final class RebuildService

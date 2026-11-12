@@ -3,9 +3,7 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\GetActiveProjectList;
-use App\Unitman\Business\Command\Project\GetProjectList;
 use App\Unitman\Business\Port\Project\CanGetActiveProjectList;
-use App\Unitman\Business\Port\Project\CanGetProjectList;
 
 final class GetActiveProjectListQuery
 {

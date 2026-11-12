@@ -4,11 +4,8 @@ namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
-use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
-use App\Unitman\Business\Port\CanGeneateGuid;
 use App\Unitman\Business\Port\Unit\UnitRepository;
-use App\Unitman\Business\Port\UnitmanSecurityService;
 use Psr\Clock\ClockInterface;
 
 final class ObrabotatProzesiUnitaUseCase

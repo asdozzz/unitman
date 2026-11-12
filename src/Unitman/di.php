@@ -7,12 +7,18 @@ namespace App\Unitman;
 use App\App\Infra\EventStore\AuthorMessageDecorator;
 use App\Mediateka\Business\Port\FileLinkChecker;
 use App\Unitman\Acl\MediatekaAdapter;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\MediatekaService;
+use App\Unitman\Business\Port\Project\CanGetProjectRunnerJobs;
+use App\Unitman\Business\Port\Queue\ZadachaVOchered;
+use App\Unitman\Business\Port\Unit\UmeetObnovlyatStatistikuKonteinera;
 use App\Unitman\Business\Port\VolumeType\VolumeTypeFileRepository;
 use App\Unitman\Business\Port\VolumeType\VolumeTypeRepository;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\Adapter\ZadachaVOcheredAdapter;
+use App\Unitman\Infra\Repository\Project\ProjectRunnerJobRepository;
+use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeFileRepository;
 use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeRepository;
 use App\Unitman\Infra\Service\VolumeTypeFileLinkChecker;
@@ -47,16 +53,20 @@ return function (ContainerConfigurator $configuration) {
         ->defaults()
         ->autowire()
         ->autoconfigure()
-        ->bind('$appEnv','%env(APP_ENV)%');
+        ->bind('$appEnv','%env(APP_ENV)%')
+        ->bind('$roadRunnerRpcAddress','%env(RR_RPC)%');
 
     $services->load('App\\Unitman\\', './{Business,Infra,Acl,Api}')
-        ->exclude(['./{di.php,di_test.php, routing.php, Migrations, Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
+        ->exclude(['./{di.php,di_test.php,routing.php,Migrations,Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
         ->public();
 
-    $services->set(CanGeneateGuid::class, RamseyGuidGenerator::class);
+    $services->set(CanGenerateGuid::class, RamseyGuidGenerator::class);
     $services->set(MediatekaService::class, MediatekaAdapter::class);
     $services->set(VolumeTypeRepository::class, SqlVolumeTypeRepository::class);
     $services->set(VolumeTypeFileRepository::class, SqlVolumeTypeFileRepository::class);
+    $services->set(ZadachaVOchered::class, ZadachaVOcheredAdapter::class);
+    $services->set(UmeetObnovlyatStatistikuKonteinera::class, SpisokUnitovRepository::class);
+    $services->set(CanGetProjectRunnerJobs::class, ProjectRunnerJobRepository::class);
 
     $services->set(VolumeTypeFileLinkChecker::class)
         ->tag(FileLinkChecker::TAG);

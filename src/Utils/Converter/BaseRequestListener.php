@@ -5,7 +5,6 @@ namespace App\Utils\Converter;
 use App\Utils\Model\Reponse\ErrorResponse\ErrorCodeEnum;
 use App\Utils\Service\DoctrineReconnectHelper;
 use App\Utils\Service\BlockerService;
-use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;

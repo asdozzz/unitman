@@ -9,7 +9,7 @@ use App\Unitman\Business\Command\Repo\DeleteRepo;
 use App\Unitman\Business\Command\Repo\GetActiveRepoList;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\RepoList;
@@ -21,13 +21,12 @@ use App\Unitman\Business\UseCase\Repo\GetActiveRepoListQuery;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Repo\RepoListRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Nonstandard\Uuid;
 
 final class RepoTest extends AbstractTestCaseWithTransactionWrapper
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function repo_was_deleted()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -48,9 +47,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertTrue(empty($row));
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function credentials_was_changed()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -72,9 +69,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals('https://org2@gitlab.ru', $repoList->repoUrl);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function access_is_confirmed()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -85,7 +80,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         self::$container->set(UnitmanSecurityService::class, $securityService);
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId, $repoId2]));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$repoId, $repoId2]));
 
         //GIVE
         $this->addRepoRaw(RepoType::GITLAB, $repoName, 'https://org@gitlab.ru');
@@ -132,7 +127,7 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         self::$container->set(UnitmanSecurityService::class, $securityService);
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId]));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$repoId]));
 
         $this->addRepoRaw($repoType, $repoName, $repoUrl);
 

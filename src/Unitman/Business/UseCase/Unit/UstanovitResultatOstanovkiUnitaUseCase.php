@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Unitman\Business\Command\Unit\UstanovitResultatOstanovkiUnita;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 

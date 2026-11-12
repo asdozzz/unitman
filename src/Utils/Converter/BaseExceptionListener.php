@@ -8,7 +8,7 @@
 
 namespace App\Utils\Converter;
 
-use App\App\Exception\Dump;
+use App\Utils\Exception\Dump;
 use App\Utils\Service\DoctrineReconnectHelper;
 use App\Utils\Service\ExceptionTranslator;
 use \Exception;

@@ -2,7 +2,6 @@
 
 namespace App\Account\Business\UseCase;
 
-use App\Account\Business\Command\RegisterAccount;
 use App\Account\Business\Model\Account;
 use App\Account\Business\Port\AccountRepository;
 use App\Account\Business\Port\CanHashPassword;

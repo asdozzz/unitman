@@ -1,49 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- https://phpunit.readthedocs.io/en/latest/configuration.html -->
+<!-- Конфигурация под PHPUnit 11 (см. vendor/phpunit/phpunit/phpunit.xsd).
+     Изменения относительно прежней версии:
+       * убран convertDeprecationsToExceptions — атрибут удалён в PHPUnit 10;
+       * listeners заменены на extensions (PHPUnit 10+ не поддерживает listeners);
+       * coverage больше не задаёт исходники, за это отвечает секция coverage/source;
+       * processUncoveredFiles переименован в includeUncoveredFiles;
+       * убран SYMFONY_PHPUNIT_VERSION=9.5 — он противоречил phpunit/phpunit ^11;
+       * тесты ищутся по суффиксу Test.php, чтобы в набор не попадали Support/ и
+         абстрактные базовые классы и чтобы пустой набор не оставался незамеченным. -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          backupGlobals="false"
          colors="true"
          bootstrap="tests/bootstrap.php"
-         convertDeprecationsToExceptions="false"
+         cacheDirectory=".phpunit.cache"
+         failOnEmptyTestSuite="true"
+         failOnRisky="true"
+         beStrictAboutTestsThatDoNotTestAnything="true"
 >
     <php>
         <ini name="display_errors" value="1" />
         <ini name="error_reporting" value="-1" />
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
-        <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
-        <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" />
+        <!-- Должно совпадать с .env.test: иначе значение из окружения
+             перекрывает конфиг и поведение зависит от порядка загрузки. -->
         <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled" />
     </php>
 
     <testsuites>
         <testsuite name="Project Test Suite">
-            <directory suffix=".php">src/*/Tests</directory>
-            <exclude>src/Mediateka/Tests/Support</exclude>
-            <exclude>src/Unitman/Tests/Support</exclude>
-            <exclude>src/Unitman/Tests/Unit/VolumeType/AbstractKatalogUseCase.php</exclude>
-            <exclude>src/Unitman/Tests/UseCase/AbstractUnitmanUseCase.php</exclude>
-            <exclude>src/Unitman/Tests/UseCase/Unit/AbstractUnitUseCase.php</exclude>
-            <exclude>src/Unitman/Tests/UseCase/Proekt/AbstractProjectUseCase.php</exclude>
+            <!-- Суффикс Test.php отбирает только реальные тест-классы:
+                 из src/*/Tests в набор попадают ровно *Test.php, а Support/
+                 и Abstract*-классы отсекаются без ручных exclude. -->
+            <directory suffix="Test.php">src</directory>
         </testsuite>
     </testsuites>
 
-    <coverage processUncoveredFiles="true">
+    <source>
         <include>
-            <directory suffix=".php">src/*/Business/Model</directory>
+            <!-- Без глоба: перечислены модули, у которых есть доменная модель.
+                 Покрытие считается только по Business/Model. -->
+            <directory suffix=".php">src/Account/Business/Model</directory>
+            <directory suffix=".php">src/Initialization/Business/Model</directory>
+            <directory suffix=".php">src/Mediateka/Business/Model</directory>
+            <directory suffix=".php">src/Runner/Business/Model</directory>
+            <directory suffix=".php">src/Unitman/Business/Model</directory>
         </include>
-    </coverage>
+    </source>
 
-    <listeners>
-        <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
-    </listeners>
+    <coverage includeUncoveredFiles="true" />
 
-    <!-- Run `composer require symfony/panther` before enabling this extension -->
-    <!--
     <extensions>
-        <extension class="Symfony\Component\Panther\ServerExtension" />
+        <!-- Замена удалённому Symfony\Bridge\PhpUnit\SymfonyTestsListener. -->
+        <bootstrap class="Symfony\Bridge\PhpUnit\SymfonyExtension" />
     </extensions>
-    -->
 </phpunit>

@@ -4,11 +4,11 @@ namespace App\Account\Business\UseCase;
 
 use App\Account\Business\Command\ChangeMyLocale;
 use App\Account\Business\Port\AccountRepository;
-use App\Account\Infra\Adapter\SymfonySecurityService;
+use App\Account\Business\Port\SecurityService;
 
 final class ChangeMyLocaleUseCase
 {
-    public function __construct(private AccountRepository $accountRepository, private SymfonySecurityService $securityService)
+    public function __construct(private AccountRepository $accountRepository, private SecurityService $securityService)
     {
     }
 

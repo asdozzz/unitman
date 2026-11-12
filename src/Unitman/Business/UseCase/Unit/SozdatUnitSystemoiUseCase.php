@@ -4,7 +4,7 @@ namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Unit;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
 use App\Unitman\Business\Port\Unit\UnitRepository;
@@ -16,7 +16,7 @@ final class SozdatUnitSystemoiUseCase
         private CanFindUnitDouble      $canFindUnitDouble,
         private ProjectRepository      $projectRepository,
         private UnitmanSecurityService $securityService,
-        private CanGeneateGuid         $uuidGenerator,
+        private CanGenerateGuid         $uuidGenerator,
         private UnitRepository         $unitRepository,
     )
     {

@@ -7,7 +7,6 @@ use App\Utils\Service\LockService;
 use FluffyDiscord\RoadRunnerBundle\Worker\JobsWorker\JobsHandlerInterface;
 use Fresh\CentrifugoBundle\Service\CentrifugoInterface;
 use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 final class WebsocketUnitEventReadModelJobHandler implements JobsHandlerInterface
 {

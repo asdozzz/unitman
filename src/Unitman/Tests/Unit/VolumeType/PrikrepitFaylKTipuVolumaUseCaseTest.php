@@ -7,6 +7,7 @@ namespace App\Unitman\Tests\Unit\VolumeType;
 use App\Unitman\Business\Command\VolumeType\PrikrepitFaylKTipuVoluma;
 use App\Unitman\Business\UseCase\VolumeType\PrikrepitFaylKTipuVolumaUseCase;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Привязка проектного архива медиатеки к типу тома.
@@ -27,9 +28,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function proektnyi_arhiv_privyazyvaetsya_k_tipu(): void
     {
         $type = $this->dobavitTip('logs');
@@ -41,9 +40,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertCount(1, $this->fileRepository->najtiPoTipu($type->id));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function k_odnomu_tipu_mozhno_privyazat_neskolko_faylov(): void
     {
         $type = $this->dobavitTip('logs');
@@ -56,9 +53,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertCount(2, $this->fileRepository->najtiPoTipu($type->id));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_file_id_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -69,9 +64,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new PrikrepitFaylKTipuVoluma(self::PROJECT_ID, 'logs', '   '));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function neizvestnyi_fayl_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -82,9 +75,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new PrikrepitFaylKTipuVoluma(self::PROJECT_ID, 'logs', 'file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function fayl_iunita_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -96,9 +87,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new PrikrepitFaylKTipuVoluma(self::PROJECT_ID, 'logs', 'file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function fayl_chuzhogo_proekta_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -110,9 +99,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new PrikrepitFaylKTipuVoluma(self::PROJECT_ID, 'logs', 'file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function fayl_privyazannyi_k_drugomu_tipu_otklonyaetsya(): void
     {
         $this->tipSFaylom('cache', 'file-1');
@@ -124,9 +111,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new PrikrepitFaylKTipuVoluma(self::PROJECT_ID, 'logs', 'file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function povtornaya_privyazka_k_tomu_zhe_tipu_idempotentna(): void
     {
         $type = $this->tipSFaylom('logs', 'file-1');
@@ -136,9 +121,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertCount(1, $this->fileRepository->najtiPoTipu($type->id));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function neizvestnyi_tip_otklonyaetsya(): void
     {
         $this->mediatekaService->vladelcy['file-1'] = ['unitId' => null, 'projectId' => self::PROJECT_ID];
@@ -149,9 +132,7 @@ final class PrikrepitFaylKTipuVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new PrikrepitFaylKTipuVoluma(self::PROJECT_ID, 'logs', 'file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function ne_admin_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');

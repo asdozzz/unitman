@@ -46,10 +46,10 @@ reset_prepare:
   - rm -f .env
 
 up:
-  - docker-compose up -d --build
+  - docker compose up -d --build
 
 down:
-  - docker-compose down
+  - docker compose down
 
 services:
   web:
@@ -107,13 +107,13 @@ reset_prepare:
 
 # up — поднятие контейнеров стенда
 up:
-  - docker-compose up -d --build
-  - docker-compose run web composer install --optimize-autoloader
-  - docker-compose run web php bin/console doctrine:migrations:migrate
+  - docker compose up -d --build
+  - docker compose run web composer install --optimize-autoloader
+  - docker compose run web php bin/console doctrine:migrations:migrate
 
 # down — остановка/снос стенда
 down:
-  - docker-compose down
+  - docker compose down
 
 # ─── Сервисы стенда: порты (для proxy/ссылок) и кэш сборки ───
 services:
@@ -149,7 +149,7 @@ actions:
         defaultValue: "debug:router"
     commands:
       # ${UNITMAN_ACTION_<ID_ПЕРЕМЕННОЙ>} подставляет значение переменной действия
-      - docker-compose exec php php bin/console ${UNITMAN_ACTION_BIN_CONSOLE}
+      - docker compose exec php php bin/console ${UNITMAN_ACTION_BIN_CONSOLE}
     prepare: true            # выполнять на подготовленном стенде
 
 # ─── Необязательный блок: тома юнита (файлы из медиатеки) ───

@@ -3,7 +3,6 @@
 namespace App\BackgroundJob\Infra\Cli;
 
 use App\BackgroundJob\Infra\Service\BackgroundJobCollection;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;

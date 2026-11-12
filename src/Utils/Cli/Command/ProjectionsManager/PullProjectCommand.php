@@ -58,7 +58,14 @@ final class PullProjectCommand extends Command
                 throw new \Exception('Projections manager not found for projection with name=' . $projectionName);
             }
 
-            $result->pullProjectionByName($projectionName);
+            // false означает, что проекцию не обновили: блокировку держит
+            // другой процесс. Это не успех — иначе команда молча «выполнится»,
+            // ничего не сделав.
+            if (!$result->pullProjectionByName($projectionName)) {
+                $output->writeln('SKIPPED: projection lock is held by another process');
+
+                return Command::FAILURE;
+            }
 
             return Command::SUCCESS;
         } catch (\Exception $e) {

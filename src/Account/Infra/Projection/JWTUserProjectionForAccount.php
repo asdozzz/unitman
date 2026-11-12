@@ -18,7 +18,6 @@ use App\Account\Business\Utils\AccountEventTypeEnum;
 use App\Account\Infra\Repository\JWTUserRepository;
 use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
-use EventSauce\EventSourcing\Message;
 
 final class JWTUserProjectionForAccount extends AbstractProjection implements SyncProjectionForAccount
 {

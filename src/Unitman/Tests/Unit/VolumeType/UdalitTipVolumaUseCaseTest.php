@@ -7,6 +7,7 @@ namespace App\Unitman\Tests\Unit\VolumeType;
 use App\Unitman\Business\Command\VolumeType\UdalitTipVoluma;
 use App\Unitman\Business\UseCase\VolumeType\UdalitTipVolumaUseCase;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Удаление типа тома из каталога проекта.
@@ -22,9 +23,7 @@ final class UdalitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase = new UdalitTipVolumaUseCase($this->proverkaDostupa, $this->typeRepository);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tip_bez_faylov_udalyayetsya(): void
     {
         $this->dobavitTip('logs');
@@ -34,9 +33,7 @@ final class UdalitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertNull($this->typeRepository->findByProjectAndCode(self::PROJECT_ID, 'logs'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tip_s_faylami_otklonyaetsya(): void
     {
         $this->tipSFaylom('logs', 'file-1');
@@ -47,9 +44,7 @@ final class UdalitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new UdalitTipVoluma(self::PROJECT_ID, 'logs'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tip_s_faylami_ostayotsya_v_kataloge(): void
     {
         $this->tipSFaylom('logs', 'file-1');
@@ -64,9 +59,7 @@ final class UdalitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertNotNull($this->typeRepository->findByProjectAndCode(self::PROJECT_ID, 'logs'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function neizvestnyi_tip_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -75,9 +68,7 @@ final class UdalitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new UdalitTipVoluma(self::PROJECT_ID, 'logs'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function ne_admin_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -90,9 +81,7 @@ final class UdalitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new UdalitTipVoluma(self::PROJECT_ID, 'logs'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tip_chuzhogo_proekta_ne_udalyayetsya(): void
     {
         $this->dobavitTip('logs', 'Логи', self::OTHER_PROJECT_ID);

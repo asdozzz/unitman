@@ -15,7 +15,7 @@ use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PometitKakSlomaniiUseCase;
@@ -25,14 +25,13 @@ use App\Unitman\Business\UseCase\Unit\UdalitUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Utils\Service\TestClockService;
+use PHPUnit\Framework\Attributes\Test;
 use Psr\Clock\ClockInterface;
 use Ramsey\Uuid\Uuid;
 
 class UnitPomechenKakSlomaniiTest extends AbstractUnitUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function kogda_jdem_resultat_udaleniya() {
         $readModelRepo = self::$container->get(SpisokUnitovRepository::class);
         /** @var SpisokUnitovRepository $readModelRepo*/
@@ -66,7 +65,7 @@ class UnitPomechenKakSlomaniiTest extends AbstractUnitUseCase
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
 
         $guidGenerator = new MemoryGuidGenerator([$unitId, $prozesSbrokiId, $prozesUdaleniyaId]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $this->sozdatUnit($userId, $unitId, 'task-111');
 

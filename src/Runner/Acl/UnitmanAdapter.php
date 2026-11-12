@@ -3,10 +3,11 @@
 namespace App\Runner\Acl;
 
 use App\Runner\Business\Model\RunnerState\DockerContainerStats;
+use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
 use App\Unitman\Api\UnitmanApi;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 
-final class UnitmanAdapter
+final class UnitmanAdapter implements UmeetObnovlyatStatistikuPoUnitam
 {
     public function __construct(private UnitmanApi $unitmanApi)
     {
@@ -15,7 +16,7 @@ final class UnitmanAdapter
     /**
      * @param DockerContainerStats[] $containerStats
      * */
-    function obnovitStatistikuPoUnitam(array $containerStats): void
+    public function obnovitStatistikuPoUnitam(array $containerStats): void
     {
         if (empty($containerStats)) {
             return;

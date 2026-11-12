@@ -5,13 +5,6 @@ namespace App\Account\Infra\Repository;
 use App\Account\Business\Model\Account;
 use App\Account\Business\Port\AccountRepository;
 use App\Utils\EventSauce\ProjectionsManager;
-use Doctrine\DBAL\Connection;
-use EventSauce\EventSourcing\ClassNameInflector;
-use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
-use EventSauce\EventSourcing\MessageDecorator;
-use EventSauce\EventSourcing\MessageDispatcher;
-use EventSauce\EventSourcing\MessageRepository;
-use EventSauce\EventSourcing\Serialization\MessageSerializer;
 
 final class SqlAccountRepository implements AccountRepository
 {

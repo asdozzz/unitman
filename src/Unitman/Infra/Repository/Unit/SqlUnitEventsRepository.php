@@ -4,11 +4,7 @@ namespace App\Unitman\Infra\Repository\Unit;
 
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
-use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
-use App\Utils\EventSauce\Model\StreamName;
 use App\Utils\EventSauce\ProjectionsManager;
-use Doctrine\DBAL\Connection;
-use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 
 final class SqlUnitEventsRepository implements UnitRepository
 {

@@ -12,7 +12,7 @@ use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ProveritKonteinerUnitaUseCase;
@@ -65,7 +65,7 @@ final class UnitSbroshenIUdalenTest extends AbstractUnitUseCase
         self::$container->set(ClockInterface::class, $clockService);
 
         $guidGenerator = new MemoryGuidGenerator([$unitId, $prozesSbrokiId, $prozesUdaleniyaId]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $this->sozdatUnit($userId, $unitId, 'task-111');
 

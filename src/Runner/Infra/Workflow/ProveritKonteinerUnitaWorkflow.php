@@ -2,9 +2,7 @@
 
 namespace App\Runner\Infra\Workflow;
 use App\App\Infra\Workflow\WorkflowClientFactory;
-use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
-use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatProverkiKonteineraUnita;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Workflow;

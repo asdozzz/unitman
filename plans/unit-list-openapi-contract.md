@@ -2,7 +2,7 @@
 
 ## 1. Problem
 
-[`UnitConroller::list()`](src/Unitman/Infra/Controller/UnitConroller.php:120) documents its `200`
+[`UnitConroller::list()`](src/Unitman/Infra/Controller/UnitController.php:120) documents its `200`
 response as `oneOf: [SuccessEnvelope, ErrorEnvelope]`, where
 [`SuccessEnvelope.data`](config/packages/nelmio_api_doc.yaml:80) is a bare `type: object`.
 Generated JSON at [openapi.json](docs/openapi.json:2519) therefore says nothing about the payload:
@@ -327,9 +327,9 @@ the point of this task, and drift is caught by review of these five files.
 
 Same payload shape is returned by:
 
-* [`moi()`](src/Unitman/Infra/Controller/UnitConroller.php:207) — array of the same read model
+* [`moi()`](src/Unitman/Infra/Controller/UnitController.php:207) — array of the same read model
   (`getMyUnits` deserializes into `SpisokUnitovReadModel`), so `data` = `array<UnitListItem>`.
-* [`read()`](src/Unitman/Infra/Controller/UnitConroller.php:178) — a single read model, so `data` =
+* [`read()`](src/Unitman/Infra/Controller/UnitController.php:178) — a single read model, so `data` =
   `UnitListItem`.
 
 All three operations were annotated in this pass, so the three read APIs expose the same precision.

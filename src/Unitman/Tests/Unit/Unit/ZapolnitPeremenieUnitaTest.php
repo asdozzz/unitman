@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\PeremenieUnitaZapolneni;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -42,9 +43,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         ],
     ];
 
-    /**
-     * @test
-     */
+    #[Test]
     public function list_of_objects_from_public_contract_is_accepted(): void
     {
         $unit = $this->unitSKonfigom();
@@ -67,9 +66,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         ], $event->values);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function canonical_map_is_accepted(): void
     {
         $unit = $this->unitSKonfigom();
@@ -88,9 +85,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         ], $event->values);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function event_stores_map_regardless_of_input_format(): void
     {
         $unit = $this->unitSKonfigom();
@@ -109,9 +104,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         $this->assertArrayNotHasKey(2, $values);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function zero_value_is_valid_and_not_treated_as_empty(): void
     {
         $unit = $this->unitSKonfigom();
@@ -125,9 +118,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         $this->assertSame('0', $this->znacheniya($unit)['COUNT']->getValue());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function missing_variable_is_reported(): void
     {
         $unit = $this->unitSKonfigom();
@@ -141,9 +132,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function variable_absent_in_config_is_reported(): void
     {
         $unit = $this->unitSKonfigom();
@@ -159,9 +148,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function empty_value_is_reported(): void
     {
         $unit = $this->unitSKonfigom();
@@ -178,9 +165,7 @@ final class ZapolnitPeremenieUnitaTest extends TestCase
         ]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function config_is_required(): void
     {
         $unit = Unit::sozdatUnit(

@@ -2,18 +2,37 @@
 
 namespace App\Utils\EventSauce;
 
-use App\Unitman\Infra\Projection\ProzesUnitaProjection;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use App\Utils\EventSauce\Repository\CheckpointStore;
 use App\Utils\Service\LockService;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootId;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag('utils.event_store.projections_manager')]
 final class ProjectionsManager
 {
+    /**
+     * Размер выборки при догоняющем чтении потока. Ограничивает память на
+     * один запрос, но НЕ суммарный объём работы за вызов: pull-цикл повторяет
+     * выборку до исчерпания потока.
+     */
+    private const PULL_BATCH_SIZE = 200;
+
+    /** Размер выборки на один проход полной пересборки проекции. */
+    private const REBUILD_BATCH_SIZE = 5000;
+
+    /** Пауза между проходами пересборки, секунды. */
+    private const REBUILD_PAUSE_SECONDS = 3;
+
+    /** Страховка от бесконечного цикла пересборки. */
+    private const REBUILD_MAX_PASSES = 100;
+
+    /** Значение флага --disable-reset, при котором checkpoint не сбрасывается. */
+    private const REBUILD_DISABLE_RESET = 1;
+
     /**
      * @var iterable<int, CanProjectEvents>
      * */
@@ -29,7 +48,8 @@ final class ProjectionsManager
         iterable                 $projections,
         DoctrineStreamRepository $eventsRepository,
         string $appEnv,
-        private LockService $lockService
+        private LockService $lockService,
+        private LoggerInterface $logger,
     )
     {
         $this->projections = $projections;
@@ -82,23 +102,35 @@ final class ProjectionsManager
         $streamName = $this->eventsRepository->getEventStreamByAggregateName($aggregateRoot::class);
         foreach ($this->projections as $projection) {
             if ($streamName->aggregateType !== $projection->getStreamName()->aggregateType) continue;
-            if (!$projection->isSyncProjection() && $this->appEnv != 'test') continue;
+            if (!$projection->isSyncProjection() && $this->appEnv !== 'test') continue;
             $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
             if ($checkpoint === 0) {
                 $projection->init();
             }
 
-            $this->handleEventsByCheckpoint($projection, $checkpoint, 200);
+            $this->drainEventsByCheckpoint($projection);
         }
     }
 
-    public function pullProjectionByName(string $projectionName): void
+    /**
+     * Дочитывает проекцию до конца потока событий.
+     *
+     * @return bool false — проекцию не обновили из-за занятой блокировки.
+     *              Вызывающий код не должен считать такой вызов успехом.
+     */
+    public function pullProjectionByName(string $projectionName): bool
     {
         $lockFactory = $this->lockService->makeLockFactory();
         $lock = $lockFactory->createLock('pullProjectionByName.'.$projectionName);
 
         if (!$lock->acquire()) {
-            return;
+            // Раньше здесь был «голый» return: джоба рапортовала об успехе,
+            // хотя не сделала ничего. Теперь пропуск виден и в логе, и вызывающему.
+            $this->logger->warning('projections_manager.pull_skipped_lock_not_acquired', [
+                'projection' => $projectionName,
+            ]);
+
+            return false;
         }
 
         $this->connection->beginTransaction();
@@ -110,7 +142,7 @@ final class ProjectionsManager
                 $projection->init();
             }
 
-            $this->handleEventsByCheckpoint($projection, $checkpoint, 200);
+            $this->drainEventsByCheckpoint($projection);
 
             $this->connection->commit();
         } catch (\Exception $e) {
@@ -119,6 +151,8 @@ final class ProjectionsManager
         } finally {
             $lock->release();
         }
+
+        return true;
     }
 
     public function rebuildAll(): void
@@ -171,20 +205,19 @@ final class ProjectionsManager
             throw new \DomainException('projections_manager.rebuild_not_allowed');
         }
 
-        if ($disableReset !== 1) {
+        if ($disableReset !== self::REBUILD_DISABLE_RESET) {
             $this->checkpointStore->resetCheckpoint($projectionName);
             $projection->init();
             $projection->reset();
         }
 
-        $deep = 100;
-        $cnt = 0;
+        $passes = 0;
         while (true) {
             $oldCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
 
             $this->connection->beginTransaction();
             try {
-                $this->handleEventsByCheckpoint($projection, $oldCheckpoint, 5000);
+                $this->handleEventsByCheckpoint($projection, $oldCheckpoint, self::REBUILD_BATCH_SIZE);
                 $this->connection->commit();
             } catch (\Exception $e) {
                 $this->connection->rollBack();
@@ -193,24 +226,21 @@ final class ProjectionsManager
 
             $newCheckpoint = $this->checkpointStore->getCheckpoint($projectionName);
 
-            if ($newCheckpoint === $oldCheckpoint || $cnt >= $deep) {
+            if ($newCheckpoint === $oldCheckpoint || $passes >= self::REBUILD_MAX_PASSES) {
                 break;
             }
 
-            sleep(3);
-            $cnt++;
+            sleep(self::REBUILD_PAUSE_SECONDS);
+            $passes++;
         }
-
-
-
     }
 
     /**
-     * @param CanProjectEvents $projection
-     * @param int $checkpoint
-     * @return void
+     * Обрабатывает один батч событий, начиная с checkpoint.
+     *
+     * @return int новый checkpoint (равен исходному, если событий не было)
      */
-    private function handleEventsByCheckpoint(CanProjectEvents $projection, int $checkpoint, int $limit = 0): void
+    private function handleEventsByCheckpoint(CanProjectEvents $projection, int $checkpoint, int $limit = 0): int
     {
         $events = $this->eventsRepository->getStream($projection->getStreamName(), $checkpoint, $limit);
 
@@ -222,11 +252,42 @@ final class ProjectionsManager
             $checkpoint++;
         }
 
-        if ($oldCheckpoint == $checkpoint) {
-            return;
+        if ($oldCheckpoint === $checkpoint) {
+            return $oldCheckpoint;
         }
 
         $this->checkpointStore->saveCheckpoint($projection->getProjectionName(), $checkpoint);
+
+        return $checkpoint;
+    }
+
+    /**
+     * Дочитывает поток до исчерпания.
+     *
+     * PULL_BATCH_SIZE ограничивает размер одной выборки (память), но не общий
+     * объём за вызов. Раньше за проход обрабатывалось не более 200 событий,
+     * поэтому отставшая sync-проекция оставалась частично обновлённой, хотя
+     * вызывающий код считал работу выполненной.
+     *
+     * @return int количество обработанных батчей
+     */
+    private function drainEventsByCheckpoint(CanProjectEvents $projection): int
+    {
+        $checkpoint = $this->checkpointStore->getCheckpoint($projection->getProjectionName());
+        $batches = 0;
+
+        while (true) {
+            $newCheckpoint = $this->handleEventsByCheckpoint($projection, $checkpoint, self::PULL_BATCH_SIZE);
+
+            if ($newCheckpoint === $checkpoint) {
+                break;
+            }
+
+            $checkpoint = $newCheckpoint;
+            $batches++;
+        }
+
+        return $batches;
     }
 
     /**

@@ -27,6 +27,7 @@ use App\Account\Business\UseCase\UnblockByAdminUseCase;
 use App\Account\Infra\Adapter\SymfonySecurityService;
 use App\Account\Infra\Repository\JWTUserRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class AccountTest extends AbstractTestCaseWithTransactionWrapper
@@ -70,9 +71,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         return $row;
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function system_account_was_created(): void
     {
         $jwtRepository = self::$container->get(JWTUserRepository::class);
@@ -90,9 +89,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals(false, $user->isBlocked());
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function password_was_changed_by_admin()
     {
         $row = $this->registerAccount('asd123@asd.ru');
@@ -113,9 +110,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertNotEquals($password, $jwtUser->getPassword());
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function password_was_changed()
     {
         $userId = Uuid::uuid7()->toString();
@@ -162,9 +157,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertNotEquals($password, $jwtUser->getPassword());
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function nickname_was_changed_by_admin()
     {
         $row = $this->registerAccount('asd123@asd.ru', 'first');
@@ -221,9 +214,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $this->assertEquals('second', $jwtUser->getNickname());
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function email_was_changed()
     {
         $row = $this->registerAccount('asd123@asd.ru');
@@ -242,9 +233,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
 
         $this->assertEquals('www123@www.ru', $jwtUser->getEmail());
     }
-    /**
-     * @test
-     * */
+    #[Test]
     function account_was_unblocked()
     {
         $row = $this->registerAccount('asd123@asd.ru');
@@ -274,9 +263,7 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
 
         $this->assertEquals(0, $row['is_blocked']);
     }
-    /**
-     * @test
-     * */
+    #[Test]
     function role_was_changed_by_admin()
     {
         $row = $this->registerAccount('asd123@asd.ru', 'first');

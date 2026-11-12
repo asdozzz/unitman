@@ -2,7 +2,6 @@
 
 namespace App\Account\Business\UseCase;
 
-use App\Account\Business\Command\BlockByAdmin;
 use App\Account\Business\Command\UnblockByAdmin;
 use App\Account\Business\Port\AccountRepository;
 

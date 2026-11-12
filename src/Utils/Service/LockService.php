@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Utils\Service;
 
 use RoadRunner\Lock\Lock;
@@ -9,12 +11,15 @@ use Symfony\Component\Lock\LockFactory;
 
 final class LockService
 {
-    function makeLockFactory(): LockFactory
+    public function __construct(private string $roadRunnerRpcAddress)
     {
-        $lock = new Lock(RPC::create('tcp://127.0.0.1:6001'));
-        $factory = new LockFactory(
-            new RoadRunnerStore($lock)
-        );
-        return $factory;
+    }
+
+    public function makeLockFactory(): LockFactory
+    {
+        // Адрес RPC-сокета берётся из RR_RPC (.env) и совпадает с rpc.listen в .rr.yaml.
+        $lock = new Lock(RPC::create($this->roadRunnerRpcAddress));
+
+        return new LockFactory(new RoadRunnerStore($lock));
     }
 }

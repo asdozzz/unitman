@@ -3,10 +3,8 @@
 namespace App\Initialization\Business\UseCase;
 
 use App\Initialization\Business\Command\ObnovitDefoltnyiProxyHost;
-use App\Initialization\Business\Model\InitializationRecord;
 use App\Initialization\Business\Port\InitializationRepository as InitializationRepositoryPort;
 use App\Initialization\Business\Port\SecurityService;
-use App\Initialization\Business\Port\UnitmanPort;
 
 final class ObnovitDefoltnyiProxyHostUseCase
 {

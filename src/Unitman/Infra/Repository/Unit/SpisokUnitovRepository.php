@@ -9,6 +9,7 @@ use App\Unitman\Business\Port\Unit\CanFindUnitIdByContainerName;
 use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
+use App\Unitman\Business\Port\Unit\UmeetObnovlyatStatistikuKonteinera;
 use App\Unitman\Business\Port\Unit\UmeetOtbiratNeaktivnieUniti;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
@@ -16,7 +17,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
 
-final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById, CanFindUnitIdByContainerName, UmeetOtbiratNeaktivnieUniti
+final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById, CanFindUnitIdByContainerName, UmeetObnovlyatStatistikuKonteinera, UmeetOtbiratNeaktivnieUniti
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection, private Serializer $serializer)

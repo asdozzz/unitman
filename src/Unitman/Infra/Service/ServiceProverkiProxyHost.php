@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Infra\Service;
 
-use Symfony\Component\HttpClient\CurlHttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class ServiceProverkiProxyHost

@@ -7,6 +7,7 @@ namespace App\Unitman\Tests\Unit\VolumeType;
 use App\Unitman\Business\Command\VolumeType\PoluchitTipyVolumov;
 use App\Unitman\Business\UseCase\VolumeType\PoluchitTipyVolumovQuery;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Чтение каталога типов томов проекта.
@@ -27,9 +28,7 @@ final class PoluchitTipyVolumovQueryTest extends AbstractKatalogUseCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tipy_vozvrashchayutsya_otsortirovannymi_po_kodu(): void
     {
         $this->dobavitTip('logs', 'Логи');
@@ -43,9 +42,7 @@ final class PoluchitTipyVolumovQueryTest extends AbstractKatalogUseCase
         $this->assertSame('logs', $result[1]->code);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tipy_chuzhogo_proekta_ne_popadayut_v_vydachu(): void
     {
         $this->dobavitTip('logs', 'Логи', self::PROJECT_ID);
@@ -57,9 +54,7 @@ final class PoluchitTipyVolumovQueryTest extends AbstractKatalogUseCase
         $this->assertSame('logs', $result[0]->code);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function fayly_tipa_vozvrashchayutsya_s_metadannymi(): void
     {
         $this->tipSFaylom('logs', 'file-1');
@@ -81,9 +76,7 @@ final class PoluchitTipyVolumovQueryTest extends AbstractKatalogUseCase
         $this->assertSame(1700000000, $file->createdAt);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function fayl_bez_metadannyh_propuskaetsya(): void
     {
         $type = $this->dobavitTip('logs');
@@ -100,9 +93,7 @@ final class PoluchitTipyVolumovQueryTest extends AbstractKatalogUseCase
         $this->assertSame([], $result[0]->files);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function to_array_otdayot_kontrakt_otveta(): void
     {
         $this->tipSFaylom('logs', 'file-1');
@@ -133,9 +124,7 @@ final class PoluchitTipyVolumovQueryTest extends AbstractKatalogUseCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function uchastnik_proekta_mozhet_chitat_katalog(): void
     {
         $this->dobavitTip('logs');
@@ -147,9 +136,7 @@ final class PoluchitTipyVolumovQueryTest extends AbstractKatalogUseCase
         $this->assertCount(1, $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function polzovatel_vne_proekta_otklonyaetsya(): void
     {
         $this->securityService->ustanovitPolzovatelya(self::STRANGER_ID);

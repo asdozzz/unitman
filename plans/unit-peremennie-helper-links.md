@@ -73,7 +73,7 @@ public function __construct(
 ### OpenAPI
 
 Обновить в [`docs/openapi.json`](docs/openapi.json:1) и в атрибутах
-[`UnitConroller`](src/Unitman/Infra/Controller/UnitConroller.php:1):
+[`UnitConroller`](src/Unitman/Infra/Controller/UnitController.php:1):
 
 - схема `ZnacheniePeremenoi` — добавить `targetUnitId` (`type: string`, nullable);
 - схема `SvyazPeremenoi`;

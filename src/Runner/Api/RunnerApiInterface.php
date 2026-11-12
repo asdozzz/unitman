@@ -17,7 +17,6 @@ use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
-use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaVetkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;

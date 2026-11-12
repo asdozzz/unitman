@@ -2,7 +2,7 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 
@@ -11,7 +11,7 @@ final class DobavitProzesUdaleniyaUseCase
     public function __construct(
         private UnitRepository $unitRepository,
         private UnitmanSecurityService $securityService,
-        private CanGeneateGuid         $uuidGenerator,
+        private CanGenerateGuid         $uuidGenerator,
     )
     {
     }

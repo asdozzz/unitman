@@ -5,7 +5,7 @@ namespace App\Unitman\Business\UseCase\Repo;
 use App\Unitman\Business\Command\Repo\AddRepo;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Repo\CanFindRepoDouble;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Repo\UmeetPoluchatUrlHranilisha;
@@ -16,7 +16,7 @@ final class AddRepoUseCase
     public function __construct(
         private UnitmanSecurityService $securityService,
         private RepoRepository         $repoRepository,
-        private CanGeneateGuid         $uuidGenerator,
+        private CanGenerateGuid         $uuidGenerator,
         private CanFindRepoDouble      $canFindDouble,
         private UmeetPoluchatUrlHranilisha $umeetPoluchatUrlHranilisha
     )

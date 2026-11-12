@@ -5,14 +5,13 @@ namespace App\Unitman\Infra\Jobs;
 use App\Unitman\Business\Model\ZadachaDlyOcheredi;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Repository\ZadachaDlyOcherediRepository;
-use App\Utils\Service\LockService;
 use Symfony\Component\Serializer\SerializerInterface;
 
 final class ZadachaDlyOcherediService
 {
     public function __construct(
         private ZadachaDlyOcherediRepository $repository,
-        private RamseyGuidGenerator $canGeneateGuid,
+        private RamseyGuidGenerator $canGenerateGuid,
         private SerializerInterface $serializer
     )
     {
@@ -23,7 +22,7 @@ final class ZadachaDlyOcherediService
      * */
     function dobavitZadachuVOchered(string $queueName, object $task, int $attemptForRetryForQueue = 1, int $retryDelayForQueue = 1): void
     {
-        $id = $this->canGeneateGuid->makeGuid();
+        $id = $this->canGenerateGuid->makeGuid();
         $taskData = $this->serializer->serialize($task, 'json');
         $this->repository->insert(new ZadachaDlyOcheredi($id, $queueName, $task::class, $taskData, $attemptForRetryForQueue, $retryDelayForQueue));
     }

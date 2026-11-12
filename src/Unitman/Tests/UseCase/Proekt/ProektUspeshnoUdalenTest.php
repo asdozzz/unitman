@@ -11,13 +11,12 @@ use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
 use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class ProektUspeshnoUdalenTest extends AbstractProjectUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function proekt_uspeshno_udalen()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -28,7 +27,7 @@ final class ProektUspeshnoUdalenTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
         $steps = [new RunnerJobStep('command', 'response', true, 123123123)];

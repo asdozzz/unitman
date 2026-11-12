@@ -3,16 +3,16 @@
 namespace App\Unitman\Business\UseCase\Project;
 
 use App\Unitman\Business\Command\Project\GetProjectRunnerJobs;
-use App\Unitman\Infra\Repository\Project\ProjectRunnerJobRepository;
+use App\Unitman\Business\Port\Project\CanGetProjectRunnerJobs;
 
 final class GetProjectRunnerJobsQuery
 {
-    public function __construct(private ProjectRunnerJobRepository $projectRunnerJobRepository)
+    public function __construct(private CanGetProjectRunnerJobs $canGetProjectRunnerJobs)
     {
     }
 
     function handle(GetProjectRunnerJobs $command): array
     {
-        return $this->projectRunnerJobRepository->findAllRunnerJobsByProjectId($command->id);
+        return $this->canGetProjectRunnerJobs->findAllRunnerJobsByProjectId($command->id);
     }
 }

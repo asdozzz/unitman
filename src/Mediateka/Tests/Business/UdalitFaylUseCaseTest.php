@@ -10,6 +10,7 @@ use App\Mediateka\Business\UseCase\UdalitFaylUseCase;
 use App\Mediateka\Tests\Support\FakeFileStorage;
 use App\Mediateka\Tests\Support\InMemoryFaylUnitaRepository;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,9 +29,7 @@ final class UdalitFaylUseCaseTest extends TestCase
         $this->repository = new InMemoryFaylUnitaRepository();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function svyazannii_fayl_udalit_nelzya(): void
     {
         $this->sohranit('file-1', null, 'project-1');
@@ -47,9 +46,7 @@ final class UdalitFaylUseCaseTest extends TestCase
         $useCase->handle('file-1');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function nesvyazannii_fayl_udaetsya_iz_hranilishcha_i_reestra(): void
     {
         $this->sohranit('file-1', null, 'project-1');
@@ -66,9 +63,7 @@ final class UdalitFaylUseCaseTest extends TestCase
         $this->assertNull($this->repository->findById('file-1'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function bez_chekerov_udalenie_razresheno(): void
     {
         $this->sohranit('file-1', 'unit-1', null);
@@ -81,9 +76,7 @@ final class UdalitFaylUseCaseTest extends TestCase
         $this->assertSame(0, $this->repository->kolichestvo());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function udalit_bez_proverki_ignoriruet_svyazi(): void
     {
         $this->sohranit('file-1', null, 'project-1');

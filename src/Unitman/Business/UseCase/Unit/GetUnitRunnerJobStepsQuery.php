@@ -4,7 +4,6 @@ namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\PoluchitShagiZadachiUnita;
 use App\Unitman\Business\Port\Unit\UmeetPoluchatProzesiUnitaPoId;
-use App\Unitman\Business\ReadModel\Unit\ProzesUnita;
 
 final class GetUnitRunnerJobStepsQuery
 {

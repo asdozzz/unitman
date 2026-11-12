@@ -4,7 +4,7 @@ namespace App\Unitman\Tests\UseCase\Proekt;
 
 use App\Unitman\Business\Command\Project\Webhook\IzmenitUrlWebhooka;
 use App\Unitman\Business\Command\Project\Webhook\SozdatWebhookProekta;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\WebhookProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Project\Webhook\DobavitWebhookProektaUseCase;
@@ -14,13 +14,12 @@ use App\Unitman\Business\UseCase\Project\Webhook\UdalitWebhookProektaUseCase;
 use App\Unitman\Business\UseCase\Project\Webhook\VkluchitWebhookProektaUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Tests\UseCase\Unit\AbstractUnitUseCase;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class WebhookProektaUseCaseTest extends AbstractUnitUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function sozdan_i_udalen()
     {
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
@@ -30,7 +29,7 @@ final class WebhookProektaUseCaseTest extends AbstractUnitUseCase
         $webhookId = Uuid::uuid7()->toString();
         $webhookIdDouble = Uuid::uuid7()->toString();
         $projectId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$webhookId, $webhookIdDouble]));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$webhookId, $webhookIdDouble]));
 
         $useCase = self::$container->get(DobavitWebhookProektaUseCase::class);
         $useCase->handle(new SozdatWebhookProekta($projectId,'http://asd.ru'));

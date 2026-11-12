@@ -9,6 +9,7 @@ use App\Mediateka\Business\UseCase\UdaliFayliUnitaUseCase;
 use App\Mediateka\Tests\Support\FakeFileStorage;
 use App\Mediateka\Tests\Support\InMemoryFaylUnitaRepository;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,9 +29,7 @@ final class UdaliFayliUnitaUseCaseTest extends TestCase
         $this->useCase = new UdaliFayliUnitaUseCase($this->repository, $this->fileStorage);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function udalyayutsya_vse_fayly_tolko_celevogo_unita(): void
     {
         $this->sohranit('file-1', 'unit-1');
@@ -51,9 +50,7 @@ final class UdaliFayliUnitaUseCaseTest extends TestCase
         $this->assertSame(1, $this->repository->kolichestvo());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function arhivy_kataloga_proekta_ostayutsya(): void
     {
         $this->sohranit('file-1', 'unit-1');
@@ -69,9 +66,7 @@ final class UdaliFayliUnitaUseCaseTest extends TestCase
         $this->assertSame(1, $this->repository->kolichestvo());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function povtornoe_udalenie_ne_privodit_k_oshibke(): void
     {
         $this->sohranit('file-1', 'unit-1');
@@ -83,9 +78,7 @@ final class UdaliFayliUnitaUseCaseTest extends TestCase
         $this->assertSame(0, $this->repository->kolichestvo());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_unit_id_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);

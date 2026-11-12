@@ -5,7 +5,6 @@ use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Model\GolangRunner\Runner\RunnerHealthCheckResult;
 use App\Runner\Infra\Activity\UstanovitResultatRabotosposobnostiRunneraActivity;
 use Carbon\CarbonInterval;
-use PharIo\Version\Exception;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Common\RetryOptions;
 use Temporal\Workflow;

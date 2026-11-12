@@ -12,7 +12,7 @@ use App\Unitman\Business\Model\Unit\Runner\RunnerJobState;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\State\OshibkaZapuska;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
@@ -63,7 +63,7 @@ final class OtmenaZadachiPoLimituTest extends AbstractUnitUseCase
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
 
         $guidGenerator = new MemoryGuidGenerator([$unitId, $prozesSbrokiId]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $this->sozdatUnit($userId, $unitId, 'task-111');
 

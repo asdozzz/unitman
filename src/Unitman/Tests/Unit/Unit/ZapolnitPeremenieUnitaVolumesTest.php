@@ -10,6 +10,7 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\PeremenieUnitaZapolneni;
 use App\Unitman\Business\Model\Unit\VolumeValue;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -42,9 +43,7 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
 
     private const VALUES = ['APP_TITLE' => 'unit', 'DB_HOST' => 'localhost'];
 
-    /**
-     * @test
-     */
+    #[Test]
     public function toma_zapolnyayutsya_po_dir_iz_konfiga(): void
     {
         $unit = $this->unitSKonfigom();
@@ -68,9 +67,8 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
 
     /**
      * Без переданных томов файлы не появляются.
-     *
-     * @test
      */
+    #[Test]
     public function bez_zaprosa_tomov_fayly_pustye(): void
     {
         $unit = $this->unitSKonfigom();
@@ -84,9 +82,7 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
         $this->assertNull($volumes[1]->getFileId());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function event_zapolneniya_soderzhit_toma(): void
     {
         $unit = $this->unitSKonfigom();
@@ -101,9 +97,7 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
         ], $event->volumes);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pri_povtornom_zapolnenii_toma_pereschityvayutsya(): void
     {
         $unit = $this->unitSKonfigom();
@@ -119,9 +113,8 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
 
     /**
      * Том, не переданный в запросе, сохраняет текущий файл.
-     *
-     * @test
      */
+    #[Test]
     public function ne_peredannii_tom_sohranyaet_fayl(): void
     {
         $unit = $this->unitSKonfigom();
@@ -134,9 +127,8 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
 
     /**
      * Явный `fileId: null` очищает файл тома.
-     *
-     * @test
      */
+    #[Test]
     public function yavnii_null_ochishchaet_fayl_toma(): void
     {
         $unit = $this->unitSKonfigom();
@@ -149,9 +141,8 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
 
     /**
      * Если переданы только тома, значения переменных сохраняются.
-     *
-     * @test
      */
+    #[Test]
     public function pustie_znacheniya_sohranyayut_peremennie(): void
     {
         $unit = $this->unitSKonfigom();
@@ -168,9 +159,7 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
         $this->assertSame('file-web', $unit->poluchitVolumeUnita()[1]->getFileId());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function neizvestnii_dir_otklonyaetsya(): void
     {
         $unit = $this->unitSKonfigom();
@@ -181,9 +170,7 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
         $unit->zapolnitPeremenie(self::VALUES, [new VolumeZapros('unknown', 'file-1')]);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function povtornii_dir_v_zaprose_otklonyaetsya(): void
     {
         $unit = $this->unitSKonfigom();
@@ -197,9 +184,7 @@ final class ZapolnitPeremenieUnitaVolumesTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function bez_bloka_unitman_volumes_toma_pustye(): void
     {
         $unit = $this->unitSKonfigomBezVolumes();

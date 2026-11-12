@@ -4,9 +4,7 @@ namespace App\Runner\Infra\Workflow;
 
 use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\NachatDeistvieUnita;
-use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
-use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\ReturnType;

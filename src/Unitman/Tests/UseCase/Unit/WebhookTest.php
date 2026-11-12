@@ -10,7 +10,7 @@ use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Business\Command\Project\Webhook\SozdatWebhookProekta;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Repo\RepoType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\WebhookProjectRepository;
 use App\Unitman\Business\Port\Repo\RepoRepository;
@@ -25,6 +25,7 @@ use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\BackgroundJob\WebhookEvent\WebhookEventSender;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Utils\Service\TestClockService;
+use PHPUnit\Framework\Attributes\Test;
 use Psr\Clock\ClockInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -33,9 +34,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class WebhookTest extends AbstractUnitUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function otptrav_v_ochered()
     {
         $readModelRepo = self::$container->get(SpisokUnitovRepository::class);
@@ -66,7 +65,7 @@ final class WebhookTest extends AbstractUnitUseCase
             $webhookEvent5,
             $webhookEvent6
         ]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $userId = Uuid::uuid7()->toString();
         $this->mokaemUspehSecurity($userId);

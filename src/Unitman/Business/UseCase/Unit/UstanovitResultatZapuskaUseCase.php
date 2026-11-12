@@ -2,8 +2,6 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Unitman\Business\Command\Unit\UstanovitResultatZapuska;
-use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 

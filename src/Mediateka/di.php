@@ -17,7 +17,6 @@ use App\Mediateka\Infra\Repository\SqlFaylUnitaRepository;
 use App\Mediateka\Infra\S3\S3Settings;
 use App\Mediateka\Infra\S3\SigV4Signer;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return function (ContainerConfigurator $configuration) {
@@ -29,7 +28,7 @@ return function (ContainerConfigurator $configuration) {
 
     $services->load('App\\Mediateka\\', './{Business,Infra,Acl,Api}')
         ->exclude([
-            './{di.php, di_test.php, routing.php, Migrations, Tests}',
+            './{di.php,di_test.php,routing.php,Migrations,Tests}',
             './Business/Command',
             './Business/Model',
             './Business/ReadModel',

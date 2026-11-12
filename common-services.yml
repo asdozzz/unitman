@@ -78,19 +78,30 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
-    command: >
-      sh -c '
+    # $$ экранирует переменные: их должен подставлять shell ВНУТРИ контейнера,
+    # а не compose на хосте.
+    # Пользователь default отключён: при указании --aclfile директива
+    # requirepass игнорируется, поэтому "user default on nopass" ранее делал
+    # Redis полностью открытым на порту 6380.
+    # Форма списка (а не folded scalar ">") важна: внутри ">" строки с большим
+    # отступом сохраняют переводы строк, и echo попадает в ACL-файл с \n
+    # внутри имени пользователя — Redis падает с "contains invalid characters".
+    command:
+      - sh
+      - -c
+      - |
         mkdir -p /usr/local/etc/redis &&
         echo "bind 0.0.0.0" > /usr/local/etc/redis/redis.conf &&
-        echo "requirepass $REDIS_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
         echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
         echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
-        echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
+        echo "user default off -@all" > /usr/local/etc/redis/users.acl &&
         echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
-        redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
-      '
+        exec redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping" ]
+      # Проверяем именно те учётные данные, с которыми ходит RoadRunner KV:
+      # redis-cli возвращает PONG даже после неудачного AUTH, поэтому
+      # дополнительно фильтруем вывод через grep.
+      test: [ "CMD-SHELL", "redis-cli --user \"$$REDIS_USER\" --pass \"$$REDIS_USER_PASSWORD\" --no-auth-warning ping | grep -qx PONG" ]
       interval: 30s
       timeout: 10s
       retries: 5

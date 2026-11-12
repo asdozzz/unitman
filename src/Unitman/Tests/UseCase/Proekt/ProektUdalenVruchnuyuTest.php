@@ -11,7 +11,7 @@ use App\Unitman\Business\Command\Project\ForceRemoveProject;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Repo\RepoType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 use App\Unitman\Business\UseCase\Project\ForceRemoveProjectUseCase;
@@ -22,20 +22,19 @@ use App\Unitman\Business\UseCase\Project\UstanovitResultatUdaleniyaProektaUseCas
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class ProektUdalenVruchnuyuTest extends AbstractProjectUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function proekt_udalen_vruchnuyu()
     {
         $repoId = Uuid::uuid7()->toString();
         $projectId = Uuid::uuid7()->toString();
         $adminId = Uuid::uuid7()->toString();
 
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$repoId, $projectId]));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$repoId, $projectId]));
 
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
@@ -44,7 +43,7 @@ final class ProektUdalenVruchnuyuTest extends AbstractProjectUseCase
 
         $this->addRepoRaw(RepoType::GITLAB, 'repoName', 'http://repoUrl');
 
-        $this->addProjectRaw($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su');
+        $this->addProjectRaw($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su');
 
         $memoryRunner = new MemoryRunnerService();
         $steps = [[

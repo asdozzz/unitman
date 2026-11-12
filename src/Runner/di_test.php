@@ -1,6 +1,5 @@
 <?php
 
-use App\Runner\Business\Port\UmeetProveryatRabotosposobnostGolangRunnera;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $configuration) {

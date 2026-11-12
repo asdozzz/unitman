@@ -1,23 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\BackgroundJob\Infra\Service;
+
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag('app.background_job')]
 interface BackgroundJobInterface
 {
     /** @return non-empty-string */
-    function getName(): string;
+    public function getName(): string;
 
-    function run(): bool;
+    public function run(): bool;
 
     /**
      * @return int<0, max>
      * */
-    function getDelay(): int;
+    public function getDelay(): int;
 
     /**
      * @return int<1, 20>
      * */
-    function getProcessNum(): int;
+    public function getProcessNum(): int;
 }

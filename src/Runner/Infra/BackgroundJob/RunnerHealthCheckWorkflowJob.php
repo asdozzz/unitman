@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Runner\Infra\BackgroundJob;
 
-use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
+use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
 use App\Runner\Infra\Workflow\RunnerHealthCheckWorkflow;
-use PharIo\Version\Exception;
+use Psr\Log\LoggerInterface;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
 use Temporal\Common\IdReusePolicy;
 
-final class RunnerHealthCheckWorkflowJob implements BackgroundJobInterface
+final class RunnerHealthCheckWorkflowJob extends AbstractBackgroundJob
 {
-    public function __construct(private WorkflowClient $workflowClient)
-    {
+    public function __construct(
+        private WorkflowClient $workflowClient,
+        private LoggerInterface $logger,
+    ) {
     }
 
-    function getName(): string
+    public function getName(): string
     {
         return 'runner_health_check';
     }
@@ -27,7 +31,7 @@ final class RunnerHealthCheckWorkflowJob implements BackgroundJobInterface
             ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName);
     }
 
-    function run(): bool
+    public function run(): bool
     {
         try {
             $options = $this->getWorkflowJobOptions();
@@ -40,18 +44,24 @@ final class RunnerHealthCheckWorkflowJob implements BackgroundJobInterface
             $workflow->run();
 
             return true;
-        } catch (Exception) {
+        } catch (\Throwable $e) {
+            // Ранее здесь ловился PharIo\Version\Exception, из-за чего ошибки
+            // Temporal не перехватывались и сервис падал по счётчику ошибок.
+            $this->logger->error(
+                sprintf('job %s failed: %s', $this->getName(), $e->getMessage()),
+                ['exception' => $e]
+            );
+
             return false;
         }
-
     }
 
-    function getDelay(): int
+    public function getDelay(): int
     {
         return 300;
     }
 
-    function getProcessNum(): int
+    public function getProcessNum(): int
     {
         return 1;
     }

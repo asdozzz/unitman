@@ -1,9 +1,14 @@
 <?php
 
-namespace App\App\Exception;
+declare(strict_types=1);
 
-class Dump extends \Exception {
+namespace App\Utils\Exception;
 
+final class Dump extends \Exception
+{
+    /**
+     * @var string[]
+     */
     private array $dump = [];
 
     public function addDump(string $dump): void
@@ -15,5 +20,4 @@ class Dump extends \Exception {
     {
         return implode(\PHP_EOL, $this->dump);
     }
-
 }

@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
-use App\Unitman\Business\Command\Unit\UstanovitResultatUdaleniya;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRepository;

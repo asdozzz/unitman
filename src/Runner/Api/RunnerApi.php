@@ -31,7 +31,7 @@ use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
-use App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow;
+use App\Runner\Infra\Workflow\NachatOstanovkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatSborkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatSbrosPodgotovkiWorkflow;
@@ -40,7 +40,6 @@ use App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow;
 use App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow;
 use App\Runner\Infra\Workflow\RemoveProjectWorkflow;
 use Carbon\CarbonInterval;
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
@@ -220,7 +219,7 @@ final class RunnerApi implements RunnerApiInterface
     public function nachatOstanovkuUnita(string $workflowId,NachatOstanovkuUnita $command): string
     {
         $workflow = $this->workflowClient->newWorkflowStub(
-            NachatOstanvkuUnitaWorkflow::class,
+            NachatOstanovkuUnitaWorkflow::class,
             WorkflowOptions::new()
                 ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)

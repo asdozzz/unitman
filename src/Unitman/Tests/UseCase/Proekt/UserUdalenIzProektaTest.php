@@ -10,13 +10,12 @@ use App\Unitman\Business\ReadModel\ProjectUsersList;
 use App\Unitman\Business\UseCase\Project\AddUserToProjectUseCase;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class UserUdalenIzProektaTest extends AbstractProjectUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function user_udalen_is_proekta()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -33,7 +32,7 @@ final class UserUdalenIzProektaTest extends AbstractProjectUseCase
         );
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'thttp://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'thttp://testcase.su', $adminId);
 
         $addUserUseCase = self::$container->get(AddUserToProjectUseCase::class);
         $command = new AddUserToProject($projectId, $userId);

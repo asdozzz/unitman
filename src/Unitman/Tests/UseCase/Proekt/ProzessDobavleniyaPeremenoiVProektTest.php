@@ -11,13 +11,12 @@ use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
 use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiProekta;
 use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class ProzessDobavleniyaPeremenoiVProektTest extends AbstractProjectUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function test()
     {
 
@@ -29,7 +28,7 @@ final class ProzessDobavleniyaPeremenoiVProektTest extends AbstractProjectUseCas
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
 
         $command = new DobavitPeremenuyuVProekt($projectId, 'hidden', 'secretKey', '1231231');
         $useCase = self::$container->get(ProzessDobavleniyaPeremenoiVProekt::class);

@@ -4,15 +4,13 @@ namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Port\Unit\CanFindUnitIdByContainerName;
-use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\Unit\UmeetObnovlyatStatistikuKonteinera;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
-use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
-use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 
 final class ObnovitStatistikuPoKonteineruUnitaUseCase
 {
     public function __construct(
-        private SpisokUnitovRepository $spisokUnitovRepository,
+        private UmeetObnovlyatStatistikuKonteinera $umeetObnovlyatStatistikuKonteinera,
         private CanFindUnitIdByContainerName $canFindUnitIdByContainerName
     )
     {
@@ -26,7 +24,7 @@ final class ObnovitStatistikuPoKonteineruUnitaUseCase
             return;
         }
 
-        $this->spisokUnitovRepository->obnovitStatistikuContainer($id, new ProjectListContainerStats(
+        $this->umeetObnovlyatStatistikuKonteinera->obnovitStatistikuContainer($id, new ProjectListContainerStats(
             $command->cpuPercent,
             $command->memoryPercent,
             $command->memoryUsage,

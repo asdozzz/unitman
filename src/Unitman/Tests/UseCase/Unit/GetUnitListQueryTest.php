@@ -13,6 +13,8 @@ use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SvyaziUnitovRepository;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 
 final class GetUnitListQueryTest extends AbstractUnitUseCase
 {
@@ -43,10 +45,8 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         yield 'только переданный юнит' => [new GetUnitListFilter(unitIds: ['1']), '6', ['1']];
     }
 
-    /**
-     * @test
-     * @dataProvider dataProviderGetUnitList
-     * */
+    #[Test]
+    #[DataProvider('dataProviderGetUnitList')]
     function handle(GetUnitListFilter $filter, string $currentUserId, array $resultIds): void
     {
         $readModelRepo = self::$container->get(SpisokUnitovRepository::class);

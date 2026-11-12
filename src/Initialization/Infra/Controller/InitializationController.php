@@ -5,7 +5,6 @@ namespace App\Initialization\Infra\Controller;
 use App\Initialization\Business\Command\ObnovitDefoltnyiProxyHost;
 use App\Initialization\Business\Port\InitializationRepository;
 use App\Initialization\Business\UseCase\ObnovitDefoltnyiProxyHostUseCase;
-use App\Initialization\Infra\Repository\SqlInitializationRepository;
 use App\Utils\Service\ExceptionTranslator;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

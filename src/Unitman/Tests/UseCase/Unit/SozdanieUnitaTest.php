@@ -8,7 +8,7 @@ use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
 use App\Unitman\Business\Model\Unit\VariableValue;
 use App\Unitman\Business\Model\Unit\PeremennayaSvyaz;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
@@ -23,6 +23,7 @@ use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SvyaziUnitovRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class SozdanieUnitaTest extends AbstractUnitUseCase
@@ -38,7 +39,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $projectId = Uuid::uuid7()->toString();
 
         $guidGenerator = new MemoryGuidGenerator([$projectId]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $project = $this->stubProekta($projectId, $userId);
         $projectRepository = self::$container->get(ProjectRepository::class);
@@ -118,9 +119,8 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
     /**
      * Тома из запроса на создание юнита связываются с медиатекой по `fileId`.
      * Тома без файла (только каталог) медиатеку не затрагивают.
-     *
-     * @test
-     * */
+     */
+    #[Test]
     function toma_privyazivayutsya_k_mediateke_po_fileId()
     {
         $unitId = Uuid::uuid7()->toString();
@@ -130,7 +130,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $projectId = Uuid::uuid7()->toString();
 
         $guidGenerator = new MemoryGuidGenerator([$projectId]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $project = $this->stubProekta($projectId, $userId);
         $projectRepository = self::$container->get(ProjectRepository::class);
@@ -195,9 +195,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $this->assertNull($volumes[2]->getFileId());
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function avtosozdanie()
     {
         $unitId = Uuid::uuid7()->toString();
@@ -211,7 +209,7 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
         $projectId = Uuid::uuid7()->toString();
 
         $guidGenerator = new MemoryGuidGenerator([$projectId]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $project = $this->stubProekta($projectId, $userId);
         $projectRepository = self::$container->get(ProjectRepository::class);
@@ -243,9 +241,8 @@ final class SozdanieUnitaTest extends AbstractUnitUseCase
     /**
      * Связь переменной с юнитом, выбранным через хелпер, фиксируется при
      * создании юнита: в агрегате, в read-модели списка и в проекции связей.
-     *
-     * @test
-     * */
+     */
+    #[Test]
     function svyazi_peredayutsya_v_read_model_i_proekciyu()
     {
         $targetUnitId = Uuid::uuid7()->toString();

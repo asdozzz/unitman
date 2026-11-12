@@ -6,13 +6,12 @@ use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class DannieProektaIzmeneniTest extends AbstractProjectUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function dannie_proekta_izmeneni()
     {
         $repoId = Uuid::uuid7()->toString();
@@ -23,7 +22,7 @@ final class DannieProektaIzmeneniTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, 'asdozzz/unitman', 'Units', 'main', 'http://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
 
         $command = new UpdateProjectData($projectId, 'Units2', 'https://testcase2.su', memoryLimit: 500);
         $useCase = self::$container->get(UpdateProjectDataUseCase::class);

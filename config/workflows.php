@@ -11,7 +11,7 @@ return [
     \App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\NachatSbrosPodgotovkiWorkflow::class,
     \App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow::class,
-    \App\Runner\Infra\Workflow\NachatOstanvkuUnitaWorkflow::class,
+    \App\Runner\Infra\Workflow\NachatOstanovkuUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\RunnerHealthCheckWorkflow::class,
     \App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow::class,

@@ -2,7 +2,6 @@
 
 namespace App\Utils\EventSauce\Repository;
 
-use App\Account\Business\Utils\AccountEventTypeEnum;
 use App\Utils\EventSauce\Model\StreamName;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\AggregateRoot;

@@ -6,7 +6,6 @@ use App\Runner\Business\Command\SaveStepsCommand;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
 use App\Runner\Infra\Service\RedisService;
 use OpenApi\Attributes as OA;
-use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;

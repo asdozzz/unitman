@@ -7,6 +7,7 @@ namespace App\Unitman\Tests\Unit\VolumeType;
 use App\Unitman\Business\Command\VolumeType\DobavitTipVoluma;
 use App\Unitman\Business\UseCase\VolumeType\DobavitTipVolumaUseCase;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Создание типа тома в каталоге проекта.
@@ -26,9 +27,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function tip_sohranyaetsya_v_kataloge_proekta(): void
     {
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, 'logs', 'Логи'));
@@ -40,9 +39,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertSame(self::PROJECT_ID, $type->projectId);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function kod_i_nazvanie_ochishchayutsya_ot_probelov(): void
     {
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, '  logs  ', '  Логи  '));
@@ -53,9 +50,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertSame('Логи', $type->name);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_kod_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -64,9 +59,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, '   ', 'Логи'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoe_nazvanie_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -75,9 +68,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, 'logs', '   '));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function slishkom_dlinnyi_kod_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -86,9 +77,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, str_repeat('a', 101), 'Логи'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function slishkom_dlinnoe_nazvanie_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -97,9 +86,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, 'logs', str_repeat('a', 256)));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function povtornyi_kod_v_proekte_otklonyaetsya(): void
     {
         $this->dobavitTip('logs');
@@ -110,9 +97,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, 'logs', 'Логи'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function odinakovyi_kod_v_raznyh_proektah_razreshen(): void
     {
         $this->dobavitTip('logs', 'Логи', self::PROJECT_ID);
@@ -125,9 +110,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->assertSame(self::OTHER_PROJECT_ID, $type->projectId);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function ne_admin_otklonyaetsya(): void
     {
         $this->dobavitUchastnika(self::USER_ID);
@@ -139,9 +122,7 @@ final class DobavitTipVolumaUseCaseTest extends AbstractKatalogUseCase
         $this->useCase->handle(new DobavitTipVoluma(self::PROJECT_ID, 'logs', 'Логи'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function polzovatel_vne_proekta_otklonyaetsya(): void
     {
         $this->securityService->ustanovitPolzovatelya(self::STRANGER_ID);

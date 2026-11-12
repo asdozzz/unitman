@@ -7,26 +7,26 @@ deptrac:
     - name: Api
       collectors:
         - type: directory
-          regex: ./Api
+          regex: ./Api/.*
     - name: Acl
       collectors:
         - type: directory
-          regex: ./Acl
-    - name: Infrastructure
+          regex: ./Acl/.*
+    - name: Business
       collectors:
         - type: directory
-          regex: ./Infrastructure
-    - name: Domain
+          regex: ./Business/.*
+    - name: Infra
       collectors:
         - type: directory
-          regex: ./Domain
+          regex: ./Infra/.*
   ruleset:
-    Acl:
-      - Domain
-      - Infrastructure
     Api:
-      - Domain
-      - Infrastructure
-    Infrastructure:
-      - Domain
-    Domain:
+      - Business
+      - Infra
+    Acl:
+      - Business
+      - Infra
+    Business:
+    Infra:
+      - Business

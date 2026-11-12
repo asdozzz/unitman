@@ -4,17 +4,31 @@ services:
       file: common-services.yml
       service: web
     depends_on:
-      - beanstalk
-      - centrifugo
-      - postgres
-      - minio
-      - minio-init
+      beanstalk:
+        condition: service_started
+      centrifugo:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     environment:
       - APP_ENV=prod
       - PHP_OPCACHE_ENABLE=1
       - PHP_OPCACHE_ENABLE_CLI=1
       - PHP_ERROR_REPORTING="E_ALL"
-      - PHP_DISPLAY_ERRORS=On
+      # В prod ошибки не должны попадать в тело ответа: только в лог.
+      - PHP_DISPLAY_ERRORS=Off
+      - PHP_LOG_ERRORS=On
+      # RoadRunner KV (kv.redis в .rr.yaml) читает эти переменные из окружения
+      # процесса, а не из .env через Symfony Dotenv.
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
     volumes:
       - ./config/jwt:/home/containeruser/www/config/jwt
   postgres:
@@ -23,12 +37,13 @@ services:
       service: postgres
 
   unitman-front:
-    build: asdozzz/unitman-front:0.0.9
+    image: asdozzz/unitman-front:0.0.9
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       VITE_API_HOST: http://web:8080/api
-      VITE_CENTRIFUGE_HOST: ws://web:8000/connection/websocket
+      # Порт 8000 слушает контейнер centrifugo (см. common-services.yml), а не web (у него 8080).
+      VITE_CENTRIFUGE_HOST: ws://centrifugo:8000/connection/websocket
     ports:
       - ${UNITMAN_FRONT_PORT}:80
     depends_on:

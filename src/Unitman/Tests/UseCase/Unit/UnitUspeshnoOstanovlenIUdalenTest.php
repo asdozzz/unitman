@@ -19,7 +19,7 @@ use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
 use App\Unitman\Business\Model\Unit\State\StateUserCommand;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\ProzesUnita;
 use App\Unitman\Business\ReadModel\Unit\ProzesUnitaBezShagov;
@@ -52,7 +52,7 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $prozesSbrokiId = Uuid::uuid7()->toString();
         $prozesDeistviyaId = Uuid::uuid7()->toString();
         $prozesUdaleniyaId = Uuid::uuid7()->toString();
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSbrokiId, $prozesDeistviyaId, $prozesUdaleniyaId]));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$unitId, $prozesSbrokiId, $prozesDeistviyaId, $prozesUdaleniyaId]));
         $unitName = 'task-123';
         $projectName = 'uwin';
         $projectId = Uuid::uuid7()->toString();

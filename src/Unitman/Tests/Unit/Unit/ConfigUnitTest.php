@@ -4,13 +4,12 @@ namespace App\Unitman\Tests\Unit\Unit;
 
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\VariableValue;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ConfigUnitTest extends TestCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function validnii_config()
     {
         $configAsArray = [
@@ -177,9 +176,7 @@ final class ConfigUnitTest extends TestCase
         $this->assertNull($arr['variables'][0]['helper']);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function pomoschnik_ssylki_s_protokolom_ws()
     {
         $configAsArray = $this->minimalniiConfig();
@@ -206,9 +203,7 @@ final class ConfigUnitTest extends TestCase
         $this->assertSame('ws', $config->toArray()['variables'][0]['helper']['type']);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function pomoschnik_ssylki_s_nekorrektnim_protokolom_otklonyaetsya()
     {
         $this->expectException(\DomainException::class);
@@ -233,9 +228,7 @@ final class ConfigUnitTest extends TestCase
         ConfigUnita::fromArray($configAsArray);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function tip_porta_normalizuyetsya()
     {
         $configAsArray = $this->minimalniiConfig();
@@ -250,9 +243,7 @@ final class ConfigUnitTest extends TestCase
         $this->assertSame('ws', $config->toArray()['services'][0]['ports'][0]['type']);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function config_bez_pomoschnika()
     {
         $configAsArray = [
@@ -282,9 +273,7 @@ final class ConfigUnitTest extends TestCase
         $this->assertEquals([], $config->getVariables());
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function nevalidnii_pomoschnik_bez_projectId()
     {
         $configAsArray = [
@@ -326,9 +315,7 @@ final class ConfigUnitTest extends TestCase
         ConfigUnita::fromArray($configAsArray);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function neobazatelnii_blok_unitman_volumes_razbiraetsya()
     {
         $configAsArray = $this->configSVolumes([
@@ -353,9 +340,7 @@ final class ConfigUnitTest extends TestCase
         ], $config->toArray()['unitman_volumes']);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function blok_unitman_volumes_neobazatelen()
     {
         $config = ConfigUnita::fromArray($this->minimalniiConfig());
@@ -365,9 +350,7 @@ final class ConfigUnitTest extends TestCase
         $this->assertSame([], $config->toArray()['unitman_volumes']);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function povtornii_dir_v_unitman_volumes_otklonyaetsya()
     {
         $configAsArray = $this->configSVolumes([
@@ -382,9 +365,8 @@ final class ConfigUnitTest extends TestCase
 
     /**
      * Поле `variable` в описании тома больше не поддерживается и игнорируется.
-     *
-     * @test
-     * */
+     */
+    #[Test]
     function pole_variable_v_tome_ignoriruetsya()
     {
         $config = ConfigUnita::fromArray($this->configSVolumes([
@@ -397,9 +379,7 @@ final class ConfigUnitTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function tom_bez_dir_otklonyaetsya()
     {
         $configAsArray = $this->configSVolumes([
@@ -411,9 +391,7 @@ final class ConfigUnitTest extends TestCase
         ConfigUnita::fromArray($configAsArray);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function tom_bez_imeni_otklonyaetsya()
     {
         $configAsArray = $this->configSVolumes([
@@ -425,9 +403,7 @@ final class ConfigUnitTest extends TestCase
         ConfigUnita::fromArray($configAsArray);
     }
 
-    /**
-     * @test
-     * */
+    #[Test]
     function nevalidnii_element_unitman_volumes_otklonyaetsya()
     {
         $configAsArray = $this->minimalniiConfig();

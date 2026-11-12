@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Unitman\Infra\BackgroundJob\UnitRunnerJobs;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
-use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
 use App\Unitman\Infra\Projection\ProzesUnitaProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
@@ -20,8 +21,7 @@ final class UnitRunnerJobs extends AbstractBackgroundJob
 
     function run(): bool
     {
-        $this->projectionsManager->pullProjectionByName(ProzesUnitaProjection::PROJECTION_NAME);
-
-        return true;
+        // false пробрасываем наружу: заблокированная проекция — не успех.
+        return $this->projectionsManager->pullProjectionByName(ProzesUnitaProjection::PROJECTION_NAME);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Unitman\Infra\Adapter;
 
 use App\Unitman\Business\Command\Repo\GetRepoTypeList;
 use App\Unitman\Business\Model\Project;
-use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;

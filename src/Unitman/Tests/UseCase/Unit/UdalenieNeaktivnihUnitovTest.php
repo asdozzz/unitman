@@ -17,7 +17,7 @@ use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessType;
 use App\Unitman\Business\Model\Unit\VariableValue;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -97,7 +97,7 @@ final class UdalenieNeaktivnihUnitovTest extends AbstractUnitUseCase
         self::$container->set(ClockInterface::class, $clockService);
 
         $guidGenerator = new MemoryGuidGenerator([$unitId, $prozesSbrokiId, $unitId2, $prozesSbrokiId2, $unitId3, $prozesSbrokiId3, $unitId4, $prozesSbrokiId4, $prozesUdaleniyaId, $prozesUdaleniyaId2]);
-        self::$container->set(CanGeneateGuid::class, $guidGenerator);
+        self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $this->sozdatUnit($userId, $unitId, 'task-111');
 

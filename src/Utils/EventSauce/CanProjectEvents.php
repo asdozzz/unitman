@@ -4,7 +4,6 @@ namespace App\Utils\EventSauce;
 
 use App\Utils\EventSauce\Model\StreamName;
 use EventSauce\EventSourcing\MessageConsumer;
-use phpDocumentor\Reflection\Types\True_;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag('utils.event_store.projection')]

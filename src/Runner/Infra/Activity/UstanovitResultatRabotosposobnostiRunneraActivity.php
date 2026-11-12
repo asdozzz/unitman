@@ -2,10 +2,9 @@
 
 namespace App\Runner\Infra\Activity;
 
-use App\Runner\Acl\UnitmanAdapter;
 use App\Runner\Business\Command\UstanovitResultatProverkiRabotosposobnosti;
 use App\Runner\Business\Model\GolangRunner\Runner\RunnerHealthCheckResult;
-use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
 use App\Runner\Business\UseCase\UstanovitResultatProverkiRabotosposobnostiRunneraUseCase;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
 use Temporal\Activity\ActivityInterface;
@@ -17,7 +16,7 @@ final class UstanovitResultatRabotosposobnostiRunneraActivity
     public function __construct(
         private UstanovitResultatProverkiRabotosposobnostiRunneraUseCase $useCase,
         private SqlRunnerStateRepository $sqlRunnerStateRepository,
-        private UnitmanAdapter $unitmanAdapter
+        private UmeetObnovlyatStatistikuPoUnitam $umeetObnovlyatStatistikuPoUnitam
     )
     {
     }
@@ -50,7 +49,7 @@ final class UstanovitResultatRabotosposobnostiRunneraActivity
     {
         try {
             $runner = $this->sqlRunnerStateRepository->getById($runnerId);
-            $this->unitmanAdapter->obnovitStatistikuPoUnitam($runner->getDockerStats());
+            $this->umeetObnovlyatStatistikuPoUnitam->obnovitStatistikuPoUnitam($runner->getDockerStats());
 
             return 'ok';
         } catch (\Exception $e) {

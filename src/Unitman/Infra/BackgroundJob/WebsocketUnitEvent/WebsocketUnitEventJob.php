@@ -18,8 +18,7 @@ final class WebsocketUnitEventJob extends AbstractBackgroundJob
 
     function run(): bool
     {
-        $this->projectionsManager->pullProjectionByName(WebsocketUnitEventProjection::PROJECTION_NAME);
-
-        return true;
+        // false пробрасываем наружу: заблокированная проекция — не успех.
+        return $this->projectionsManager->pullProjectionByName(WebsocketUnitEventProjection::PROJECTION_NAME);
     }
 }

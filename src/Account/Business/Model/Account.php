@@ -24,8 +24,6 @@ use App\Utils\Exception\TranslatorKeyword;
 use App\Utils\Model\Locale\SupportedLocale;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
-use EventSauce\EventSourcing\AggregateRootId;
-use Generator;
 
 /**
  * @template-implements AggregateRoot<AccountId>

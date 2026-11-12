@@ -6,7 +6,6 @@ use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\UseCase\VipustitRefreshTokenUseCase;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
-use Lexik\Bundle\JWTAuthenticationBundle\Security\User\JWTUserInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 #[AsEventListener(event: 'lexik_jwt_authentication.on_authentication_success')]

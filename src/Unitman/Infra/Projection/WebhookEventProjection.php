@@ -10,7 +10,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehSborkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\WebhookProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
@@ -19,9 +19,7 @@ use App\Unitman\Business\ReadModel\Unit\WebhookEvent;
 use App\Unitman\Business\ReadModel\Unit\WebhookEvent\WebhookEventPayload;
 use App\Unitman\Business\ReadModel\Unit\WebhookEvent\WebhookEventPayload\WebhookEventPayloadType;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
-use App\Unitman\Infra\Jobs\ZadachaDlyOcherediService;
 use App\Unitman\Infra\Repository\Unit\SqlWebhookEventRepository;
-use App\Utils\EventSauce\AbstractProjection;
 use App\Utils\EventSauce\Model\StreamName;
 use EventSauce\EventSourcing\Message;
 use Psr\Clock\ClockInterface;
@@ -36,7 +34,7 @@ final class WebhookEventProjection implements UnitmanProjection
         private ProjectRepository         $projectRepository,
         private UnitmanSecurityService    $securityService,
         private ClockInterface            $clock,
-        private CanGeneateGuid            $canGeneateGuid,
+        private CanGenerateGuid            $canGenerateGuid,
         private WebhookProjectRepository  $webhookProjectRepository
     )
     {
@@ -128,7 +126,7 @@ final class WebhookEventProjection implements UnitmanProjection
 
             foreach ($projectWebhooks as $projectWebhook) {
                 $webhookEvent = new WebhookEvent(
-                    $this->canGeneateGuid->makeGuid(),
+                    $this->canGenerateGuid->makeGuid(),
                     $projectWebhook->id,
                     $payload
                 );

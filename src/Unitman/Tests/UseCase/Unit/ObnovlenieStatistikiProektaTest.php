@@ -4,7 +4,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
@@ -19,13 +19,12 @@ use App\Unitman\Business\UseCase\Unit\ProverkaSvyazeyPeremenih;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
+use PHPUnit\Framework\Attributes\Test;
 use Ramsey\Uuid\Uuid;
 
 final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
 {
-    /**
-     * @test
-     * */
+    #[Test]
     function obnovlenieStatistikiUnita()
     {
         $unitId = Uuid::uuid7()->toString();
@@ -35,7 +34,7 @@ final class ObnovlenieStatistikiProektaTest extends AbstractUnitUseCase
 
         $prozesId = Uuid::uuid7()->toString();
         $guidGeneratorArr = [$unitId, $prozesId];
-        self::$container->set(CanGeneateGuid::class, new MemoryGuidGenerator($guidGeneratorArr));
+        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator($guidGeneratorArr));
 
         $project = $this->stubProekta($projectId, $userId, 'uwin');
         $projectRepository = self::$container->get(ProjectRepository::class);

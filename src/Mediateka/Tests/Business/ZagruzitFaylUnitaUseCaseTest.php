@@ -11,6 +11,7 @@ use App\Mediateka\Tests\Support\FakeFileStorage;
 use App\Mediateka\Tests\Support\FixedGuidGenerator;
 use App\Mediateka\Tests\Support\InMemoryFaylUnitaRepository;
 use DomainException;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -36,9 +37,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function zip_arhiv_sohranyaetsya_v_hranilishe_i_reestre(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);
@@ -62,9 +61,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->assertSame('units/unit-1/file-id-1.zip', $saved->getStorageKey());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_zip_arhiv_prinimaetsya(): void
     {
         // "PK\x05\x06" — конец центрального каталога, валидный пустой архив.
@@ -75,9 +72,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->assertSame(strlen($content), $file->getSize());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function ne_zip_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -86,9 +81,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->useCase->handle($this->komanda('обычный текст, не архив'));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoi_fayl_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -97,9 +90,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->useCase->handle($this->komanda(''));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function fayl_bolshe_limita_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -108,9 +99,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->useCase->handle($this->komanda("PK\x03\x04", self::MAX_FILE_SIZE + 1));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function content_length_bolshe_limita_otklonyaetsya_do_chteniya_potoka(): void
     {
         $this->expectException(DomainException::class);
@@ -126,9 +115,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         ));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function pustoie_imya_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -144,9 +131,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         ));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function slishkom_dlinnoe_imya_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -162,9 +147,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         ));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function bez_unit_id_sohranyaetsya_kak_chernovik(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);
@@ -185,9 +168,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->assertSame('drafts/file-id-1.zip', $this->repository->getById('file-id-1')->getStorageKey());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function arhiv_proekta_sohranyaetsya_v_papke_proekta(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);
@@ -214,9 +195,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function odnovremenno_unit_i_proekt_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
@@ -235,9 +214,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         ));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function imya_fayla_privoditsya_k_pravilam_docker_volume(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);
@@ -254,9 +231,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->assertSame('damp-bd-v2.zip', $file->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function imya_bez_rasshireniya_dopolnyaetsya_zip(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);
@@ -273,9 +248,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
         $this->assertSame('damp-bd.zip', $file->getName());
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function chernovik_privyazyvaetsya_k_unitu_bez_kopirovaniya_v_hranilishche(): void
     {
         $content = "PK\x03\x04" . str_repeat('a', 96);

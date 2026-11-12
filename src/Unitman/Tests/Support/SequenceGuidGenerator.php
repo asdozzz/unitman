@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Unitman\Tests\Support;
 
-use App\Unitman\Business\Port\CanGeneateGuid;
+use App\Unitman\Business\Port\CanGenerateGuid;
 
 /**
  * Последовательный генератор идентификаторов: `type-1`, `type-2`, ...
  */
-final class SequenceGuidGenerator implements CanGeneateGuid
+final class SequenceGuidGenerator implements CanGenerateGuid
 {
     private int $counter = 0;
 
