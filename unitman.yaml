@@ -36,7 +36,7 @@ up:
   - docker network create unitman_default
   - chmod -R 755 ./scripts
   - docker compose -f dc.temporal.yml up -d
-  - docker compose  f dc.unitman.yml up -d --build
+  - docker compose -f dc.unitman.yml up -d --build
   - docker compose -f dc.unitman.yml exec web php bin/console app:jobs start
 
 down:
