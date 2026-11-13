@@ -26,7 +26,10 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\Step;
+use App\Runner\Business\Model\RunnerProgress;
 use App\Runner\Business\Port\RunnerRepository;
+use App\Runner\Business\Port\UmeetChitatProgressZadachi;
+use App\Runner\Business\Port\UmeetHranitProgressZadachi;
 use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
@@ -54,9 +57,21 @@ final class RunnerApi implements RunnerApiInterface
         private RunnerRepository $runnerRepository,
         private float $minFreeMemoryPercent,
         private RedisService $redisService,
-        private SerializerInterface $serializer
+        private SerializerInterface $serializer,
+        private UmeetHranitProgressZadachi $progressStorage,
+        private UmeetChitatProgressZadachi $progressReader,
     )
     {
+    }
+
+    public function zaregistrirovatProgressToken(string $workflowId): void
+    {
+        $this->progressStorage->zaregistrirovat($workflowId);
+    }
+
+    public function poluchitProgressZadachi(string $workflowId): ?RunnerProgress
+    {
+        return $this->progressReader->poluchit($workflowId);
     }
 
     function getTaskQueue(): string
@@ -115,6 +130,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatSborkuUnita(string $workflowId,NachatSborkuUnita $command): string
     {
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatSborkuUnitaWorkflow::class,
             WorkflowOptions::new()
@@ -135,6 +152,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatUdalenieUnita(string $workflowId,NachatUdalenieUnita $command): string
     {
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatUdalenieUnitaWorkflow::class,
             WorkflowOptions::new()
@@ -155,6 +174,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatPodgotovkuUnita(string $workflowId,NachatPodgotovkuUnita $command): string
     {
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatPodgotovkuUnitaWorkflow::class,
             WorkflowOptions::new()
@@ -169,6 +190,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatObnovlenieUnita(string $workflowId,NachatObnovlenieUnita $command): string
     {
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatObnovlenieUnitaWorkflow::class,
             WorkflowOptions::new()
@@ -183,6 +206,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatSbrosPodgotovkiUnita(string $workflowId,NachatSbrosPodgotovkiUnita $command): string
     {
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatSbrosPodgotovkiWorkflow::class,
             WorkflowOptions::new()
@@ -203,6 +228,8 @@ final class RunnerApi implements RunnerApiInterface
             throw new \DomainException('runner.memory_free_is_to_small');
         }
 
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatZapuskUnitaWorkflow::class,
             WorkflowOptions::new()
@@ -218,6 +245,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatOstanovkuUnita(string $workflowId,NachatOstanovkuUnita $command): string
     {
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatOstanovkuUnitaWorkflow::class,
             WorkflowOptions::new()
@@ -233,6 +262,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatDeistvieUnita(string $workflowId,NachatDeistvieUnita $command): string
     {
+        $this->zaregistrirovatProgressToken($workflowId);
+
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatDeistvieUnitaWorkflow::class,
             WorkflowOptions::new()

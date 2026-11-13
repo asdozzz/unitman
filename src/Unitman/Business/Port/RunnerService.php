@@ -5,6 +5,7 @@ namespace App\Unitman\Business\Port;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatDeistviyaiUnita;
+use App\Unitman\Business\Model\Runner\RunnerJobProgress;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
@@ -57,6 +58,14 @@ interface RunnerService
     public function poluchitResultatUdaleniyaUnita(string $jobId): ResultatUdaleniyaUnita;
 
     public function poluchitResultatDeistviya(string $jobId): ResultatDeistviyaiUnita;
+
+    /**
+     * Промежуточный прогресс задачи раннера.
+     *
+     * Возвращает null, если раннер ещё не присылал шагов либо снапшот истёк —
+     * это нормальная ситуация для только что запущенной задачи.
+     */
+    public function poluchitProgressZadachi(string $jobId): ?RunnerJobProgress;
 
     public function proveritKonteinerUnita(Unit $unit, Project $project): bool;
 }

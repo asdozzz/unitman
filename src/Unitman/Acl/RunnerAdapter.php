@@ -26,6 +26,7 @@ use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaProekta;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatZapuskaUnita;
+use App\Unitman\Business\Model\Runner\RunnerJobProgress;
 use App\Runner\Business\Command\NachatPodgotovkuUnita\Volume;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\MediatekaService;
@@ -53,7 +54,37 @@ final class RunnerAdapter implements RunnerService
      * */
     private function convertRunnerSteps(array $Steps): array
     {
-        return array_map(fn(array $step) => new Unit\Runner\RunnerJobStep($step['Command'], $step['Response'], $step['Success'], $step['Unixtime']), $Steps);
+        return array_map(fn(array $step) => new Unit\Runner\RunnerJobStep(
+            $step['Command'],
+            $step['Response'],
+            $step['Success'],
+            $step['Unixtime'],
+            $this->izvlechVremyaNachalaShaga($step),
+        ), $Steps);
+    }
+
+    /**
+     * Время начала шага необязательно: старый раннер и старые снапшоты в KV
+     * ключ не содержат, поэтому отсутствие трактуется как `null`.
+     *
+     * Ключ читается регистронезависимо: сериализация `Step` через `json_encode`
+     * даёт `UnixtimeStart`, а раннер может прислать `unixtimeStart`.
+     *
+     * @param array<string, mixed> $step
+     */
+    private function izvlechVremyaNachalaShaga(array $step): ?int
+    {
+        $value = $step['UnixtimeStart'] ?? $step['unixtimeStart'] ?? null;
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        return null;
     }
 
     public function nachatSborkuProekta(Project $project): JobId
@@ -360,6 +391,23 @@ final class RunnerAdapter implements RunnerService
         }
 
         return new ResultatDeistviyaiUnita((bool) $result->Success, $this->convertRunnerSteps($result->Steps));
+    }
+
+    public function poluchitProgressZadachi(string $jobId): ?RunnerJobProgress
+    {
+        $progress = $this->runnerApi->poluchitProgressZadachi($jobId);
+
+        if ($progress === null) {
+            return null;
+        }
+
+        return new RunnerJobProgress(
+            $progress->token,
+            $this->convertRunnerSteps($progress->steps),
+            $progress->finished,
+            $progress->success,
+            $progress->unixtime,
+        );
     }
 
     public function proveritKonteinerUnita(Unit $unit, Project $project): bool

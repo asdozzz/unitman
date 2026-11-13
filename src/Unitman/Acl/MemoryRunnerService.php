@@ -20,6 +20,7 @@ use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatProverkiKonteineraUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
+use App\Runner\Business\Model\RunnerProgress;
 use Symfony\Component\DependencyInjection\Attribute\When;
 
 #[When(env: 'test')]
@@ -58,6 +59,8 @@ final class MemoryRunnerService implements RunnerApiInterface
     const RESULTAT_DEISTVIYA = 'RESULTAT_DEISTVIYA';
 
     const PROVERKA_UNITA = 'PROVERKA_UNITA';
+
+    const PROGRESS_ZADACHI = 'PROGRESS_ZADACHI';
     private array $responses = [];
     public function __construct()
     {
@@ -265,6 +268,15 @@ final class MemoryRunnerService implements RunnerApiInterface
             $response['expectedParams'](func_get_args());
         }
         return $response['response'];
+    }
+
+    public function zaregistrirovatProgressToken(string $workflowId): void
+    {
+    }
+
+    public function poluchitProgressZadachi(string $workflowId): ?RunnerProgress
+    {
+        return $this->getNextResponse(self::PROGRESS_ZADACHI);
     }
 
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ?ResultatProverkiKonteineraUnita

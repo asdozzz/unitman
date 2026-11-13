@@ -25,9 +25,25 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrosaPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
+use App\Runner\Business\Model\RunnerProgress;
 
 interface RunnerApiInterface
 {
+    /**
+     * Регистрация токена прогресса перед стартом workflow.
+     *
+     * Пока токен не зарегистрирован, `saveSteps` по нему отклоняется —
+     * это защищает KV от записи по произвольным ключам.
+     */
+    public function zaregistrirovatProgressToken(string $workflowId): void;
+
+    /**
+     * Текущий снапшот прогресса задачи (pull-канал, дублирует push).
+     *
+     * Возвращает null, если раннер ещё не присылал шагов или снапшот истёк.
+     */
+    public function poluchitProgressZadachi(string $workflowId): ?RunnerProgress;
+
     public function initProject(InitProjectCommand $command): string;
     public function poluchitResultatSborkiProekta(string $workflowId): ?InitProjectResult;
     public function removeProject(RemoveProjectCommand $command): string;

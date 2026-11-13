@@ -580,6 +580,17 @@ nelmio_api_doc:
                             type: string
                         zadachaId:
                             type: string
+                PoluchitProgressZadachiUnita:
+                    type: object
+                    description: Запрос текущего прогресса выполнения задачи runner'а
+                    required: [prozesId, zadachaId]
+                    properties:
+                        prozesId:
+                            type: string
+                            description: Идентификатор процесса юнита
+                        zadachaId:
+                            type: string
+                            description: Идентификатор задачи процесса (он же jobId/workflowId)
                 VipolnitDeistviye:
                     type: object
                     required: [id, actionId, values]
@@ -1366,7 +1377,11 @@ nelmio_api_doc:
                                 $ref: '#/components/schemas/RunnerJobStep'
                 RunnerJobStep:
                     type: object
-                    description: Шаг выполнения задания (RunnerJobStep::toArray)
+                    description: >-
+                        Шаг выполнения задания (RunnerJobStep::toArray).
+                        `unixtime` — время окончания шага, `unixtimeStart` — необязательное
+                        время начала. Ключ `unixtimeStart` не эмитится, если время начала
+                        не известно (старый раннер, старые события).
                     required: [command, response, success, unixtime]
                     properties:
                         command:
@@ -1377,6 +1392,42 @@ nelmio_api_doc:
                             type: boolean
                         unixtime:
                             type: integer
+                            description: Время окончания шага (unix-секунды)
+                            example: 1730000000
+                        unixtimeStart:
+                            type: integer
+                            nullable: true
+                            description: >-
+                                Необязательное время начала шага (unix-секунды).
+                                Отсутствует, если раннер его не прислал; длительность
+                                шага = unixtime - unixtimeStart (при наличии поля).
+                            example: 1729999975
+                RunnerJobProgress:
+                    type: object
+                    description: >-
+                        Текущий прогресс задачи runner'а (RunnerJobProgress::toArray).
+                        Совпадает по структуре с payload push-канала Centrifugo
+                        `unit_progress#<jobId>`, поэтому фронтенд обрабатывает
+                        push и pull одинаково.
+                    required: [jobId, steps, finished, success, updatedAt]
+                    properties:
+                        jobId:
+                            type: string
+                            description: Идентификатор задачи (он же Temporal workflowId)
+                        steps:
+                            type: array
+                            description: Полный снапшот шагов на момент updatedAt
+                            items:
+                                $ref: '#/components/schemas/RunnerJobStep'
+                        finished:
+                            type: boolean
+                            description: Признак завершения задачи
+                        success:
+                            type: boolean
+                            description: Итог выполнения (имеет смысл только при finished=true)
+                        updatedAt:
+                            type: integer
+                            description: Unix-время последнего обновления снапшота (0 — снапшота ещё нет)
                             example: 1730000000
                 ProjectStatistics:
                     type: object

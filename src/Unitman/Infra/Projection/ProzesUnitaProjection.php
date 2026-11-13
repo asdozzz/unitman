@@ -80,6 +80,8 @@ final class ProzesUnitaProjection extends AbstractProjection implements UnitmanP
                         $stepData['response'],
                         $stepData['success'],
                         $stepData['unixtime'],
+                        // Необязательное время начала: в старых событиях ключа нет.
+                        $stepData['unixtimeStart'] ?? null,
                     );
                 }
 
@@ -116,6 +118,8 @@ final class ProzesUnitaProjection extends AbstractProjection implements UnitmanP
                     $stepData['response'],
                     $stepData['success'],
                     $stepData['unixtime'],
+                    // Необязательное время начала: в старых событиях ключа нет.
+                    $stepData['unixtimeStart'] ?? null,
                 );
             }
 

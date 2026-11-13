@@ -1342,7 +1342,7 @@
                     "Runner"
                 ],
                 "summary": "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0448\u0430\u0433\u0438 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u0437\u0430\u0434\u0430\u0447\u0438",
-                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT",
+                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. `responseId` \u0441\u043e\u0434\u0435\u0440\u0436\u0438\u0442 \u0442\u043e\u043a\u0435\u043d \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430 (workflowId/jobId), `stepsContent` \u2014 \u043f\u043e\u043b\u043d\u044b\u0439 \u0441\u043d\u0430\u043f\u0448\u043e\u0442 \u0448\u0430\u0433\u043e\u0432. \u041f\u0440\u0438 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u043e\u043c RUNNER_CALLBACK_SECRET \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u0435\u043d \u0437\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a X-Runner-Signature: hex(HMAC-SHA256(responseId . stepsContent, secret)).",
                 "operationId": "post_app_runner_infra_runner_savesteps",
                 "requestBody": {
                     "required": true,
@@ -1365,6 +1365,12 @@
                                 "example": true
                             }
                         }
+                    },
+                    "400": {
+                        "description": "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0442\u043e\u043a\u0435\u043d \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430 \u043b\u0438\u0431\u043e \u043f\u0440\u0435\u0432\u044b\u0448\u0435\u043d \u0440\u0430\u0437\u043c\u0435\u0440 \u0441\u043d\u0430\u043f\u0448\u043e\u0442\u0430"
+                    },
+                    "403": {
+                        "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c \u0437\u0430\u043f\u0440\u043e\u0441\u0430"
                     }
                 },
                 "security": []
@@ -3679,7 +3685,7 @@
                     "Unit"
                 ],
                 "summary": "\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u044e\u043d\u0438\u0442",
-                "operationId": "post_app_unitman_infra_unitconroller_sozdat",
+                "operationId": "post_app_unitman_infra_unit_sozdat",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3733,7 +3739,7 @@
                     "Unit"
                 ],
                 "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u044e\u043d\u0438\u0442\u043e\u0432 \u0441 \u0444\u0438\u043b\u044c\u0442\u0440\u0430\u0446\u0438\u0435\u0439",
-                "operationId": "post_app_unitman_infra_unitconroller_list",
+                "operationId": "post_app_unitman_infra_unit_list",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3790,7 +3796,7 @@
                     "Unit"
                 ],
                 "summary": "\u041d\u0430\u0439\u0442\u0438 \u0434\u0443\u0431\u043b\u0438 \u044e\u043d\u0438\u0442\u043e\u0432 \u043f\u043e \u043f\u0440\u043e\u0435\u043a\u0442e \u0438 \u0432\u0435\u0442\u043a\u0435",
-                "operationId": "post_app_unitman_infra_unitconroller_naitidubliunita",
+                "operationId": "post_app_unitman_infra_unit_naitidubliunita",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3847,7 +3853,7 @@
                     "Unit"
                 ],
                 "summary": "\u042e\u043d\u0438\u0442 \u043f\u043e \u0438\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440\u0443",
-                "operationId": "post_app_unitman_infra_unitconroller_read",
+                "operationId": "post_app_unitman_infra_unit_read",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3900,7 +3906,7 @@
                     "Unit"
                 ],
                 "summary": "\u041c\u043e\u0438 \u044e\u043d\u0438\u0442\u044b",
-                "operationId": "post_app_unitman_infra_unitconroller_moi",
+                "operationId": "post_app_unitman_infra_unit_moi",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3957,7 +3963,7 @@
                     "Unit"
                 ],
                 "summary": "\u0421\u043e\u0431\u0440\u0430\u0442\u044c \u044e\u043d\u0438\u0442",
-                "operationId": "post_app_unitman_infra_unitconroller_sobrat",
+                "operationId": "post_app_unitman_infra_unit_sobrat",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4011,7 +4017,7 @@
                     "Unit"
                 ],
                 "summary": "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u043e\u0434 \u044e\u043d\u0438\u0442\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_obnovitkodunita",
+                "operationId": "post_app_unitman_infra_unit_obnovitkodunita",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4065,7 +4071,7 @@
                     "Unit"
                 ],
                 "summary": "\u0417\u0430\u043f\u043e\u043b\u043d\u0438\u0442\u044c \u043f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u044e\u043d\u0438\u0442\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_zapolnitperemenie",
+                "operationId": "post_app_unitman_infra_unit_zapolnitperemenie",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4119,7 +4125,7 @@
                     "Unit"
                 ],
                 "summary": "\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u0438\u0442\u044c \u044e\u043d\u0438\u0442 \u043a \u0437\u0430\u043f\u0443\u0441\u043a\u0443",
-                "operationId": "post_app_unitman_infra_unitconroller_podgotovit",
+                "operationId": "post_app_unitman_infra_unit_podgotovit",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4173,7 +4179,7 @@
                     "Unit"
                 ],
                 "summary": "\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u043f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0443 \u044e\u043d\u0438\u0442\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_sbrositpodgotovku",
+                "operationId": "post_app_unitman_infra_unit_sbrositpodgotovku",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4227,7 +4233,7 @@
                     "Unit"
                 ],
                 "summary": "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c \u044e\u043d\u0438\u0442",
-                "operationId": "post_app_unitman_infra_unitconroller_zapustit",
+                "operationId": "post_app_unitman_infra_unit_zapustit",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4281,7 +4287,7 @@
                     "Unit"
                 ],
                 "summary": "\u041e\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u044e\u043d\u0438\u0442",
-                "operationId": "post_app_unitman_infra_unitconroller_ostanovit",
+                "operationId": "post_app_unitman_infra_unit_ostanovit",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4335,7 +4341,7 @@
                     "Unit"
                 ],
                 "summary": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u044e\u043d\u0438\u0442",
-                "operationId": "post_app_unitman_infra_unitconroller_udalit",
+                "operationId": "post_app_unitman_infra_unit_udalit",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4389,7 +4395,7 @@
                     "Unit"
                 ],
                 "summary": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0441\u043b\u043e\u043c\u0430\u043d\u043d\u044b\u0439 \u044e\u043d\u0438\u0442",
-                "operationId": "post_app_unitman_infra_unitconroller_udalitslomaniyunit",
+                "operationId": "post_app_unitman_infra_unit_udalitslomaniyunit",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4443,7 +4449,7 @@
                     "Unit"
                 ],
                 "summary": "\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f \u044e\u043d\u0438\u0442\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_poluchitkonfigunita",
+                "operationId": "post_app_unitman_infra_unit_poluchitkonfigunita",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4508,7 +4514,7 @@
                     "Unit"
                 ],
                 "summary": "\u041f\u0435\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0435 \u044e\u043d\u0438\u0442\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_poluchitperemenieunita",
+                "operationId": "post_app_unitman_infra_unit_poluchitperemenieunita",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4581,7 +4587,7 @@
                     "Unit"
                 ],
                 "summary": "\u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u043f\u043e\u043c\u043e\u0449\u043d\u0438\u043a\u0430 (\u043a\u0440\u043e\u0441\u0441-\u0441\u0435\u0440\u0432\u0438\u0441\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441)",
-                "operationId": "post_app_unitman_infra_unitconroller_poluchitssylkupopomoschniku",
+                "operationId": "post_app_unitman_infra_unit_poluchitssylkupopomoschniku",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4634,7 +4640,7 @@
                     "Unit"
                 ],
                 "summary": "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u0437\u0430\u0434\u0430\u0447\u0438 runner'\u0430 \u0434\u043b\u044f \u044e\u043d\u0438\u0442\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_poluchitvipolneniezadachirunnera",
+                "operationId": "post_app_unitman_infra_unit_poluchitvipolneniezadachirunnera",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4691,7 +4697,7 @@
                     "Unit"
                 ],
                 "summary": "\u0428\u0430\u0433\u0438 \u0437\u0430\u0434\u0430\u0447\u0438 runner'\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_poluchitshagizadachirunnera",
+                "operationId": "post_app_unitman_infra_unit_poluchitshagizadachirunnera",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4742,13 +4748,67 @@
                 }
             }
         },
+        "/api/unit/poluchitProgressZadachiRunnera": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441 \u0437\u0430\u0434\u0430\u0447\u0438 runner'\u0430 (pull-\u0440\u0435\u0436\u0438\u043c)",
+                "description": "\u0412\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u0441\u043d\u0430\u043f\u0448\u043e\u0442 \u0448\u0430\u0433\u043e\u0432 \u0437\u0430\u0434\u0430\u0447\u0438 \u0431\u0435\u0437 \u043e\u0436\u0438\u0434\u0430\u043d\u0438\u044f \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f Temporal-\u0430\u043a\u0442\u0438\u0432\u0438\u0442\u0438. \u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a \u0434\u0430\u043d\u043d\u044b\u0445 \u0432\u044b\u0431\u0438\u0440\u0430\u0435\u0442\u0441\u044f \u043f\u043e \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u044e \u0437\u0430\u0434\u0430\u0447\u0438: \u0435\u0441\u043b\u0438 \u043e\u043d\u0430 \u0443\u0436\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0430 (SUCCESS/ERROR/CANCLED) \u0438 \u0448\u0430\u0433\u0438 \u043f\u0440\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u044b \u0432 \u0411\u0414, \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441 \u0441\u043e\u0431\u0438\u0440\u0430\u0435\u0442\u0441\u044f \u0438\u0437 \u0411\u0414 (\u043f\u0435\u0440\u0435\u0436\u0438\u0432\u0430\u0435\u0442 \u0438\u0441\u0442\u0435\u0447\u0435\u043d\u0438\u0435 TTL \u0441\u043d\u0438\u043c\u043a\u0430); \u0438\u043d\u0430\u0447\u0435 \u2014 \u0438\u0437 \u0441\u043d\u0438\u043c\u043a\u0430 \u0440\u0430\u043d\u043d\u0435\u0440\u0430. \u0415\u0441\u043b\u0438 \u0440\u0430\u043d\u043d\u0435\u0440 \u0435\u0449\u0451 \u043d\u0435 \u043f\u0440\u0438\u0441\u044b\u043b\u0430\u043b \u0448\u0430\u0433\u043e\u0432, \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442\u0441\u044f \u043f\u0443\u0441\u0442\u043e\u0439 \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441 \u0441 finished=false. \u0414\u043b\u044f push-\u0440\u0435\u0436\u0438\u043c\u0430 \u043f\u043e\u0434\u043f\u0438\u0441\u044b\u0432\u0430\u0439\u0442\u0435\u0441\u044c \u0432 Centrifugo \u043d\u0430 \u043a\u0430\u043d\u0430\u043b unit_progress#<jobId> \u2014 payload \u0441\u043e\u0431\u044b\u0442\u0438\u044f \u0438\u0434\u0435\u043d\u0442\u0438\u0447\u0435\u043d \u043f\u043e\u043b\u044e data \u044d\u0442\u043e\u0433\u043e \u043e\u0442\u0432\u0435\u0442\u0430.",
+                "operationId": "post_app_unitman_infra_unit_poluchitprogresszadachirunnera",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PoluchitProgressZadachiUnita"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441 \u0437\u0430\u0434\u0430\u0447\u0438 runner \u043f\u043e \u044e\u043d\u0438\u0442\u0443. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/RunnerJobProgress"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
         "/api/unit/vipolnitDeistviye": {
             "post": {
                 "tags": [
                     "Unit"
                 ],
                 "summary": "\u0412\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u044c \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043d\u0430\u0434 \u044e\u043d\u0438\u0442\u043e\u043c",
-                "operationId": "post_app_unitman_infra_unitconroller_vipolnitdeistviye",
+                "operationId": "post_app_unitman_infra_unit_vipolnitdeistviye",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4802,7 +4862,7 @@
                     "Unit"
                 ],
                 "summary": "\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440 \u044e\u043d\u0438\u0442\u0430",
-                "operationId": "post_app_unitman_infra_unitconroller_proveritkonteinerunita",
+                "operationId": "post_app_unitman_infra_unit_proveritkonteinerunita",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4856,7 +4916,7 @@
                     "Unit"
                 ],
                 "summary": "\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f \u0438\u0437 \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430 \u043f\u043e \u043f\u0440\u043e\u0435\u043a\u0442\u0443 \u0438 \u0432\u0435\u0442\u043a\u0435",
-                "operationId": "post_app_unitman_infra_unitconroller_poluchitkonfigizhranilisha",
+                "operationId": "post_app_unitman_infra_unit_poluchitkonfigizhranilisha",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4929,7 +4989,7 @@
                     "Unit"
                 ],
                 "summary": "\u041f\u0435\u0440\u0435\u0441\u043e\u0431\u0440\u0430\u0442\u044c \u043f\u0440\u043e\u0435\u043a\u0446\u0438\u044e \u0441\u043f\u0438\u0441\u043a\u0430 \u044e\u043d\u0438\u0442\u043e\u0432",
-                "operationId": "post_app_unitman_infra_unitconroller_rebuildspisokunitov",
+                "operationId": "post_app_unitman_infra_unit_rebuildspisokunitov",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4983,7 +5043,7 @@
                     "Unit"
                 ],
                 "summary": "\u041f\u043e\u043c\u0435\u0442\u0438\u0442\u044c \u044e\u043d\u0438\u0442 \u043a\u0430\u043a \u0441\u043b\u043e\u043c\u0430\u043d\u043d\u044b\u0439",
-                "operationId": "post_app_unitman_infra_unitconroller_pometitkakslomanii",
+                "operationId": "post_app_unitman_infra_unit_pometitkakslomanii",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -6133,6 +6193,24 @@
                         "type": "string"
                     },
                     "zadachaId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PoluchitProgressZadachiUnita": {
+                "description": "\u0417\u0430\u043f\u0440\u043e\u0441 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u0437\u0430\u0434\u0430\u0447\u0438 runner'\u0430",
+                "required": [
+                    "prozesId",
+                    "zadachaId"
+                ],
+                "properties": {
+                    "prozesId": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u0430 \u044e\u043d\u0438\u0442\u0430",
+                        "type": "string"
+                    },
+                    "zadachaId": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0437\u0430\u0434\u0430\u0447\u0438 \u043f\u0440\u043e\u0446\u0435\u0441\u0441\u0430 (\u043e\u043d \u0436\u0435 jobId/workflowId)",
                         "type": "string"
                     }
                 },
@@ -7586,7 +7664,7 @@
                 "type": "object"
             },
             "RunnerJobStep": {
-                "description": "\u0428\u0430\u0433 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u0437\u0430\u0434\u0430\u043d\u0438\u044f (RunnerJobStep::toArray)",
+                "description": "\u0428\u0430\u0433 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u0437\u0430\u0434\u0430\u043d\u0438\u044f (RunnerJobStep::toArray). `unixtime` \u2014 \u0432\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0448\u0430\u0433\u0430, `unixtimeStart` \u2014 \u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e\u0435 \u0432\u0440\u0435\u043c\u044f \u043d\u0430\u0447\u0430\u043b\u0430. \u041a\u043b\u044e\u0447 `unixtimeStart` \u043d\u0435 \u044d\u043c\u0438\u0442\u0438\u0442\u0441\u044f, \u0435\u0441\u043b\u0438 \u0432\u0440\u0435\u043c\u044f \u043d\u0430\u0447\u0430\u043b\u0430 \u043d\u0435 \u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e (\u0441\u0442\u0430\u0440\u044b\u0439 \u0440\u0430\u043d\u043d\u0435\u0440, \u0441\u0442\u0430\u0440\u044b\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u044f).",
                 "required": [
                     "command",
                     "response",
@@ -7604,6 +7682,52 @@
                         "type": "boolean"
                     },
                     "unixtime": {
+                        "description": "\u0412\u0440\u0435\u043c\u044f \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f \u0448\u0430\u0433\u0430 (unix-\u0441\u0435\u043a\u0443\u043d\u0434\u044b)",
+                        "type": "integer",
+                        "example": 1730000000
+                    },
+                    "unixtimeStart": {
+                        "description": "\u041d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e\u0435 \u0432\u0440\u0435\u043c\u044f \u043d\u0430\u0447\u0430\u043b\u0430 \u0448\u0430\u0433\u0430 (unix-\u0441\u0435\u043a\u0443\u043d\u0434\u044b). \u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442, \u0435\u0441\u043b\u0438 \u0440\u0430\u043d\u043d\u0435\u0440 \u0435\u0433\u043e \u043d\u0435 \u043f\u0440\u0438\u0441\u043b\u0430\u043b; \u0434\u043b\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0448\u0430\u0433\u0430 = unixtime - unixtimeStart (\u043f\u0440\u0438 \u043d\u0430\u043b\u0438\u0447\u0438\u0438 \u043f\u043e\u043b\u044f).",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "example": 1729999975
+                    }
+                },
+                "type": "object"
+            },
+            "RunnerJobProgress": {
+                "description": "\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441 \u0437\u0430\u0434\u0430\u0447\u0438 runner'\u0430 (RunnerJobProgress::toArray). \u0421\u043e\u0432\u043f\u0430\u0434\u0430\u0435\u0442 \u043f\u043e \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0435 \u0441 payload push-\u043a\u0430\u043d\u0430\u043b\u0430 Centrifugo `unit_progress#<jobId>`, \u043f\u043e\u044d\u0442\u043e\u043c\u0443 \u0444\u0440\u043e\u043d\u0442\u0435\u043d\u0434 \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442 push \u0438 pull \u043e\u0434\u0438\u043d\u0430\u043a\u043e\u0432\u043e.",
+                "required": [
+                    "jobId",
+                    "steps",
+                    "finished",
+                    "success",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "jobId": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0437\u0430\u0434\u0430\u0447\u0438 (\u043e\u043d \u0436\u0435 Temporal workflowId)",
+                        "type": "string"
+                    },
+                    "steps": {
+                        "description": "\u041f\u043e\u043b\u043d\u044b\u0439 \u0441\u043d\u0430\u043f\u0448\u043e\u0442 \u0448\u0430\u0433\u043e\u0432 \u043d\u0430 \u043c\u043e\u043c\u0435\u043d\u0442 updatedAt",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RunnerJobStep"
+                        }
+                    },
+                    "finished": {
+                        "description": "\u041f\u0440\u0438\u0437\u043d\u0430\u043a \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f \u0437\u0430\u0434\u0430\u0447\u0438",
+                        "type": "boolean"
+                    },
+                    "success": {
+                        "description": "\u0418\u0442\u043e\u0433 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f (\u0438\u043c\u0435\u0435\u0442 \u0441\u043c\u044b\u0441\u043b \u0442\u043e\u043b\u044c\u043a\u043e \u043f\u0440\u0438 finished=true)",
+                        "type": "boolean"
+                    },
+                    "updatedAt": {
+                        "description": "Unix-\u0432\u0440\u0435\u043c\u044f \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0435\u0433\u043e \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u0441\u043d\u0430\u043f\u0448\u043e\u0442\u0430 (0 \u2014 \u0441\u043d\u0430\u043f\u0448\u043e\u0442\u0430 \u0435\u0449\u0451 \u043d\u0435\u0442)",
                         "type": "integer",
                         "example": 1730000000
                     }

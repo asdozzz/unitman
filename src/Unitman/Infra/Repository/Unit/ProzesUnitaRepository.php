@@ -4,6 +4,7 @@ namespace App\Unitman\Infra\Repository\Unit;
 
 use App\Unitman\Business\Port\Unit\UmeetPoluchatProzesiUnitaPoId;
 use App\Unitman\Business\ReadModel\Unit\ProzesUnita;
+use App\Unitman\Business\ReadModel\Unit\ProzesUnita\ZadachaProzesaUnita;
 use App\Unitman\Business\ReadModel\Unit\ProzesUnitaBezShagov;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
@@ -104,5 +105,24 @@ final class ProzesUnitaRepository implements UmeetPoluchatProzesiUnitaPoId
         }
 
         return $shagi;
+    }
+
+    function poluchitZadachuPoId(string $prozesId, string $zadachaId): ZadachaProzesaUnita
+    {
+        $table = self::TABLE;
+        $row = $this->connection->fetchAssociative("SELECT id,payload FROM $table WHERE id = :id ORDER BY id desc", ['id' => $prozesId]);
+        if (empty($row)) {
+            throw new \DomainException('unit.runner_job_not_found');
+        }
+
+        $prozess = $this->makeReadModelByRow($row);
+
+        foreach ($prozess->jobs as $zadacha) {
+            if ($zadacha->id === $zadachaId) {
+                return $zadacha;
+            }
+        }
+
+        throw new \DomainException('unit.runner_job_not_found');
     }
 }

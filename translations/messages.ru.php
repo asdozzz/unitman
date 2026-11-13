@@ -188,6 +188,7 @@ return [
     // ─── Runner ──────────────────────────────────────────────────────────────
     'runner' => [
         'deistvie_ne_zakonchena' => 'Действие еще не завершено',
+        'invalid_signature' => 'Неверная подпись запроса runner\'а',
         'memory_free_is_to_small' => 'Недостаточно свободной памяти для запуска юнита',
         'obnovlenie_eshe_ne_zakoncheno' => 'Обновление еще не завершено',
         'oshibka_proverki_unita' => 'Ошибка проверки юнита',
@@ -196,10 +197,13 @@ return [
         'sborka_eshe_ne_zakonchena' => 'Сборка еще не завершена',
         'sborka_proekta_eshe_ne_zakonchena' => 'Сборка проекта еще не завершена',
         'sbros_podgotovki_eshe_ne_zakonchen' => 'Сброс подготовки еще не завершен',
+        'steps_malformed' => 'Полезная нагрузка шагов runner\'а не является корректным JSON-массивом',
+        'steps_too_large' => 'Полезная нагрузка шагов runner\'а слишком велика',
         'udalenie_eshe_ne_zakoncheno' => 'Удаление еще не завершено',
         'udalenie_proekta_eshe_ne_zakonchena' => 'Удаление проекта еще не завершено',
         'unknown_error_when_make_result' => 'Неизвестная ошибка при формировании результата',
         'unknown_error_when_make_result_with_config' => 'Неизвестная ошибка при формировании результата с конфигом',
+        'unknown_progress_token' => 'Токен прогресса runner\'а не зарегистрирован',
         'workflow_unit_not_found' => 'Workflow юнита не найден',
         'zapusk_eshe_ne_zakonchen' => 'Запуск еще не завершен',
         'state' => [

@@ -22,10 +22,25 @@ final class RedisService
         $storage->set($key, $value, 24*60);
     }
 
+    /**
+     * Запись с явным TTL в секундах. Нужна для прогресса задач раннера:
+     * снапшоты живут ограниченное время и не должны засорять KV.
+     */
+    function setWithTtl(string $key, string $value, int $ttlSeconds): void
+    {
+        $storage = $this->getStorage();
+        $storage->set($key, $value, $ttlSeconds);
+    }
+
     function get(string $key): ?string
     {
         $storage = $this->getStorage();
         return $storage->get($key);
+    }
+
+    function delete(string $key): void
+    {
+        $this->getStorage()->delete($key);
     }
 
     /**

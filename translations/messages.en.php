@@ -192,6 +192,7 @@ return [
     // ─── Runner ──────────────────────────────────────────────────────────────
     'runner' => [
         'deistvie_ne_zakonchena' => 'The action has not finished yet',
+        'invalid_signature' => 'The runner request signature is invalid',
         'memory_free_is_to_small' => 'Not enough free memory to start the unit',
         'obnovlenie_eshe_ne_zakoncheno' => 'The update has not finished yet',
         'oshibka_proverki_unita' => 'The unit check failed',
@@ -200,10 +201,13 @@ return [
         'sborka_eshe_ne_zakonchena' => 'The build has not finished yet',
         'sborka_proekta_eshe_ne_zakonchena' => 'The project build has not finished yet',
         'sbros_podgotovki_eshe_ne_zakonchen' => 'The preparation reset has not finished yet',
+        'steps_malformed' => 'The runner steps payload is not a valid JSON array',
+        'steps_too_large' => 'The runner steps payload is too large',
         'udalenie_eshe_ne_zakoncheno' => 'The removal has not finished yet',
         'udalenie_proekta_eshe_ne_zakonchena' => 'The project removal has not finished yet',
         'unknown_error_when_make_result' => 'An unknown error occurred while building the result',
         'unknown_error_when_make_result_with_config' => 'An unknown error occurred while building the result with the config',
+        'unknown_progress_token' => 'The runner progress token is not registered',
         'workflow_unit_not_found' => 'The unit workflow was not found',
         'zapusk_eshe_ne_zakonchen' => 'The start operation has not finished yet',
         'state' => [

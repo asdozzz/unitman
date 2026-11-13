@@ -7,6 +7,7 @@ use App\Unitman\Business\Command\Unit\GetUnitList;
 use App\Unitman\Business\Command\Unit\GetUnitReadModelById;
 use App\Unitman\Business\Command\Unit\GetUnitRunnerJobs;
 use App\Unitman\Business\Command\Unit\NaitiDubliUnita;
+use App\Unitman\Business\Command\Unit\PoluchitProgressZadachiUnita;
 use App\Unitman\Business\Command\Unit\PoluchitShagiZadachiUnita;
 use App\Unitman\Business\Command\Unit\ObnovitKodUnita;
 use App\Unitman\Business\Command\Unit\OstanovitUnit;
@@ -38,6 +39,7 @@ use App\Unitman\Business\UseCase\Unit\GetMyUnitsQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitByIdQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitListQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobsQuery;
+use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobProgressQuery;
 use App\Unitman\Business\UseCase\Unit\GetUnitRunnerJobStepsQuery;
 use App\Unitman\Business\UseCase\Unit\NaitiDubliUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitKonfigIzHranilishaUseCase;
@@ -782,6 +784,52 @@ final class UnitController extends AbstractController
         try {
             $data = $query->handle($command);
             return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+        } catch (\Error $error) {
+            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/unit/poluchitProgressZadachiRunnera',
+        summary: 'Текущий прогресс задачи runner\'а (pull-режим)',
+        description: 'Возвращает снапшот шагов задачи без ожидания завершения Temporal-активити. '
+            . 'Источник данных выбирается по состоянию задачи: если она уже завершена '
+            . '(SUCCESS/ERROR/CANCLED) и шаги проставлены в БД, прогресс собирается из БД '
+            . '(переживает истечение TTL снимка); иначе — из снимка раннера. '
+            . 'Если раннер ещё не присылал шагов, возвращается пустой прогресс с finished=false. '
+            . 'Для push-режима подписывайтесь в Centrifugo на канал unit_progress#<jobId> — '
+            . 'payload события идентичен полю data этого ответа.',
+        tags: ['Unit'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PoluchitProgressZadachiUnita')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Текущий прогресс задачи runner по юниту. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            ref: '#/components/schemas/RunnerJobProgress'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/poluchitProgressZadachiRunnera', methods: ['POST'])]
+    public function poluchitProgressZadachiRunnera(PoluchitProgressZadachiUnita $command, GetUnitRunnerJobProgressQuery $query): Response
+    {
+        try {
+            $data = $query->handle($command);
+            return $this->json(\App\Utils\Model\Reponse\Response::success($data->toArray()));
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }
