@@ -25,8 +25,10 @@ use App\Unitman\Infra\Service\VolumeTypeFileLinkChecker;
 use App\Unitman\Infra\BackgroundJob\StatistikaPoProektu\StatistikaPoProektuBackgroundJob;
 use App\Unitman\Infra\BackgroundJob\WebhookEvent\WebhookEventProjectionPuller;
 use App\Unitman\Infra\BackgroundJob\WebsocketUnitEvent\WebsocketUnitEventJob;
+use App\Unitman\Infra\BackgroundJob\WebsocketProjectEvent\WebsocketProjectEventJob;
 use App\Unitman\Infra\Jobs\SobitieIzHranilishaJobsHandler;
 use App\Unitman\Infra\Jobs\WebhookEventJobHandler;
+use App\Unitman\Infra\Jobs\WebsocketProjectEventReadModelJobHandler;
 use App\Unitman\Infra\Jobs\WebsocketUnitEventReadModelJobHandler;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 use App\Unitman\Infra\Repository\Repo\SqlRepoEvensRepository;
@@ -146,6 +148,11 @@ return function (ContainerConfigurator $configuration) {
             service('unitman.projections_manager'),
         ]);
 
+    $services->set(WebsocketProjectEventJob::class)
+        ->args([
+            service('unitman.projections_manager'),
+        ]);
+
     $services->set(WebhookEventProjectionPuller::class)
         ->args([
             service('unitman.projections_manager'),
@@ -160,6 +167,9 @@ return function (ContainerConfigurator $configuration) {
         ->tag('roadrunner_jobs.handler');
 
     $services->set(WebsocketUnitEventReadModelJobHandler::class)
+        ->tag('roadrunner_jobs.handler');
+
+    $services->set(WebsocketProjectEventReadModelJobHandler::class)
         ->tag('roadrunner_jobs.handler');
 
     $services->set(WebhookEventJobHandler::class)

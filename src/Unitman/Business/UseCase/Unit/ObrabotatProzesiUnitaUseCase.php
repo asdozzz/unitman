@@ -33,14 +33,21 @@ final class ObrabotatProzesiUnitaUseCase
     )
     {
     }
-    function handle(string $unitId): void
+    /**
+     * @return bool false — у юнита не осталось незавершённых заданий, то есть
+     *              обрабатывать нечего. Вызывающий обязан снять юнита с опроса:
+     *              раньше метод молча возвращал управление, очередь не получала
+     *              ни события, ни повода удалить строку, и «пустой» юнит
+     *              опрашивался вечно (ровно так зависла строка ochered_unitov).
+     */
+    function handle(string $unitId): bool
     {
         $unit = $this->unitRepository->getById($unitId);
         $job = $unit->poluchitJobuDlyObravotki();
 
         if (empty($job)) {
             //$this->proveritKonteinerUnitaUseCase->handle($unitId);
-            return;
+            return false;
         }
 
         match ($job->getType()) {
@@ -54,6 +61,8 @@ final class ObrabotatProzesiUnitaUseCase
             RunnerJobType::DEISTVIE => $this->deistvie($unit, $job),
             default => throw new \DomainException('unit.obrabotka_prozesa.tip_ne_opredelen: '.$job->getType()->value),
         };
+
+        return true;
     }
 
     private function sborka(Unit $unit, RunnerJob $runnerJob): void

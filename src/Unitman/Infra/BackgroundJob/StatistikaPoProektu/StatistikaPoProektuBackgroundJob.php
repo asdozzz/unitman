@@ -19,8 +19,10 @@ final class StatistikaPoProektuBackgroundJob extends AbstractBackgroundJob
 
     function run(): bool
     {
-        // false пробрасываем наружу: заблокированная проекция — не успех.
-        return $this->projectionsManager->pullProjectionByName(StatistikaPoProektuProjection::PROJECTION_NAME);
+        // Занятая блокировка — не ошибка: проекцию двигает другой процесс.
+        $this->projectionsManager->pullProjectionByName(StatistikaPoProektuProjection::PROJECTION_NAME);
+
+        return true;
     }
 
     function getDelay(): int

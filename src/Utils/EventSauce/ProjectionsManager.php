@@ -2,6 +2,7 @@
 
 namespace App\Utils\EventSauce;
 
+use App\Utils\EventSauce\Model\ProjectionPullResult;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use App\Utils\EventSauce\Repository\CheckpointStore;
 use App\Utils\Service\LockService;
@@ -10,6 +11,7 @@ use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootId;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+use Symfony\Component\Lock\Lock;
 
 #[AutoconfigureTag('utils.event_store.projections_manager')]
 final class ProjectionsManager
@@ -115,44 +117,80 @@ final class ProjectionsManager
     /**
      * Дочитывает проекцию до конца потока событий.
      *
-     * @return bool false — проекцию не обновили из-за занятой блокировки.
-     *              Вызывающий код не должен считать такой вызов успехом.
+     * Занятая блокировка — не ошибка: проекцию прямо сейчас двигает другой
+     * процесс, повторять попытку бессмысленно. Раньше такой случай возвращал
+     * false, вызывающая джоба превращала его в исключение, срабатывал
+     * предохранитель трёх подряд ошибок, сервис падал и перезапускался
+     * RoadRunner'ом — то есть на каждом конфликте блокировки мы получали
+     * перезапуск целого воркера.
      */
-    public function pullProjectionByName(string $projectionName): bool
+    public function pullProjectionByName(string $projectionName): ProjectionPullResult
     {
         $lockFactory = $this->lockService->makeLockFactory();
         $lock = $lockFactory->createLock('pullProjectionByName.'.$projectionName);
 
         if (!$lock->acquire()) {
-            // Раньше здесь был «голый» return: джоба рапортовала об успехе,
-            // хотя не сделала ничего. Теперь пропуск виден и в логе, и вызывающему.
-            $this->logger->warning('projections_manager.pull_skipped_lock_not_acquired', [
+            $this->logger->debug('projections_manager.pull_skipped_lock_not_acquired', [
                 'projection' => $projectionName,
             ]);
 
-            return false;
+            return ProjectionPullResult::Skipped;
         }
 
-        $this->connection->beginTransaction();
         try {
-            $projection = $this->getProjectionByName($projectionName);
-            $checkpoint = $this->checkpointStore->getCheckpoint($projectionName);
+            $this->connection->beginTransaction();
+            try {
+                $projection = $this->getProjectionByName($projectionName);
+                $checkpoint = $this->checkpointStore->getCheckpoint($projectionName);
 
-            if ($checkpoint === 0) {
-                $projection->init();
+                if ($checkpoint === 0) {
+                    $projection->init();
+                }
+
+                $this->drainEventsByCheckpoint($projection);
+
+                $this->connection->commit();
+            } catch (\Exception $e) {
+                $this->connection->rollBack();
+                throw $e;
             }
-
-            $this->drainEventsByCheckpoint($projection);
-
-            $this->connection->commit();
-        } catch (\Exception $e) {
-            $this->connection->rollBack();
-            throw $e;
         } finally {
-            $lock->release();
+            $this->releaseLock($lock, $projectionName);
         }
 
-        return true;
+        return ProjectionPullResult::Pulled;
+    }
+
+    /**
+     * Освобождает блокировку, не давая сбою маскировать исходную ошибку.
+     *
+     * Lock::release() бросает LockReleasingException, если после delete()
+     * ресурс всё ещё числится занятым. В finally это исключение заменяло
+     * собой исключение из тела метода, а при удачном исходе — ломало
+     * уже выполненную работу. Плюс несостоявшийся release оставлял замок
+     * висеть до истечения TTL, поэтому пробуем ещё раз.
+     */
+    private function releaseLock(Lock $lock, string $projectionName): void
+    {
+        try {
+            $lock->release();
+
+            return;
+        } catch (\Throwable $e) {
+            $this->logger->warning('projections_manager.lock_release_failed', [
+                'projection' => $projectionName,
+                'exception' => $e,
+            ]);
+        }
+
+        try {
+            $lock->release();
+        } catch (\Throwable $e) {
+            $this->logger->error('projections_manager.lock_release_failed_twice', [
+                'projection' => $projectionName,
+                'exception' => $e,
+            ]);
+        }
     }
 
     public function rebuildAll(): void

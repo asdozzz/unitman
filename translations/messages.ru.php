@@ -154,6 +154,9 @@ return [
             'url_invalid' => 'Некорректный URL webhook',
             'url_is_empty' => 'URL webhook не может быть пустым',
         ],
+        'websocket_project_event' => [
+            'not_found_id' => 'Событие websocket проекта не найдено',
+        ],
     ],
 
     'proekt' => [

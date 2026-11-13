@@ -21,7 +21,9 @@ final class UnitRunnerJobs extends AbstractBackgroundJob
 
     function run(): bool
     {
-        // false пробрасываем наружу: заблокированная проекция — не успех.
-        return $this->projectionsManager->pullProjectionByName(ProzesUnitaProjection::PROJECTION_NAME);
+        // Занятая блокировка — не ошибка: проекцию двигает другой процесс.
+        $this->projectionsManager->pullProjectionByName(ProzesUnitaProjection::PROJECTION_NAME);
+
+        return true;
     }
 }

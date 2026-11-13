@@ -46,6 +46,7 @@ use Carbon\CarbonInterval;
 use Symfony\Component\Serializer\SerializerInterface;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
+use Temporal\Exception\Client\TimeoutException;
 use Temporal\Exception\Client\WorkflowFailedException;
 use Temporal\Exception\Client\WorkflowServiceException;
 use Temporal\Exception\WorkflowExecutionFailedException;
@@ -281,6 +282,10 @@ final class RunnerApi implements RunnerApiInterface
         $workflow = $this->getWorkflowById($workflowId);
         $result = $this->makeResult($workflow, ResultatPodgotovkiUnita::class);
 
+        if ($result === null) {
+            return null;
+        }
+
         if (!empty($result->ResponseId)) {
             $responseContent = $this->redisService->get($result->ResponseId);
 
@@ -304,6 +309,10 @@ final class RunnerApi implements RunnerApiInterface
         $workflow = $this->getWorkflowById($workflowId);
         $result = $this->makeResult($workflow, ResultatSbrosaPodgotovkiUnita::class);
 
+        if ($result === null) {
+            return null;
+        }
+
         if (!empty($result->ResponseId)) {
             $responseContent = $this->redisService->get($result->ResponseId);
 
@@ -321,6 +330,10 @@ final class RunnerApi implements RunnerApiInterface
         $workflow = $this->getWorkflowById($workflowId);
         $result = $this->makeResult($workflow, ResultatZapuskaUnita::class);
 
+        if ($result === null) {
+            return null;
+        }
+
         if (!empty($result->ResponseId)) {
             $responseContent = $this->redisService->get($result->ResponseId);
 
@@ -337,6 +350,10 @@ final class RunnerApi implements RunnerApiInterface
     {
         $workflow = $this->getWorkflowById($workflowId);
         $result = $this->makeResult($workflow, ResultatOstanovkiUnita::class);
+
+        if ($result === null) {
+            return null;
+        }
 
         if (!empty($result->ResponseId)) {
             $responseContent = $this->redisService->get($result->ResponseId);
@@ -369,7 +386,7 @@ final class RunnerApi implements RunnerApiInterface
      * @template T
      * @param \Temporal\Client\WorkflowStubInterface $workflow
      * @param class-string<T> $type
-     * @return T|null
+     * @return T|null null — workflow ещё не завершён, результата пока нет.
      * @throws \Throwable
      */
     private function makeResult(\Temporal\Client\WorkflowStubInterface $workflow, string $type): ?object
@@ -377,6 +394,12 @@ final class RunnerApi implements RunnerApiInterface
         try {
             $result = $workflow->getResult($type, 5);
             return $result;
+        } catch (TimeoutException) {
+            // Deadline reached — это штатное «результата ещё нет», а не сбой.
+            // Раньше исключение уходило в общий catch и пробрасывалось наружу,
+            // где превращалось в ошибку обработки задания (и сыпалось в лог
+            // тысячами строк при каждом опросе незавершённого workflow).
+            return null;
         } catch (WorkflowServiceException $e) {
             $msg = $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result';
             $steps = [$this->stepAsArray('error workflow', $msg, false, time())];
@@ -393,7 +416,7 @@ final class RunnerApi implements RunnerApiInterface
      * @template T
      * @param \Temporal\Client\WorkflowStubInterface $workflow
      * @param class-string<T> $type
-     * @return T|null
+     * @return T|null null — workflow ещё не завершён, результата пока нет.
      * @throws \Throwable
      */
     private function makeResultWithConfig(\Temporal\Client\WorkflowStubInterface $workflow, string $type): ?object
@@ -401,6 +424,9 @@ final class RunnerApi implements RunnerApiInterface
         try {
             $result = $workflow->getResult($type, 5);
             return $result;
+        } catch (TimeoutException) {
+            // См. makeResult(): истёкший deadline — это «ещё не готово».
+            return null;
         } catch (WorkflowServiceException $e) {
             $msg = $e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result_with_config';
             $steps = [$this->stepAsArray('error workflow', $msg, false, time())];
@@ -423,6 +449,10 @@ final class RunnerApi implements RunnerApiInterface
     {
         $workflow = $this->getWorkflowById($workflowId);
         $result = $this->makeResult($workflow, ResultatDeistviyaUnita::class);
+
+        if ($result === null) {
+            return null;
+        }
 
         if (!empty($result->ResponseId)) {
             $responseContent = $this->redisService->get($result->ResponseId);

@@ -157,6 +157,9 @@ return [
             'url_invalid' => 'The webhook URL is invalid',
             'url_is_empty' => 'The webhook URL must not be empty',
         ],
+        'websocket_project_event' => [
+            'not_found_id' => 'The websocket project event was not found',
+        ],
     ],
 
     // Legacy spelling kept because it is used in code and tests.

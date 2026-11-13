@@ -112,9 +112,18 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
         $this->repository->update($fact->unitId, $this->clock->now());
     }
 
+    /**
+     * Новый процесс = новая работа для воркера очереди.
+     *
+     * Раньше обработчик был пустым: юнит, у которого воркер уже снял строку
+     * из очереди (все задания терминальны), после добавления процесса
+     * в очередь не возвращался и его задания никто не запускал.
+     * update() работает как upsert, поэтому событие и двигает метку уже
+     * стоящего юнита, и возвращает снятого.
+     */
     function handleDobavlenProzesVUnit(DobavlenProzesVUnit $fact): void
     {
-
+        $this->repository->update($fact->unitId, $this->clock->now());
     }
 
     function handleOshibkaSborkiUnitaUstanovlena(OshibkaSborkiUnitaUstanovlena $fact): void

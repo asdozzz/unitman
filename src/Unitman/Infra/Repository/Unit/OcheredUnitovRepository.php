@@ -48,12 +48,30 @@ final class OcheredUnitovRepository
         return $model;
     }
 
+    /**
+     * Кладёт юнит в очередь, обновляя метку у уже стоящего.
+     *
+     * upsert, а не чистый insert: воркер удаляет строку, когда у юнита не
+     * осталось незавершённых заданий (см. OcheredUnitovActivity), поэтому
+     * событие, спроецированное сразу после удаления, обязано вернуть юнита
+     * в очередь, а не упасть на конфликте. Требует уникального индекса по
+     * unit_id (Version20261113120000).
+     *
+     * on conflict do update, а не do nothing: метка last_update определяет
+     * порядок опроса, и вернувшийся в очередь юнит должен встать в конец,
+     * а не сохранить старое «самое старое» время.
+     */
     function insert(string $unitId, \DateTimeImmutable $lastUpdate): void
     {
-        $this->connection->insert(self::TABLE, [
-            'unit_id' => $unitId,
-            'last_update' => $lastUpdate->format(self::DATETIME_FORMAT)
-        ]);
+        $table = self::TABLE;
+        $this->connection->executeStatement(
+            "INSERT INTO $table (unit_id, last_update) VALUES (:unitId, :lastUpdate)
+             ON CONFLICT (unit_id) DO UPDATE SET last_update = EXCLUDED.last_update",
+            [
+                'unitId' => $unitId,
+                'lastUpdate' => $lastUpdate->format(self::DATETIME_FORMAT),
+            ]
+        );
     }
 
     function removeByUnitId(string $unitId): void
@@ -61,11 +79,17 @@ final class OcheredUnitovRepository
         $this->connection->delete(self::TABLE, ['unit_id' => $unitId]);
     }
 
+    /**
+     * Двигает метку юнита; отсутствующего юнита возвращает в очередь.
+     *
+     * Раньше это был plain update: если строки не было (воркер успел её
+     * удалить, либо юнит никогда не попадал в очередь), событие молча
+     * терялось, и юнит больше не опрашивался. Делегируем в upsert, чтобы
+     * любое событие проекции гарантированно ставило юнита в очередь.
+     */
     function update(string $unitId, \DateTimeImmutable $lastUpdate): void
     {
-        $this->connection->update(self::TABLE, [
-            'last_update' => $lastUpdate->format(self::DATETIME_FORMAT),
-        ], ['unit_id' => $unitId]);
+        $this->insert($unitId, $lastUpdate);
     }
 
 

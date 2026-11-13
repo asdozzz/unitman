@@ -77,6 +77,7 @@ jobs:
   consume: [
     "sobitiya_iz_hranilisha",
     "websocket_unit_event",
+    "websocket_project_event",
     "webhook_event"
   ]
   pipelines:
@@ -85,6 +86,10 @@ jobs:
       config:
         priority: 10
     websocket_unit_event:
+      driver: beanstalk
+      config:
+        priority: 1
+    websocket_project_event:
       driver: beanstalk
       config:
         priority: 1

@@ -94,13 +94,11 @@ final class DoctrineStreamRepository
                 $metadata + [Header::AGGREGATE_ROOT_VERSION => ++$aggregateRootVersion]
             ));
         }, $events);
-        try {
-            $this->messageRepository->persist(...$messages);
-        } catch (\Throwable $e) {
-            //die("<pre>" . print_r($messages, true) . "</pre>");
-            throw $e;
-        }
-
+        // Без обёртки: исключение репозитория уже несёт исходную причину
+        // в previous. Раньше здесь стоял try/catch, который просто
+        // пробрасывал то же исключение, — он только создавал иллюзию
+        // обработки.
+        $this->messageRepository->persist(...$messages);
     }
 
     /**
@@ -138,7 +136,10 @@ final class DoctrineStreamRepository
         try {
             return $this->yieldMessagesFromPayloads(array_map(fn(array $row): string => $row['payload'],$rows));
         } catch (\Throwable $exception) {
-            throw UnableToRetrieveMessages::dueTo('', $exception);
+            // Причина передаётся в текст: раньше здесь стояла пустая строка,
+            // и в логе оставалось голое «Unable to retrieve messages.»
+            // без указания, что именно сломалось.
+            throw UnableToRetrieveMessages::dueTo($exception->getMessage(), $exception);
         }
     }
 
@@ -152,7 +153,7 @@ final class DoctrineStreamRepository
         try {
             return $this->yieldMessagesFromPayloads(array_map(fn(array $row): string => $row['payload'],$rows));
         } catch (\Throwable $exception) {
-            throw UnableToRetrieveMessages::dueTo('', $exception);
+            throw UnableToRetrieveMessages::dueTo($exception->getMessage(), $exception);
         }
     }
 }

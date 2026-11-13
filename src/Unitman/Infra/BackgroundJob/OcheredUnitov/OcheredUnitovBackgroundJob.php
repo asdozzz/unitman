@@ -21,16 +21,25 @@ final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
 
     function run(): bool
     {
-        $zadachi = $this->ocheredUnitovActivity->poluchitZadachiNaObrabotku(100);
+        try {
+            $obrabotano = $this->ocheredUnitovActivity->obrabotatOchered(100);
+        } catch (\Throwable $e) {
+            // Ошибку не глотаем: раньше здесь писался только $e->getMessage(),
+            // из-за чего в логе оставалась голая строка «Unable to persist
+            // messages.» без типа исключения, стека и исходной причины.
+            // Теперь причина видна, но пачка не роняет процесс: очередь
+            // переживёт, транзакция откачена целиком.
+            $this->logger->error('ochered_unitov.batch_failed', [
+                'exception' => $e,
+            ]);
 
-        foreach ($zadachi as $zadacha) {
-            try {
-                $this->ocheredUnitovActivity->obrabotatZadachu($zadacha);
-            } catch (\Throwable $e) {
-                //echo "AAAAAAAAA:".$e->getMessage()."\n";
-                $this->logger->error($e->getMessage());
-                continue;
-            }
+            return false;
+        }
+
+        if ($obrabotano > 0) {
+            $this->logger->info('ochered_unitov.batch_processed', [
+                'tasks' => $obrabotano,
+            ]);
         }
 
         return true;

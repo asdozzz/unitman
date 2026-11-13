@@ -2,6 +2,7 @@
 
 namespace App\Utils\Cli\Command\ProjectionsManager;
 
+use App\Utils\EventSauce\Model\ProjectionPullResult;
 use App\Utils\EventSauce\ProjectionsManager;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -58,10 +59,11 @@ final class PullProjectCommand extends Command
                 throw new \Exception('Projections manager not found for projection with name=' . $projectionName);
             }
 
-            // false означает, что проекцию не обновили: блокировку держит
-            // другой процесс. Это не успех — иначе команда молча «выполнится»,
-            // ничего не сделав.
-            if (!$result->pullProjectionByName($projectionName)) {
+            // Skipped означает, что блокировку держит другой процесс и работу
+            // выполнит он. Для ручного запуска это не успех, но и не ошибка
+            // выполнения — сообщаем явно и выходим с ненулевым кодом, чтобы
+            // в скриптах пропуск не выглядел как удачное догоняние.
+            if ($result->pullProjectionByName($projectionName) === ProjectionPullResult::Skipped) {
                 $output->writeln('SKIPPED: projection lock is held by another process');
 
                 return Command::FAILURE;
