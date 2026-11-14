@@ -3,11 +3,11 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\PoluchitSsylkuPoPomoschniku;
-use App\Unitman\Business\Model\Unit\ConfigUnita\PomoschnikSsylki;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
+use App\Unitman\Business\Utils\SsylkaServisaUtil;
 
 final class PoluchitSsylkuPoPomoschnikuQuery
 {
@@ -26,14 +26,14 @@ final class PoluchitSsylkuPoPomoschnikuQuery
 
         $targetUnit = $this->canGetUnitReadModelById->getById($command->targetUnitId);
 
-        $type = $this->normalizovatTip($command->type);
+        $type = SsylkaServisaUtil::normalizovatTip($command->type);
 
         /**
          * @var array{service: string, port: int|string, protocol: string} $unitLink
          */
         foreach ($targetUnit->links as $unitLink) {
             if ($unitLink['service'] === $command->service
-                && $this->normalizovatTip($unitLink['protocol']) === $type
+                && SsylkaServisaUtil::normalizovatTip($unitLink['protocol']) === $type
                 && (int)$unitLink['port'] === $command->port
             ) {
                 return ['link' => $this->sformirovatSsylku($targetUnit, $type, $command->port, $command->suffix)];
@@ -41,16 +41,6 @@ final class PoluchitSsylkuPoPomoschnikuQuery
         }
 
         throw new \DomainException('unit.pomoschnik.servis_ne_naiden');
-    }
-
-    /**
-     * Пустой протокол трактуется как протокол по умолчанию (`http`).
-     */
-    private function normalizovatTip(?string $type): string
-    {
-        $type = strtolower(trim((string)$type));
-
-        return $type === '' ? PomoschnikSsylki::DEFAULT_TYPE : $type;
     }
 
     /**
@@ -63,21 +53,13 @@ final class PoluchitSsylkuPoPomoschnikuQuery
     {
         $targetProject = $this->projectRepository->getById($targetUnit->projectId);
 
-        if ($type === PomoschnikSsylki::DEFAULT_TYPE) {
-            $pathinfo = parse_url((string)$targetProject->getProxyHost());
-            /** @var array|false $pathinfo*/
-
-            if ($pathinfo === false || empty($pathinfo['scheme']) || empty($pathinfo['host'])) {
-                throw new \DomainException('unit.invalid_proxy_host');
-            }
-
-            $link = $pathinfo['scheme'].'://'.$port.'.'.$targetUnit->name.'.'.$targetProject->getName().'.'.$pathinfo['host'];
-            if (!empty($pathinfo['port'])) {
-                $link .= ':'.$pathinfo['port'];
-            }
-        } else {
-            $link = $type.'://'.$targetUnit->name.'.'.$targetProject->getName().':'.$port;
-        }
+        $link = SsylkaServisaUtil::sformirovat(
+            $type,
+            $port,
+            $targetUnit->name,
+            $targetProject->getName(),
+            (string)$targetProject->getProxyHost()
+        );
 
         if ($suffix !== null && $suffix !== '') {
             $link .= str_starts_with($suffix, '/') ? $suffix : '/'.$suffix;

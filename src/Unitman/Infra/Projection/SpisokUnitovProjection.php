@@ -41,6 +41,7 @@ use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
+use App\Unitman\Business\Utils\SsylkaServisaUtil;
 use App\Unitman\Business\Utils\SvyaziPeremenihUtil;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -203,26 +204,26 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         if (!empty($fact->configUnita['services'])) {
             $project = $this->projectRepository->getById($readModel->projectId);
 
-            $projectProxyHost = $project->getProxyHost();
+            $projectProxyHost = (string)$project->getProxyHost();
             $projectName = $project->getName();
-            $pathinfo = parse_url((string)$projectProxyHost);
-            /** @var array|false $pathinfo*/
-
-            if ($pathinfo === false) {
-                throw new \DomainException('unit.invalid_proxy_host');
-            }
 
             foreach ($fact->configUnita['services'] as $name => $service) {
                 if (!isset($service['ports'])) continue;
                 foreach ($service['ports'] as $portData) {
-                    if ($portData['type'] == 'http') {
-                        $link = $pathinfo['scheme'].'://'.$portData['port'].'.'.$readModel->name.'.'.$projectName.'.'.$pathinfo['host'];
-                        if (!empty($pathinfo['port'])) {
-                            $link .= ':'.$pathinfo['port'];
-                        }
-                    } else {
-                        $link = $portData['type'].'://'.$readModel->name.'.'.$projectName.':'.$portData['port'];
-                    }
+                    $protocol = SsylkaServisaUtil::normalizovatTip(
+                        isset($portData['type']) ? (string)$portData['type'] : null
+                    );
+
+                    // http — через proxy host проекта, остальные протоколы — напрямую
+                    // на юнит: `{type}://{unit}.{project}:{port}`.
+                    $link = SsylkaServisaUtil::sformirovat(
+                        $protocol,
+                        $portData['port'] ?? 0,
+                        $readModel->name,
+                        $projectName,
+                        $projectProxyHost
+                    );
+
                     if (!empty($portData['startUri'])) {
                         $link .= $portData['startUri'];
                     }
@@ -230,7 +231,7 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
                         'service' => $name,
                         'path' => $link,
                         'port' => $portData['port'],
-                        'protocol' => $portData['type'],
+                        'protocol' => $protocol,
                         'startUri' => $portData['startUri'] ?? null
                     ];
                 }

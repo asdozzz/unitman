@@ -115,7 +115,6 @@ services:
   # MINIO_ROOT_USER / MINIO_ROOT_PASSWORD (см. .env.dist / .env.local).
   minio:
     image: bitnamilegacy/minio:2025.4.22-debian-12-r1
-    container_name: minio
     restart: always
     # root нужен только на старте: setup.sh выставляет владельца каталога данных,
     # дальше процесс запускается от непривилегированного пользователя minio
@@ -147,7 +146,6 @@ services:
   minio-init:
     # mc из того же legacy-зеркала Bitnami (официальный minio/mc недоступен)
     image: bitnamilegacy/minio-client:latest
-    container_name: minio-init
     restart: "no"
     depends_on:
       minio:
@@ -156,6 +154,7 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MEDIATEKA_BUCKET=${MEDIATEKA_BUCKET}
+      - MC_CONFIG_DIR=/tmp/.mc
     # entrypoint образа переопределяется на sh, поэтому конфиг-каталог mc
     # (по умолчанию /.mc, недоступен для записи) задаётся явно
     entrypoint: [ "/bin/sh", "-c" ]
