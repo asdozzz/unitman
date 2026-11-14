@@ -5,6 +5,7 @@ namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
+use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
@@ -14,6 +15,7 @@ use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
@@ -61,6 +63,9 @@ final class MemoryRunnerService implements RunnerApiInterface
     const PROVERKA_UNITA = 'PROVERKA_UNITA';
 
     const PROGRESS_ZADACHI = 'PROGRESS_ZADACHI';
+
+    const HOD_OPENCODE = 'HOD_OPENCODE';
+    const RESULTAT_HODA_OPENCODE = 'RESULTAT_HODA_OPENCODE';
     private array $responses = [];
     public function __construct()
     {
@@ -279,9 +284,39 @@ final class MemoryRunnerService implements RunnerApiInterface
         return $this->getNextResponse(self::PROGRESS_ZADACHI);
     }
 
+    /**
+     * Формат имени канала повторяет `RunnerProgressPublisher::CHANNEL_PREFIX`.
+     *
+     * Литерал, а не константа, потому что Unitman не имеет права тянуть
+     * `Runner\Infra` — двойник существует только для тестов, где важна форма
+     * ответа, а не источник истины по имени канала.
+     */
+    public function poluchitKanalProgressa(string $workflowId): string
+    {
+        return 'unit_progress#' . $workflowId;
+    }
+
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ?ResultatProverkiKonteineraUnita
     {
         $response = $this->getNextResponse(self::PROVERKA_UNITA);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+        return $response['response'];
+    }
+
+    public function nachatHodOpenCode(string $workflowId, NachatHodOpenCode $command): string
+    {
+        $response = $this->getNextResponse(self::HOD_OPENCODE);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+        return $response['response'];
+    }
+
+    public function poluchitResultatHodaOpenCode(string $workflowId): ?ResultatHodaOpenCode
+    {
+        $response = $this->getNextResponse(self::RESULTAT_HODA_OPENCODE);
         if (!empty($response['expectedParams'])) {
             $response['expectedParams'](func_get_args());
         }

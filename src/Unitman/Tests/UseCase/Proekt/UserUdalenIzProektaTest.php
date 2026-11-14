@@ -30,6 +30,9 @@ final class UserUdalenIzProektaTest extends AbstractProjectUseCase
             new Account($userId, 'asd@asd.ru', false),
             new Account($userId2, 'asd2@asd.ru', false),
         );
+        // Без этого стаба мок возвращает Account с неинициализированными
+        // readonly-свойствами и проекция websocket-событий падает.
+        $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'thttp://testcase.su', $adminId);

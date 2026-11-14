@@ -5,6 +5,7 @@ namespace App\Unitman\Tests\UseCase\Proekt;
 use App\Unitman\Business\Command\Project\DobavitPeremenuyuVProekt;
 use App\Unitman\Business\Command\Project\IzmenitZnacheniePeremenoiProekta;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
+use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListVariable;
 use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
@@ -26,6 +27,9 @@ final class ProzessDobavleniyaPeremenoiVProektTest extends AbstractProjectUseCas
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
+        // Без этого стаба мок возвращает Account с неинициализированными
+        // readonly-свойствами и проекция websocket-событий падает.
+        $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);

@@ -37,7 +37,9 @@ final class OtmenaZadachiPoLimituTest extends AbstractUnitUseCase
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->atLeastOnce())->method('getCurrentUserId')->willReturn($userId);
         $securityService->expects($this->atLeastOnce())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru', false));
-        //$securityService->expects($this->atLeastOnce())->method('getSystemUser')->willReturn(new Account($userId, 'asd@asd.ru', false));
+        // Без этого стаба мок возвращает Account с неинициализированными
+        // readonly-свойствами и проекция websocket-событий падает.
+        $securityService->expects($this->atLeastOnce())->method('getSystemUser')->willReturn(new Account($userId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $now = new \DateTimeImmutable('2025-10-09 10:00:00');

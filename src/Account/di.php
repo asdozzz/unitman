@@ -7,13 +7,17 @@ namespace App\Account;
 use App\Account\Business\Model\Account;
 use App\Account\Business\Port\CanGenerateRefreshToken;
 use App\Account\Business\Port\CanIssueAccessToken;
+use App\Account\Business\Port\OpenCodeCredentialRepository;
 use App\Account\Business\Port\RefreshTokenRepository;
+use App\Account\Business\Port\UmeetShifrovatSekrety;
 use App\Account\Business\Port\UuidGenerator;
 use App\Account\Business\Utils\EventTypeMapFactory;
 use App\Account\Infra\Adapter\LexikAccessTokenIssuer;
+use App\Account\Infra\Adapter\OpenSslShifr;
 use App\Account\Infra\Adapter\RamseyUuidGenerator;
 use App\Account\Infra\Adapter\RandomRefreshTokenGenerator;
 use App\Account\Infra\Repository\SqlAccountRepository;
+use App\Account\Infra\Repository\SqlOpenCodeCredentialRepository;
 use App\Account\Infra\Repository\SqlRefreshTokenRepository;
 use App\App\Infra\EventStore\AuthorMessageDecorator;
 use App\Utils\EventSauce\ProjectionsManager;
@@ -39,7 +43,8 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure()
         ->bind('$appEnv','%env(APP_ENV)%')
         ->bind('$defaultLocale','%env(ACCOUNT_DEFAULT_LOCALE)%')
-        ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%');
+        ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%')
+        ->bind('$openCodeCredentialsKey','%env(OPENCODE_CREDENTIALS_KEY)%');
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
         ->exclude(['./{di.php,di_test.php,routing.php,Migrations,Tests}', './Business/Command', './Business/Model', './Business/ReadModel'])
@@ -49,6 +54,8 @@ return function (ContainerConfigurator $configuration) {
     $services->set(RefreshTokenRepository::class, SqlRefreshTokenRepository::class);
     $services->set(CanGenerateRefreshToken::class, RandomRefreshTokenGenerator::class);
     $services->set(CanIssueAccessToken::class, LexikAccessTokenIssuer::class);
+    $services->set(UmeetShifrovatSekrety::class, OpenSslShifr::class);
+    $services->set(OpenCodeCredentialRepository::class, SqlOpenCodeCredentialRepository::class);
 
     $services->set('account.event_type_mapper', ExplicitlyMappedClassNameInflector::class)
         ->factory([service(EventTypeMapFactory::class), 'getMap']);

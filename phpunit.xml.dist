@@ -44,6 +44,7 @@
                  Покрытие считается только по Business/Model. -->
             <directory suffix=".php">src/Account/Business/Model</directory>
             <directory suffix=".php">src/Initialization/Business/Model</directory>
+            <directory suffix=".php">src/OpenCode/Business/Model</directory>
             <directory suffix=".php">src/Mediateka/Business/Model</directory>
             <directory suffix=".php">src/Runner/Business/Model</directory>
             <directory suffix=".php">src/Unitman/Business/Model</directory>

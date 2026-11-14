@@ -26,6 +26,10 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Mediateka/.*
+    - name: OpenCode
+      collectors:
+        - type: directory
+          regex: ./src/OpenCode/.*
     - name: Runner
       collectors:
         - type: directory
@@ -59,8 +63,17 @@ deptrac:
       - Account
       - Unitman
       - Utils
-    # Runner управляет контейнерами и обращается к Unitman через Acl\\UnitmanAdapter.
+    # OpenCode — диалоги с OpenCode: реквизиты берёт из Account через AccountApi,
+    # исполнение ходов — из Runner через RunnerApi. Никаких внутренних классов чужих модулей.
+    OpenCode:
+      - Account
+      - App
+      - BackgroundJob
+      - Runner
+      - Utils
+    # Runner управляет контейнерами и обращается к Unitman и Account только через Acl-адаптеры.
     Runner:
+      - Account
       - App
       - BackgroundJob
       - Unitman

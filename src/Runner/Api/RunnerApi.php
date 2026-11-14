@@ -4,6 +4,8 @@ namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
+use App\Runner\Business\Command\NachatHodOpenCode;
+use App\Runner\Business\Command\VipolnitHodOpenCode;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
@@ -13,6 +15,7 @@ use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
@@ -30,9 +33,12 @@ use App\Runner\Business\Model\RunnerProgress;
 use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Business\Port\UmeetChitatProgressZadachi;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
+use App\Runner\Business\Port\UmeetPoluchatRekvizityOpenCode;
 use App\Runner\Infra\Service\RedisService;
+use App\Runner\Infra\Service\RunnerProgressPublisher;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
+use App\Runner\Infra\Workflow\OpenCodeTurnWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatOstanovkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatPodgotovkuUnitaWorkflow;
@@ -61,6 +67,7 @@ final class RunnerApi implements RunnerApiInterface
         private SerializerInterface $serializer,
         private UmeetHranitProgressZadachi $progressStorage,
         private UmeetChitatProgressZadachi $progressReader,
+        private UmeetPoluchatRekvizityOpenCode $rekvizityOpenCode,
     )
     {
     }
@@ -73,6 +80,11 @@ final class RunnerApi implements RunnerApiInterface
     public function poluchitProgressZadachi(string $workflowId): ?RunnerProgress
     {
         return $this->progressReader->poluchit($workflowId);
+    }
+
+    public function poluchitKanalProgressa(string $workflowId): string
+    {
+        return RunnerProgressPublisher::kanalDlyaToken($workflowId);
     }
 
     function getTaskQueue(): string
@@ -464,6 +476,64 @@ final class RunnerApi implements RunnerApiInterface
         }
 
         return $result;
+    }
+
+    public function nachatHodOpenCode(string $workflowId, NachatHodOpenCode $command): string
+    {
+        // Реквизиты забираются до старта workflow: если ключ не расшифровывается
+        // или реквизиты чужие, ошибка возвращается сразу, без «висящего» workflow.
+        $rekvizity = $this->rekvizityOpenCode->poluchitRekvizity($command->AccountId, $command->CredentialId);
+
+        $this->zaregistrirovatProgressToken($workflowId);
+
+        $activityCommand = new VipolnitHodOpenCode(
+            $command->SessionId,
+            $command->Prompt,
+            $command->Answers,
+            $command->History,
+            $rekvizity->url,
+            $rekvizity->model,
+            $rekvizity->apiKey,
+        );
+
+        $workflow = $this->workflowClient->newWorkflowStub(
+            OpenCodeTurnWorkflow::class,
+            WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(15))
+        );
+
+        $run = $this->workflowClient->start($workflow, $activityCommand);
+        return $run->getExecution()->getID();
+    }
+
+    public function poluchitResultatHodaOpenCode(string $workflowId): ?ResultatHodaOpenCode
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+
+        try {
+            return $workflow->getResult(ResultatHodaOpenCode::class, 5);
+        } catch (TimeoutException) {
+            // Истёкший deadline — это «ход ещё выполняется», а не ошибка.
+            return null;
+        } catch (WorkflowServiceException $e) {
+            return $this->oshibkaHoda($e->getPrevious()?->getMessage() ?? 'runner.unknown_error_when_make_result');
+        } catch (WorkflowExecutionFailedException|WorkflowFailedException $exp) {
+            return $this->oshibkaHoda($exp->getMessage());
+        }
+    }
+
+    /**
+     * Результат-ошибка хода OpenCode.
+     *
+     * Отдельный фабричный метод, потому что `makeResult()` создаёт результат
+     * по контракту `(int $Success, array $Steps)`, а у хода другая структура:
+     * клиенту нужен машинный `ErrorKey` вместо списка шагов.
+     */
+    private function oshibkaHoda(string $errorKey): ResultatHodaOpenCode
+    {
+        return new ResultatHodaOpenCode(false, ResultatHodaOpenCode::KIND_ERROR, [], null, $errorKey);
     }
 
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ResultatProverkiKonteineraUnita

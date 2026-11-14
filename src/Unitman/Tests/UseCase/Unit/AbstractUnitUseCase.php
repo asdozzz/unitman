@@ -40,6 +40,10 @@ class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($userId);
         $securityService->expects($this->any())->method('getEmailOrNicknameByUserId')->willReturn('asd@asd.ru');
         $securityService->expects($this->any())->method('getUserById')->willReturn(new Account($userId, 'asd@asd.ru', false));
+        // Проекция websocket-событий берёт автора из заголовка сообщения, а если
+        // его нет — системного пользователя. Без этого стаба мок возвращает
+        // Account с неинициализированными readonly-свойствами и падает.
+        $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($userId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
         return $securityService;
     }

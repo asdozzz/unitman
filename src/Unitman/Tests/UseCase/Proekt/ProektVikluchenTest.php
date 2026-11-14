@@ -7,6 +7,7 @@ use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Unitman\Business\Command\Project\DisableProject;
 use App\Unitman\Business\Command\Project\EnableProject;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
+use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\Runner\JobId;
@@ -40,6 +41,9 @@ final class ProektVikluchenTest extends AbstractProjectUseCase
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
+        // Без этого стаба мок возвращает Account с неинициализированными
+        // readonly-свойствами и проекция websocket-событий падает.
+        $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $this->addRepoRaw(RepoType::GITLAB, 'repoName', 'http://repoUrl');

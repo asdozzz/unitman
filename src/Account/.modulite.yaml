@@ -6,6 +6,9 @@ namespace: "App\\Account\\"
 # Symbols not listed here will be internal.
 export:
   - "Api\\AccountApi"
+  # DTO, который AccountApi отдаёт другим модулям (Runner/OpenCode).
+  # Ключ в нём расшифрован, поэтому использовать его можно только внутри бэкенда.
+  - "Business\\ReadModel\\OpenCodeCredentialSecretReadModel"
 
 # Class members to exclude, they override "export".
 force-internal:

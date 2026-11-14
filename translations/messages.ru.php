@@ -48,6 +48,23 @@ return [
         'access_token' => [
             'invalid_payload' => 'Не удалось выпустить access-токен',
         ],
+        'opencode_credential' => [
+            'decrypt_failed' => 'Не удалось расшифровать API-ключ OpenCode',
+            'empty_id' => 'Идентификатор реквизитов не может быть пустым',
+            'empty_account_id' => 'Не указан владелец реквизитов',
+            'empty_api_key' => 'API-ключ OpenCode не может быть пустым',
+            'empty_name' => 'Имя реквизитов не может быть пустым',
+            'empty_url' => 'URL OpenCode не может быть пустым',
+            'empty_model' => 'Модель OpenCode не может быть пустой',
+            'encrypt_failed' => 'Не удалось зашифровать API-ключ OpenCode',
+            'invalid_key' => 'Некорректный ключ шифрования OpenCode',
+            'key_not_configured' => 'Ключ шифрования OpenCode не задан',
+            'model_too_long' => 'Название модели OpenCode слишком длинное',
+            'name_double' => 'Реквизиты с таким именем уже существуют',
+            'name_too_long' => 'Имя реквизитов слишком длинное',
+            'not_found' => 'Реквизиты OpenCode не найдены',
+            'url_too_long' => 'URL OpenCode слишком длинный',
+        ],
     ],
 
     // ─── Shared ──────────────────────────────────────────────────────────────
@@ -102,6 +119,28 @@ return [
             'name_is_empty' => 'Имя файла не может быть пустым',
             'name_is_too_long' => 'Имя файла слишком длинное',
             'owner_is_ambiguous' => 'Владелец файла определен неоднозначно',
+        ],
+    ],
+
+    // ─── OpenCode ────────────────────────────────────────────────────────────
+    'opencode' => [
+        'session' => [
+            'account_required' => 'Не указан владелец сессии',
+            'credential_required' => 'Нужно выбрать реквизиты OpenCode',
+            'not_found' => 'Сессия OpenCode не найдена',
+        ],
+        'turn' => [
+            'answers_required' => 'Нужен хотя бы один ответ',
+            'awaiting_answer' => 'Ход уже ожидает ответа',
+            'failed' => 'Ход OpenCode завершился ошибкой',
+            'invalid_status' => 'Некорректный статус сохранённого хода',
+            'not_awaiting_answer' => 'Ход не ожидает ответа',
+            'not_found' => 'Ход OpenCode не найден',
+            'option_required' => 'Нужно выбрать вариант ответа',
+            'request_required' => 'Промпт не может быть пустым',
+            'unexpected_kind' => 'Раннер вернул результат неизвестного типа',
+            'unknown_option' => 'Выбранного варианта ответа не существует',
+            'unknown_question' => 'Вопроса, на который дан ответ, не существует',
         ],
     ],
 

@@ -24,6 +24,8 @@ nelmio_api_doc:
               description: Тестовые стенды
             - name: Mediateka
               description: Файлы юнитов (zip-архивы в MinIO)
+            - name: OpenCode
+              description: Сессии и ходы OpenCode (вопросы, ответы, прогресс)
         # Маршруты, которые создаются не контроллерами проекта, а бандлами
         # (lexik JSON-логин), поэтому описываются декларативно.
         paths:
@@ -189,6 +191,339 @@ nelmio_api_doc:
                         locale:
                             type: string
                             example: ru
+                SozdatRekvizityOpenCode:
+                    type: object
+                    description: 'Реквизиты подключения к OpenCode (API-ключ шифруется на бэкенде)'
+                    required: [name, url, model, apiKey]
+                    properties:
+                        name:
+                            type: string
+                            maxLength: 128
+                            description: 'Произвольное имя реквизитов, уникальное в рамках аккаунта'
+                            example: 'Рабочий ключ'
+                        url:
+                            type: string
+                            maxLength: 512
+                            description: Базовый URL API OpenCode
+                            example: 'https://api.opencode.ai'
+                        model:
+                            type: string
+                            maxLength: 128
+                            description: Идентификатор модели OpenCode
+                            example: 'claude-sonnet-4'
+                        apiKey:
+                            type: string
+                            format: password
+                            description: 'API-ключ в открытом виде; на сервере шифруется AES-256-GCM и наружу больше не отдаётся'
+                IzmenitRekvizityOpenCode:
+                    type: object
+                    description: 'Частичное изменение реквизитов OpenCode: непереданные поля не меняются'
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        name:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                        url:
+                            type: string
+                            maxLength: 512
+                            nullable: true
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                        apiKey:
+                            type: string
+                            format: password
+                            nullable: true
+                            description: 'Новый API-ключ. null или пустая строка — оставить прежний'
+                UdalitRekvizityOpenCode:
+                    type: object
+                    required: [id]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                OpenCodeCredential:
+                    type: object
+                    description: 'Реквизиты OpenCode для показа пользователю (OpenCodeCredentialReadModel). Полный API-ключ отсутствует — только маска'
+                    required: [id, name, url, model, apiKeyHint, createdAt, updatedAt]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        name:
+                            type: string
+                            example: 'Рабочий ключ'
+                        url:
+                            type: string
+                            example: 'https://api.opencode.ai'
+                        model:
+                            type: string
+                            example: 'claude-sonnet-4'
+                        apiKeyHint:
+                            type: string
+                            description: 'Маска ключа: последние 4 символа'
+                            example: '****a1b2'
+                        createdAt:
+                            type: integer
+                            description: Момент создания, unix timestamp (секунды)
+                            example: 1762000000
+                        updatedAt:
+                            type: integer
+                            description: Момент последнего изменения, unix timestamp (секунды)
+                            example: 1762000000
+                # --- OpenCode: сессии и ходы ---
+                SozdatSessiyu:
+                    type: object
+                    description: 'Создание сессии OpenCode под выбранные реквизиты'
+                    required: [credentialId]
+                    properties:
+                        credentialId:
+                            type: string
+                            format: uuid
+                            description: 'Идентификатор реквизитов из /api/account/opencode (обязателен: ключ выбирает пользователь)'
+                        title:
+                            type: string
+                            maxLength: 255
+                            nullable: true
+                            description: 'Необязательный заголовок сессии; при пустом значении подставляется по первому промпту'
+                            example: 'Рефакторинг модуля биллинга'
+                NachatPrompt:
+                    type: object
+                    description: 'Промпт пользователя, запускающий новый ход'
+                    required: [sessionId, text]
+                    properties:
+                        sessionId:
+                            type: string
+                            format: uuid
+                        text:
+                            type: string
+                            minLength: 1
+                            description: 'Текст промпта в открытом виде'
+                            example: 'Добавь ретраи в клиент оплаты'
+                OtvetitNaVopros:
+                    type: object
+                    description: 'Ответ на вопросы предыдущего хода; запускает новый ход'
+                    required: [turnId, answers]
+                    properties:
+                        turnId:
+                            type: string
+                            format: uuid
+                            description: 'Ход в статусе AWAITING_INPUT'
+                        answers:
+                            type: array
+                            minItems: 1
+                            description: 'Ответы по каждому вопросу хода'
+                            items:
+                                $ref: '#/components/schemas/OpenCodeAnswer'
+                OpenCodeAnswer:
+                    type: object
+                    description: 'Ответ на один вопрос: выбранный вариант и/или свободный текст'
+                    required: [questionId]
+                    properties:
+                        questionId:
+                            type: string
+                            description: 'Id вопроса из result.Questions предыдущего хода'
+                        optionId:
+                            type: string
+                            nullable: true
+                            description: 'Id выбранного варианта; обязателен, если вопрос не допускает свободный текст'
+                        text:
+                            type: string
+                            nullable: true
+                            description: 'Свободный текстовый ответ; допустим только при AllowFreeText'
+                PoluchitResultatHoda:
+                    type: object
+                    required: [turnId]
+                    properties:
+                        turnId:
+                            type: string
+                            format: uuid
+                PoluchitProgressHoda:
+                    type: object
+                    required: [turnId]
+                    properties:
+                        turnId:
+                            type: string
+                            format: uuid
+                PoluchitIstoriyuSessii:
+                    type: object
+                    required: [sessionId]
+                    properties:
+                        sessionId:
+                            type: string
+                            format: uuid
+                OpenCodeSession:
+                    type: object
+                    description: 'Сессия OpenCode (SessiyaOpenCodeReadModel)'
+                    required: [id, credentialId, title, createdAt, updatedAt]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        credentialId:
+                            type: string
+                            format: uuid
+                            description: 'Реквизиты, под которыми создана сессия'
+                        title:
+                            type: string
+                            example: 'Рефакторинг модуля биллинга'
+                        externalSessionId:
+                            type: string
+                            nullable: true
+                            description: 'Идентификатор сессии на стороне OpenCode; появляется после первого завершённого хода'
+                        createdAt:
+                            type: integer
+                            description: Момент создания, unix timestamp (секунды)
+                            example: 1762000000
+                        updatedAt:
+                            type: integer
+                            description: Момент последнего изменения, unix timestamp (секунды)
+                            example: 1762000000
+                OpenCodeTurnLaunch:
+                    type: object
+                    description: 'Ход запущен: клиент подписывается на progressChannel и опрашивает /poluchitResultatHoda по turnId'
+                    required: [turnId, status, progressChannel]
+                    properties:
+                        turnId:
+                            type: string
+                            format: uuid
+                        status:
+                            type: string
+                            enum: [RUNNING, AWAITING_INPUT, ANSWERED, FAILED]
+                            example: RUNNING
+                        progressChannel:
+                            type: string
+                            description: 'Имя Centrifugo-канала, в который раннер публикует шаги хода. Подписка возможна сразу после старта, без ожидания первого saveSteps.'
+                            example: 'unit_progress#6f1c5e0a-7d1f-4d59-9a54-0c2f8a2e6f11'
+                OpenCodeTurn:
+                    type: object
+                    description: 'Ход OpenCode (HodOpenCodeReadModel)'
+                    required: [id, sessionId, seq, status, requestText, answers, createdAt, progressChannel]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        sessionId:
+                            type: string
+                            format: uuid
+                        seq:
+                            type: integer
+                            description: 'Порядковый номер хода внутри сессии, начиная с 1'
+                            example: 1
+                        status:
+                            type: string
+                            enum: [RUNNING, AWAITING_INPUT, ANSWERED, FAILED]
+                            example: AWAITING_INPUT
+                        requestText:
+                            type: string
+                            description: 'Текст, отправленный раннеру: промпт пользователя либо сводка ответов'
+                        answers:
+                            type: array
+                            description: 'Нормализованные ответы, породившие этот ход (для первого хода и хода после промпта — пустой массив)'
+                            items:
+                                $ref: '#/components/schemas/OpenCodeAnswer'
+                        result:
+                            $ref: '#/components/schemas/OpenCodeTurnResult'
+                        errorKey:
+                            type: string
+                            nullable: true
+                            description: 'Ключ перевода ошибки, если ход завершился неудачей'
+                            example: opencode.turn.failed
+                        createdAt:
+                            type: integer
+                            description: Момент создания, unix timestamp (секунды)
+                            example: 1762000000
+                        finishedAt:
+                            type: integer
+                            nullable: true
+                            description: 'Момент завершения хода; null пока ход выполняется'
+                            example: 1762000030
+                        progressChannel:
+                            type: string
+                            description: 'Имя Centrifugo-канала прогресса этого хода. Для завершённых ходов остаётся прежним и может использоваться для дозагрузки снапшота через /poluchitProgressHoda.'
+                            example: 'unit_progress#6f1c5e0a-7d1f-4d59-9a54-0c2f8a2e6f11'
+                OpenCodeTurnResult:
+                    type: object
+                    nullable: true
+                    description: 'Результат хода в контракте раннера; API-ключа в нём нет по построению'
+                    required: [Success, Kind, Questions]
+                    properties:
+                        Success:
+                            type: boolean
+                        Kind:
+                            type: string
+                            enum: [ANSWER, QUESTION, ERROR]
+                            example: QUESTION
+                        Questions:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/OpenCodeQuestion'
+                        Answer:
+                            type: string
+                            nullable: true
+                            description: 'Финальный ответ ассистента при Kind=ANSWER'
+                        ErrorKey:
+                            type: string
+                            nullable: true
+                            description: 'Ключ перевода ошибки при Kind=ERROR'
+                        ExternalSessionId:
+                            type: string
+                            nullable: true
+                            description: 'Идентификатор сессии на стороне OpenCode'
+                OpenCodeQuestion:
+                    type: object
+                    required: [Id, Text, AllowFreeText, Options]
+                    properties:
+                        Id:
+                            type: string
+                        Text:
+                            type: string
+                            description: 'Текст вопроса'
+                        AllowFreeText:
+                            type: boolean
+                            description: 'Разрешён ли свободный текстовый ответ вместо выбора варианта'
+                        Options:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/OpenCodeQuestionOption'
+                OpenCodeQuestionOption:
+                    type: object
+                    required: [Id, Label]
+                    properties:
+                        Id:
+                            type: string
+                        Label:
+                            type: string
+                        Description:
+                            type: string
+                            nullable: true
+                OpenCodeTurnProgress:
+                    type: object
+                    nullable: true
+                    description: 'Снапшот шагов хода из KV раннера (ProgressHodaOpenCode)'
+                    required: [steps, finished, success, updatedAt]
+                    properties:
+                        steps:
+                            type: array
+                            description: 'Шаги раннера как есть: Command, Response, Success, Unixtime'
+                            items:
+                                type: object
+                                additionalProperties: true
+                        finished:
+                            type: boolean
+                            description: 'Признак завершения выполнения'
+                        success:
+                            type: boolean
+                            description: 'Итог выполнения; осмысленно только при finished=true'
+                        updatedAt:
+                            type: integer
+                            description: 'Момент последней публикации шагов, unix timestamp (секунды)'
+                            example: 1762000015
                 ChangeMyNickname:
                     type: object
                     required: [newNickname]

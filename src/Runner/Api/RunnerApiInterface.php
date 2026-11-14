@@ -4,6 +4,7 @@ namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
+use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
@@ -13,6 +14,7 @@ use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
@@ -44,6 +46,15 @@ interface RunnerApiInterface
      */
     public function poluchitProgressZadachi(string $workflowId): ?RunnerProgress;
 
+    /**
+     * Имя Centrifugo-канала, в который публикуется прогресс задачи.
+     *
+     * Вычисляется из `workflowId`, поэтому клиент может подписаться сразу после
+     * старта, не дожидаясь первого `saveSteps`. Знание имени канала наружу
+     * отдаёт только Runner: префикс — его внутренняя деталь.
+     */
+    public function poluchitKanalProgressa(string $workflowId): string;
+
     public function initProject(InitProjectCommand $command): string;
     public function poluchitResultatSborkiProekta(string $workflowId): ?InitProjectResult;
     public function removeProject(RemoveProjectCommand $command): string;
@@ -68,4 +79,22 @@ interface RunnerApiInterface
     public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita;
 
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ?ResultatProverkiKonteineraUnita;
+
+    /**
+     * Старт одного хода диалога с OpenCode.
+     *
+     * Реквизиты подключения Runner подставляет сам — через `Acl`-адаптер над Account.
+     * Токен прогресса регистрируется до старта, поэтому `saveSteps` работает без изменений.
+     *
+     * @return string id workflow хода
+     * @throws \DomainException если реквизиты не найдены или принадлежат другому аккаунту
+     */
+    public function nachatHodOpenCode(string $workflowId, NachatHodOpenCode $command): string;
+
+    /**
+     * Результат хода: ответ, вопрос с вариантами или ошибка.
+     *
+     * null — workflow ещё не завершён, результата пока нет.
+     */
+    public function poluchitResultatHodaOpenCode(string $workflowId): ?ResultatHodaOpenCode;
 }

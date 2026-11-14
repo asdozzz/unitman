@@ -26,6 +26,18 @@ final class RunnerProgressPublisher
 
     private const THROTTLE_WINDOW_MS = 250;
 
+    /**
+     * Имя Centrifugo-канала прогресса для токена задачи.
+     *
+     * Единственное место, где формируется имя канала: и публикация, и выдача
+     * имени клиенту через RunnerApi обязаны совпадать, иначе подписка уйдёт
+     * «в пустоту» и UI будет ждать событий, которых никто не пришлёт.
+     */
+    public static function kanalDlyaToken(string $token): string
+    {
+        return self::CHANNEL_PREFIX . $token;
+    }
+
     public function __construct(
         private readonly CentrifugoInterface $centrifugo,
         private readonly UmeetHranitProgressZadachi $progressStorage,
@@ -41,7 +53,7 @@ final class RunnerProgressPublisher
         $this->progressStorage->zapomnitVremyaPublikacii($progress->token, $this->nowMs());
 
         try {
-            $this->centrifugo->publish($progress->toClientPayload(), self::CHANNEL_PREFIX . $progress->token);
+            $this->centrifugo->publish($progress->toClientPayload(), self::kanalDlyaToken($progress->token));
         } catch (\Throwable) {
             return false;
         }

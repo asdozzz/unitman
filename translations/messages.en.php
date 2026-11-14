@@ -51,6 +51,23 @@ return [
         'access_token' => [
             'invalid_payload' => 'Unable to issue an access token',
         ],
+        'opencode_credential' => [
+            'decrypt_failed' => 'Unable to decrypt the OpenCode API key',
+            'empty_id' => 'The credential ID must not be empty',
+            'empty_account_id' => 'The credential account is missing',
+            'empty_api_key' => 'The OpenCode API key must not be empty',
+            'empty_name' => 'The credential name must not be empty',
+            'empty_url' => 'The OpenCode URL must not be empty',
+            'empty_model' => 'The OpenCode model must not be empty',
+            'encrypt_failed' => 'Unable to encrypt the OpenCode API key',
+            'invalid_key' => 'The OpenCode encryption key is invalid',
+            'key_not_configured' => 'The OpenCode encryption key is not configured',
+            'model_too_long' => 'The OpenCode model name is too long',
+            'name_double' => 'A credential with that name already exists',
+            'name_too_long' => 'The credential name is too long',
+            'not_found' => 'The OpenCode credential was not found',
+            'url_too_long' => 'The OpenCode URL is too long',
+        ],
     ],
 
     // ─── Shared ──────────────────────────────────────────────────────────────
@@ -105,6 +122,28 @@ return [
             'name_is_empty' => 'The file name must not be empty',
             'name_is_too_long' => 'The file name is too long',
             'owner_is_ambiguous' => 'The file owner is ambiguous',
+        ],
+    ],
+
+    // ─── OpenCode ────────────────────────────────────────────────────────────
+    'opencode' => [
+        'session' => [
+            'account_required' => 'The session owner is missing',
+            'credential_required' => 'An OpenCode credential must be selected',
+            'not_found' => 'The OpenCode session was not found',
+        ],
+        'turn' => [
+            'answers_required' => 'At least one answer is required',
+            'awaiting_answer' => 'The turn is already waiting for an answer',
+            'failed' => 'The OpenCode turn failed',
+            'invalid_status' => 'The stored turn status is invalid',
+            'not_awaiting_answer' => 'The turn is not waiting for an answer',
+            'not_found' => 'The OpenCode turn was not found',
+            'option_required' => 'An answer option must be selected',
+            'request_required' => 'The prompt must not be empty',
+            'unexpected_kind' => 'The runner returned an unknown result kind',
+            'unknown_option' => 'The selected answer option does not exist',
+            'unknown_question' => 'The answered question does not exist',
         ],
     ],
 

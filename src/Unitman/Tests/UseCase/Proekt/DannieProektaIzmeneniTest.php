@@ -3,6 +3,7 @@
 namespace App\Unitman\Tests\UseCase\Proekt;
 
 use App\Unitman\Business\Command\Project\UpdateProjectData;
+use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
@@ -20,6 +21,9 @@ final class DannieProektaIzmeneniTest extends AbstractProjectUseCase
         $securityService = $this->getMockBuilder(UnitmanSecurityService::class)->getMock();
         $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
         $securityService->expects($this->any())->method('getCurrentUserId')->willReturn($adminId);
+        // Без этого стаба мок возвращает Account с неинициализированными
+        // readonly-свойствами и проекция websocket-событий падает.
+        $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
         $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
