@@ -116,35 +116,29 @@ services:
   minio:
     image: bitnamilegacy/minio:2025.4.22-debian-12-r1
     restart: always
-    # root нужен только на старте: setup.sh выставляет владельца каталога данных,
-    # дальше процесс запускается от непривилегированного пользователя minio
     user: root
     environment:
-      # Авторизация MinIO задаётся только через env (см. .env.dist / .env.local)
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_BROWSER_REDIRECT_URL=${MINIO_PUBLIC_ENDPOINT_CONSOLE}
-      # Образ Bitnami запускает minio через run.sh, поэтому каталог данных
-      # и порты задаются переменными (по умолчанию /bitnami/minio/data)
+      - MINIO_BROWSER_REDIRECT_URL=${MINIO_PUBLIC_ENDPOINT_CONSOLE:-http://localhost:9001}
       - MINIO_DATA_DIR=/data
       - MINIO_API_PORT_NUMBER=9000
       - MINIO_CONSOLE_PORT_NUMBER=9001
+      - MINIO_ADDRESS=0.0.0.0:9000
+      - MINIO_CONSOLE_ADDRESS=0.0.0.0:9001
     ports:
       - "${MINIO_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - ./var/volume/minio:/data
     healthcheck:
-      # liveness-эндпоинт самого MinIO: в образе Bitnami нет
-      # предварительно настроенного alias `local` для `mc ready local`
-      test: [ "CMD", "curl", "-fsS", "http://127.0.0.1:9000/minio/health/live" ]
-      interval: 10s
+      test: [ "CMD", "curl", "-fsS", "http://127.0.0" ]
+      interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
 
   minio-init:
-    # mc из того же legacy-зеркала Bitnami (официальный minio/mc недоступен)
     image: bitnamilegacy/minio-client:latest
     restart: "no"
     depends_on:
@@ -155,13 +149,14 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
       - MEDIATEKA_BUCKET=${MEDIATEKA_BUCKET}
       - MC_CONFIG_DIR=/tmp/.mc
-    # entrypoint образа переопределяется на sh, поэтому конфиг-каталог mc
-    # (по умолчанию /.mc, недоступен для записи) задаётся явно
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - >
-        mc --config-dir /tmp/.mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" &&
-        mc --config-dir /tmp/.mc mb --ignore-existing "local/$$MEDIATEKA_BUCKET" &&
+        until mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do
+          echo "Waiting for minio API...";
+          sleep 2;
+        done &&
+        mc mb --ignore-existing "local/$$MEDIATEKA_BUCKET" &&
         echo "bucket $$MEDIATEKA_BUCKET is ready"
 
   buggregator:
