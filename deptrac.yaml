@@ -64,12 +64,15 @@ deptrac:
       - Unitman
       - Utils
     # OpenCode — диалоги с OpenCode: реквизиты берёт из Account через AccountApi,
-    # исполнение ходов — из Runner через RunnerApi. Никаких внутренних классов чужих модулей.
+    # исполнение ходов — из Runner через RunnerApi, состояние юнита и его
+    # продвижение по конвейеру — из Unitman через UnitmanApi.
+    # Никаких внутренних классов чужих модулей.
     OpenCode:
       - Account
       - App
       - BackgroundJob
       - Runner
+      - Unitman
       - Utils
     # Runner управляет контейнерами и обращается к Unitman и Account только через Acl-адаптеры.
     Runner:

@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace App\Runner\Business\Command;
 
 /**
- * Входные данные хода диалога с OpenCode — то, что приходит из модуля OpenCode.
+ * Запуск хода OpenCode на стороне раннера.
  *
- * Реквизитов подключения здесь нет: их подставляет сам Runner, забирая
- * у Account через `Acl`-адаптер по паре `AccountId` + `CredentialId`.
- * Так ключ не проходит через публичный API Runner и не попадает в вызывающий модуль.
+ * `Units` — упорядоченный список юнитов сессии (multi-root workspace): первый
+ * юнит задаёт рабочий каталог хода (`<workdir>/<ProjectId>/<UnitId>`), остальные
+ * раннер подключает к OpenCode как дополнительные корни.
+ * `ProjectId`/`UnitId` продублированы для обратной совместимости — это первый юнит.
  */
 final class NachatHodOpenCode
 {
     /**
      * @param list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $Answers
      * @param list<array{Role: string, Text: string}> $History
+     * @param list<array{ProjectId: string, UnitId: string}> $Units
      */
     public function __construct(
         public readonly string $AccountId,
@@ -24,6 +26,10 @@ final class NachatHodOpenCode
         public readonly string $Prompt,
         public readonly array $Answers = [],
         public readonly array $History = [],
-    ) {
+        public readonly ?string $ProjectId = null,
+        public readonly ?string $UnitId = null,
+        public readonly array $Units = [],
+    )
+    {
     }
 }

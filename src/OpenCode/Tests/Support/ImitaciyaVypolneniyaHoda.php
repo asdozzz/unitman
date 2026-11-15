@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Tests\Support;
 
+use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
@@ -18,6 +19,10 @@ use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
  * `nachatHod` возвращает переданный `workflowId`, а `kanalProgressa` строит имя
  * канала из него же. Результат и прогресс задаются тестом **после** старта
  * хода — так же, как их позже вернул бы опрос Temporal.
+ *
+ * Юниты записываются в том порядке, в котором их передал `ZapuskatelHodaOpenCode`:
+ * это и есть multi-root workspace, где первый юнит — cwd хода. Поля `unitId`
+ * и `unitProjectId` дублируют первый юнит — для читаемости существующих проверок.
  */
 final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
 {
@@ -27,6 +32,9 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     accountId: string,
      *     credentialId: string,
      *     sessionId: string|null,
+     *     unitProjectId: string|null,
+     *     unitId: string|null,
+     *     units: list<array{unitId: string, unitProjectId: string}>,
      *     prompt: string,
      *     answers: list<array{QuestionId: string, OptionId: string|null, Text: string|null}>,
      *     history: list<array{Role: string, Text: string}>
@@ -49,17 +57,32 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
         string $accountId,
         string $credentialId,
         ?string $sessionId,
+        array $units,
         string $prompt,
         array $answers,
         array $history,
     ): string {
+        /** @var list<PrivyazkaKUnitu> $units */
         /** @var list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers */
         /** @var list<array{Role: string, Text: string}> $history */
+        $unitsPayload = array_map(
+            static fn (PrivyazkaKUnitu $privyazka): array => [
+                'unitId' => $privyazka->unitId,
+                'unitProjectId' => $privyazka->unitProjectId,
+            ],
+            $units,
+        );
+
+        $pervyiUnit = $unitsPayload[0] ?? null;
+
         $this->vyzovy[] = [
             'workflowId' => $workflowId,
             'accountId' => $accountId,
             'credentialId' => $credentialId,
             'sessionId' => $sessionId,
+            'unitProjectId' => $pervyiUnit['unitProjectId'] ?? null,
+            'unitId' => $pervyiUnit['unitId'] ?? null,
+            'units' => $unitsPayload,
             'prompt' => $prompt,
             'answers' => $answers,
             'history' => $history,
@@ -89,6 +112,9 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     accountId: string,
      *     credentialId: string,
      *     sessionId: string|null,
+     *     unitProjectId: string|null,
+     *     unitId: string|null,
+     *     units: list<array{unitId: string, unitProjectId: string}>,
      *     prompt: string,
      *     answers: list<array{QuestionId: string, OptionId: string|null, Text: string|null}>,
      *     history: list<array{Role: string, Text: string}>
@@ -110,6 +136,9 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     accountId: string,
      *     credentialId: string,
      *     sessionId: string|null,
+     *     unitProjectId: string|null,
+     *     unitId: string|null,
+     *     units: list<array{unitId: string, unitProjectId: string}>,
      *     prompt: string,
      *     answers: list<array{QuestionId: string, OptionId: string|null, Text: string|null}>,
      *     history: list<array{Role: string, Text: string}>
@@ -122,6 +151,25 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
         }
 
         return $this->vyzovy[\count($this->vyzovy) - 1];
+    }
+
+    /**
+     * Идентификаторы юнитов последнего хода в порядке привязки (первый — cwd).
+     *
+     * @return list<string>
+     */
+    public function unitIdsPoslednegoHoda(): array
+    {
+        $vyzov = $this->posledniiVyzov();
+
+        if ($vyzov === null) {
+            return [];
+        }
+
+        return array_map(
+            static fn (array $unit): string => $unit['unitId'],
+            $vyzov['units'],
+        );
     }
 
     public function posledniiWorkflowId(): ?string

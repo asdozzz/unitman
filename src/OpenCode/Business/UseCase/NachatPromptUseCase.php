@@ -11,6 +11,7 @@ use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\ReadModel\RezultatZapuskaHoda;
+use App\OpenCode\Business\Utils\PropuskHodaOpenCode;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
 
 /**
@@ -27,6 +28,7 @@ final class NachatPromptUseCase
         private UmeetProveryatRekvizityOpenCode $credentials,
         private ZapuskatelHodaOpenCode $launcher,
         private UmeetVypolnyatHodOpenCode $runner,
+        private PropuskHodaOpenCode $propusk,
     ) {
     }
 
@@ -36,6 +38,7 @@ final class NachatPromptUseCase
 
         $session = $this->sessionRepository->getById($command->sessionId);
         $session->trebovatVladelca($accountId);
+        $units = $this->propusk->proverit($session);
 
         $poslednii = $this->turnRepository->findPosledniiPoSessii($session->getId());
 
@@ -43,7 +46,7 @@ final class NachatPromptUseCase
             throw new \DomainException('opencode.turn.awaiting_answer');
         }
 
-        $turn = $this->launcher->zapustit($session, $command->text, []);
+        $turn = $this->launcher->zapustit($session, $command->text, [], $units);
 
         return new RezultatZapuskaHoda(
             $turn->getId(),

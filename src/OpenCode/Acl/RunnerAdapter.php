@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Acl;
 
+use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
@@ -23,15 +24,30 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode
     {
     }
 
+    /**
+     * @param list<PrivyazkaKUnitu> $units
+     */
     public function nachatHod(
         string $workflowId,
         string $accountId,
         string $credentialId,
         ?string $sessionId,
+        array $units,
         string $prompt,
         array $answers,
         array $history,
     ): string {
+        $unitsPayload = [];
+
+        foreach ($units as $privyazka) {
+            $unitsPayload[] = [
+                'ProjectId' => $privyazka->unitProjectId,
+                'UnitId' => $privyazka->unitId,
+            ];
+        }
+
+        $pervyiUnit = $units[0] ?? null;
+
         return $this->runnerApi->nachatHodOpenCode(
             $workflowId,
             new NachatHodOpenCode(
@@ -41,6 +57,9 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode
                 $prompt,
                 $answers,
                 $history,
+                $pervyiUnit?->unitProjectId,
+                $pervyiUnit?->unitId,
+                $unitsPayload,
             ),
         );
     }

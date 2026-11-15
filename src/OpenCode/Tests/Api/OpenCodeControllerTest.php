@@ -6,7 +6,10 @@ namespace App\OpenCode\Tests\Api;
 
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
+use App\OpenCode\Business\Model\SostoyanieUnita;
+use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
+use App\OpenCode\Tests\Support\ImitaciyaUpravleniyaUnitami;
 use App\OpenCode\Tests\Support\ImitaciyaVypolneniyaHoda;
 use Doctrine\DBAL\Connection;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
@@ -24,7 +27,13 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  * записывает вызовы и позволяет «доставить» результат так, как это позже
  * сделал бы опрос workflow.
  *
- * Все запросы идут в одном ядре (`disableReboot`), иначе подмена сервиса и
+ * Unitman тоже подменён (`ImitaciyaUpravleniyaUnitami`): тесты юнитов задают
+ * состояние и доступ явно, поэтому проверяют контракт OpenCode, а не сборку
+ * контейнеров. Состояние юнита влияет на ходы через единый гейт
+ * `PropuskHodaOpenCode`, поэтому проверка «собирается → ход запрещён»
+ * остаётся сквозной.
+ *
+ * Все запросы идут в одном ядре (`disableReboot`), иначе подмена сервисов и
  * открытая транзакция терялись бы между запросами сценария.
  */
 final class OpenCodeControllerTest extends WebTestCase
@@ -32,6 +41,8 @@ final class OpenCodeControllerTest extends WebTestCase
     private KernelBrowser $client;
 
     private ImitaciyaVypolneniyaHoda $runner;
+
+    private ImitaciyaUpravleniyaUnitami $unitami;
 
     private Connection $db;
 
@@ -52,6 +63,9 @@ final class OpenCodeControllerTest extends WebTestCase
 
         $this->runner = new ImitaciyaVypolneniyaHoda();
         $container->set(UmeetVypolnyatHodOpenCode::class, $this->runner);
+
+        $this->unitami = new ImitaciyaUpravleniyaUnitami();
+        $container->set(UmeetUpravlyatUnitami::class, $this->unitami);
 
         $this->db = $container->get(Connection::class);
         $this->db->beginTransaction();
@@ -134,7 +148,11 @@ final class OpenCodeControllerTest extends WebTestCase
      */
     private function dannye(array $otvet)
     {
-        $this->assertSame('success', $otvet['status'] ?? null);
+        $this->assertSame(
+            'success',
+            $otvet['status'] ?? null,
+            json_encode($otvet, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+        );
         $this->assertArrayHasKey('data', $otvet);
 
         return $otvet['data'];
@@ -511,5 +529,607 @@ final class OpenCodeControllerTest extends WebTestCase
         $this->client->request('GET', '/api/opencode/spisokSessiy');
 
         $this->assertResponseStatusCodeSame(401);
+    }
+
+    #[Test]
+    public function arhivaciya_ostavlyaet_sessiyu_i_istoriyu_v_spiske(): void
+    {
+        $sessionId = $this->sozdatSessiyu('Архивируемая сессия');
+        $this->zapustit('/api/opencode/prompt', ['sessionId' => $sessionId, 'text' => 'Первый']);
+
+        $this->assertSame(
+            1,
+            (int) $this->db->fetchOne('select count(*) from opencode_turn where session_id = ?', [$sessionId]),
+            'Перед архивацией у сессии должен быть хотя бы один ход',
+        );
+
+        $otvet = $this->zapros('POST', '/api/opencode/arhivirovatSessiyu', ['sessionId' => $sessionId]);
+
+        $this->assertSame('success', $otvet['status'] ?? null, json_encode($otvet, JSON_UNESCAPED_UNICODE));
+        $this->assertNull($otvet['data'] ?? null, 'Успешная архивация отвечает пустым data');
+
+        $this->assertSame(
+            1,
+            (int) $this->db->fetchOne('select count(*) from opencode_session where id = ?', [$sessionId]),
+            'Сессия не удаляется, а остаётся в архиве',
+        );
+        $this->assertSame(
+            1,
+            (int) $this->db->fetchOne('select count(*) from opencode_turn where session_id = ?', [$sessionId]),
+            'История ходов сохраняется: архивация не стирает диалог',
+        );
+        $this->assertSame(
+            'manual',
+            (string) $this->db->fetchOne('select archive_reason from opencode_session where id = ?', [$sessionId]),
+        );
+
+        $spisok = $this->dannye($this->zapros('GET', '/api/opencode/spisokSessiy'));
+        $nashli = $this->najtiVSspiske($spisok, $sessionId);
+
+        $this->assertIsArray($nashli, 'Архивная сессия остаётся в списке по умолчанию');
+        $this->assertTrue($nashli['archived']);
+        $this->assertSame('manual', $nashli['archiveReason']);
+    }
+
+    #[Test]
+    public function arhivnaya_sessiya_ne_prinimaet_prompt(): void
+    {
+        $sessionId = $this->sozdatSessiyu('Архивная');
+
+        $this->dannye($this->zapros('POST', '/api/opencode/arhivirovatSessiyu', ['sessionId' => $sessionId]));
+
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/prompt', ['sessionId' => $sessionId, 'text' => 'Ещё раз'])
+        );
+
+        $this->assertNotSame('', $message);
+        $this->assertSame(0, $this->runner->kolichestvoVyzovov(), 'Ход из архива не уходит в раннер');
+    }
+
+    #[Test]
+    public function udalit_sessiyu_rabotaet_kak_arhivaciya(): void
+    {
+        $sessionId = $this->sozdatSessiyu('Устаревший алиас');
+
+        $otvet = $this->zapros('POST', '/api/opencode/udalitSessiyu', ['sessionId' => $sessionId]);
+
+        $this->assertSame('success', $otvet['status'] ?? null, json_encode($otvet, JSON_UNESCAPED_UNICODE));
+        $this->assertNull($otvet['data'] ?? null);
+        $this->assertSame(
+            'manual',
+            (string) $this->db->fetchOne('select archive_reason from opencode_session where id = ?', [$sessionId]),
+            'Устаревший маршрут удаления архивирует сессию',
+        );
+    }
+
+    #[Test]
+    public function chuzhuyu_sessiyu_arhivirovat_nelzya(): void
+    {
+        $now = time();
+
+        $this->db->insert('opencode_session', [
+            'id' => 'foreign-deletable-session',
+            'account_id' => 'another-account',
+            'credential_id' => $this->credentialId,
+            'title' => 'Чужая',
+            'external_session_id' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/arhivirovatSessiyu', ['sessionId' => 'foreign-deletable-session'])
+        );
+
+        $this->assertNotSame('', $message);
+        $this->assertNull(
+            $this->db->fetchOne(
+                'select archived_at from opencode_session where id = ?',
+                ['foreign-deletable-session'],
+            ),
+            'Чужая сессия не должна архивироваться',
+        );
+    }
+
+    #[Test]
+    public function arhivaciya_neizvestnoj_sessii_otklonyaetsya(): void
+    {
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/arhivirovatSessiyu', ['sessionId' => 'no-such-session'])
+        );
+
+        $this->assertNotSame('', $message);
+    }
+
+    #[Test]
+    public function arhivaciya_sessii_s_pustym_id_otklonyaetsya(): void
+    {
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/arhivirovatSessiyu', ['sessionId' => '   '])
+        );
+
+        $this->assertNotSame('', $message);
+    }
+
+    #[Test]
+    public function privezka_k_unitu_peredayot_ego_direktoriyu_v_hod(): void
+    {
+        $this->unitami->zadatSostoyanieUnita('unit-1', $this->sostoyanieUnita(SostoyanieUnita::GROUP_READY));
+
+        $sessionId = $this->sozdatSessiyu('Свободная сессия');
+
+        $otvet = $this->zapros('POST', '/api/opencode/privezatKUnitu', [
+            'sessionId' => $sessionId,
+            'unitIds' => ['unit-1'],
+        ]);
+
+        $this->assertSame('success', $otvet['status'] ?? null, json_encode($otvet, JSON_UNESCAPED_UNICODE));
+        $this->assertNull($otvet['data'] ?? null);
+
+        $this->zapustit('/api/opencode/prompt', ['sessionId' => $sessionId, 'text' => 'Работаем в юните']);
+
+        $vyzov = $this->runner->posledniiVyzov();
+
+        $this->assertIsArray($vyzov);
+        $this->assertSame('unit-1', $vyzov['unitId'], 'Ход идёт в директории привязанного юнита');
+        $this->assertSame('project-1', $vyzov['unitProjectId'], 'Снимок проекта передаётся в активити');
+        $this->assertSame(
+            [['unitId' => 'unit-1', 'unitProjectId' => 'project-1']],
+            $vyzov['units'],
+            'Список юнитов уходит в раннер как multi-root workspace',
+        );
+
+        $this->assertSame(
+            'unit-1',
+            (string) $this->db->fetchOne('select unit_id from opencode_session where id = ?', [$sessionId]),
+            'Легаси-колонка хранит первый юнит',
+        );
+        $this->assertSame(
+            'project-1',
+            (string) $this->db->fetchOne('select unit_project_id from opencode_session where id = ?', [$sessionId]),
+        );
+    }
+
+    #[Test]
+    public function privezka_dobavlyaet_neskolko_unitov_v_odnom_zaprose(): void
+    {
+        // Юниты из разных проектов: один проект может дать только один юнит сессии.
+        $this->zadatGotovyeUnity(['unit-1' => 'project-1', 'unit-2' => 'project-2', 'unit-3' => 'project-3']);
+
+        $sessionId = $this->sozdatSessiyu();
+
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', [
+            'sessionId' => $sessionId,
+            'unitIds' => ['unit-1', 'unit-2', 'unit-3'],
+        ]));
+
+        $this->assertSame(
+            ['unit-1', 'unit-2', 'unit-3'],
+            $this->db->fetchFirstColumn(
+                'select unit_id from opencode_session_unit where session_id = ? order by position_index',
+                [$sessionId],
+            ),
+            'Порядок юнитов сохраняется: первый задаёт cwd',
+        );
+
+        $this->zapustit('/api/opencode/prompt', ['sessionId' => $sessionId, 'text' => 'Мульти-рут']);
+
+        $this->assertSame(
+            ['unit-1', 'unit-2', 'unit-3'],
+            $this->runner->unitIdsPoslednegoHoda(),
+            'Все юниты передаются в раннер, первый — рабочий каталог',
+        );
+    }
+
+    #[Test]
+    public function povtornaya_privezka_togo_zhe_unita_idempotentna(): void
+    {
+        $this->zadatGotovyeUnity(['unit-1' => 'project-1', 'unit-2' => 'project-2']);
+
+        $sessionId = $this->sozdatSessiyu();
+
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-1']]));
+
+        // Повтор той же привязки не ошибка: клиент может ретраить запрос.
+        $this->assertSame(
+            'success',
+            $this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-1']])['status'] ?? null,
+        );
+
+        // Привязка второго юнита дополняет список, а не заменяет его.
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-2']]));
+
+        $this->assertSame(
+            ['unit-1', 'unit-2'],
+            $this->db->fetchFirstColumn(
+                'select unit_id from opencode_session_unit where session_id = ? order by position_index',
+                [$sessionId],
+            ),
+            'Привязка аддитивна, первый юнит остаётся первым',
+        );
+    }
+
+    #[Test]
+    public function vtoroj_unit_togo_zhe_proekta_otklonyaetsya(): void
+    {
+        $this->zadatGotovyeUnity(['unit-1' => 'project-1', 'unit-2' => 'project-1']);
+
+        $sessionId = $this->sozdatSessiyu();
+
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-1']]));
+
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-2']])
+        );
+
+        $this->assertSame(
+            'К сессии можно привязать только один юнит в рамках одного проекта',
+            $message,
+            'Второй юнит того же проекта отклоняется с понятной причиной',
+        );
+        $this->assertSame(
+            ['unit-1'],
+            $this->db->fetchFirstColumn(
+                'select unit_id from opencode_session_unit where session_id = ? order by position_index',
+                [$sessionId],
+            ),
+            'Отклонённая привязка не меняет состав сессии',
+        );
+    }
+
+    #[Test]
+    public function sozdanie_sessii_s_dvumya_unitami_odnogo_proekta_otklonyaetsya(): void
+    {
+        $this->zadatGotovyeUnity(['unit-1' => 'project-1', 'unit-2' => 'project-1']);
+
+        $doSozdaniya = (int) $this->db->fetchOne('select count(*) from opencode_session');
+
+        $message = $this->trebovatOtkaz($this->zapros('POST', '/api/opencode/sozdatSessiyu', [
+            'credentialId' => $this->credentialId,
+            'unitIds' => ['unit-1', 'unit-2'],
+        ]));
+
+        $this->assertSame(
+            'К сессии можно привязать только один юнит в рамках одного проекта',
+            $message,
+        );
+        $this->assertSame(
+            $doSozdaniya,
+            (int) $this->db->fetchOne('select count(*) from opencode_session'),
+            'Сессия с конфликтом проектов не создаётся',
+        );
+    }
+
+    #[Test]
+    public function privezka_k_nedostupnomu_unitu_otklonyaetsya(): void
+    {
+        $this->unitami->zadatSostoyanieUnita('unit-1', $this->sostoyanieUnita(SostoyanieUnita::GROUP_READY), false);
+
+        $sessionId = $this->sozdatSessiyu();
+
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-1']])
+        );
+
+        $this->assertNotSame('', $message);
+        $this->assertNull(
+            $this->db->fetchOne('select unit_id from opencode_session where id = ?', [$sessionId]),
+            'Недоступный юнит не привязывается',
+        );
+        $this->assertSame(
+            [],
+            $this->db->fetchFirstColumn(
+                'select unit_id from opencode_session_unit where session_id = ?',
+                [$sessionId],
+            ),
+        );
+    }
+
+    #[Test]
+    public function sozdanie_sessii_s_unitami_fiksiruet_snimki_proektov(): void
+    {
+        $this->zadatGotovyeUnity(['unit-42' => 'project-42', 'unit-43' => 'project-43']);
+
+        $data = $this->dannye($this->zapros('POST', '/api/opencode/sozdatSessiyu', [
+            'credentialId' => $this->credentialId,
+            'unitIds' => ['unit-42', 'unit-43'],
+        ]));
+
+        $this->assertIsArray($data);
+
+        $sessionId = $data['id'];
+        $this->assertIsString($sessionId);
+
+        $this->assertSame(
+            'project-42',
+            (string) $this->db->fetchOne('select unit_project_id from opencode_session where id = ?', [$sessionId]),
+            'Проект первого юнита снимается в момент создания сессии',
+        );
+        $this->assertSame(
+            ['project-42', 'project-43'],
+            $this->db->fetchFirstColumn(
+                'select unit_project_id from opencode_session_unit where session_id = ? order by position_index',
+                [$sessionId],
+            ),
+            'У каждого юнита свой снимок проекта',
+        );
+        $this->assertSame(
+            ['unit-42', 'unit-43'],
+            $this->db->fetchFirstColumn(
+                'select unit_id from opencode_session_unit where session_id = ? order by position_index',
+                [$sessionId],
+            ),
+        );
+    }
+
+    #[Test]
+    public function prevyshenie_limita_unitov_otklonyaetsya(): void
+    {
+        $unitIds = [];
+        $unity = [];
+
+        // Каждый юнит — из своего проекта, иначе сработает правило «один юнит на проект».
+        for ($i = 1; $i <= 11; ++$i) {
+            $unitId = 'unit-' . $i;
+            $unitIds[] = $unitId;
+            $unity[$unitId] = 'project-' . $i;
+        }
+
+        $this->zadatGotovyeUnity($unity);
+
+        $message = $this->trebovatOtkaz($this->zapros('POST', '/api/opencode/sozdatSessiyu', [
+            'credentialId' => $this->credentialId,
+            'unitIds' => $unitIds,
+        ]));
+
+        $this->assertNotSame('', $message);
+    }
+
+    #[Test]
+    public function sozdanie_sessii_poruchaet_sozdat_unit_ot_imeni_polzovatelya(): void
+    {
+        $this->dannye($this->zapros('POST', '/api/opencode/sozdatSessiyu', [
+            'credentialId' => $this->credentialId,
+            'unit' => [
+                'projectId' => 'project-7',
+                'unitName' => 'open-code-unit',
+                'branch' => 'feature/x',
+            ],
+        ]));
+
+        $parametri = $this->unitami->poslednieParametriSozdaniya();
+
+        $this->assertNotNull($parametri, 'Юнит создаётся через публичное API Unitman');
+        $this->assertSame('project-7', $parametri->projectId);
+        $this->assertSame('open-code-unit', $parametri->unitName);
+        $this->assertSame('feature/x', $parametri->branch);
+        $this->assertSame($this->accountId, $this->unitami->posledniiAccountIdSozdaniya());
+    }
+
+    #[Test]
+    public function nelzya_odnovremenno_privyazat_i_sozdat_unit(): void
+    {
+        $message = $this->trebovatOtkaz($this->zapros('POST', '/api/opencode/sozdatSessiyu', [
+            'credentialId' => $this->credentialId,
+            'unitIds' => ['unit-1'],
+            'unit' => [
+                'projectId' => 'project-7',
+                'unitName' => 'open-code-unit',
+                'branch' => 'feature/x',
+            ],
+        ]));
+
+        $this->assertNotSame('', $message);
+        $this->assertNull($this->unitami->poslednieParametriSozdaniya(), 'Юнит не создаётся при конфликте источников');
+    }
+
+    #[Test]
+    public function poka_unit_ne_gotov_hod_ne_zapuskaetsya(): void
+    {
+        $this->unitami->zadatSostoyanieUnita(
+            'unit-1',
+            $this->sostoyanieUnita(SostoyanieUnita::GROUP_BLOCKED, 'IDET_SBORKA'),
+        );
+
+        $sessionId = $this->sozdatSessiyu();
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-1']]));
+
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/prompt', ['sessionId' => $sessionId, 'text' => 'Рано'])
+        );
+
+        $this->assertNotSame('', $message);
+        $this->assertSame(0, $this->runner->kolichestvoVyzovov(), 'Ход в несобранный юнит не уходит в раннер');
+    }
+
+    #[Test]
+    public function odin_negotovyi_unit_blokiruet_hod_vo_vseh_unitah(): void
+    {
+        $this->unitami->zadatSostoyanieUnita(
+            'unit-1',
+            $this->sostoyanieUnita(SostoyanieUnita::GROUP_READY, projectId: 'project-1'),
+        );
+        $this->unitami->zadatSostoyanieUnita(
+            'unit-2',
+            $this->sostoyanieUnita(SostoyanieUnita::GROUP_BLOCKED, 'IDET_SBORKA', 'project-2'),
+        );
+
+        $sessionId = $this->sozdatSessiyu();
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', [
+            'sessionId' => $sessionId,
+            'unitIds' => ['unit-1', 'unit-2'],
+        ]));
+
+        $message = $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/prompt', ['sessionId' => $sessionId, 'text' => 'Рано'])
+        );
+
+        $this->assertNotSame('', $message);
+        $this->assertSame(0, $this->runner->kolichestvoVyzovov(), 'Ход не уходит в раннер, пока не готовы все юниты');
+    }
+
+    #[Test]
+    public function udalennyj_unit_arhiviruet_sessiyu_pri_popytke_hoda(): void
+    {
+        $this->unitami->zadatSostoyanieUnita('unit-gone', $this->sostoyanieUnita(SostoyanieUnita::GROUP_READY));
+
+        $sessionId = $this->sozdatSessiyu();
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-gone']]));
+
+        // Юнит удалили в Unitman: сессия узнаёт об этом через состояние юнита.
+        $this->unitami->zadatSostoyanieUnita(
+            'unit-gone',
+            $this->sostoyanieUnita(SostoyanieUnita::GROUP_ARCHIVED, 'UDALEN'),
+            false,
+        );
+
+        $this->trebovatOtkaz(
+            $this->zapros('POST', '/api/opencode/prompt', ['sessionId' => $sessionId, 'text' => 'Ещё раз'])
+        );
+
+        $this->assertSame(
+            'unit_deleted',
+            (string) $this->db->fetchOne('select archive_reason from opencode_session where id = ?', [$sessionId]),
+            'Сессия удалённого юнита уходит в архив автоматически',
+        );
+        $this->assertSame(0, $this->runner->kolichestvoVyzovov());
+    }
+
+    #[Test]
+    public function sostoyanie_svobodnoj_sessii_razreshaet_hody(): void
+    {
+        $sessionId = $this->sozdatSessiyu();
+
+        $data = $this->dannye($this->zapros('POST', '/api/opencode/sostoyanieSessii', ['sessionId' => $sessionId]));
+
+        $this->assertIsArray($data);
+        $this->assertSame($sessionId, $data['sessionId']);
+        $this->assertSame([], $data['units'], 'Свободная сессия не имеет привязанных юнитов');
+        $this->assertNull($data['unitId']);
+        $this->assertNull($data['unitStateCode'], 'Свободная сессия не зависит от юнита');
+        $this->assertFalse($data['archived']);
+        $this->assertTrue($data['canAcceptMessages']);
+    }
+
+    #[Test]
+    public function sostoyanie_privezannoj_sessii_zavisit_ot_gotovnosti_unita(): void
+    {
+        $this->unitami->zadatSostoyanieUnita(
+            'unit-1',
+            $this->sostoyanieUnita(SostoyanieUnita::GROUP_BLOCKED, 'IDET_SBORKA'),
+        );
+
+        $sessionId = $this->sozdatSessiyu();
+        $this->dannye($this->zapros('POST', '/api/opencode/privezatKUnitu', ['sessionId' => $sessionId, 'unitIds' => ['unit-1']]));
+
+        $zablokirovana = $this->dannye($this->zapros('POST', '/api/opencode/sostoyanieSessii', ['sessionId' => $sessionId]));
+
+        $this->assertIsArray($zablokirovana);
+        $this->assertSame('unit-1', $zablokirovana['unitId']);
+        $this->assertSame('project-1', $zablokirovana['unitProjectId']);
+        $this->assertSame('IDET_SBORKA', $zablokirovana['unitStateCode']);
+        $this->assertFalse($zablokirovana['canAcceptMessages']);
+
+        $this->assertCount(1, $zablokirovana['units']);
+
+        $edinstvennyi = $zablokirovana['units'][0];
+        $this->assertIsArray($edinstvennyi);
+        $this->assertSame('unit-1', $edinstvennyi['unitId']);
+        $this->assertSame('project-1', $edinstvennyi['unitProjectId']);
+        $this->assertSame('IDET_SBORKA', $edinstvennyi['unitStateCode']);
+        $this->assertFalse($edinstvennyi['ready']);
+        $this->assertFalse($edinstvennyi['deleted']);
+
+        // Юнит дособрался и запустился — сообщения снова принимаются.
+        $this->unitami->zadatSostoyanieUnita('unit-1', $this->sostoyanieUnita(SostoyanieUnita::GROUP_READY));
+
+        $razblokirovana = $this->dannye($this->zapros('POST', '/api/opencode/sostoyanieSessii', ['sessionId' => $sessionId]));
+
+        $this->assertIsArray($razblokirovana);
+        $this->assertSame('USPESHNO_ZAPUSHEN', $razblokirovana['unitStateCode']);
+        $this->assertTrue($razblokirovana['canAcceptMessages']);
+    }
+
+    #[Test]
+    public function filtr_tolko_aktivnye_skryvaet_arhivnye_sessii(): void
+    {
+        $aktivnaya = $this->sozdatSessiyu('Активная');
+        $arhivnaya = $this->sozdatSessiyu('Архивная');
+
+        $this->dannye($this->zapros('POST', '/api/opencode/arhivirovatSessiyu', ['sessionId' => $arhivnaya]));
+
+        $vse = $this->dannye($this->zapros('GET', '/api/opencode/spisokSessiy'));
+
+        $this->assertNotNull($this->najtiVSspiske($vse, $arhivnaya), 'По умолчанию архивные сессии видны');
+
+        $tolkoAktivnye = $this->dannye($this->zapros('GET', '/api/opencode/spisokSessiy?onlyActive=true'));
+
+        $this->assertNotNull($this->najtiVSspiske($tolkoAktivnye, $aktivnaya));
+        $this->assertNull(
+            $this->najtiVSspiske($tolkoAktivnye, $arhivnaya),
+            'Фильтр onlyActive скрывает архивные сессии',
+        );
+    }
+
+    #[Test]
+    public function poisk_filtruet_spisok_po_podstroke_nazvaniya(): void
+    {
+        $nuzhnaya = $this->sozdatSessiyu('Починка оплаты картой');
+        $drugaya = $this->sozdatSessiyu('Рефакторинг отчётов');
+
+        $data = $this->dannye(
+            $this->zapros('GET', '/api/opencode/spisokSessiy?search=' . urlencode('оплаты'))
+        );
+
+        $this->assertNotNull($this->najtiVSspiske($data, $nuzhnaya));
+        $this->assertNull($this->najtiVSspiske($data, $drugaya));
+    }
+
+    /**
+     * @param mixed $spisok
+     *
+     * @return array<string, mixed>|null
+     */
+    private function najtiVSspiske($spisok, string $sessionId): ?array
+    {
+        $this->assertIsArray($spisok);
+
+        foreach ($spisok as $element) {
+            $this->assertIsArray($element);
+
+            if (($element['id'] ?? null) === $sessionId) {
+                /** @var array<string, mixed> $element */
+                return $element;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Готовит фейковые юниты Unitman: `unitId => projectId`.
+     *
+     * @param array<string, string> $unity
+     */
+    private function zadatGotovyeUnity(array $unity): void
+    {
+        foreach ($unity as $unitId => $projectId) {
+            $this->unitami->zadatSostoyanieUnita(
+                $unitId,
+                $this->sostoyanieUnita(SostoyanieUnita::GROUP_READY, projectId: $projectId),
+            );
+        }
+    }
+
+    /**
+     * Состояние фейкового юнита Unitman с заданным проектом.
+     */
+    private function sostoyanieUnita(
+        string $group,
+        string $code = 'USPESHNO_ZAPUSHEN',
+        string $projectId = 'project-1',
+    ): SostoyanieUnita
+    {
+        return new SostoyanieUnita(true, $code, $projectId, 'unit', 'main', $group);
     }
 }

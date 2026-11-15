@@ -129,8 +129,18 @@ return [
     'opencode' => [
         'session' => [
             'account_required' => 'The session owner is missing',
+            'archive_reason_required' => 'The archive reason of the session is missing',
+            'archived' => 'The session is archived: new turns are not allowed',
             'credential_required' => 'An OpenCode credential must be selected',
+            'id_required' => 'The session ID must not be empty',
             'not_found' => 'The OpenCode session was not found',
+            'too_many_units' => 'A session can be attached to at most 10 units',
+            'unit_not_found' => 'The unit was not found or is not accessible',
+            'unit_not_ready' => 'One or more units are still building or starting — wait for them to finish',
+            'unit_project_conflict' => 'Only one unit per project can be attached to a session',
+            'unit_project_required' => 'The project ID of the unit is missing',
+            'unit_required' => 'The unit ID must not be empty',
+            'unit_source_conflict' => 'A unit and a new unit cannot be specified at the same time',
         ],
         'turn' => [
             'answers_required' => 'At least one answer is required',
@@ -142,6 +152,7 @@ return [
             'option_required' => 'An answer option must be selected',
             'request_required' => 'The prompt must not be empty',
             'unexpected_kind' => 'The runner returned an unknown result kind',
+            'unit_directory_not_found' => 'The unit directory was not found on the runner',
             'unknown_option' => 'The selected answer option does not exist',
             'unknown_question' => 'The answered question does not exist',
         ],

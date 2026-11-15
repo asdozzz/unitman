@@ -157,6 +157,25 @@ final class RezultatHodaOpenCodeTest extends TestCase
         $this->assertTrue($rezultat->estOshibkoi());
     }
 
+    /**
+     * Раннер сам разрешает каталог юнита по `ProjectId`/`UnitId`; если каталога
+     * нет, приходит этот ключ. PHP-сторона его не порождает, поэтому кодируем
+     * контракт тестом: ключ обязан дойти до домена без искажений, иначе
+     * пользователь увидит непереведённое сообщение.
+     */
+    #[Test]
+    public function oshibka_ottsutstviya_kataloga_unita_prohodit_bez_iskazhenii(): void
+    {
+        $rezultat = RezultatHodaOpenCode::fromArray([
+            'Success' => false,
+            'Kind' => 'ERROR',
+            'ErrorKey' => 'opencode.turn.unit_directory_not_found',
+        ]);
+
+        $this->assertTrue($rezultat->estOshibkoi());
+        $this->assertSame('opencode.turn.unit_directory_not_found', $rezultat->errorKey);
+    }
+
     #[Test]
     public function to_array_vozvrashchaet_konтракт_ranнера(): void
     {

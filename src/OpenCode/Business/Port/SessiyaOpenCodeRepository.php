@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\OpenCode\Business\Port;
 
 use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
 
 interface SessiyaOpenCodeRepository
 {
@@ -22,12 +23,17 @@ interface SessiyaOpenCodeRepository
     /**
      * @return list<SessiyaOpenCode>
      */
-    public function findByAccountId(string $accountId): array;
+    public function findByAccountId(string $accountId, SessiyaOpenCodeFilter $filter): array;
 
     /**
      * @return list<SessiyaOpenCode>
      */
     public function findByCredentialId(string $credentialId): array;
 
-    public function delete(string $id): void;
+    /**
+     * Активные (неархивные) сессии хотя бы с одним юнитом — вход для фоновой сверки.
+     *
+     * @return list<SessiyaOpenCode>
+     */
+    public function findAktivnieSUnitom(int $limit): array;
 }

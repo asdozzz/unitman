@@ -6,9 +6,11 @@ namespace App\OpenCode;
 
 use App\OpenCode\Acl\AccountAdapter;
 use App\OpenCode\Acl\RunnerAdapter;
+use App\OpenCode\Acl\UnitmanAdapter;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Infra\Adapter\RamseyUuidGenerator;
@@ -39,4 +41,5 @@ return function (ContainerConfigurator $configuration) {
     // Порты бизнес-слоя -> Acl-адаптеры чужих модулей.
     $services->set(UmeetProveryatRekvizityOpenCode::class, AccountAdapter::class);
     $services->set(UmeetVypolnyatHodOpenCode::class, RunnerAdapter::class);
+    $services->set(UmeetUpravlyatUnitami::class, UnitmanAdapter::class);
 };

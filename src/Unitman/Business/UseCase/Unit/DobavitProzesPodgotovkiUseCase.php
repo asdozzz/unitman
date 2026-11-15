@@ -18,7 +18,15 @@ final class DobavitProzesPodgotovkiUseCase
 
     function handle(string $unitId): void
     {
-        $userId = $this->securityService->getCurrentUserId();
+        $this->handleDlyaPolzovatelya($unitId, $this->securityService->getCurrentUserId());
+    }
+
+    /**
+     * Тот же сценарий, но от имени явно переданного пользователя: нужно
+     * интеграциям (сессии OpenCode), которые действуют не от текущего запроса.
+     */
+    function handleDlyaPolzovatelya(string $unitId, string $userId): void
+    {
         $prozesId = $this->uuidGenerator->makeGuid();
         $unit = $this->unitRepository->getById($unitId);
         $unit->dobavitProzesPodgotovki($userId, $prozesId);

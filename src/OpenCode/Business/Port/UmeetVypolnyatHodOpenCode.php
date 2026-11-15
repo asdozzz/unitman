@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Business\Port;
 
+use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 
@@ -17,6 +18,9 @@ use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 interface UmeetVypolnyatHodOpenCode
 {
     /**
+     * @param list<PrivyazkaKUnitu> $units живые юниты сессии в порядке привязки;
+     *                                    первый — рабочий каталог хода (cwd), остальные —
+     *                                    дополнительные корни workspace (multi-root)
      * @param list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers
      * @param list<array{Role: string, Text: string}> $history
      *
@@ -29,6 +33,7 @@ interface UmeetVypolnyatHodOpenCode
         string $accountId,
         string $credentialId,
         ?string $sessionId,
+        array $units,
         string $prompt,
         array $answers,
         array $history,

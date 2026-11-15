@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\OpenCode\Business\Utils;
 
 use App\OpenCode\Business\Model\HodOpenCode;
+use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
@@ -34,8 +35,9 @@ final class ZapuskatelHodaOpenCode
 
     /**
      * @param list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers
+     * @param list<PrivyazkaKUnitu> $units живые юниты, прошедшие гейт готовности; первый — cwd хода
      */
-    public function zapustit(SessiyaOpenCode $session, string $prompt, array $answers): HodOpenCode
+    public function zapustit(SessiyaOpenCode $session, string $prompt, array $answers, array $units): HodOpenCode
     {
         $now = time();
 
@@ -58,6 +60,7 @@ final class ZapuskatelHodaOpenCode
             $session->getAccountId(),
             $session->getCredentialId(),
             $session->getExternalSessionId(),
+            $units,
             $prompt,
             $answers,
             $history,

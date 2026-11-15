@@ -32,6 +32,16 @@ final class SozdatUnitUseCase
 
     function handle(SozdatUnit $command): string
     {
+        return $this->handleDlyaPolzovatelya($command, $this->securityService->getCurrentUserId());
+    }
+
+    /**
+     * Создание юнита от имени явно переданного пользователя: этим путём
+     * пользуются интеграции (сессии OpenCode), у которых нет текущего запроса.
+     * Права проверяются по тому же пользователю, что и в обычном сценарии.
+     */
+    function handleDlyaPolzovatelya(SozdatUnit $command, string $userId): string
+    {
         if ($this->canFindUnitDouble->isExistsDoubleByName($command->projectId, $command->unitName)) {
             throw new \DomainException(TranslatorKeyword::UNIT_NAME_ALREADY_EXISTS->value);
         }
@@ -41,8 +51,6 @@ final class SozdatUnitUseCase
         if ($project->isDisable()) {
             throw new \DomainException('unit.project_is_disabled');
         }
-
-        $userId = $this->securityService->getCurrentUserId();
 
         // Связи переменных с юнитами, выбранными через хелпер, проверяются
         // до записи событий: цель должна существовать и быть доступной.

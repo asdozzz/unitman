@@ -108,7 +108,13 @@ Payload — JSON-объект. Имена полей **PascalCase, регист�
   "History": [],
   "Url": "https://opencode.internal/api",
   "Model": "gpt-5-codex",
-  "ApiKey": "sk-..."
+  "ApiKey": "sk-...",
+  "Units": [
+    { "ProjectId": "9b04...", "UnitId": "3d7a..." },
+    { "ProjectId": "9b04...", "UnitId": "5c1b..." }
+  ],
+  "ProjectId": "9b04...",
+  "UnitId": "3d7a..."
 }
 ```
 
@@ -121,6 +127,29 @@ Payload — JSON-объект. Имена полей **PascalCase, регист�
 | `Url` | `string` | всегда, непустой | базовый URL OpenCode API |
 | `Model` | `string` | всегда, непустой | идентификатор модели |
 | `ApiKey` | `string` | всегда, непустой | секрет; см. § 8 |
+| `Units` | массив объектов | всегда, может быть `[]` | юниты сессии в порядке привязки. `[]` — свободная сессия: работать в корне проекта |
+| `ProjectId` | `string` или `null` | всегда есть, может быть `null` | **устаревшее:** `ProjectId` первого элемента `Units`. `null` — сессия без привязки |
+| `UnitId` | `string` или `null` | всегда есть, может быть `null` | **устаревшее:** `UnitId` первого элемента `Units`. `null` — свободная сессия |
+
+`Units` — единственный источник сведений о рабочих директориях: бэкенд путь не
+передаёт и о структуре каталогов раннера не знает.
+
+- `Units[0]` — **рабочий каталог хода** (`cwd`): `<workdir>/<ProjectId>/<UnitId>`.
+- `Units[1..]` — **дополнительные корни workspace**: те же каталоги, которые
+  OpenCode должен видеть в рамках одной сессии (multi-root). Порядок значим и
+  менять его нельзя.
+- `ProjectId` в `Units` **уникальны**: бэкенд не даёт привязать к сессии два
+  юнита одного проекта, поэтому раннеру не нужно схлопывать дубли корней.
+- `Units = []` — свободная сессия: ход выполняется в корне проекта
+  (`<workdir>/<ProjectId>` при наличии `ProjectId`, иначе в собственном корне
+  раннера).
+- Каталог любого юнита из `Units` не найден → `Kind = ERROR` с
+  `ErrorKey = opencode.turn.unit_directory_not_found` (§ 9.2), а не Go-ошибка:
+  пользователь должен увидеть понятный текст. Частичный запуск не допускается —
+  ход либо стартует со всеми корнями, либо возвращает ошибку.
+- Поля `ProjectId`/`UnitId` верхнего уровня продублированы **только для
+  обратной совместимости** и всегда равны `Units[0]`; при расхождении
+  источником правды считается `Units[0]`.
 
 ### 3.1 `Answers[]`
 
@@ -253,8 +282,22 @@ Payload — JSON-объект. Имена полей **PascalCase, регист�
      продолжает ту же сессию.
 - Если OpenCode не выдаёт id сессии, верните `null` и собирайте контекст
   исключительно из `History`. Диалог при этом обязан оставаться связным.
-- Ход не связан ни с юнитом, ни с контейнером, ни с репозиторием: это обычный
-  диалог с OpenCode. Никаких `unitId` в payload нет и не будет.
+- Ход **связан с юнитами только рабочими директориями**. `Units` приходит в
+  payload (§ 3), раннер по нему собирает workspace и запускает OpenCode в
+  `Units[0]`. Ни контейнера, ни docker-операций, ни обращения к Unitman-API при
+  этом не требуется — ход остаётся обычным диалогом с OpenCode.
+- `Units` — это **упорядоченный** список: `Units[0]` задаёт `cwd` (рабочий
+  каталог хода), `Units[1..]` подключаются как дополнительные корни workspace
+  (multi-root). Порядок приходит от бэкенда в порядке привязки юнитов к сессии
+  и не должен переупорядочиваться раннером.
+- `Units = []` — свободная сессия: работа идёт в корне проекта `ProjectId`
+  (прежнее поведение). Если `ProjectId` тоже `null`, используйте корень рабочего
+  каталога раннера.
+- Сессия может быть привязана к нескольким юнитам сразу; раннер об этом ничего
+  не решает — он просто открывает все переданные каталоги. Если хотя бы один
+  каталог недоступен, ход не начинается (см. § 9.2).
+- Готовность сессии к ходу раннер не проверяет: гейт стоит в бэкенде, поэтому
+  если активность всё же вызвана, каталог юнита обязан существовать.
 - Ответ может быть длинным — ограничений на длину `Answer` нет, но держите его
   в разумных пределах: он уходит в `result_json` и отдаётся клиенту.
 
@@ -444,6 +487,7 @@ X-Runner-Signature = hex( HMAC-SHA256( responseId . stepsContent , RUNNER_CALLBA
 |---|---|
 | `opencode.turn.failed` | любая ошибка выполнения хода: сеть, недоступность OpenCode, 401/403, отказ модели, таймаут, лимиты |
 | `opencode.turn.unexpected_kind` | OpenCode ответил, но ответ не удалось классифицировать ни как финальный текст, ни как вопросы |
+| `opencode.turn.unit_directory_not_found` | хотя бы один каталог из `Units` (либо `ProjectId`/`UnitId` устаревшей пары) отсутствует на раннере — работать негде |
 
 Правило одной строкой: **любой ожидаемый отказ → `Success: false`, `Kind:
 "ERROR"`, `ErrorKey: "opencode.turn.failed"`, и никаких Go-ошибок.**
@@ -459,6 +503,7 @@ X-Runner-Signature = hex( HMAC-SHA256( responseId . stepsContent , RUNNER_CALLBA
 | 401/403 от OpenCode | `ERROR` + `opencode.turn.failed` (не раскрывать детали) |
 | Превышен собственный таймаут запроса | `ERROR` + `opencode.turn.failed` |
 | Ответ не разбирается | `ERROR` + `opencode.turn.unexpected_kind` |
+| Каталог любого юнита из `Units` не найден | `ERROR` + `opencode.turn.unit_directory_not_found`, без ретраев и без частичного запуска |
 | Активность отменена по контексту | вернуть `ctx.Err()`, финальный прогресс не отправлять |
 
 ---
@@ -502,7 +547,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -525,14 +573,23 @@ type Replika struct {
 	Text string `json:"Text"`
 }
 
+// UnitRef — юнит сессии: раннер сам вычисляет каталог <root>/<ProjectID>/<UnitID>.
+type UnitRef struct {
+	ProjectID string `json:"ProjectId"`
+	UnitID    string `json:"UnitId"`
+}
+
 type HodCommand struct {
-	SessionID string     `json:"SessionId"` // null приходит как ""
-	Prompt    string     `json:"Prompt"`
-	Answers   []Otvet    `json:"Answers"`
-	History   []Replika  `json:"History"`
-	URL       string     `json:"Url"`
-	Model     string     `json:"Model"`
-	ApiKey    string     `json:"ApiKey"`
+	SessionID string    `json:"SessionId"` // null приходит как ""
+	Prompt    string    `json:"Prompt"`
+	Answers   []Otvet   `json:"Answers"`
+	History   []Replika `json:"History"`
+	URL       string    `json:"Url"`
+	Model     string    `json:"Model"`
+	ApiKey    string    `json:"ApiKey"`
+	Units     []UnitRef `json:"Units"`     // порядок значим: [0] — cwd, [1..] — доп. корни
+	ProjectID *string   `json:"ProjectId"` // устаревшее: == Units[0].ProjectID
+	UnitID    *string   `json:"UnitId"`    // устаревшее: == Units[0].UnitID
 }
 
 // ─── выход ───────────────────────────────────────────────────────────────────
@@ -574,6 +631,7 @@ func errorResult(key string) HodResult {
 type Activities struct {
 	BackendURL string
 	Secret     string
+	WorkDir    string // корень рабочих каталогов: <WorkDir>/<ProjectId>/<UnitId>
 	Client     *http.Client
 	OpenCode   OpenCodeExecutor
 }
@@ -590,12 +648,21 @@ func (a *Activities) VipolnitHodOpenCodeActivity(ctx context.Context, cmd HodCom
 		}
 	}()
 
+	// Каталоги юнитов вычисляет раннер: бэкенд передаёт только идентификаторы.
+	workDir, extraRoots, dirErr := a.resolveWorkDirs(cmd)
+	if dirErr != nil {
+		p.publish(ctx, true, false)
+		return errorResult("opencode.turn.unit_directory_not_found"), nil
+	}
+
 	started := time.Now()
 	answer, execErr := a.OpenCode.Execute(ctx, OpenCodeRequest{
 		SessionID: cmd.SessionID,
 		URL:       cmd.URL,
 		Model:     cmd.Model,
 		APIKey:    cmd.ApiKey,
+		WorkDir:   workDir,
+		Roots:     extraRoots, // дополнительные корни workspace (multi-root)
 		Messages:  sobratSoobsheniya(cmd),
 	})
 
@@ -618,6 +685,65 @@ func (a *Activities) VipolnitHodOpenCodeActivity(ctx context.Context, cmd HodCom
 	p.publish(ctx, true, result.Kind != KindError)
 
 	return result, nil
+}
+
+// resolveWorkDirs собирает рабочие каталоги хода.
+//
+// Первый возвращённый каталог — cwd хода, остальные — дополнительные корни
+// workspace (multi-root). Если Units пуст, используется устаревшая пара
+// ProjectID/UnitID, а при её отсутствии — корень WorkDir раннера.
+func (a *Activities) resolveWorkDirs(cmd HodCommand) (cwd string, roots []string, err error) {
+	units := cmd.Units
+
+	// обратная совместимость со старыми бэкендами: пара верхнего уровня
+	if len(units) == 0 && (cmd.ProjectID != nil || cmd.UnitID != nil) {
+		units = []UnitRef{{ProjectID: str(cmd.ProjectID), UnitID: str(cmd.UnitID)}}
+	}
+
+	if len(units) == 0 {
+		dir, err := a.checkDir(a.WorkDir)
+		return dir, nil, err
+	}
+
+	roots = make([]string, 0, len(units))
+	for _, u := range units {
+		dir := a.WorkDir
+		if u.ProjectID != "" {
+			dir = filepath.Join(dir, u.ProjectID)
+			if u.UnitID != "" {
+				dir = filepath.Join(dir, u.UnitID)
+			}
+		}
+
+		dir, err := a.checkDir(dir)
+		if err != nil {
+			// частичный запуск запрещён: любой отсутствующий корень — ошибка хода
+			return "", nil, err
+		}
+
+		roots = append(roots, dir)
+	}
+
+	return roots[0], roots[1:], nil
+}
+
+// checkDir проверяет, что каталог существует, и возвращает его абсолютный путь.
+func (a *Activities) checkDir(dir string) (string, error) {
+	info, err := os.Stat(dir)
+	if err != nil || !info.IsDir() {
+		return "", fmt.Errorf("unit directory not found: %s", dir)
+	}
+
+	return dir, nil
+}
+
+// str разыменовывает необязательную строку: nil → "".
+func str(s *string) string {
+	if s == nil {
+		return ""
+	}
+
+	return *s
 }
 
 func sobratSoobsheniya(cmd HodCommand) []Replika {
@@ -752,6 +878,18 @@ func obrezatTekst(s string) string {
 Заготовки, которые остались за кадром и должны быть реализованы по вашему
 вкусу: `OpenCodeExecutor`, `OpenCodeRequest`, `prevratitRezultat`.
 
+`OpenCodeRequest` обязан нести рабочие каталоги: `WorkDir string` — это `cwd`,
+вычисленный `resolveWorkDirs` (равен `Units[0]`), и `Roots []string` —
+дополнительные корни workspace (все остальные юниты в порядке привязки). Процесс
+OpenCode запускается с `cmd.Dir = WorkDir`, поэтому все файловые операции модели
+остаются внутри первого юнита, а `Roots` передаются OpenCode как дополнительные
+корни (multi-root), чтобы один диалог мог читать и править несколько юнитов.
+
+Если `Units = []` — каталогом становится корень проекта (`<root>/<ProjectId>`),
+при пустом `ProjectId` — `WorkDir` самого раннера, а `Roots` остаётся пустым.
+Отсутствие любого каталога из `Units` — это `opencode.turn.unit_directory_not_found`
+(§ 9.2), частичный запуск запрещён.
+
 **Собственный дедлайн (§ 10) в каркас не входит намеренно** — его место в
 `OpenCodeExecutor.Execute`, рядом с уже существующими таймаутами клиента:
 
@@ -834,6 +972,13 @@ curl -sS -X POST "$BACKEND/api/runner/saveSteps" \
 
 - [ ] Активность зарегистрирована ровно под именем `VipolnitHodOpenCodeActivity`
       на очереди `unitman-runner-queue`.
+- [ ] `Units` читается из payload; OpenCode запускается в `Units[0]` (`cwd`), а
+      `Units[1..]` подключаются как дополнительные корни workspace. `Units = []`
+      — работа в корне проекта; устаревшие `ProjectId`/`UnitId` равны `Units[0]`.
+- [ ] Отсутствие каталога любого юнита из `Units` — `ERROR` без частичного
+      запуска.
+- [ ] Отсутствующий каталог юнита даёт `ERROR` +
+      `opencode.turn.unit_directory_not_found`, а не Go-ошибку и не ретрай.
 - [ ] Метод принимает `context.Context` и ровно один аргумент — объект команды.
 - [ ] Имена JSON-полей на входе и выходе совпадают с § 3 и § 4 посимвольно,
       включая регистр.
@@ -851,7 +996,8 @@ curl -sS -X POST "$BACKEND/api/runner/saveSteps" \
 - [ ] Финальный `saveSteps` с `finished: true` отправляется один раз.
 - [ ] Ошибка `saveSteps` не валит ход.
 - [ ] Ожидаемые отказы возвращаются как `Kind = ERROR` с ключом
-      `opencode.turn.failed` или `opencode.turn.unexpected_kind`, а не Go-ошибкой.
+      `opencode.turn.failed`, `opencode.turn.unexpected_kind` или
+      `opencode.turn.unit_directory_not_found`, а не Go-ошибкой.
 - [ ] `ApiKey` не попадает ни в логи, ни в прогресс, ни в результат,
       ни в `argv` дочернего процесса.
 - [ ] Отмена контекста останавливает работу с OpenCode.

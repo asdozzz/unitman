@@ -12,6 +12,7 @@ use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\ReadModel\RezultatZapuskaHoda;
 use App\OpenCode\Business\Utils\IstoriyaDialogaOpenCode;
 use App\OpenCode\Business\Utils\OtvetyNaVoprosyOpenCode;
+use App\OpenCode\Business\Utils\PropuskHodaOpenCode;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
 
 /**
@@ -29,6 +30,7 @@ final class OtvetitNaVoprosUseCase
         private UmeetProveryatRekvizityOpenCode $credentials,
         private ZapuskatelHodaOpenCode $launcher,
         private UmeetVypolnyatHodOpenCode $runner,
+        private PropuskHodaOpenCode $propusk,
     ) {
     }
 
@@ -43,6 +45,7 @@ final class OtvetitNaVoprosUseCase
         $session = $this->sessionRepository->getById($turn->getSessionId());
 
         $session->trebovatVladelca($accountId);
+        $units = $this->propusk->proverit($session);
 
         if (!$turn->zhdetOtveta()) {
             throw new \DomainException('opencode.turn.not_awaiting_answer');
@@ -57,7 +60,7 @@ final class OtvetitNaVoprosUseCase
             throw new \DomainException('opencode.turn.answers_required');
         }
 
-        $novyiHod = $this->launcher->zapustit($session, $prompt, $answers);
+        $novyiHod = $this->launcher->zapustit($session, $prompt, $answers, $units);
 
         return new RezultatZapuskaHoda(
             $novyiHod->getId(),

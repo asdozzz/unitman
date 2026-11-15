@@ -494,6 +494,9 @@ final class RunnerApi implements RunnerApiInterface
             $rekvizity->url,
             $rekvizity->model,
             $rekvizity->apiKey,
+            $command->ProjectId,
+            $command->UnitId,
+            $command->Units,
         );
 
         $workflow = $this->workflowClient->newWorkflowStub(

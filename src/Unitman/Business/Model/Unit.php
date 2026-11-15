@@ -1621,6 +1621,16 @@ final class Unit implements AggregateRoot
         return $this->authorId;
     }
 
+    /**
+     * Код текущего состояния юнита наружу: нужен интеграциям (например,
+     * сессиям OpenCode), которые не должны зависеть от внутренних классов
+     * состояний юнита.
+     */
+    function poluchitKodSostoyaniya(): ?string
+    {
+        return $this->state?->getCode();
+    }
+
     function esliNugnoObnovitKodUnita(): bool
     {
         return $this->unixtimePoslednegoObnovleniyaKodaVHranilishe > $this->unixtimePoslednegoObnovleniyaKodaUnita;
