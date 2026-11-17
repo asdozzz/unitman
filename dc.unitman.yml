@@ -1,4 +1,29 @@
 services:
+    postgresql:
+    extends:
+      file: dc.temporal.yml
+      service: postgresql
+
+  temporal-admin-tools:
+    extends:
+      file: dc.temporal.yml
+      service: temporal-admin-tools
+  
+  temporal:
+    extends:
+      file: dc.temporal.yml
+      service: temporal
+
+  temporal-create-namespace:
+    extends:
+      file: dc.temporal.yml
+      service: temporal-create-namespace
+
+  temporal-ui:
+    extends:
+      file: dc.temporal.yml
+      service: temporal-ui
+      
   web:
     extends:
       file: common-services.yml
