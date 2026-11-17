@@ -5,10 +5,8 @@ COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
 RUN composer install --no-scripts --no-autoloader --prefer-dist
 
 COPY --chown=containeruser:groupcontainer . .
-RUN composer dump-autoload --optimize --classmap-authoritative && \
-    composer run-script post-install-cmd --no-interaction && \
-    composer check-platform-reqs && \
-    php bin/console cache:warmup
+RUN composer dump-autoload --optimize && \
+    composer check-platform-reqs
 
 CMD ["rr", "serve","-c",".rr.yaml"]
 #ENTRYPOINT ["tail", "-f", "/dev/null"]
