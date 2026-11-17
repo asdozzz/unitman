@@ -2,11 +2,11 @@
 FROM asdozzz/roadrunner:0.0.10
 
 COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
-RUN composer install --no-scripts --no-autoloader
+RUN composer install --no-scripts --no-autoloader --prefer-dist
 
 COPY --chown=containeruser:groupcontainer . .
-RUN composer dump-autoload --optimize && \
-    composer run-script post-install-cmd && \
+RUN composer dump-autoload --optimize --classmap-authoritative && \
+    composer run-script post-install-cmd --no-interaction && \
     composer check-platform-reqs && \
     php bin/console cache:warmup
 
