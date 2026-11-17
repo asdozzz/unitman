@@ -6,6 +6,7 @@ namespace App\OpenCode\Acl;
 
 use App\OpenCode\Business\Model\ParametriSozdaniyaUnita;
 use App\OpenCode\Business\Model\SostoyanieUnita;
+use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Utils\OcenkaGotovnostiUnita;
 use App\Unitman\Api\UnitmanApi;
@@ -20,7 +21,7 @@ use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
  * OpenCode не знает про агрегат Unit и его состояния: наружу отдаётся
  * группа готовности, вычисленная единой матрицей `OcenkaGotovnostiUnita`.
  */
-final class UnitmanAdapter implements UmeetUpravlyatUnitami
+final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUniti
 {
     public function __construct(
         private UnitmanApi $unitmanApi,
@@ -54,6 +55,20 @@ final class UnitmanAdapter implements UmeetUpravlyatUnitami
         $this->unitmanApi->prodvinutCiklUnita($unitId, $accountId);
     }
 
+    /**
+     * Тип занятости передаётся строковой константой UnitmanApi, чтобы модуль
+     * OpenCode не зависел от внутреннего enum `TipZanyatosti`.
+     */
+    public function zahvatit(array $unitIds, string $vladelec): void
+    {
+        $this->unitmanApi->zahvatitZanyatostUnitov($unitIds, $vladelec, UnitmanApi::TIP_OPENCODE_HOD);
+    }
+
+    public function osvobodit(array $unitIds, string $vladelec): void
+    {
+        $this->unitmanApi->osvoboditZanyatostUnitov($unitIds, $vladelec);
+    }
+
     private function prevratit(SostoyanieUnitaReadModel $readModel): SostoyanieUnita
     {
         return new SostoyanieUnita(
@@ -62,7 +77,9 @@ final class UnitmanAdapter implements UmeetUpravlyatUnitami
             $readModel->projectId,
             $readModel->name,
             $readModel->branch,
-            $this->ocenkaGotovnostiUnita->ocenit($readModel->exists, $readModel->code),
+            $this->ocenkaGotovnostiUnita->ocenit($readModel->exists, $readModel->code, $readModel->zanyat),
+            $readModel->zanyat,
+            $readModel->prichinaZanyatosti,
         );
     }
 

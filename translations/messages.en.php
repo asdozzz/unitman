@@ -318,6 +318,11 @@ return [
         'vipolnenieDeistviya_ne_nachalas' => 'The action execution has not started',
         'wait_another_proccess' => 'Another process is still running',
         'wait_runner' => 'The runner is still busy',
+        'zanyat' => 'The unit is busy',
+        'zanyat_hodom_opencode' => 'The unit is busy with an OpenCode turn',
+        'zanyatost' => [
+            'tip_neizvesten' => 'Unknown unit occupancy type',
+        ],
         'zapushen' => 'The unit is already running',
         'config' => [
             'prepare_is_empty' => 'The "prepare" block must not be empty',
@@ -390,6 +395,9 @@ return [
         ],
         'obrabotka_prozesa' => [
             'tip_ne_opredelen' => 'The process type is not defined',
+        ],
+        'otlozhennoe_deistvie' => [
+            'tip_ne_podderzhan' => 'This deferred action type is not supported',
         ],
         'pomoschnik' => [
             'servis_ne_naiden' => 'The helper service was not found',

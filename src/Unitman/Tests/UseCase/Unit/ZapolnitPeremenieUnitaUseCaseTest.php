@@ -22,6 +22,7 @@ use App\Unitman\Business\UseCase\Unit\ProverkaFaylovVolumov;
 use App\Unitman\Business\UseCase\Unit\ProverkaSvyazeyPeremenih;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\ZapolnitPeremenieUnitaUseCase;
+use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Infra\Projection\SvyaziUnitovProjection;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
@@ -329,6 +330,9 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
         $volumeTypeFileRepository = $this->getMockBuilder(VolumeTypeFileRepository::class)->getMock();
         $stubDostupnieProekti = $this->stubDostupnieProekti($dostupnieProekti);
 
+        /** @var ProverkaSvobodyUnita $proverkaSvobody */
+        $proverkaSvobody = self::$container->get(ProverkaSvobodyUnita::class);
+
         $zapolnitUseCase = new ZapolnitPeremenieUnitaUseCase(
             $unitRepo,
             $projectRepository,
@@ -337,7 +341,8 @@ final class ZapolnitPeremenieUnitaUseCaseTest extends AbstractUnitUseCase
             $mediatekaService,
             new ProverkaFaylovVolumov($mediatekaService, $volumeTypeFileRepository),
             new ProverkaSvyazeyPeremenih($spisokUnitovRepo),
-            $stubDostupnieProekti
+            $stubDostupnieProekti,
+            $proverkaSvobody
         );
 
         $sozdatUseCase = new SozdatUnitUseCase(

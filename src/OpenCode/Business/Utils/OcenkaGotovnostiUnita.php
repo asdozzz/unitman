@@ -12,6 +12,11 @@ use App\OpenCode\Business\Model\SostoyanieUnita;
  * Сессия может принимать сообщения только когда юнит дошёл до рабочего
  * состояния: успешно запущен или упал на любом этапе (с ошибкой тоже можно
  * работать в директории юнита). Всё остальное — ожидание конвейера.
+ *
+ * Отдельно учитывается занятость: юнит в `USPESHNO_ZAPUSHEN` с идущим
+ * действием или остановкой не должен считаться готовым — именно этот разрыв
+ * позволял отправить сообщение одновременно с активити над юнитом.
+ * Архивация при этом важнее занятости: удалённый юнит не «занят», он мёртв.
  */
 final class OcenkaGotovnostiUnita
 {
@@ -20,7 +25,7 @@ final class OcenkaGotovnostiUnita
     private const KOD_UDALEN_VRUCHNUYU = 'UDALEN_VRUCHNUYU';
     private const PREFIX_OSHIBKA = 'OSHIBKA_';
 
-    public function ocenit(bool $exists, ?string $code): string
+    public function ocenit(bool $exists, ?string $code, bool $zanyat = false): string
     {
         if (!$exists) {
             return SostoyanieUnita::GROUP_ARCHIVED;
@@ -32,6 +37,10 @@ final class OcenkaGotovnostiUnita
 
         if ($code === self::KOD_UDALEN || $code === self::KOD_UDALEN_VRUCHNUYU) {
             return SostoyanieUnita::GROUP_ARCHIVED;
+        }
+
+        if ($zanyat) {
+            return SostoyanieUnita::GROUP_BLOCKED;
         }
 
         if ($code === self::KOD_ZAPUSHEN) {

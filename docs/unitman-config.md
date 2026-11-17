@@ -14,6 +14,7 @@
   - [`build` — образ сборки](#build--образ-сборки)
   - [`unitman_volumes` — тома юнита](#unitman_volumes--тома-юнита)
 - [Хелпер ссылки: «направить юнит на другой юнит»](#хелпер-ссылки-направить-юнит-на-другой-юнит)
+- [Занятость юнита и отложенные действия](#занятость-юнита-и-отложенные-действия)
 - [Сводная таблица валидации](#сводная-таблица-валидации)
 - [Коды ошибок](#коды-ошибок)
 
@@ -321,6 +322,112 @@ curl -X POST http://localhost:8082/api/unit/sozdat \
 ```
 
 Если хелпер из конфига убирают, связи по этой переменной удаляются при реконцилиации конфига.
+
+---
+
+## Занятость юнита и отложенные действия
+
+Этот раздел описывает не файл `unitman.yaml`, а поведение юнита во время работы
+над ним. Знание нужно при настройке автообновления и автоудаления: занятость
+решает, применится ли вебхук сразу или будет отложен.
+
+### Реестр занятости `unit_zanyatost`
+
+Строка таблицы — «юнит кем-то занят»: `unit_id` (первичный ключ), непрозрачный
+токен владельца `vladelec`, тип `tip`
+([`TipZanyatosti`](src/Unitman/Business/Model/Unit/TipZanyatosti.php:15)),
+`zahvacheno_v` и `istekaet_v`. Захват — атомарный upsert с условием
+`istekaet_v < now()`, поэтому гонку выигрывает ровно один владелец, а второй
+получает отказ (`rowCount() = 0`). TTL захвата — 20 минут: это больше
+`WorkflowExecutionTimeout` хода OpenCode (15 минут), иначе действующий ход мог
+бы потерять юнит до собственного завершения.
+
+Типы занятости:
+
+| `tip` | Источник | Что значит |
+| --- | --- | --- |
+| `opencode_hod` | [`ZahvatitZanyatostUnitovUseCase`](src/Unitman/Business/UseCase/Unit/ZahvatitZanyatostUnitovUseCase.php:23) | Юнит захвачен ходом OpenCode, владелец — `opencode:<turnId>` |
+| `prozes` | вычисляется при чтении | У юнита есть незавершённый процесс; в таблице не хранится |
+
+Модуль `Unitman` не знает про OpenCode: токен владельца — просто строка,
+которую он возвращает при освобождении. Зависимость идёт только в одну
+сторону — `OpenCode → Unitman`.
+
+Единая точка ответа «можно ли трогать юнит» —
+[`ProverkaSvobodyUnita`](src/Unitman/Business/Utils/ProverkaSvobodyUnita.php:24).
+Она проверяет **только внешний захват**; собственные незавершённые процессы
+остаются заботой агрегата, который видит их в event store и сам отвечает
+`unit.wait_another_proccess`.
+
+### Что происходит с вебхуком
+
+| Событие | Юнит свободен | Юнит занят `opencode_hod` |
+| --- | --- | --- |
+| `KOD_OBNOVLEN` | метка времени обновляется, затем запускается процесс обновления | метка времени обновляется **немедленно**, запуск обновления откладывается |
+| `VETKA_UDALENA` | запускается процесс удаления | удаление откладывается |
+| `VETKA_SOZDANA` | создаётся юнит | — |
+
+Метка `unixtimePoslednegoIzmeneniya` обновляется всегда и сразу: это событие
+event store, раннер в нём не участвует, занятость ему не мешает.
+
+Несобранный юнит **не** откладывается: состояние не транзиентное, сам он не
+соберётся, и намерение висело бы вечно. Обработчик по-прежнему возвращает
+причину `invalid status`. То же для юнита, которому обновление не нужно
+(`ne nugno obnovlyat`).
+
+Проверка свободы выполняется в обработчике **явно**, а не через агрегат:
+`handleSystem()` вызывает `dobavitProzesObnovleniya(..., neproveryatProzesi: true)`
+и `dobavitProzesUdaleniya(..., neproveryatProzesi: true)`, то есть агрегат
+удаление или обновление не остановит.
+
+Результат обработки вебхука — строка. Кроме прежних значений (`ok`,
+`empty ids`, `invalid`, причины ошибок) появилось `deferred`: событие принято,
+намерение сохранено, применение произойдёт автоматически.
+
+### Durable-намерение `unit_otlozhennoe_deistvie`
+
+Джоб вебхука ретраится ограниченное число раз, после чего событие исчезает.
+Поэтому намерение пишется в таблицу: `unit_id`, `project_id`, `tip_sobitiya`,
+`payload` (jsonb: ветка и `unixtime`), `created_at`, `attempts`,
+`next_attempt_at`, `last_error`. Уникальный индекс `(unit_id, tip_sobitiya)`
+делает повторный вебхук по той же ветке обновлением существующей строки, а не
+дубликатом.
+
+`VETKA_UDALENA` вытесняет `KOD_OBNOVLEN`
+([`OtlozhitDeistvieNadUnitomUseCase`](src/Unitman/Business/UseCase/Unit/OtlozhitDeistvieNadUnitomUseCase.php:23)):
+удаление ветки отменяет смысл её обновления, поэтому строка обновления по этому
+юниту удаляется. Обратное неверно: обновление не отменяет отложенное удаление.
+
+### Когда намерение применяется
+
+| Триггер | Где |
+| --- | --- |
+| Освобождение захвата | [`OsvoboditZanyatostUnitovUseCase`](src/Unitman/Business/UseCase/Unit/OsvoboditZanyatostUnitovUseCase.php:1) сразу вызывает применение |
+| Завершение последней задачи процесса | [`ObrabotatProzesiUnitaUseCase`](src/Unitman/Business/UseCase/Unit/ObrabotatProzesiUnitaUseCase.php:1), когда `poluchitJobuDlyObravotki()` вернул `null` |
+| Страховочный обход | [`OtlozhennieDeistviyaBackgroundJob`](src/Unitman/Infra/BackgroundJob/OtlozhennieDeistviya/OtlozhennieDeistviyaBackgroundJob.php:19) |
+
+Все три входа ведут в
+[`PrimenitOtlozhennieDeistviyaDlyaUnitaUseCase`](src/Unitman/Business/UseCase/Unit/PrimenitOtlozhennieDeistviyaDlyaUnitaUseCase.php:26),
+поэтому ведут себя одинаково.
+
+Фоновый job (`otlozhennie_deistviya`, задержка 10 с) разбирает пачку до 50
+юнитов в одной транзакции с `FOR UPDATE SKIP LOCKED`, каждый юнит — во
+вложенной транзакции (savepoint), чтобы падение на одном не откатывало пачку.
+Он же чистит истёкшие захваты и намерения старше 24 часов.
+
+### Ошибки и backoff
+
+| Ситуация | Поведение |
+| --- | --- |
+| Юнит всё ещё занят (`unit.zanyat_hodom_opencode`) | Повтор с задержкой `min(30·2^attempts, 900)` секунд |
+| Временный отказ агрегата (`unit.zanyat`, `unit.wait_another_proccess`) | То же: повтор с задержкой |
+| Юнит удалён (`unit.udalen`) | Намерение удаляется: применять нечего |
+| Юнита нет в event store | Намерение удаляется |
+| Исчерпан бюджет `MAX_ATTEMPTS = 40` | Намерение удаляется, в лог пишется `ischerpan_budget` |
+| Неподдерживаемый тип события | `unit.otlozhennoe_deistvie.tip_ne_podderzhan` |
+
+40 попыток при задержке до 15 минут покрывают около десяти часов занятости:
+дольше держать намерение бессмысленно, событие вебхука к тому моменту устарело.
 
 ---
 

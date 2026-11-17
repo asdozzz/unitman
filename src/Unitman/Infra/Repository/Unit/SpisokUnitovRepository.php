@@ -9,6 +9,8 @@ use App\Unitman\Business\Port\Unit\CanFindUnitIdByContainerName;
 use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
+use App\Unitman\Business\Model\Unit\TipZanyatosti;
+use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
 use App\Unitman\Business\Port\Unit\UmeetObnovlyatStatistikuKonteinera;
 use App\Unitman\Business\Port\Unit\UmeetOtbiratNeaktivnieUniti;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
@@ -110,6 +112,9 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     }
 
     /**
+     * Занятость не хранится в payload: реестр захватов меняется вне потока событий,
+     * поэтому признак подмешивается в ответ через LEFT JOIN по актуальным захватам.
+     *
      * @param string[] $projectIds проекты, доступные пользователю
      * @return array<int, array<string, mixed>>
      */
@@ -147,28 +152,34 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $where = "WHERE ".join(' AND ', $whereArr);
 
         $rows = $this->connection->fetchAllAssociative(
-            "SELECT * FROM $table $where ORDER BY id desc LIMIT :limit OFFSET :offset",
+            $this->sqlSNanyatostyu("$table t", $where)." ORDER BY t.id desc LIMIT :limit OFFSET :offset",
             $params,
             $types
         );
 
         $result = [];
         foreach ($rows as $row) {
-            $result[] = json_decode($row['payload'], true);
+            $result[] = $this->makeUnitSNanyatostyu($row);
         }
 
         return $result;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     function getMyUnits(GetMyUnits $command, string $authorId): array
     {
         $table = self::TABLE;
-        $rows = $this->connection->fetchAllAssociative("SELECT * FROM $table where payload->>'authorId' = :authorId ORDER BY id desc LIMIT :limit OFFSET :offset",
-            ['limit' => $command->limit, 'offset' => $command->offset, 'authorId' => $authorId]);
+        $rows = $this->connection->fetchAllAssociative(
+            $this->sqlSNanyatostyu("$table t", "where t.payload->>'authorId' = :authorId")
+            ." ORDER BY t.id desc LIMIT :limit OFFSET :offset",
+            ['limit' => $command->limit, 'offset' => $command->offset, 'authorId' => $authorId]
+        );
 
         $result = [];
         foreach ($rows as $row) {
-            $result[] = $this->makeUnitByRow($row);
+            $result[] = $this->makeUnitSNanyatostyu($row);
         }
 
         return $result;
@@ -311,6 +322,106 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         )";
         $params['unitIds'] = array_values($unitIds);
         $types['unitIds'] = ArrayParameterType::STRING;
+    }
+
+    /**
+     * Выборка списка юнитов вместе с актуальным захватом.
+     *
+     * Захваты с истёкшим TTL не учитываются: иначе «зависший» владелец навсегда
+     * показывал бы юнит занятым, хотя любой другой участник уже может его захватить.
+     *
+     * @param string $from выражение FROM с алиасом t
+     */
+    private function sqlSNanyatostyu(string $from, string $where): string
+    {
+        $zanyatostTable = SqlZanyatostUnitaRepository::TABLE;
+
+        return "SELECT t.payload, z.tip as zanyat_tip
+            FROM $from
+            LEFT JOIN $zanyatostTable z
+                ON z.unit_id = t.payload->>'id' AND z.istekaet_v > now()
+            $where";
+    }
+
+    /**
+     * Строка выборки: payload юнита плюс подмешанная занятость.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function makeUnitSNanyatostyu(array $row): array
+    {
+        $payload = $row['payload'] ?? null;
+        $unit = is_string($payload) ? json_decode($payload, true) : [];
+
+        if (!is_array($unit)) {
+            $unit = [];
+        }
+
+        $tip = $row['zanyat_tip'] ?? null;
+
+        return $this->obogatitZanyatostyu($unit, is_string($tip) ? $tip : null);
+    }
+
+    /**
+     * Добавляет в строку ответа признаки занятости.
+     *
+     * Приоритет причины повторяет ZanyatostUnitaReadModel: явный захват важнее
+     * незавершённого процесса, потому что захват блокирует внешние действия.
+     *
+     * @param array<string, mixed> $unit
+     * @return array<string, mixed>
+     */
+    private function obogatitZanyatostyu(array $unit, ?string $tipZanyatosti): array
+    {
+        $prichina = $this->opredelitPrichinuZanyatosti($unit, $tipZanyatosti);
+
+        $unit['zanyat'] = $prichina !== null;
+        $unit['prichinaZanyatosti'] = $prichina;
+
+        return $unit;
+    }
+
+    /**
+     * @param array<string, mixed> $unit
+     */
+    private function opredelitPrichinuZanyatosti(array $unit, ?string $tipZanyatosti): ?string
+    {
+        if ($tipZanyatosti !== null && $tipZanyatosti !== '') {
+            return $tipZanyatosti;
+        }
+
+        $prozesi = $unit['prozesi'] ?? [];
+
+        if (!is_array($prozesi)) {
+            return null;
+        }
+
+        return $this->estNezavershenniyProzes($prozesi) ? TipZanyatosti::PROZES->value : null;
+    }
+
+    /**
+     * @param array<int|string, mixed> $prozesi
+     */
+    private function estNezavershenniyProzes(array $prozesi): bool
+    {
+        $zavershennie = [
+            UnitProcessState::SUCCESS->value,
+            UnitProcessState::ERROR->value,
+            UnitProcessState::CANCLED->value,
+        ];
+
+        foreach ($prozesi as $prozes) {
+            if (!is_array($prozes)) {
+                continue;
+            }
+
+            if (!in_array($prozes['state'] ?? null, $zavershennie, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

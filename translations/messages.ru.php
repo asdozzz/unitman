@@ -314,6 +314,11 @@ return [
         'vipolnenieDeistviya_ne_nachalas' => 'Выполнение действия не начато',
         'wait_another_proccess' => 'Еще выполняется другой процесс',
         'wait_runner' => 'Runner еще занят',
+        'zanyat' => 'Юнит занят',
+        'zanyat_hodom_opencode' => 'Юнит занят ходом OpenCode',
+        'zanyatost' => [
+            'tip_neizvesten' => 'Неизвестный тип занятости юнита',
+        ],
         'zapushen' => 'Юнит уже запущен',
         'config' => [
             'prepare_is_empty' => 'Блок "prepare" не может быть пустым',
@@ -386,6 +391,9 @@ return [
         ],
         'obrabotka_prozesa' => [
             'tip_ne_opredelen' => 'Тип процесса не определен',
+        ],
+        'otlozhennoe_deistvie' => [
+            'tip_ne_podderzhan' => 'Такой тип отложенного действия не поддерживается',
         ],
         'pomoschnik' => [
             'servis_ne_naiden' => 'Сервис хелпера не найден',

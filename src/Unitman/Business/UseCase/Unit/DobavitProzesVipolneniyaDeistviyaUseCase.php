@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\VipolnitDeistviye;
 use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
 
 final class DobavitProzesVipolneniyaDeistviyaUseCase
 {
@@ -13,6 +14,7 @@ final class DobavitProzesVipolneniyaDeistviyaUseCase
         private UnitRepository $unitRepository,
         private UnitmanSecurityService $securityService,
         private CanGenerateGuid         $uuidGenerator,
+        private ProverkaSvobodyUnita    $proverkaSvobody,
     )
     {
     }
@@ -22,6 +24,7 @@ final class DobavitProzesVipolneniyaDeistviyaUseCase
         $userId = $this->securityService->getCurrentUserId();
         $prozesId = $this->uuidGenerator->makeGuid();
         $unit = $this->unitRepository->getById($command->id);
+        $this->proverkaSvobody->proverit($unit);
         $unit->dobavitProzesVipolneniyaDeistviya($userId, $prozesId, $command);
         $this->unitRepository->save($unit);
     }

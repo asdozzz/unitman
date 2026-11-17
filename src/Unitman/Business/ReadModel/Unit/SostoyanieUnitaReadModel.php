@@ -9,6 +9,10 @@ namespace App\Unitman\Business\ReadModel\Unit;
  */
 final class SostoyanieUnitaReadModel
 {
+    /**
+     * @param bool $zanyat идёт операция над юнитом: внешний захват или незавершённый процесс
+     * @param string|null $prichinaZanyatosti `prozes` | `opencode_hod`, если юнит занят
+     */
     public function __construct(
         public readonly bool $exists,
         public readonly ?string $code = null,
@@ -16,6 +20,8 @@ final class SostoyanieUnitaReadModel
         public readonly ?string $name = null,
         public readonly ?string $branch = null,
         public readonly ?string $authorId = null,
+        public readonly bool $zanyat = false,
+        public readonly ?string $prichinaZanyatosti = null,
     )
     {
     }
@@ -34,8 +40,10 @@ final class SostoyanieUnitaReadModel
         string $name,
         string $branch,
         ?string $authorId,
+        bool $zanyat = false,
+        ?string $prichinaZanyatosti = null,
     ): self
     {
-        return new self(true, $code, $projectId, $name, $branch, $authorId);
+        return new self(true, $code, $projectId, $name, $branch, $authorId, $zanyat, $prichinaZanyatosti);
     }
 }

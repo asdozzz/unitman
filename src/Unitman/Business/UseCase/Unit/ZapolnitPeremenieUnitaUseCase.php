@@ -13,6 +13,7 @@ use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
+use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
 
 final class ZapolnitPeremenieUnitaUseCase
 {
@@ -25,6 +26,7 @@ final class ZapolnitPeremenieUnitaUseCase
         private ProverkaFaylovVolumov $proverkaFaylovVolumov,
         private ProverkaSvyazeyPeremenih $proverkaSvyazeyPeremenih,
         private UmeetPoluchatSpisokProektovDlyPolzovatelya $umeetPoluchatSpisokProektovDlyPolzovatelya,
+        private ProverkaSvobodyUnita $proverkaSvobody,
     )
     {
     }
@@ -32,6 +34,7 @@ final class ZapolnitPeremenieUnitaUseCase
     function handle(ZapolnitPeremenieUnita $command): void
     {
         $unit = $this->unitRepository->getById($command->id);
+        $this->proverkaSvobody->proverit($unit);
         $project = $this->projectRepository->getById($unit->getProjectId());
         $userId = $this->securityService->getCurrentUserId();
         $projectUser = $project->getProjectUserById($userId);

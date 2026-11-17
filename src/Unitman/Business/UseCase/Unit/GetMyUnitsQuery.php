@@ -5,7 +5,6 @@ namespace App\Unitman\Business\UseCase\Unit;
 use App\Unitman\Business\Command\Unit\GetMyUnits;
 use App\Unitman\Business\Port\Unit\CanGetMyUnits;
 use App\Unitman\Business\Port\UnitmanSecurityService;
-use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 
 final class GetMyUnitsQuery
 {
@@ -17,7 +16,7 @@ final class GetMyUnitsQuery
     }
 
     /**
-     * @return SpisokUnitovReadModel[]
+     * @return array<int, array<string, mixed>>
      * */
     function handle(GetMyUnits $command): array
     {

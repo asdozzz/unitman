@@ -50,4 +50,49 @@ final class OcenkaGotovnostiUnitaTest extends TestCase
 
         $this->assertSame($ozhidaemaya, $ocenka->ocenit($exists, $code));
     }
+
+    /**
+     * Занятость гасит даже рабочие коды: пока над юнитом идёт активити или
+     * чужой ход OpenCode, отправлять сообщения в сессию нельзя.
+     *
+     * @return array<string, array{bool, ?string, string}>
+     */
+    public static function zanyatieKodi(): array
+    {
+        return [
+            'запущен, но занят' => [true, 'USPESHNO_ZAPUSHEN', SostoyanieUnita::GROUP_BLOCKED],
+            'ошибка сборки, но занят' => [true, 'OSHIBKA_SBORKI', SostoyanieUnita::GROUP_BLOCKED],
+            'ошибка подготовки, но занят' => [true, 'OSHIBKA_PODGOTOVKI', SostoyanieUnita::GROUP_BLOCKED],
+            'ошибка запуска, но занят' => [true, 'OSHIBKA_ZAPUSKA', SostoyanieUnita::GROUP_BLOCKED],
+            'собран, но занят' => [true, 'USPESHNO_SOBRAN', SostoyanieUnita::GROUP_BLOCKED],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('zanyatieKodi')]
+    public function zanyatost_peredvodit_v_bloked(bool $exists, ?string $code, string $ozhidaemaya): void
+    {
+        $ocenka = new OcenkaGotovnostiUnita();
+
+        $this->assertSame($ozhidaemaya, $ocenka->ocenit($exists, $code, true));
+    }
+
+    #[Test]
+    public function arhiv_silnee_zanyatosti(): void
+    {
+        $ocenka = new OcenkaGotovnostiUnita();
+
+        $this->assertSame(SostoyanieUnita::GROUP_ARCHIVED, $ocenka->ocenit(true, 'UDALEN', true));
+        $this->assertSame(SostoyanieUnita::GROUP_ARCHIVED, $ocenka->ocenit(true, 'UDALEN_VRUCHNUYU', true));
+        $this->assertSame(SostoyanieUnita::GROUP_ARCHIVED, $ocenka->ocenit(false, 'USPESHNO_ZAPUSHEN', true));
+    }
+
+    #[Test]
+    public function zanyatost_ne_povyishaet_gotovnost_sozdannogo_unita(): void
+    {
+        $ocenka = new OcenkaGotovnostiUnita();
+
+        $this->assertSame(SostoyanieUnita::GROUP_BLOCKED, $ocenka->ocenit(true, 'SOZDAN', true));
+        $this->assertSame(SostoyanieUnita::GROUP_BLOCKED, $ocenka->ocenit(true, 'SOZDAN', false));
+    }
 }

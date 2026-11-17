@@ -50,13 +50,18 @@ final class ProdvinutCiklUnitaUseCase
         }
 
         try {
+            /*
+             * `proveritSvobodu: false` — шаг конвейера двигает сам OpenCode,
+             * который как раз и держит захват юнита. Проверка свободы здесь
+             * заблокировала бы ровно того, ради кого захват и ставился.
+             */
             if ($code === self::KOD_SOBRAN) {
-                $this->dobavitProzesPodgotovkiUseCase->handleDlyaPolzovatelya($unitId, $accountId);
+                $this->dobavitProzesPodgotovkiUseCase->handleDlyaPolzovatelya($unitId, $accountId, false);
 
                 return;
             }
 
-            $this->dobavitProzesZapuskaUseCase->handleDlyaPolzovatelya($unitId, $accountId);
+            $this->dobavitProzesZapuskaUseCase->handleDlyaPolzovatelya($unitId, $accountId, false);
         } catch (\DomainException) {
             // Состояние успело измениться между чтением и записью: считаем,
             // что цикл уже продвинут кем-то другим.

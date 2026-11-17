@@ -9,6 +9,7 @@ use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
 
@@ -22,6 +23,10 @@ use App\OpenCode\Business\Port\UuidGenerator;
  *
  * История собирается до сохранения нового хода: раннер получает контекст
  * предыдущих реплик без текущего промпта — текущий приходит отдельным полем.
+ *
+ * Юниты захватываются ДО старта workflow: пока ход выполняется, активити
+ * Unitman над юнитами не запускаются. Если раннер не принял ход, захват
+ * освобождается — иначе юнит остался бы занятым до истечения TTL.
  */
 final class ZapuskatelHodaOpenCode
 {
@@ -30,6 +35,7 @@ final class ZapuskatelHodaOpenCode
         private SessiyaOpenCodeRepository $sessionRepository,
         private UmeetVypolnyatHodOpenCode $runner,
         private UuidGenerator $uuidGenerator,
+        private UmeetBronirovatUniti $bronirovanie,
     ) {
     }
 
@@ -55,16 +61,33 @@ final class ZapuskatelHodaOpenCode
             $this->turnRepository->findBySessionId($session->getId()),
         );
 
-        $this->runner->nachatHod(
-            $turn->getWorkflowId(),
-            $session->getAccountId(),
-            $session->getCredentialId(),
-            $session->getExternalSessionId(),
-            $units,
-            $prompt,
-            $answers,
-            $history,
-        );
+        $vladelec = VladelecZanyatostiOpenCode::dlyaHoda($turn->getId());
+        $unitIds = $this->sobratIdUnitov($units);
+        $zahvacheno = false;
+
+        try {
+            if ($unitIds !== []) {
+                $this->bronirovanie->zahvatit($unitIds, $vladelec);
+                $zahvacheno = true;
+            }
+
+            $this->runner->nachatHod(
+                $turn->getWorkflowId(),
+                $session->getAccountId(),
+                $session->getCredentialId(),
+                $session->getExternalSessionId(),
+                $units,
+                $prompt,
+                $answers,
+                $history,
+            );
+        } catch (\Throwable $e) {
+            if ($zahvacheno) {
+                $this->bronirovanie->osvobodit($unitIds, $vladelec);
+            }
+
+            throw $e;
+        }
 
         $this->turnRepository->save($turn);
 
@@ -74,5 +97,20 @@ final class ZapuskatelHodaOpenCode
         $this->sessionRepository->update($session);
 
         return $turn;
+    }
+
+    /**
+     * @param list<PrivyazkaKUnitu> $units
+     * @return list<string>
+     */
+    private function sobratIdUnitov(array $units): array
+    {
+        $unitIds = [];
+
+        foreach ($units as $privyazka) {
+            $unitIds[] = $privyazka->unitId;
+        }
+
+        return $unitIds;
     }
 }

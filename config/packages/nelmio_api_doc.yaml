@@ -1227,6 +1227,24 @@ nelmio_api_doc:
                             oneOf:
                                 - $ref: '#/components/schemas/ContainerStats'
                                 - type: 'null'
+                        zanyat:
+                            type: boolean
+                            description: >-
+                                Юнит занят: либо его захватил внешний владелец (ход OpenCode), либо по нему
+                                есть незавершённый процесс. Пока юнит занят, мутирующие действия над ним
+                                блокируются, а события вебхука откладываются до освобождения.
+                            example: false
+                        prichinaZanyatosti:
+                            oneOf:
+                                - type: string
+                                  enum: [opencode_hod, prozes]
+                                - type: 'null'
+                            description: >-
+                                Причина занятости: `opencode_hod` — юнит захвачен ходом OpenCode,
+                                `prozes` — у юнита есть незавершённый процесс; null — юнит свободен.
+                                Значение `opencode_hod` приходит из таблицы `unit_zanyatost`, `prozes`
+                                вычисляется по незавершённым процессам read-модели.
+                            example: opencode_hod
                 UnitProcess:
                     type: object
                     description: Процесс юнита (UnitProcess::toArray)

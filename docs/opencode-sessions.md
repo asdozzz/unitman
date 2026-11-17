@@ -276,6 +276,43 @@ OpenCode неразличимы (общий `.git`, общие конфиги, �
 тем же правилом, что и гейт старта хода (не в архиве, есть хотя бы один живой
 юнит, все живые юниты `ready`), поэтому UI и бэкенд не расходятся.
 
+#### Занятость юнита ходом OpenCode
+
+Занятость — это встречная блокировка: ход OpenCode не должен стартовать по
+юниту, над которым прямо сейчас работает Unitman, а Unitman не должен трогать
+юнит, по которому идёт ход. Владелец захвата — строка `unit_zanyatost` модуля
+`Unitman` с непрозрачным токеном `opencode:<turnId>`
+([`VladelecZanyatostiOpenCode::dlyaHoda()`](src/OpenCode/Business/Utils/VladelecZanyatostiOpenCode.php:19)),
+тип захвата — `TipZanyatosti::OPENCODE_HOD` (`opencode_hod`).
+
+Порядок при старте хода
+([`ZapuskatelHodaOpenCode`](src/OpenCode/Business/Utils/ZapuskatelHodaOpenCode.php:16)):
+
+1. создаётся запись хода и собирается список id **всех** живых юнитов сессии;
+2. [`UmeetBronirovatUniti::zahvatit()`](src/OpenCode/Business/Port/UmeetBronirovatUniti.php:18)
+   захватывает их **до** `runner.nachatHod()` — иначе раннер успел бы начать
+   работу над ещё свободным юнитом;
+3. если раннер не принял ход, захват тут же освобождается, иначе юнит остался
+   бы занятым до истечения TTL;
+4. захват освобождается по достижении ходом терминального статуса
+   ([`PoluchitResultatHodaQuery`](src/OpenCode/Business/UseCase/PoluchitResultatHodaQuery.php:1)).
+
+Захват **мультиюнитный и атомарный**: либо заняты все юниты сессии, либо ни
+один. Если хотя бы один юнит занят, `zahvatit()` бросает `\DomainException`
+`unit.zanyat`, и ход не начинается вовсе. Освобождение идемпотентно и не
+падает, если захват уже истёк.
+
+Занятость в матрице готовности учитывается **после** архивации: удалённый юнит
+не «занят», он мёртв. Поэтому `UDALEN`/`UDALEN_VRUCHNUYU` и отсутствующий юнит
+дают `archived`, а занятый живой юнит — `blocked` (`unitStateCode` при этом
+остаётся прежним, `canAcceptMessages` становится `false`).
+
+В обратную сторону занятость видна и в Unitman: список юнитов отдаёт
+`zanyat` и `prichinaZanyatosti` (`opencode_hod` / `prozes` / `null`), а
+мутирующие UseCase отвечают `unit.zanyat_hodom_opencode`. События вебхука по
+занятому юниту не теряются — они откладываются и применяются после
+освобождения, см. [`unitman-config.md`](unitman-config.md#занятость-юнита-и-отложенные-действия).
+
 #### Архивация
 
 | Причина | Триггер | Что дальше |

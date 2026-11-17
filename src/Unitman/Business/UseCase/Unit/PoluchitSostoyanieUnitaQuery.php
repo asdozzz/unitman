@@ -6,10 +6,14 @@ use App\Unitman\Business\Command\Unit\PoluchitSostoyanieUnita;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
+use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
 
 final class PoluchitSostoyanieUnitaQuery
 {
-    public function __construct(private UnitRepository $unitRepository)
+    public function __construct(
+        private UnitRepository $unitRepository,
+        private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
+    )
     {
     }
 
@@ -43,12 +47,25 @@ final class PoluchitSostoyanieUnitaQuery
             return SostoyanieUnitaReadModel::otsutstvuet();
         }
 
+        $zanyatost = $this->poluchitZanyatostUnitaQuery->dlyaUnita($unit);
+
         return SostoyanieUnitaReadModel::izUnita(
             $code,
             $unit->getProjectId(),
             $unit->getName(),
             $unit->getBranch(),
             $unit->getAuthorId(),
+            $zanyatost->zanyat(),
+            $this->prichinaZanyatosti($zanyatost),
         );
+    }
+
+    /**
+     * Причина нужна только для занятого юнита: у свободного её нет,
+     * иначе интерфейс начал бы показывать «причину» без самой блокировки.
+     */
+    private function prichinaZanyatosti(ZanyatostUnitaReadModel $zanyatost): ?string
+    {
+        return $zanyatost->zanyat() ? $zanyatost->prichina() : null;
     }
 }

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://opencode.ai",
+  "watcher": {
+    "ignore": [
+      ".git/**",
+      "vendor/**",
+      "var/**",
+      "public/bundles/**",
+      "public/build/**",
+      "node_modules/**",
+      "*.log",
+      "*.sql",
+      "*.dump",
+      "rr",
+      ".phpunit.result.cache",
+      ".deptrac.cache",
+      ".deptrac.phar",
+      "symfony.lock"
+    ]
+  },
+  "permissions": {
+    "read": {
+      ".env*": "deny",
+      "!.env.dist": "allow",
+      "config/secrets/**": "deny",
+      "var/**": "deny",
+      "vendor/**": "deny",
+      "*.sql": "deny",
+      "*.dump": "deny",
+      "rr": "deny",
+      "rr.exe": "deny",
+      ".deptrac.phar": "deny",
+      "symfony.lock": "deny",
+      ".phpunit.result.cache": "deny",
+      ".deptrac.cache": "deny"
+    },
+    "glob": {
+      "vendor/**": "deny",
+      "var/**": "deny",
+       ".deptrac.phar": "deny",
+      "symfony.lock": "deny",
+      ".phpunit.result.cache": "deny",
+      ".deptrac.cache": "deny"
+    },
+    "grep": {
+      "vendor/**": "deny",
+      "var/**": "deny",
+       ".deptrac.phar": "deny",
+      "symfony.lock": "deny",
+      ".phpunit.result.cache": "deny",
+      ".deptrac.cache": "deny"
+    }
+  }
+}

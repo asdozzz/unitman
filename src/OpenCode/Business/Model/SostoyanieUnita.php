@@ -16,6 +16,10 @@ final class SostoyanieUnita
     public const GROUP_BLOCKED = 'blocked';
     public const GROUP_ARCHIVED = 'archived';
 
+    /**
+     * @param bool $zanyat над юнитом идёт операция: активити Unitman или чужой ход OpenCode
+     * @param string|null $prichinaZanyatosti `prozes` | `opencode_hod` — для подсказки в интерфейсе
+     */
     public function __construct(
         public readonly bool $exists,
         public readonly ?string $code,
@@ -23,6 +27,8 @@ final class SostoyanieUnita
         public readonly ?string $name,
         public readonly ?string $branch,
         public readonly string $group,
+        public readonly bool $zanyat = false,
+        public readonly ?string $prichinaZanyatosti = null,
     )
     {
     }

@@ -11,7 +11,9 @@ use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesObnovleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
+use App\Unitman\Business\UseCase\Unit\OtlozhitDeistvieNadUnitomUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
+use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter\StorageTypeAdapterFactory;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 
@@ -21,6 +23,12 @@ final class SobitiyaIzHranilishaActivity
     const OK = 'ok';
     const EMPTY_IDS = 'empty ids';
 
+    /**
+     * Событие принято, но применить его сразу нельзя: юнит занят ходом
+     * OpenCode, намерение сохранено и будет применено автоматически.
+     */
+    const DEFERRED = 'deferred';
+
     public function __construct(
         private StorageTypeAdapterFactory $storageTypeAdapterFactory,
         private ProjectRepository $projectRepository,
@@ -29,7 +37,9 @@ final class SobitiyaIzHranilishaActivity
         private DobavitProzesObnovleniyaUseCase $dobavitProzesObnovleniyaUseCase,
         private DobavitProzesUdaleniyaUseCase $dobavitProzesUdaleniyaUseCase,
         private UnitRepository $unitRepository,
-        private SozdatUnitSystemoiUseCase $sozdatUnitSystemoiUseCase
+        private SozdatUnitSystemoiUseCase $sozdatUnitSystemoiUseCase,
+        private ProverkaSvobodyUnita $proverkaSvobody,
+        private OtlozhitDeistvieNadUnitomUseCase $otlozhitDeistvieNadUnitomUseCase,
     )
     {
     }
@@ -80,9 +90,15 @@ final class SobitiyaIzHranilishaActivity
         }
 
         $errs = [];
+        $otlozheno = 0;
         foreach ($ids as $id) {
             try {
                 $unit = $this->unitRepository->getById($id);
+                /*
+                 * Метка времени обновляется немедленно всегда: это событие
+                 * event store, раннер в нём не участвует, и занятость юнита
+                 * ему не мешает.
+                 */
                 $unit->izmenitVremyaPoslednegoIzmeneniyaKodaVHranilishe($dannieSobitiya->unixtime);
                 $this->unitRepository->save($unit);
 
@@ -90,15 +106,40 @@ final class SobitiyaIzHranilishaActivity
                     continue;
                 }
 
-                if ($unit->esliNugnoObnovitKodUnita()) {
-                    if ($unit->esliSobran()) {
-                        $this->dobavitProzesObnovleniyaUseCase->handleSystem($id);
-                    } else {
-                        $errs[] = 'invalid status';
-                    }
-                } else {
+                if (!$unit->esliNugnoObnovitKodUnita()) {
                     $errs[] = 'ne nugno obnovlyat';
+
+                    continue;
                 }
+
+                /*
+                 * Несобранный юнит не откладываем: такое состояние не
+                 * транзиентное (сам он не соберётся), и намерение висело бы
+                 * вечно, пока юнит не удалят. Сохраняем прежнюю ошибку.
+                 */
+                if (!$unit->esliSobran()) {
+                    $errs[] = 'invalid status';
+
+                    continue;
+                }
+
+                /*
+                 * Проверка свободы выполняется явно: `handleSystem` передаёт
+                 * `neproveryatProzesi: true`, и агрегат не остановит запуск
+                 * обновления. Событие не теряем — откладываем до освобождения.
+                 */
+                if (!$this->proverkaSvobody->svoboden($unit)) {
+                    $this->otlozhitDeistvieNadUnitomUseCase->handle(
+                        $unit,
+                        TipSobitiya::KOD_OBNOVLEN,
+                        $dannieSobitiya
+                    );
+                    $otlozheno++;
+
+                    continue;
+                }
+
+                $this->dobavitProzesObnovleniyaUseCase->handleSystem($id);
             } catch (\Exception $e) {
                 $errs[] = $e->getMessage();
             }
@@ -108,7 +149,7 @@ final class SobitiyaIzHranilishaActivity
             return join(",", $errs);
         }
 
-        return self::OK;
+        return $otlozheno > 0 ? self::DEFERRED : self::OK;
     }
 
     private function udalitUniti(Project $project, DannieSobitiya $dannieSobitiya): string
@@ -123,8 +164,28 @@ final class SobitiyaIzHranilishaActivity
         }
 
         $errs = [];
+        $otlozheno = 0;
         foreach ($ids as $id) {
             try {
+                $unit = $this->unitRepository->getById($id);
+
+                /*
+                 * Удаление занятого юнита откладываем: идущий поток OpenCode
+                 * продолжает писать в юнит, и удаление оборвало бы его на
+                 * середине. Проверка явная по той же причине, что и для
+                 * обновления: `handleSystem` отключает проверки агрегата.
+                 */
+                if (!$this->proverkaSvobody->svoboden($unit)) {
+                    $this->otlozhitDeistvieNadUnitomUseCase->handle(
+                        $unit,
+                        TipSobitiya::VETKA_UDALENA,
+                        $dannieSobitiya
+                    );
+                    $otlozheno++;
+
+                    continue;
+                }
+
                 $this->dobavitProzesUdaleniyaUseCase->handleSystem($id);
             } catch (\Exception $e) {
                 $errs[] = $e->getMessage();
@@ -135,6 +196,6 @@ final class SobitiyaIzHranilishaActivity
             return join(",", $errs);
         }
 
-        return self::OK;
+        return $otlozheno > 0 ? self::DEFERRED : self::OK;
     }
 }

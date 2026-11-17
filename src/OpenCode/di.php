@@ -9,6 +9,7 @@ use App\OpenCode\Acl\RunnerAdapter;
 use App\OpenCode\Acl\UnitmanAdapter;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
@@ -42,4 +43,5 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UmeetProveryatRekvizityOpenCode::class, AccountAdapter::class);
     $services->set(UmeetVypolnyatHodOpenCode::class, RunnerAdapter::class);
     $services->set(UmeetUpravlyatUnitami::class, UnitmanAdapter::class);
+    $services->set(UmeetBronirovatUniti::class, UnitmanAdapter::class);
 };

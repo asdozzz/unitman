@@ -13,10 +13,12 @@ use App\Unitman\Business\Model\Unit\Event\UspehPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSborkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\UnitId;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesPodgotovkiUseCase;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesZapuskaUseCase;
 use App\Unitman\Business\UseCase\Unit\ProdvinutCiklUnitaUseCase;
+use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
 use App\Unitman\Tests\Support\SequenceGuidGenerator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -191,12 +193,25 @@ final class ProdvinutCiklUnitaUseCaseTest extends TestCase
     private function useCase(UnitRepository $repository): ProdvinutCiklUnitaUseCase
     {
         $generator = new SequenceGuidGenerator('type-');
+        $proverkaSvobody = $this->proverkaSvobody();
 
         return new ProdvinutCiklUnitaUseCase(
             $repository,
-            new DobavitProzesPodgotovkiUseCase($repository, $this->securityService(), $generator),
-            new DobavitProzesZapuskaUseCase($repository, $this->securityService(), $generator),
+            new DobavitProzesPodgotovkiUseCase($repository, $this->securityService(), $generator, $proverkaSvobody),
+            new DobavitProzesZapuskaUseCase($repository, $this->securityService(), $generator, $proverkaSvobody),
         );
+    }
+
+    /**
+     * Шаг конвейера вызывается самим OpenCode и гейт свободы не проходит,
+     * поэтому реестр захватов здесь всегда отвечает «свободен».
+     */
+    private function proverkaSvobody(): ProverkaSvobodyUnita
+    {
+        $repository = $this->createMock(ZanyatostUnitaRepository::class);
+        $repository->method('poluchitAktivnuyu')->willReturn(null);
+
+        return new ProverkaSvobodyUnita($repository);
     }
 
     private function securityService(): UnitmanSecurityService

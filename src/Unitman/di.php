@@ -11,7 +11,9 @@ use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Project\CanGetProjectRunnerJobs;
 use App\Unitman\Business\Port\Queue\ZadachaVOchered;
+use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
 use App\Unitman\Business\Port\Unit\UmeetObnovlyatStatistikuKonteinera;
+use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\Port\VolumeType\VolumeTypeFileRepository;
 use App\Unitman\Business\Port\VolumeType\VolumeTypeRepository;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
@@ -19,6 +21,8 @@ use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Adapter\ZadachaVOcheredAdapter;
 use App\Unitman\Infra\Repository\Project\ProjectRunnerJobRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
+use App\Unitman\Infra\Repository\Unit\SqlOtlozhennieDeistviyaRepository;
+use App\Unitman\Infra\Repository\Unit\SqlZanyatostUnitaRepository;
 use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeFileRepository;
 use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeRepository;
 use App\Unitman\Infra\Service\VolumeTypeFileLinkChecker;
@@ -68,6 +72,8 @@ return function (ContainerConfigurator $configuration) {
     $services->set(VolumeTypeFileRepository::class, SqlVolumeTypeFileRepository::class);
     $services->set(ZadachaVOchered::class, ZadachaVOcheredAdapter::class);
     $services->set(UmeetObnovlyatStatistikuKonteinera::class, SpisokUnitovRepository::class);
+    $services->set(ZanyatostUnitaRepository::class, SqlZanyatostUnitaRepository::class);
+    $services->set(OtlozhennieDeistviyaRepository::class, SqlOtlozhennieDeistviyaRepository::class);
     $services->set(CanGetProjectRunnerJobs::class, ProjectRunnerJobRepository::class);
 
     $services->set(VolumeTypeFileLinkChecker::class)
