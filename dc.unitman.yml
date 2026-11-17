@@ -1,5 +1,5 @@
 services:
-    postgresql:
+  postgresql:
     extends:
       file: dc.temporal.yml
       service: postgresql
@@ -23,7 +23,7 @@ services:
     extends:
       file: dc.temporal.yml
       service: temporal-ui
-      
+
   web:
     extends:
       file: common-services.yml
