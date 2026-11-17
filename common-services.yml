@@ -3,9 +3,10 @@ services:
     build:
       context: ./
       args:
-        - CURRENT_USER_ID=${UID}
-        - CURRENT_USER_GROUP=${GID}
+        - CURRENT_USER_ID=${UID:-1000}
+        - CURRENT_USER_GROUP=${GID:-1000}
     restart: always
+    user: root
     ports:
       - '${UNITMAN_API_PORT}:8080'
       - 2112:2112

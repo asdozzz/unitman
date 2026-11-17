@@ -30,8 +30,8 @@ services:
       service: web
     volumes:
       - '.:/home/containeruser/www'
+      - '/var/www/html/vendor'
       - "/var/run/docker.sock:/var/run/docker.sock"
-    command: sh -c "composer install --no-interaction && exec ./rr serve"
     depends_on:
       buggregator:
         condition: service_started
