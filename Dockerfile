@@ -2,11 +2,13 @@
 FROM asdozzz/roadrunner:0.0.10
 
 COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
-RUN composer install --no-scripts --no-autoloader --prefer-dist
+RUN composer install --no-scripts --prefer-dist
 
 COPY --chown=containeruser:groupcontainer . .
 RUN composer dump-autoload --optimize && \
-    composer check-platform-reqs
+    composer run-script post-install-cmd --no-interaction && \
+    composer check-platform-reqs && \
+    php bin/console cache:warmup
 
 CMD ["rr", "serve","-c",".rr.yaml"]
 #ENTRYPOINT ["tail", "-f", "/dev/null"]
