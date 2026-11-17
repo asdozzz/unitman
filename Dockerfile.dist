@@ -39,8 +39,4 @@ RUN composer dump-autoload --optimize && \
 
 EXPOSE 8080
 
-# Точка входа выполняет миграции и передаёт управление RoadRunner через exec,
-# поэтому `rr` остаётся PID 1 и корректно получает SIGTERM от `docker stop`.
-COPY --chown=containeruser:groupcontainer --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["rr", "serve", "-c", ".rr.yaml"]
