@@ -1311,6 +1311,29 @@ nelmio_api_doc:
                                 Значение `opencode_hod` приходит из таблицы `unit_zanyatost`, `prozes`
                                 вычисляется по незавершённым процессам read-модели.
                             example: opencode_hod
+                        containerStateMismatch:
+                            type: boolean
+                            description: Признак расхождения ожидаемого и фактического состояния контейнера юнита
+                            example: true
+                        containerStateMismatchExpected:
+                            oneOf:
+                                - type: string
+                                  enum: [running, absent]
+                                - type: 'null'
+                            description: Ожидаемое состояние контейнера по последней успешной активности
+                            example: running
+                        containerStateMismatchActual:
+                            oneOf:
+                                - type: string
+                                  enum: [running, stopped, absent, unknown]
+                                - type: 'null'
+                            description: Фактическое состояние контейнера на момент последней проверки
+                            example: absent
+                        containerStateMismatchDetectedAt:
+                            type: integer
+                            nullable: true
+                            description: Unix timestamp обнаружения расхождения
+                            example: 1730000000
                 UnitProcess:
                     type: object
                     description: Процесс юнита (UnitProcess::toArray)
