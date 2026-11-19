@@ -2,6 +2,8 @@
 
 namespace App\Unitman\Business\Model\Unit\ConfigUnita\KonfigServisa;
 
+use App\Unitman\Business\Utils\IdePort;
+
 final class PortServisa
 {
     /**/
@@ -19,6 +21,13 @@ final class PortServisa
         if (!isset($port) || $port < 0 || $port > 65535) {
             throw new \Exception('unit.config.port.invalid');
         }
+
+        // Порт редактора зарезервирован: IDE публикуется в network namespace
+        // юнита, поэтому сервис на этом порту перекрыл бы редактор.
+        if (IdePort::yavlyaetsyaZarezervirovannim($port)) {
+            throw new \Exception('unit.config.port.invalid');
+        }
+
         $this->port = $port;
         $this->type = $type;
         $this->startUri = $startUri ?? "";

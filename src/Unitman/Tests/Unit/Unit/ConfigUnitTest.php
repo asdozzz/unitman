@@ -4,6 +4,7 @@ namespace App\Unitman\Tests\Unit\Unit;
 
 use App\Unitman\Business\Model\Unit\ConfigUnita;
 use App\Unitman\Business\Model\Unit\VariableValue;
+use App\Unitman\Business\Utils\IdePort;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -224,6 +225,23 @@ final class ConfigUnitTest extends TestCase
                 ],
             ],
         ];
+
+        ConfigUnita::fromArray($configAsArray);
+    }
+
+    /**
+     * Порт редактора зарезервирован и не может использоваться сервисом юнита.
+     */
+    #[Test]
+    function zarezervirovannii_port_redaktora_otklonyaetsya()
+    {
+        $configAsArray = $this->minimalniiConfig();
+        $configAsArray['services']['web']['ports'] = [
+            ['port' => IdePort::DEFAULT_PORT, 'type' => 'http'],
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('unit.config.port.invalid');
 
         ConfigUnita::fromArray($configAsArray);
     }

@@ -1266,6 +1266,14 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/UnitLink'
+                        redaktorLink:
+                            oneOf:
+                                - type: string
+                                - type: 'null'
+                            description: >-
+                                Ссылка на read-only редактор файлов юнита. Появляется после успешной
+                                подготовки, очищается при сбросе подготовки или пересборке.
+                            example: https://47000.feature-123.my-app.proxy.example
                         unixtimePoslednegoObnovleniyaUnita:
                             type: integer
                             nullable: true

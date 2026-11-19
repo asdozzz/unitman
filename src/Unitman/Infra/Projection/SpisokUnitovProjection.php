@@ -41,6 +41,7 @@ use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
+use App\Unitman\Business\Utils\IdePort;
 use App\Unitman\Business\Utils\SsylkaServisaUtil;
 use App\Unitman\Business\Utils\SvyaziPeremenihUtil;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
@@ -162,7 +163,9 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'unixtimePoslednegoObnovleniyaUnita' => $fact->unixtime,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            // Пересборка инвалидирует редактор: старый URL может указывать на снесённый контейнер.
+            'redaktorLink' => null
         ]);
         $this->repository->update($readModel);
     }
@@ -173,7 +176,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => true,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'redaktorLink' => null
         ]);
         $this->repository->update($readModel);
     }
@@ -190,7 +194,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => false,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'redaktorLink' => null
         ]);
         $this->repository->update($readModel);
     }
@@ -277,7 +282,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'redaktorLink' => null
         ]);
         $this->repository->update($readModel);
     }
@@ -288,7 +294,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => true,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'redaktorLink' => null
         ]);
         $this->repository->update($readModel);
     }
@@ -296,10 +303,21 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function handleUspehPodgotovkiUnitaUstanovlen(UspehPodgotovkiUnitaUstanovlen $fact): void
     {
         $readModel =$this->repository->getById($fact->unitId);
+
+        $project = $this->projectRepository->getById($readModel->projectId);
+        $projectProxyHost = (string)$project->getProxyHost();
+
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => false,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'redaktorLink' => SsylkaServisaUtil::sformirovat(
+                'http',
+                IdePort::izOkruzheniya(),
+                $readModel->name,
+                $readModel->projectName,
+                $projectProxyHost
+            )
         ]);
         $this->repository->update($readModel);
     }
@@ -343,7 +361,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel =$this->repository->getById($fact->unitId);
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'redaktorLink' => null
         ]);
         $this->repository->update($readModel);
     }
@@ -365,7 +384,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => false,
-            'prozes' => $fact->prozess
+            'prozes' => $fact->prozess,
+            'redaktorLink' => null
         ]);
         $this->repository->update($readModel);
     }

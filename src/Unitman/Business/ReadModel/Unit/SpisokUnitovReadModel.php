@@ -34,6 +34,9 @@ final class SpisokUnitovReadModel
      * @param string|null $containerStateMismatchExpected ожидаемое состояние контейнера
      * @param string|null $containerStateMismatchActual фактическое состояние контейнера
      * @param int|null $containerStateMismatchDetectedAt unixtime обнаружения расхождения
+     * @param string|null $redaktorLink ссылка на read-only редактор файлов юнита:
+     *        появляется после успешной подготовки, очищается при сбросе подготовки
+     *        или пересборке; `null` — редактор недоступен
      */
     public function __construct(
         public readonly string $id,
@@ -59,7 +62,8 @@ final class SpisokUnitovReadModel
         public readonly bool $containerStateMismatch = false,
         public readonly ?string $containerStateMismatchExpected = null,
         public readonly ?string $containerStateMismatchActual = null,
-        public readonly ?int $containerStateMismatchDetectedAt = null
+        public readonly ?int $containerStateMismatchDetectedAt = null,
+        public readonly ?string $redaktorLink = null
     )
     {
     }
@@ -114,6 +118,10 @@ final class SpisokUnitovReadModel
         $volumes = array_key_exists('volumes', $props)?$props['volumes']:$this->volumes;
         // Пустой массив валиден: связи должны очищаться, поэтому !empty использовать нельзя.
         $svyazi = array_key_exists('svyazi', $props)?$props['svyazi']:$this->svyazi;
+        // array_key_exists нужен, чтобы явно переданный null очищал ссылку редактора.
+        $redaktorLink = array_key_exists('redaktorLink', $props)
+            ? ($props['redaktorLink'] === null ? null : (string) $props['redaktorLink'])
+            : $this->redaktorLink;
 
         $containerStateMismatch = array_key_exists('containerStateMismatch', $props)
             ? (bool) $props['containerStateMismatch']
@@ -171,7 +179,8 @@ final class SpisokUnitovReadModel
             $containerStateMismatch,
             $containerStateMismatchExpected,
             $containerStateMismatchActual,
-            $containerStateMismatchDetectedAt
+            $containerStateMismatchDetectedAt,
+            $redaktorLink
         );
     }
 }

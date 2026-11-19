@@ -230,6 +230,10 @@ services:
 Протокол нормализуется (обрезка пробелов + нижний регистр). `startUri` дописывается в конец
 ссылки для любого протокола.
 
+Порт read-only редактора файлов юнита (`UNITMAN_IDE_PORT`, по умолчанию `47000`) зарезервирован:
+указывать его в `services.*.ports` нельзя — IDE работает в network namespace юнита и сервис
+на этом порту перекрыл бы редактор.
+
 ### `actions` — действия в UI
 
 Кнопки, доступные на юните. Каждое действие имеет свой набор переменных и команды.
@@ -440,7 +444,7 @@ event store, раннер в нём не участвует, занятость 
 | `reset_prepare` | **да** | непустой список команд |
 | `up` | **да** | непустой список команд |
 | `down` | **да** | непустой список команд |
-| `services` | **да** | имя сервиса обязательно; у порта — `port` (0–65535) и `type`; `startUri` необязателен |
+| `services` | **да** | имя сервиса обязательно; у порта — `port` (0–65535, кроме зарезервированного `UNITMAN_IDE_PORT`) и `type`; `startUri` необязателен |
 | `actions` | нет | `id`, `name`, `commands` (непустой массив), `variables?`, `prepare?` |
 | `build` | нет | `image` (по умолчанию `asdozzz/unitman-unit:latest`), `commands?` |
 | `unitman_volumes` | нет | `dir` (уникальный), `name`; дубликат `dir` → ошибка `unit.config.volumes.dir_is_not_unique` |
@@ -457,7 +461,7 @@ event store, раннер в нём не участвует, занятость 
 | `unit.config.down_is_empty` | Пустой блок `down` |
 | `unit.config.services_is_empty` | Пустой блок `services` |
 | `unit.config.port.type.is_empty` | У порта не указан `type` |
-| `unit.config.port.invalid` | Некорректный `port` (вне 0–65535) |
+| `unit.config.port.invalid` | Некорректный `port` (вне 0–65535 или зарезервирован за редактором `UNITMAN_IDE_PORT`) |
 | `unit.config.action.id_not_defined` | У действия нет `id` |
 | `unit.config.action.name_not_defined` | У действия нет `name` |
 | `unit.config.action.commands_not_defined` | У действия нет `commands` |
