@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Runner\Business\Model;
 
 use App\Runner\Business\Model\RunnerState\DockerContainerStats;
@@ -16,33 +18,60 @@ final class RunnerState implements \JsonSerializable
         private bool $active,
         private array $dockerStats = [],
         private MemoryInfo $memoryInfo = new MemoryInfo(0, 0),
-    )
-    {
+        private int $unixtimeLastHealth = 0,
+    ) {
     }
 
-    static function sozdatDefoltniiRunner(string $id): self
+    public static function sozdatRunner(string $id, string $taskQueue): self
+    {
+        return new self($id, $taskQueue, true);
+    }
+
+    public static function sozdatDefoltniiRunner(string $id): self
     {
         return new self($id, 'unitman-runner-queue', false);
     }
 
-    function getTaskQueue(): string
+    public function getTaskQueue(): string
     {
         return $this->taskQueue;
     }
 
-    function isActive(): bool
+    public function isActive(): bool
     {
         return $this->active;
     }
 
-    function ustanovitResultatRabotosposobnosti(bool $active, array $dockerStats, MemoryInfo $memoryInfo): void
+    public function isHealthFresh(int $ttlSeconds = 180, ?int $now = null): bool
     {
+        return $this->unixtimeLastHealth > 0
+            && ($now ?? time()) - $this->unixtimeLastHealth <= $ttlSeconds;
+    }
+
+    public function getUnixtimeLastHealth(): int
+    {
+        return $this->unixtimeLastHealth;
+    }
+
+    /**
+     * @param DockerContainerStats[] $dockerStats
+     */
+    public function ustanovitResultatRabotosposobnosti(
+        bool $active,
+        array $dockerStats,
+        MemoryInfo $memoryInfo,
+        ?int $unixtimeLastHealth = null,
+    ): void {
         $this->active = $active;
         $this->dockerStats = $dockerStats;
         $this->memoryInfo = $memoryInfo;
+
+        if ($unixtimeLastHealth !== null) {
+            $this->unixtimeLastHealth = $unixtimeLastHealth;
+        }
     }
 
-    function getId():string
+    public function getId(): string
     {
         return $this->id;
     }

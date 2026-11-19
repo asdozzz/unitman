@@ -262,6 +262,8 @@ return [
     // ─── Runner ──────────────────────────────────────────────────────────────
     'runner' => [
         'deistvie_ne_zakonchena' => 'Действие еще не завершено',
+        'health_payload_too_large' => 'Слишком большой объём данных health-запроса раннера.',
+        'health_runner_id_empty' => 'Не указан идентификатор раннера.',
         'invalid_signature' => 'Неверная подпись запроса runner\'а',
         'memory_free_is_to_small' => 'Недостаточно свободной памяти для запуска юнита',
         'obnovlenie_eshe_ne_zakoncheno' => 'Обновление еще не завершено',
@@ -277,6 +279,9 @@ return [
         'steps_too_many' => 'Полезная нагрузка шагов runner\'а содержит слишком много шагов',
         'udalenie_eshe_ne_zakoncheno' => 'Удаление еще не завершено',
         'udalenie_proekta_eshe_ne_zakonchena' => 'Удаление проекта еще не завершено',
+        'unit_state_payload_empty' => 'Список уведомлений о состоянии контейнеров пуст.',
+        'unit_state_payload_invalid' => 'Уведомление о состоянии контейнера имеет неверный формат.',
+        'unit_state_payload_too_large' => 'Слишком большой объём данных уведомлений о состоянии контейнеров.',
         'unknown_error_when_make_result' => 'Неизвестная ошибка при формировании результата',
         'unknown_error_when_make_result_with_config' => 'Неизвестная ошибка при формировании результата с конфигом',
         'unknown_progress_token' => 'Токен прогресса runner\'а не зарегистрирован',

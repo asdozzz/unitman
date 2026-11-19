@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Unitman\Business\ReadModel\Unit;
 
 
@@ -28,6 +30,10 @@ final class SpisokUnitovReadModel
      * @param array $volumes
      * @param array $svyazi связи переменных с юнитами, выбранными через хелпер:
      *        `{variableId, targetUnitId, projectId, service, port, suffix}`
+     * @param bool $containerStateMismatch признак расхождения фактического и ожидаемого состояния контейнера
+     * @param string|null $containerStateMismatchExpected ожидаемое состояние контейнера
+     * @param string|null $containerStateMismatchActual фактическое состояние контейнера
+     * @param int|null $containerStateMismatchDetectedAt unixtime обнаружения расхождения
      */
     public function __construct(
         public readonly string $id,
@@ -49,7 +55,11 @@ final class SpisokUnitovReadModel
         public readonly array $deistviya = [],
         public readonly ?ProjectListContainerStats $statistikaKonteinera = null,
         public readonly array $volumes = [],
-        public readonly array $svyazi = []
+        public readonly array $svyazi = [],
+        public readonly bool $containerStateMismatch = false,
+        public readonly ?string $containerStateMismatchExpected = null,
+        public readonly ?string $containerStateMismatchActual = null,
+        public readonly ?int $containerStateMismatchDetectedAt = null
     )
     {
     }
@@ -105,6 +115,30 @@ final class SpisokUnitovReadModel
         // Пустой массив валиден: связи должны очищаться, поэтому !empty использовать нельзя.
         $svyazi = array_key_exists('svyazi', $props)?$props['svyazi']:$this->svyazi;
 
+        $containerStateMismatch = array_key_exists('containerStateMismatch', $props)
+            ? (bool) $props['containerStateMismatch']
+            : $this->containerStateMismatch;
+        $containerStateMismatchExpected = null;
+        $containerStateMismatchActual = null;
+        $containerStateMismatchDetectedAt = null;
+
+        if ($containerStateMismatch) {
+            $expected = array_key_exists('containerStateMismatchExpected', $props)
+                ? $props['containerStateMismatchExpected']
+                : $this->containerStateMismatchExpected;
+            $containerStateMismatchExpected = $expected === null ? null : (string) $expected;
+
+            $actual = array_key_exists('containerStateMismatchActual', $props)
+                ? $props['containerStateMismatchActual']
+                : $this->containerStateMismatchActual;
+            $containerStateMismatchActual = $actual === null ? null : (string) $actual;
+
+            $detectedAt = array_key_exists('containerStateMismatchDetectedAt', $props)
+                ? $props['containerStateMismatchDetectedAt']
+                : $this->containerStateMismatchDetectedAt;
+            $containerStateMismatchDetectedAt = $detectedAt === null ? null : (int) $detectedAt;
+        }
+
         if (isset($props['prozesi'])) {
             $prozesi = $props['prozesi'];
         } else if (isset($props['prozes'])) {
@@ -133,7 +167,11 @@ final class SpisokUnitovReadModel
             $deistviya,
             $statistikaKonteinera,
             $volumes,
-            $svyazi
+            $svyazi,
+            $containerStateMismatch,
+            $containerStateMismatchExpected,
+            $containerStateMismatchActual,
+            $containerStateMismatchDetectedAt
         );
     }
 }

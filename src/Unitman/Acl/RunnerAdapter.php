@@ -133,7 +133,7 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $command = new NachatObnovlenieUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl);
+        $command = new NachatObnovlenieUnita($unit->getProjectId(), $project->getName(), $unit->getId() ,$unit->getName(), $storageUrl);
         $workflowId = $this->runnerApi->nachatObnovlenieUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -143,7 +143,7 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
-        $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $unit->getName(), $storageUrl, $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
+        $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $project->getName(), $unit->getName(), $storageUrl, $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
         $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -190,7 +190,7 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $command = new NachatUdalenieUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl);
+        $command = new NachatUdalenieUnita($unit->getProjectId(), $project->getName(), $unit->getId() ,$unit->getName(), $storageUrl);
         $workflowId = $this->runnerApi->nachatUdalenieUnita($jobId, $command);
         return new JobId($workflowId);
     }

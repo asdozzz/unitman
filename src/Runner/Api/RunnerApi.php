@@ -91,7 +91,7 @@ final class RunnerApi implements RunnerApiInterface
     {
         $runnerState = $this->runnerRepository->getDefaultRunnerState();
 
-        if (!$runnerState->isActive()) {
+        if (!$runnerState->isActive() || !$runnerState->isHealthFresh()) {
             throw new \Exception('runner.state.is_non_active');
         }
 
@@ -235,7 +235,13 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatZapuskUnita(string $workflowId,NachatZapuskUnita $command): string
     {
-        $percentFree = $this->runnerRepository->getDefaultRunnerState()->getMemoryInfo()->getFreePercent();
+        $runnerState = $this->runnerRepository->getDefaultRunnerState();
+
+        if (!$runnerState->isActive() || !$runnerState->isHealthFresh()) {
+            throw new \DomainException('runner.state.is_non_active');
+        }
+
+        $percentFree = $runnerState->getMemoryInfo()->getFreePercent();
 
         if ($percentFree < $this->minFreeMemoryPercent) {
             throw new \DomainException('runner.memory_free_is_to_small');

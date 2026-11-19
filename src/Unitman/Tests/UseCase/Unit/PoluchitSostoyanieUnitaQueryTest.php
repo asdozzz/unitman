@@ -9,8 +9,10 @@ use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\UnitId;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\UseCase\Unit\PoluchitSostoyanieUnitaQuery;
+use App\Unitman\Business\UseCase\Unit\PoluchitZanyatostUnitaQuery;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -31,7 +33,7 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
         $repository = $this->createMock(UnitRepository::class);
         $repository->expects($this->never())->method('getById');
 
-        $query = new PoluchitSostoyanieUnitaQuery($repository);
+        $query = $this->query($repository);
 
         $this->assertOtsutstvuet($query->handle(new PoluchitSostoyanieUnita('   ')));
     }
@@ -45,7 +47,7 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
             ->with(self::UNIT_ID)
             ->willThrowException(new \DomainException('unit.not_found'));
 
-        $query = new PoluchitSostoyanieUnitaQuery($repository);
+        $query = $this->query($repository);
 
         $this->assertOtsutstvuet($query->handle(new PoluchitSostoyanieUnita(self::UNIT_ID)));
     }
@@ -66,7 +68,7 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
             ->with(self::UNIT_ID)
             ->willReturn($unit);
 
-        $query = new PoluchitSostoyanieUnitaQuery($repository);
+        $query = $this->query($repository);
 
         $readModel = $query->handle(new PoluchitSostoyanieUnita(self::UNIT_ID));
 
@@ -88,9 +90,20 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
             ->method('getById')
             ->willReturn($unit);
 
-        $query = new PoluchitSostoyanieUnitaQuery($repository);
+        $query = $this->query($repository);
 
         $this->assertOtsutstvuet($query->handle(new PoluchitSostoyanieUnita(self::UNIT_ID)));
+    }
+
+    private function query(UnitRepository $repository): PoluchitSostoyanieUnitaQuery
+    {
+        $zanyatostRepository = $this->createMock(ZanyatostUnitaRepository::class);
+        $zanyatostRepository->method('poluchitAktivnuyu')->willReturn(null);
+
+        return new PoluchitSostoyanieUnitaQuery(
+            $repository,
+            new PoluchitZanyatostUnitaQuery($repository, $zanyatostRepository),
+        );
     }
 
     private function assertOtsutstvuet(SostoyanieUnitaReadModel $readModel): void

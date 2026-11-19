@@ -3,11 +3,13 @@
 namespace App\Runner\Acl;
 
 use App\Runner\Business\Model\RunnerState\DockerContainerStats;
+use App\Runner\Business\Port\UmeetObnovlyatSostoyanieKonteyneraUnita;
 use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
 use App\Unitman\Api\UnitmanApi;
+use App\Unitman\Business\Command\Unit\ObnovitSostoyanieKonteyneraUnita;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 
-final class UnitmanAdapter implements UmeetObnovlyatStatistikuPoUnitam
+final class UnitmanAdapter implements UmeetObnovlyatStatistikuPoUnitam, UmeetObnovlyatSostoyanieKonteyneraUnita
 {
     public function __construct(private UnitmanApi $unitmanApi)
     {
@@ -31,5 +33,23 @@ final class UnitmanAdapter implements UmeetObnovlyatStatistikuPoUnitam
             );
             $this->unitmanApi->obnovitStatistikuUnita($command);
         }
+    }
+
+    public function obnovit(
+        string $unitId,
+        bool $mismatch,
+        ?string $expectedState,
+        ?string $actualState,
+        ?int $detectedAt,
+    ): void {
+        $this->unitmanApi->obnovitSostoyanieKonteyneraUnita(
+            new ObnovitSostoyanieKonteyneraUnita(
+                unitId: $unitId,
+                mismatch: $mismatch,
+                expectedState: $expectedState,
+                actualState: $actualState,
+                detectedAt: $detectedAt,
+            ),
+        );
     }
 }

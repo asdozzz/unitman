@@ -40,6 +40,17 @@ final class SqlRunnerStateRepository implements RunnerRepository
         return $object;
     }
 
+    function findById(string $id): ?RunnerState
+    {
+        $row = $this->findRowById($id);
+
+        if (empty($row)) {
+            return null;
+        }
+
+        return $this->makeReadModel($row['payload']);
+    }
+
     /**
      * @param string $id
      * @return false|mixed[]
@@ -55,7 +66,9 @@ final class SqlRunnerStateRepository implements RunnerRepository
     function getDefaultRunnerState(): RunnerState
     {
         $table = self::TABLE;
-        $row = $this->connection->fetchAssociative("SELECT * FROM $table LIMIT 1");
+        $row = $this->connection->fetchAssociative(
+            "SELECT * FROM $table ORDER BY COALESCE((payload->>'unixtimeLastHealth')::bigint, 0) DESC LIMIT 1"
+        );
 
         if (empty($row)) {
             throw new \Exception('runner.state.not_found');

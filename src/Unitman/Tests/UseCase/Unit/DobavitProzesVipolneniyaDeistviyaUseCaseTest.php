@@ -89,11 +89,18 @@ final class DobavitProzesVipolneniyaDeistviyaUseCaseTest extends TestCase
 
     private function unit(): Unit
     {
-        return Unit::sozdatUnit(
+        $unit = Unit::sozdatUnit(
             self::UNIT_ID,
             'author-1',
             'prozes-1',
             new SozdatUnit('project-1', 'unit-name', 'feature/1', [], 3000),
         );
+
+        // sozdatUnit всегда добавляет незавершённый процесс сборки. Для
+        // сценария «свободный юнит» очищаем процессы: иначе гейт
+        // unit.wait_another_proccess срабатывает раньше проверки занятости.
+        (new \ReflectionProperty(Unit::class, 'prozesi'))->setValue($unit, []);
+
+        return $unit;
     }
 }

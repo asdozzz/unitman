@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Runner\Infra\Controller;
 
 use App\Runner\Business\Command\SaveStepsCommand;
+use App\Runner\Business\Command\ZaregistrirovatHealthRunnera;
+use App\Runner\Business\Command\ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera;
 use App\Runner\Business\Model\RunnerProgress;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
+use App\Runner\Business\UseCase\ZaregistrirovatHealthRunneraUseCase;
+use App\Runner\Business\UseCase\ZaregistrirovatUvedomleniyaOSostoyaniiKonteyneraUseCase;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
 use App\Runner\Infra\Service\RunnerCallbackSignatureChecker;
 use App\Runner\Infra\Service\RunnerProgressPublisher;
@@ -29,6 +33,16 @@ final class RunnerController extends AbstractController
      * вывода команды на стороне раннера).
      */
     private const MAX_STEPS_CONTENT_BYTES = 2560 * 1024;
+
+    /**
+     * Максимальный размер тела health-push.
+     */
+    private const MAX_HEALTH_CONTENT_BYTES = 2 * 1024 * 1024;
+
+    /**
+     * Максимальный размер тела пакета уведомлений о состоянии контейнеров.
+     */
+    private const MAX_UNIT_STATE_CONTENT_BYTES = 1 * 1024 * 1024;
 
     /**
      * Максимальное количество шагов в снапшоте.
@@ -69,7 +83,9 @@ final class RunnerController extends AbstractController
     function getDefaultRunnerActive(SqlRunnerStateRepository $runnerStateRepository): JsonResponse
     {
         $runnerState = $runnerStateRepository->getDefaultRunnerState();
-        return new JsonResponse(['active' => $runnerState->isActive()]);
+        return new JsonResponse([
+            'active' => $runnerState->isActive() && $runnerState->isHealthFresh(),
+        ]);
     }
 
     #[OA\Get(
@@ -171,6 +187,109 @@ final class RunnerController extends AbstractController
         );
 
         $progressPublisher->publish($progress);
+
+        return new JsonResponse(true);
+    }
+
+    #[OA\Post(
+        path: '/api/runner/health',
+        summary: 'Health-push раннера',
+        description: 'Вызывается Golang-раннером, публичный эндпоинт без JWT. '
+            . 'Обновляет состояние раннера и статистику контейнеров. '
+            . 'При настроенном RUNNER_CALLBACK_SECRET обязателен заголовок '
+            . 'X-Runner-Signature: hex(HMAC-SHA256(тело_запроса, secret)).',
+        tags: ['Runner'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ZaregistrirovatHealthRunnera')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Признак успешной обработки',
+                content: new OA\JsonContent(type: 'boolean', example: true)
+            ),
+            new OA\Response(response: 400, description: 'Пустой runnerId либо превышен размер тела'),
+            new OA\Response(response: 403, description: 'Некорректная подпись запроса'),
+        ],
+        security: []
+    )]
+    #[Route('/health', methods: ['POST'])]
+    function health(
+        ZaregistrirovatHealthRunnera $command,
+        Request $request,
+        RunnerCallbackSignatureChecker $signatureChecker,
+        ZaregistrirovatHealthRunneraUseCase $useCase,
+    ): JsonResponse {
+        $body = $request->getContent();
+
+        if (strlen($body) > self::MAX_HEALTH_CONTENT_BYTES) {
+            throw new BadRequestHttpException('runner.health_payload_too_large');
+        }
+
+        if (!$signatureChecker->estPodpisTelaValidna(
+            $body,
+            $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
+        )) {
+            throw new AccessDeniedHttpException('runner.invalid_signature');
+        }
+
+        if (trim($command->runnerId) === '') {
+            throw new BadRequestHttpException('runner.health_runner_id_empty');
+        }
+
+        $useCase->handle($command);
+
+        return new JsonResponse(true);
+    }
+
+    #[OA\Post(
+        path: '/api/runner/unitStateNotifications',
+        summary: 'Уведомления раннера о состоянии контейнеров юнитов',
+        description: 'Вызывается Golang-раннером, публичный эндпоинт без JWT. '
+            . 'При настроенном RUNNER_CALLBACK_SECRET обязателен заголовок '
+            . 'X-Runner-Signature: hex(HMAC-SHA256(тело_запроса, secret)).',
+        tags: ['Runner'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Признак успешной обработки',
+                content: new OA\JsonContent(type: 'boolean', example: true)
+            ),
+            new OA\Response(response: 400, description: 'Пустой список уведомлений либо превышен размер тела'),
+            new OA\Response(response: 403, description: 'Некорректная подпись запроса'),
+        ],
+        security: []
+    )]
+    #[Route('/unitStateNotifications', methods: ['POST'])]
+    function unitStateNotifications(
+        ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera $command,
+        Request $request,
+        RunnerCallbackSignatureChecker $signatureChecker,
+        ZaregistrirovatUvedomleniyaOSostoyaniiKonteyneraUseCase $useCase,
+    ): JsonResponse {
+        $body = $request->getContent();
+
+        if (strlen($body) > self::MAX_UNIT_STATE_CONTENT_BYTES) {
+            throw new BadRequestHttpException('runner.unit_state_payload_too_large');
+        }
+
+        if (!$signatureChecker->estPodpisTelaValidna(
+            $body,
+            $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
+        )) {
+            throw new AccessDeniedHttpException('runner.invalid_signature');
+        }
+
+        if ($command->notifications === []) {
+            throw new BadRequestHttpException('runner.unit_state_payload_empty');
+        }
+
+        $useCase->handle($command);
 
         return new JsonResponse(true);
     }

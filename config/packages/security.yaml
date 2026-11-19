@@ -27,6 +27,8 @@ security:
     access_control:
         - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/saveSteps$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/runner/health$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/runner/unitStateNotifications$, roles: PUBLIC_ACCESS }
         - { path: ^/api/account/refreshToken$, roles: PUBLIC_ACCESS }
         - { path: ^/api/initialization/list, roles: PUBLIC_ACCESS }
         - { path: ^/api/project/(.*)/hook$, roles: PUBLIC_ACCESS }

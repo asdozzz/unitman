@@ -786,6 +786,72 @@ nelmio_api_doc:
                         stepsContent:
                             type: string
                             example: '{}'
+                ZaregistrirovatHealthRunnera:
+                    type: object
+                    description: Health-push от Golang-раннера
+                    required: [runnerId, taskQueue]
+                    properties:
+                        runnerId:
+                            type: string
+                            example: runner-1
+                        taskQueue:
+                            type: string
+                            example: unitman-runner-queue
+                        active:
+                            type: boolean
+                            default: true
+                        dockerStats:
+                            type: string
+                            nullable: true
+                            description: Построчный вывод `docker stats --format json`
+                        memInfo:
+                            type: string
+                            nullable: true
+                            description: Содержимое `/proc/meminfo`
+                        unixtime:
+                            type: integer
+                            nullable: true
+                            description: Момент отправки, unix timestamp (секунды)
+                ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera:
+                    type: object
+                    description: Пакет уведомлений раннера о состоянии контейнеров юнитов
+                    required: [runnerId]
+                    properties:
+                        runnerId:
+                            type: string
+                            example: runner-1
+                        notifications:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/UvedomlenieOSostoyaniiKonteynera'
+                UvedomlenieOSostoyaniiKonteynera:
+                    type: object
+                    description: Уведомление о расхождении/изменении состояния контейнера юнита
+                    required: [unitId, projectId, unitName, projectName, expectedState, actualState, eventType, detectedAt]
+                    properties:
+                        unitId:
+                            type: string
+                            format: uuid
+                        projectId:
+                            type: string
+                            format: uuid
+                        unitName:
+                            type: string
+                        projectName:
+                            type: string
+                        expectedState:
+                            type: string
+                            example: running
+                        actualState:
+                            type: string
+                            example: stopped
+                        eventType:
+                            type: string
+                            example: mismatch
+                        detectedAt:
+                            type: integer
+                            description: Момент обнаружения, unix timestamp (секунды)
+                            example: 1762000000
                 # --- Unitman: webhook'и проектов ---
                 SozdatWebhookProekta:
                     type: object

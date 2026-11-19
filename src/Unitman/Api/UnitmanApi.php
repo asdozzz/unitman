@@ -2,12 +2,14 @@
 
 namespace App\Unitman\Api;
 
+use App\Unitman\Business\Command\Unit\ObnovitSostoyanieKonteyneraUnita;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\PoluchitSostoyanieUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Unit\TipZanyatosti;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
+use App\Unitman\Business\UseCase\Unit\ObnovitSostoyanieKonteyneraUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitStatistikuPoKonteineruUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OsvoboditZanyatostUnitovUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitSostoyanieUnitaQuery;
@@ -27,6 +29,7 @@ final class UnitmanApi
     public const TIP_OPENCODE_HOD = 'opencode_hod';
 
     public function __construct(
+        private ObnovitSostoyanieKonteyneraUnitaUseCase $obnovitSostoyanieKonteyneraUnitaUseCase,
         private ObnovitStatistikuPoKonteineruUnitaUseCase $obnovitStatistikuPoKonteineruUnitaUseCase,
         private ServiceProverkiProxyHost $serviceProverkiProxyHost,
         private PoluchitSostoyanieUnitaQuery $poluchitSostoyanieUnitaQuery,
@@ -38,6 +41,11 @@ final class UnitmanApi
         private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
     )
     {
+    }
+
+    function obnovitSostoyanieKonteyneraUnita(ObnovitSostoyanieKonteyneraUnita $command): void
+    {
+        $this->obnovitSostoyanieKonteyneraUnitaUseCase->handle($command);
     }
 
     function obnovitStatistikuUnita(ObnovitStatistikuPoKontaineruUnita $command): void

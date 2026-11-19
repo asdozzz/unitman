@@ -11,6 +11,7 @@ use App\Unitman\Business\Port\Unit\CanGetUnitList;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
 use App\Unitman\Business\Model\Unit\TipZanyatosti;
 use App\Unitman\Business\Model\Unit\UnitProcess\UnitProcessState;
+use App\Unitman\Business\Port\Unit\UmeetObnovlyatSostoyanieKonteyneraUnita;
 use App\Unitman\Business\Port\Unit\UmeetObnovlyatStatistikuKonteinera;
 use App\Unitman\Business\Port\Unit\UmeetOtbiratNeaktivnieUniti;
 use App\Unitman\Business\ReadModel\Unit\ProjectListContainerStats;
@@ -19,7 +20,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Serializer\Serializer;
 
-final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById, CanFindUnitIdByContainerName, UmeetObnovlyatStatistikuKonteinera, UmeetOtbiratNeaktivnieUniti
+final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList, CanGetMyUnits, CanGetUnitReadModelById, CanFindUnitIdByContainerName, UmeetObnovlyatStatistikuKonteinera, UmeetOtbiratNeaktivnieUniti, UmeetObnovlyatSostoyanieKonteyneraUnita
 {
     const TABLE = 'spisok_unitov';
     public function __construct(private Connection $connection, private Serializer $serializer)
@@ -221,6 +222,37 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $table = self::TABLE;
         $json = $this->serializer->serialize($containerStats, 'json');
         $this->connection->executeQuery("update $table set payload = jsonb_set(payload, '{statistikaKonteinera}', :val) where id=:id", ['id' => $id, 'val' =>$json]);
+    }
+
+    /**
+     * Атомарно обновляет только признаки расхождения состояния контейнера.
+     * Оператор `||` мержит патч в payload, не затрагивая остальные ключи
+     * (в том числе statistikaKonteinera), и не требует read-modify-write.
+     */
+    public function obnovitSostoyanieKonteynera(
+        string $unitId,
+        bool $mismatch,
+        ?string $expectedState,
+        ?string $actualState,
+        ?int $detectedAt,
+    ): bool {
+        $table = self::TABLE;
+        $patch = json_encode(
+            [
+                'containerStateMismatch' => $mismatch,
+                'containerStateMismatchExpected' => $mismatch ? $expectedState : null,
+                'containerStateMismatchActual' => $mismatch ? $actualState : null,
+                'containerStateMismatchDetectedAt' => $mismatch ? $detectedAt : null,
+            ],
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
+
+        $affected = $this->connection->executeStatement(
+            "update $table set payload = payload || cast(:patch as jsonb) where id = :id",
+            ['patch' => $patch, 'id' => $unitId]
+        );
+
+        return $affected > 0;
     }
 
     function otobratNeaktivnieUniti(int $unixtime): array

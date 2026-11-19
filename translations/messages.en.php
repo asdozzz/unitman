@@ -266,6 +266,8 @@ return [
     // ─── Runner ──────────────────────────────────────────────────────────────
     'runner' => [
         'deistvie_ne_zakonchena' => 'The action has not finished yet',
+        'health_payload_too_large' => 'Runner health payload is too large.',
+        'health_runner_id_empty' => 'Runner id is empty.',
         'invalid_signature' => 'The runner request signature is invalid',
         'memory_free_is_to_small' => 'Not enough free memory to start the unit',
         'obnovlenie_eshe_ne_zakoncheno' => 'The update has not finished yet',
@@ -281,6 +283,9 @@ return [
         'steps_too_many' => 'The runner steps payload contains too many steps',
         'udalenie_eshe_ne_zakoncheno' => 'The removal has not finished yet',
         'udalenie_proekta_eshe_ne_zakonchena' => 'The project removal has not finished yet',
+        'unit_state_payload_empty' => 'Container state notifications list is empty.',
+        'unit_state_payload_invalid' => 'A container state notification has an invalid format.',
+        'unit_state_payload_too_large' => 'Container state notifications payload is too large.',
         'unknown_error_when_make_result' => 'An unknown error occurred while building the result',
         'unknown_error_when_make_result_with_config' => 'An unknown error occurred while building the result with the config',
         'unknown_progress_token' => 'The runner progress token is not registered',

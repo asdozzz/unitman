@@ -23,6 +23,21 @@ final class RunnerCallbackSignatureChecker
     {
     }
 
+    public function estPodpisTelaValidna(string $body, ?string $signature): bool
+    {
+        if ($this->runnerCallbackSecret === '') {
+            return true;
+        }
+
+        if ($signature === null || $signature === '') {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $body, $this->runnerCallbackSecret);
+
+        return hash_equals($expected, $signature);
+    }
+
     public function estPodpisValidna(string $token, string $stepsContent, ?string $signature): bool
     {
         if ($this->runnerCallbackSecret === '') {

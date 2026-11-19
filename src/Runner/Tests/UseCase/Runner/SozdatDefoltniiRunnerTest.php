@@ -3,6 +3,8 @@
 namespace App\Runner\Tests\UseCase\Runner;
 
 use App\Runner\Business\Command\UstanovitResultatProverkiRabotosposobnosti;
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\Model\RunnerState\MemoryInfo;
 use App\Runner\Business\Port\CanGenerateGuid;
 use App\Runner\Business\UseCase\SozdatDefoltniiRunnerUseCase;
 use App\Runner\Business\UseCase\UstanovitResultatProverkiRabotosposobnostiRunneraUseCase;
@@ -29,6 +31,8 @@ final class SozdatDefoltniiRunnerTest extends AbstractTestCaseWithTransactionWra
 
         $this->assertEquals('unitman-runner-queue', $runner->getTaskQueue());
         $this->assertEquals(false, $runner->isActive());
+        $this->assertEquals(0, $runner->getUnixtimeLastHealth());
+        $this->assertFalse($runner->isHealthFresh());
 
 
         $ustanovitResultatRabotosposobnosti = self::$container->get(UstanovitResultatProverkiRabotosposobnostiRunneraUseCase::class);
@@ -44,5 +48,39 @@ final class SozdatDefoltniiRunnerTest extends AbstractTestCaseWithTransactionWra
 
         $runner = $runnerRepository->getById($runnerId);
         $this->assertEquals(false, $runner->isActive());
+    }
+
+    function testIsHealthFresh()
+    {
+        $runner = RunnerState::sozdatRunner('runner-id', 'unitman-runner-queue');
+
+        $this->assertTrue($runner->isActive());
+        $this->assertEquals('runner-id', $runner->getId());
+        $this->assertEquals('unitman-runner-queue', $runner->getTaskQueue());
+        $this->assertEquals(0, $runner->getUnixtimeLastHealth());
+        $this->assertFalse($runner->isHealthFresh());
+
+        $now = 1_000_000;
+
+        $runner->ustanovitResultatRabotosposobnosti(
+            true,
+            [],
+            new MemoryInfo(100, 50),
+            $now,
+        );
+
+        $this->assertEquals($now, $runner->getUnixtimeLastHealth());
+        $this->assertTrue($runner->isHealthFresh(180, $now));
+        $this->assertTrue($runner->isHealthFresh(180, $now + 180));
+        $this->assertFalse($runner->isHealthFresh(180, $now + 181));
+
+        $runner->ustanovitResultatRabotosposobnosti(
+            false,
+            [],
+            new MemoryInfo(100, 50),
+        );
+
+        $this->assertFalse($runner->isActive());
+        $this->assertEquals($now, $runner->getUnixtimeLastHealth());
     }
 }

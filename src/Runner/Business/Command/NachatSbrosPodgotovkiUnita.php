@@ -7,6 +7,7 @@ final class NachatSbrosPodgotovkiUnita
     public function __construct(
         public readonly string $UnitId,
         public readonly string $ProjectId,
+        public readonly string $ProjectName,
         public readonly string $Name,
         public readonly string $StorageUrl,
         public readonly array $Commands,
