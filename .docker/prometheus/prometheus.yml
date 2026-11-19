@@ -1,4 +1,9 @@
 scrape_configs:
   - job_name: prometheus
     static_configs:
-      - targets: ['node-exporter:9100', 'web:2112', 'web:9091']
+      # Роли RoadRunner разделены по контейнерам и метрикам:
+      #   web          — HTTP-пул (2112);
+      #   web-worker   — jobs + сервисы планировщика (2113);
+      #   web-temporal — Temporal activities (9091).
+      # edge-telemetry — экспортёр Docker-метрик Go-edge (8083, профиль edge).
+      - targets: ['node-exporter:9100', 'web:2112', 'web-worker:2113', 'web-temporal:9091', 'edge-telemetry:8083']

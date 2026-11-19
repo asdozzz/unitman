@@ -1,0 +1,80 @@
+version: "3"
+
+# Роль Jobs + динамические сервисы планировщика (контейнер web-worker).
+#
+# Здесь работают:
+#   * пул jobs (consumer beanstalk-пайплайнов);
+#   * сервисы background_jobs_{projections,producers,timers}, которые создаёт
+#     команда app:jobs start через RPC service.Create.
+#
+# HTTP и temporal в эту роль не входят. Пустая секция service: обязательна:
+# без неё плагин RR services и RPC service.Create/Terminate недоступны.
+# RPC-сокет роли — 6002, в контейнере web-worker задан RR_RPC=...:6002.
+
+server:
+  # Пул jobs использует server.command (тот же воркер, что и HTTP).
+  command: "php public/index.php"
+  relay: pipes
+  access_logs: true
+  env:
+    - APP_RUNTIME: FluffyDiscord\RoadRunnerBundle\Runtime\Runtime
+
+logs:
+  level: error
+
+rpc:
+  listen: tcp://127.0.0.1:6002
+
+# Адрес брокера задаётся на уровне сервиса beanstalk: RR v3 читает его отсюда
+# и применяет ко всем пайплайнам с driver: beanstalk. В pipelines.<name>.config
+# остаются только параметры конкретной очереди (priority).
+beanstalk:
+  addr: tcp://beanstalk:11300
+
+jobs:
+  num_pollers: 24
+  timeout: 5
+  pool:
+    max_jobs: 200
+    num_workers: ${RR_JOBS_NUM_WORKERS:-20}
+    allocate_timeout: 40s
+    destroy_timeout: 40s
+  consume: [
+    "sobitiya_iz_hranilisha",
+    "websocket_unit_event",
+    "websocket_project_event",
+    "webhook_event"
+  ]
+  pipelines:
+    sobitiya_iz_hranilisha:
+      driver: beanstalk
+      config:
+        priority: 10
+    websocket_unit_event:
+      driver: beanstalk
+      config:
+        priority: 1
+    websocket_project_event:
+      driver: beanstalk
+      config:
+        priority: 1
+    webhook_event:
+      driver: beanstalk
+      config:
+        priority: 50
+
+# Сохраняет плагин RR services и RPC service.Create/Terminate, через которые
+# app:jobs start создаёт сервисы планировщика в этом контейнере.
+service: {}
+
+metrics:
+  address: 0.0.0.0:2113
+
+kv:
+  redis:
+    driver: redis
+    config:
+      addrs:
+        - "redis:6379"
+      username: ${REDIS_USER}
+      password: ${REDIS_USER_PASSWORD}

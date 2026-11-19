@@ -1,0 +1,43 @@
+version: "3"
+
+# Роль Temporal activities (контейнер web-temporal).
+#
+# Здесь работают только Temporal-воркеры активностей (activities.command).
+# HTTP, jobs и service в эту роль не входят. RPC-сокет роли — 6003,
+# в контейнере web-temporal задан RR_RPC=...:6003.
+#
+# kv.redis нужен активностям Runner: RedisService пишет прогресс задачи
+# через RPC kv этого процесса.
+
+server:
+  command: "php public/index.php"
+  relay: pipes
+  access_logs: true
+  env:
+    - APP_RUNTIME: FluffyDiscord\RoadRunnerBundle\Runtime\Runtime
+
+logs:
+  level: error
+
+rpc:
+  listen: tcp://127.0.0.1:6003
+
+temporal:
+  address: "temporal:7233"
+  activities:
+    command: "php bin/console temporal:workflow:runtime"
+    num_workers: ${RR_TEMPORAL_NUM_WORKERS:-12}
+    max_jobs: 100
+    supervisor:
+      max_worker_memory: 100
+  metrics:
+    address: 0.0.0.0:9091
+
+kv:
+  redis:
+    driver: redis
+    config:
+      addrs:
+        - "redis:6379"
+      username: ${REDIS_USER}
+      password: ${REDIS_USER_PASSWORD}

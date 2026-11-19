@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\OpenCode\Infra\BackgroundJob\SinhronizaciyaSessiySUnitom;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\SostoyanieUnita;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
@@ -38,6 +39,11 @@ final class SinhronizaciyaSessiySUnitomBackgroundJob extends AbstractBackgroundJ
     public function getName(): string
     {
         return 'opencode_session_unit_sync';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::timers;
     }
 
     public function getDelay(): int

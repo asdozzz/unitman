@@ -87,6 +87,9 @@ return [
     ],
 
     // ─── Background jobs ─────────────────────────────────────────────────────
+    'background_job' => [
+        'group_unknown' => 'The background job group is unknown',
+    ],
     'job' => [
         'not_found_by_name' => 'The job was not found by name',
     ],
@@ -122,7 +125,25 @@ return [
             'name_is_empty' => 'The file name must not be empty',
             'name_is_too_long' => 'The file name is too long',
             'owner_is_ambiguous' => 'The file owner is ambiguous',
+            'presign_ttl_invalid' => 'The presigned upload TTL is invalid',
+            'size_mismatch' => 'The uploaded file size does not match the declared size',
+            'token_expired' => 'The upload token has expired',
+            'token_invalid' => 'The upload token is invalid',
         ],
+    ],
+
+    // ─── Upload token ────────────────────────────────────────────────────────
+    'token' => [
+        'content_type_is_empty' => 'The upload token content type must not be empty',
+        'expires_at_is_invalid' => 'The upload token expiration is invalid',
+        'file_id_is_empty' => 'The upload token file ID must not be empty',
+        'name_is_empty' => 'The upload token file name must not be empty',
+        'owner_is_ambiguous' => 'The upload token owner is ambiguous',
+        'project_id_is_empty' => 'The upload token project ID must not be empty',
+        'size_is_invalid' => 'The upload token file size is invalid',
+        'storage_key_is_empty' => 'The upload token storage key must not be empty',
+        'unit_id_is_empty' => 'The upload token unit ID must not be empty',
+        'uploaded_by_is_empty' => 'The upload token author must not be empty',
     ],
 
     // ─── OpenCode ────────────────────────────────────────────────────────────
@@ -254,8 +275,10 @@ return [
         'sborka_eshe_ne_zakonchena' => 'The build has not finished yet',
         'sborka_proekta_eshe_ne_zakonchena' => 'The project build has not finished yet',
         'sbros_podgotovki_eshe_ne_zakonchen' => 'The preparation reset has not finished yet',
+        'step_too_large' => 'The runner step response is too large',
         'steps_malformed' => 'The runner steps payload is not a valid JSON array',
         'steps_too_large' => 'The runner steps payload is too large',
+        'steps_too_many' => 'The runner steps payload contains too many steps',
         'udalenie_eshe_ne_zakoncheno' => 'The removal has not finished yet',
         'udalenie_proekta_eshe_ne_zakonchena' => 'The project removal has not finished yet',
         'unknown_error_when_make_result' => 'An unknown error occurred while building the result',
@@ -476,6 +499,9 @@ return [
     // ─── Storage events ──────────────────────────────────────────────────────
     'sobitie_iz_hranilisha' => [
         'commits_not_found' => 'No commits were found in the repository',
+        'job_payload_too_large' => 'The webhook job payload is too large',
+        'payload_malformed' => 'The webhook payload is not a valid JSON object',
+        'payload_too_large' => 'The webhook payload is too large',
     ],
 
     // ─── Infrastructure / utils ──────────────────────────────────────────────

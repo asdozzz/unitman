@@ -44,17 +44,14 @@ temporal:
   metrics:
     address: 0.0.0.0:9091
 
-service:
-  unit_runner_jobs:
-    command: "php bin/console app:service:start unit_runner_jobs"
-    process_num: 1
-    timeout_stop_sec: 10
-    exec_timeout: 0s
-    remain_after_exit: true
-    service_name_in_log: false
-    # Должно совпадать с restartSec, который передаёт BackgroundJobService::start()
-    # при динамическом создании сервиса через RPC.
-    restart_sec: 10
+# В режиме планировщика (BACKGROUND_JOB_SCHEDULER=1) app:jobs start создаёт
+# через RPC три сервиса background_jobs_{projections,producers,timers};
+# unit_runner_jobs в этом режиме выполняется внутри группы projections.
+# В fallback-режиме (BACKGROUND_JOB_SCHEDULER=0) unit_runner_jobs, как и
+# остальные задачи, создаётся динамически командой app:jobs start.
+# Пустая секция service: сохраняет плагин RR services и RPC
+# service.Create/Terminate, через которые сервисы создаются в обоих режимах.
+service: {}
 
 metrics:
   address: 0.0.0.0:2112

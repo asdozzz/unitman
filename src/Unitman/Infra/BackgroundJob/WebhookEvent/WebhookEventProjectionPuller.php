@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\BackgroundJob\WebhookEvent;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\Unitman\Infra\Projection\WebhookEventProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
@@ -14,6 +15,11 @@ final class WebhookEventProjectionPuller extends AbstractBackgroundJob
     function getName(): string
     {
         return 'webhook_event_puller';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::projections;
     }
 
     function run(): bool

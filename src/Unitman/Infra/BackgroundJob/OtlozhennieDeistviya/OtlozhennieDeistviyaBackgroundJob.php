@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Unitman\Infra\BackgroundJob\OtlozhennieDeistviya;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -27,6 +28,11 @@ final class OtlozhennieDeistviyaBackgroundJob extends AbstractBackgroundJob
     public function getName(): string
     {
         return 'otlozhennie_deistviya';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::producers;
     }
 
     public function run(): bool

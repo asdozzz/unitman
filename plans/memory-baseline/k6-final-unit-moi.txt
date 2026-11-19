@@ -1,0 +1,59 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /scripts/k6/unit-moi.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 10m30s max duration (incl. graceful stop):
+              * default: 1 iterations for each of 1 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_duration{endpoint:unit_moi}
+    ✓ 'p(95)<200' p(95)=31.91ms
+
+    http_req_failed{endpoint:unit_moi}
+    ✓ 'rate==0' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 2       3.456977/s
+    checks_succeeded...: 100.00% 2 out of 2
+    checks_failed......: 0.00%   0 out of 2
+
+    ✓ unit/moi: HTTP 200
+    ✓ unit/moi: success envelope
+
+    HTTP
+    http_req_duration..............: avg=235.68ms min=31.91ms  med=235.68ms max=439.45ms p(90)=398.7ms  p(95)=419.08ms
+      { endpoint:unit_moi }........: avg=31.91ms  min=31.91ms  med=31.91ms  max=31.91ms  p(90)=31.91ms  p(95)=31.91ms 
+      { expected_response:true }...: avg=235.68ms min=31.91ms  med=235.68ms max=439.45ms p(90)=398.7ms  p(95)=419.08ms
+    http_req_failed................: 0.00%  0 out of 2
+      { endpoint:unit_moi }........: 0.00%  0 out of 1
+    http_reqs......................: 2      3.456977/s
+
+    EXECUTION
+    iteration_duration.............: avg=132.99ms min=132.99ms med=132.99ms max=132.99ms p(90)=132.99ms p(95)=132.99ms
+    iterations.....................: 1      1.728489/s
+
+    NETWORK
+    data_received..................: 4.3 kB 7.5 kB/s
+    data_sent......................: 845 B  1.5 kB/s
+
+
+
+
+running (00m00.6s), 0/1 VUs, 1 complete and 0 interrupted iterations
+default ✓ [ 100% ] 1 VUs  00m00.1s/10m0s  1/1 iters, 1 per VU

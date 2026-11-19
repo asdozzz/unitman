@@ -1,18 +1,18 @@
 local:
 	docker compose up -d
-	docker compose exec web php bin/console app:jobs start
+	docker compose exec web-worker php bin/console app:jobs start
 local-stop:
 	docker compose down
 local-start:
-	docker compose exec web php bin/console app:jobs start
+	docker compose exec web-worker php bin/console app:jobs start
 
 mvp:
 	docker compose -f dc.mvp.yml up -d --build
-	docker compose -f dc.mvp.yml exec web php bin/console app:jobs start
+	docker compose -f dc.mvp.yml exec web-worker php bin/console app:jobs start
 mvp-stop:
 	docker compose -f dc.mvp.yml down
 mvp-start:
-	docker compose -f dc.mvp.yml exec web php bin/console app:jobs start
+	docker compose -f dc.mvp.yml exec web-worker php bin/console app:jobs start
 
 tools:
 	docker compose -f dc.tools.yml up -d
@@ -26,8 +26,8 @@ tag:
 update:
 	git pull
 	docker compose -f dc.mvp.yml up -d
-	docker compose -f dc.mvp.yml exec web php bin/console doctrine:migrations:migrate
-	docker compose -f dc.mvp.yml exec web php bin/console app:jobs start
+	docker compose -f dc.mvp.yml exec web-worker php bin/console doctrine:migrations:migrate
+	docker compose -f dc.mvp.yml exec web-worker php bin/console app:jobs start
 
 
 tl:

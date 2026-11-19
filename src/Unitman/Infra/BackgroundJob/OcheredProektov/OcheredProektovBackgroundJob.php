@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\BackgroundJob\OcheredProektov;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 
 final class OcheredProektovBackgroundJob extends AbstractBackgroundJob
 {
@@ -13,6 +14,11 @@ final class OcheredProektovBackgroundJob extends AbstractBackgroundJob
     function getName(): string
     {
         return 'ochered_proektov';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::producers;
     }
 
     function run(): bool

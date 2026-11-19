@@ -1,0 +1,52 @@
+This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 100 requests
+Completed 200 requests
+Completed 300 requests
+Completed 400 requests
+Completed 500 requests
+Finished 500 requests
+
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            8082
+
+Document Path:          /api/runner/saveSteps
+Document Length:        4 bytes
+
+Concurrency Level:      10
+Time taken for tests:   2.878 seconds
+Complete requests:      500
+Failed requests:        0
+Keep-Alive requests:    0
+Total transferred:      116000 bytes
+Total body sent:        1178500
+HTML transferred:       2000 bytes
+Requests per second:    173.73 [#/sec] (mean)
+Time per request:       57.562 [ms] (mean)
+Time per request:       5.756 [ms] (mean, across all concurrent requests)
+Transfer rate:          39.36 [Kbytes/sec] received
+                        399.87 kb/s sent
+                        439.23 kb/s total
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.3      0       4
+Processing:    12   57 120.9     33    1093
+Waiting:       12   56 120.8     32    1091
+Total:         12   57 120.8     33    1093
+
+Percentage of the requests served within a certain time (ms)
+  50%     33
+  66%     38
+  75%     44
+  80%     49
+  90%     66
+  95%     97
+  98%    525
+  99%    880
+ 100%   1093 (longest request)

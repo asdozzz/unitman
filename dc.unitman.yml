@@ -28,9 +28,9 @@ services:
     extends:
       file: common-services.yml
       service: web
-    volumes:
+    volumes: &unitman-volumes
       - "/var/run/docker.sock:/var/run/docker.sock"
-    depends_on:
+    depends_on: &unitman-depends-on
       buggregator:
         condition: service_started
       beanstalk:
@@ -45,19 +45,78 @@ services:
         condition: service_healthy
       temporal:
         condition: service_healthy
-    environment:
+    environment: &unitman-environment
       - PHP_OPCACHE_ENABLE=0
       - PHP_OPCACHE_ENABLE_CLI=0
       - PHP_ERROR_REPORTING="E_ALL"
       - PHP_DISPLAY_ERRORS=On
-      # RoadRunner KV (kv.redis в .rr.yaml) читает эти переменные из окружения
+      # RoadRunner KV (kv.redis в .rr.*.yaml) читает эти переменные из окружения
       # процесса, а не из .env через Symfony Dotenv.
       - REDIS_USER=${REDIS_USER}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
-    extra_hosts:
+    extra_hosts: &unitman-extra-hosts
       - "uproxy:host-gateway"
-      
+
+  # Роль Jobs + сервисы планировщика (см. .rr.worker.yaml).
+  web-worker:
+    extends:
+      file: common-services.yml
+      service: web-worker
+    volumes: *unitman-volumes
+    depends_on: *unitman-depends-on
+    environment: *unitman-environment
+    extra_hosts: *unitman-extra-hosts
+
+  # Роль Temporal activities (см. .rr.temporal.yaml).
+  web-temporal:
+    extends:
+      file: common-services.yml
+      service: web-temporal
+    volumes: *unitman-volumes
+    depends_on: *unitman-depends-on
+    environment: *unitman-environment
+    extra_hosts: *unitman-extra-hosts
+
+  # ROLLBACK: одиночный процесс со старым .rr.yaml. Одной командой:
+  #   docker compose -f dc.unitman.yml stop web web-worker web-temporal \
+  #     && docker compose -f dc.unitman.yml --profile rr-single up -d web-single
+  web-single:
+    profiles: ["rr-single"]
+    extends:
+      file: common-services.yml
+      service: web-single
+    volumes: *unitman-volumes
+    depends_on: *unitman-depends-on
+    environment: *unitman-environment
+    extra_hosts: *unitman-extra-hosts
+
+  # Канареечные edge-сервисы (профиль edge). Без --profile edge не запускаются.
+  edge-progress:
+    extends:
+      file: common-services.yml
+      service: edge-progress
+
+  edge-media:
+    extends:
+      file: common-services.yml
+      service: edge-media
+
+  edge-webhook:
+    extends:
+      file: common-services.yml
+      service: edge-webhook
+
+  edge-telemetry:
+    extends:
+      file: common-services.yml
+      service: edge-telemetry
+
+  edge-gateway:
+    extends:
+      file: common-services.yml
+      service: edge-gateway
+
   postgres:
     extends:
       file: common-services.yml

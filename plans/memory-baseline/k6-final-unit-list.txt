@@ -1,0 +1,59 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /scripts/k6/unit-list.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 10m30s max duration (incl. graceful stop):
+              * default: 1 iterations for each of 1 VUs (maxDuration: 10m0s, gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_duration{endpoint:unit_list}
+    ✓ 'p(95)<200' p(95)=39.26ms
+
+    http_req_failed{endpoint:unit_list}
+    ✓ 'rate==0' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 2       3.45329/s
+    checks_succeeded...: 100.00% 2 out of 2
+    checks_failed......: 0.00%   0 out of 2
+
+    ✓ unit/list: HTTP 200
+    ✓ unit/list: success envelope
+
+    HTTP
+    http_req_duration..............: avg=235.12ms min=39.26ms  med=235.12ms max=430.98ms p(90)=391.81ms p(95)=411.4ms 
+      { endpoint:unit_list }.......: avg=39.26ms  min=39.26ms  med=39.26ms  max=39.26ms  p(90)=39.26ms  p(95)=39.26ms 
+      { expected_response:true }...: avg=235.12ms min=39.26ms  med=235.12ms max=430.98ms p(90)=391.81ms p(95)=411.4ms 
+    http_req_failed................: 0.00%  0 out of 2
+      { endpoint:unit_list }.......: 0.00%  0 out of 1
+    http_reqs......................: 2      3.45329/s
+
+    EXECUTION
+    iteration_duration.............: avg=141.46ms min=141.46ms med=141.46ms max=141.46ms p(90)=141.46ms p(95)=141.46ms
+    iterations.....................: 1      1.726645/s
+
+    NETWORK
+    data_received..................: 4.3 kB 7.5 kB/s
+    data_sent......................: 847 B  1.5 kB/s
+
+
+
+
+running (00m00.6s), 0/1 VUs, 1 complete and 0 interrupted iterations
+default ✓ [ 100% ] 1 VUs  00m00.1s/10m0s  1/1 iters, 1 per VU

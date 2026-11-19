@@ -36,6 +36,16 @@ final class BackgroundJobCollection
 
     public function startAll(): void
     {
+        if ($this->backgroundJobService->isSchedulerEnabled()) {
+            // Один сервис на группу: иначе startAll() перезапускал бы
+            // планировщик по разу на каждую задачу этой группы.
+            foreach (BackgroundJobGroup::cases() as $group) {
+                $this->backgroundJobService->startGroup($group);
+            }
+
+            return;
+        }
+
         foreach ($this->collection as $job) {
             $this->backgroundJobService->start($job);
         }
@@ -43,6 +53,8 @@ final class BackgroundJobCollection
 
     public function stopAll(): void
     {
+        // stop() останавливает и планировщик группы, и старый per-job сервис,
+        // поэтому остановка корректна в обоих режимах.
         foreach ($this->collection as $job) {
             $this->backgroundJobService->stop($job);
         }

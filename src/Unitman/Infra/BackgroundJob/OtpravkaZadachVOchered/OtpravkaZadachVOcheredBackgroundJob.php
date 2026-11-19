@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Unitman\Infra\BackgroundJob\OtpravkaZadachVOchered;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\Unitman\Business\Model\ZadachaDlyOcheredi;
 use App\Unitman\Infra\Repository\ZadachaDlyOcherediRepository;
 use Spiral\Goridge\RPC\RPC;
@@ -21,6 +22,11 @@ final class OtpravkaZadachVOcheredBackgroundJob extends AbstractBackgroundJob
     public function getName(): string
     {
         return 'otpravkaZadachVOchered';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::producers;
     }
 
     public function run(): bool

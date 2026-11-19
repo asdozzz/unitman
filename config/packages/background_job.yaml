@@ -1,0 +1,5 @@
+parameters:
+    # Значение флага BACKGROUND_JOB_SCHEDULER по умолчанию.
+    # Подставляется через %env(default:...)% в src/BackgroundJob/di.php,
+    # поэтому старый .env без этой переменной продолжает работать.
+    background_job_scheduler_default: '1'

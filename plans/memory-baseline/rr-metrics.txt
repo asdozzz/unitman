@@ -1,0 +1,367 @@
+# HELP go_gc_duration_seconds A summary of the wall-time pause (stop-the-world) duration in garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 5.4699e-05
+go_gc_duration_seconds{quantile="0.25"} 0.000150779
+go_gc_duration_seconds{quantile="0.5"} 0.000223277
+go_gc_duration_seconds{quantile="0.75"} 0.000505126
+go_gc_duration_seconds{quantile="1"} 0.007219191
+go_gc_duration_seconds_sum 0.095929033
+go_gc_duration_seconds_count 141
+# HELP go_gc_gogc_percent Heap size target percentage configured by the user, otherwise 100. This value is set by the GOGC environment variable, and the runtime/debug.SetGCPercent function. Sourced from /gc/gogc:percent.
+# TYPE go_gc_gogc_percent gauge
+go_gc_gogc_percent 100
+# HELP go_gc_gomemlimit_bytes Go runtime memory limit configured by the user, otherwise math.MaxInt64. This value is set by the GOMEMLIMIT environment variable, and the runtime/debug.SetMemoryLimit function. Sourced from /gc/gomemlimit:bytes.
+# TYPE go_gc_gomemlimit_bytes gauge
+go_gc_gomemlimit_bytes 9.223372036854776e+18
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 252
+# HELP go_info Information about the Go environment.
+# TYPE go_info gauge
+go_info{version="go1.27.2"} 1
+# HELP go_memstats_alloc_bytes Number of bytes allocated in heap and currently in use. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 4.8077168e+07
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated in heap until now, even if released already. Equals to /gc/heap/allocs:bytes.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 4.472374336e+09
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table. Equals to /memory/classes/profiling/buckets:bytes.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 1.523825e+06
+# HELP go_memstats_frees_total Total number of heap objects frees. Equals to /gc/heap/frees:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 1.959361e+06
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata. Equals to /memory/classes/metadata/other:bytes.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 4.740416e+06
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and currently in use, same as go_memstats_alloc_bytes. Equals to /memory/classes/heap/objects:bytes.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 4.8077168e+07
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used. Equals to /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 2.79830528e+08
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 5.3682176e+07
+# HELP go_memstats_heap_objects Number of currently allocated objects. Equals to /gc/heap/objects:objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 155909
+# HELP go_memstats_heap_released_bytes Number of heap bytes released to OS. Equals to /memory/classes/heap/released:bytes.
+# TYPE go_memstats_heap_released_bytes gauge
+go_memstats_heap_released_bytes 1.69549824e+08
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system. Equals to /memory/classes/heap/objects:bytes + /memory/classes/heap/unused:bytes + /memory/classes/heap/released:bytes + /memory/classes/heap/free:bytes.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 3.33512704e+08
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.7950252640202177e+09
+# HELP go_memstats_mallocs_total Total number of heap objects allocated, both live and gc-ed. Semantically a counter version for go_memstats_heap_objects gauge. Equals to /gc/heap/allocs:objects + /gc/heap/tiny/allocs:objects.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 2.11527e+06
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures. Equals to /memory/classes/metadata/mcache/inuse:bytes.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 18368
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system. Equals to /memory/classes/metadata/mcache/inuse:bytes + /memory/classes/metadata/mcache/free:bytes.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 32144
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures. Equals to /memory/classes/metadata/mspan/inuse:bytes.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 842720
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system. Equals to /memory/classes/metadata/mspan/inuse:bytes + /memory/classes/metadata/mspan/free:bytes.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 1.12608e+06
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place. Equals to /gc/heap/goal:bytes.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 6.281793e+07
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations. Equals to /memory/classes/other:bytes.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 1.664855e+06
+# HELP go_memstats_stack_inuse_bytes Number of bytes obtained from system for stack allocator in non-CGO environments. Equals to /memory/classes/heap/stacks:bytes.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 6.22592e+06
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator. Equals to /memory/classes/heap/stacks:bytes + /memory/classes/os-stacks:bytes.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 6.22592e+06
+# HELP go_memstats_sys_bytes Number of bytes obtained from system. Equals to /memory/classes/total:byte.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 3.48825944e+08
+# HELP go_sched_gomaxprocs_threads The current runtime.GOMAXPROCS setting, or the number of operating system threads that can execute user-level Go code simultaneously. Sourced from /sched/gomaxprocs:threads.
+# TYPE go_sched_gomaxprocs_threads gauge
+go_sched_gomaxprocs_threads 8
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 84
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 33.2
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.048575e+06
+# HELP process_network_receive_bytes_total Number of bytes received by the process over the network.
+# TYPE process_network_receive_bytes_total counter
+process_network_receive_bytes_total 1.828209444e+09
+# HELP process_network_transmit_bytes_total Number of bytes sent by the process over the network.
+# TYPE process_network_transmit_bytes_total counter
+process_network_transmit_bytes_total 2.079735595e+09
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 451
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 2.14880256e+08
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.79502462698e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 1.702649856e+09
+# HELP process_virtual_memory_max_bytes Maximum amount of virtual memory available in bytes.
+# TYPE process_virtual_memory_max_bytes gauge
+process_virtual_memory_max_bytes 1.8446744073709552e+19
+# HELP rr_http_no_free_workers_total Total number of NoFreeWorkers occurrences.
+# TYPE rr_http_no_free_workers_total counter
+rr_http_no_free_workers_total 0
+# HELP rr_http_request_duration_seconds HTTP request duration.
+# TYPE rr_http_request_duration_seconds histogram
+rr_http_request_duration_seconds_bucket{status="200",le="0.005"} 0
+rr_http_request_duration_seconds_bucket{status="200",le="0.01"} 0
+rr_http_request_duration_seconds_bucket{status="200",le="0.025"} 1470
+rr_http_request_duration_seconds_bucket{status="200",le="0.05"} 2976
+rr_http_request_duration_seconds_bucket{status="200",le="0.1"} 3258
+rr_http_request_duration_seconds_bucket{status="200",le="0.25"} 3417
+rr_http_request_duration_seconds_bucket{status="200",le="0.5"} 3425
+rr_http_request_duration_seconds_bucket{status="200",le="1"} 3444
+rr_http_request_duration_seconds_bucket{status="200",le="2.5"} 3448
+rr_http_request_duration_seconds_bucket{status="200",le="5"} 3452
+rr_http_request_duration_seconds_bucket{status="200",le="10"} 3453
+rr_http_request_duration_seconds_bucket{status="200",le="20"} 3454
+rr_http_request_duration_seconds_bucket{status="200",le="30"} 3454
+rr_http_request_duration_seconds_bucket{status="200",le="60"} 3454
+rr_http_request_duration_seconds_bucket{status="200",le="+Inf"} 3454
+rr_http_request_duration_seconds_sum{status="200"} 174.76722772100013
+rr_http_request_duration_seconds_count{status="200"} 3454
+rr_http_request_duration_seconds_bucket{status="401",le="0.005"} 0
+rr_http_request_duration_seconds_bucket{status="401",le="0.01"} 0
+rr_http_request_duration_seconds_bucket{status="401",le="0.025"} 0
+rr_http_request_duration_seconds_bucket{status="401",le="0.05"} 0
+rr_http_request_duration_seconds_bucket{status="401",le="0.1"} 0
+rr_http_request_duration_seconds_bucket{status="401",le="0.25"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="0.5"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="1"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="2.5"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="5"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="10"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="20"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="30"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="60"} 1
+rr_http_request_duration_seconds_bucket{status="401",le="+Inf"} 1
+rr_http_request_duration_seconds_sum{status="401"} 0.195528741
+rr_http_request_duration_seconds_count{status="401"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="0.005"} 0
+rr_http_request_duration_seconds_bucket{status="500",le="0.01"} 0
+rr_http_request_duration_seconds_bucket{status="500",le="0.025"} 0
+rr_http_request_duration_seconds_bucket{status="500",le="0.05"} 0
+rr_http_request_duration_seconds_bucket{status="500",le="0.1"} 0
+rr_http_request_duration_seconds_bucket{status="500",le="0.25"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="0.5"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="1"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="2.5"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="5"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="10"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="20"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="30"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="60"} 1
+rr_http_request_duration_seconds_bucket{status="500",le="+Inf"} 1
+rr_http_request_duration_seconds_sum{status="500"} 0.138573646
+rr_http_request_duration_seconds_count{status="500"} 1
+# HELP rr_http_request_total Total number of handled http requests after server restart.
+# TYPE rr_http_request_total counter
+rr_http_request_total{status="200"} 3454
+rr_http_request_total{status="401"} 1
+rr_http_request_total{status="500"} 1
+# HELP rr_http_requests_queue Total number of queued requests.
+# TYPE rr_http_requests_queue gauge
+rr_http_requests_queue 0
+# HELP rr_http_total_workers Total number of workers used by the HTTP plugin
+# TYPE rr_http_total_workers gauge
+rr_http_total_workers 12
+# HELP rr_http_uptime_seconds Uptime in seconds
+# TYPE rr_http_uptime_seconds counter
+rr_http_uptime_seconds 671
+# HELP rr_http_worker_memory_bytes Worker current memory usage
+# TYPE rr_http_worker_memory_bytes gauge
+rr_http_worker_memory_bytes{pid="4257"} 6.4712704e+07
+rr_http_worker_memory_bytes{pid="4258"} 6.463488e+07
+rr_http_worker_memory_bytes{pid="4259"} 6.565888e+07
+rr_http_worker_memory_bytes{pid="4260"} 6.5671168e+07
+rr_http_worker_memory_bytes{pid="4267"} 6.6732032e+07
+rr_http_worker_memory_bytes{pid="4274"} 6.5605632e+07
+rr_http_worker_memory_bytes{pid="4275"} 6.4700416e+07
+rr_http_worker_memory_bytes{pid="4279"} 6.5687552e+07
+rr_http_worker_memory_bytes{pid="4280"} 6.5622016e+07
+rr_http_worker_memory_bytes{pid="4281"} 6.4659456e+07
+rr_http_worker_memory_bytes{pid="4285"} 6.5691648e+07
+rr_http_worker_memory_bytes{pid="4286"} 6.5736704e+07
+# HELP rr_http_worker_state Worker current state
+# TYPE rr_http_worker_state gauge
+rr_http_worker_state{pid="4257",state="ready"} 0
+rr_http_worker_state{pid="4258",state="ready"} 0
+rr_http_worker_state{pid="4259",state="ready"} 0
+rr_http_worker_state{pid="4260",state="ready"} 0
+rr_http_worker_state{pid="4267",state="ready"} 0
+rr_http_worker_state{pid="4274",state="ready"} 0
+rr_http_worker_state{pid="4275",state="ready"} 0
+rr_http_worker_state{pid="4279",state="ready"} 0
+rr_http_worker_state{pid="4280",state="ready"} 0
+rr_http_worker_state{pid="4281",state="ready"} 0
+rr_http_worker_state{pid="4285",state="ready"} 0
+rr_http_worker_state{pid="4286",state="ready"} 0
+# HELP rr_http_workers_invalid HTTP workers currently in invalid,killing,destroyed,errored,inactive states
+# TYPE rr_http_workers_invalid gauge
+rr_http_workers_invalid 0
+# HELP rr_http_workers_memory_bytes Memory usage by HTTP workers.
+# TYPE rr_http_workers_memory_bytes gauge
+rr_http_workers_memory_bytes 7.85113088e+08
+# HELP rr_http_workers_ready HTTP workers currently in ready state
+# TYPE rr_http_workers_ready gauge
+rr_http_workers_ready 12
+# HELP rr_http_workers_working HTTP workers currently in working state
+# TYPE rr_http_workers_working gauge
+rr_http_workers_working 0
+# HELP rr_jobs_jobs_err Number of jobs error while processing in the worker
+# TYPE rr_jobs_jobs_err counter
+rr_jobs_jobs_err 0
+# HELP rr_jobs_jobs_ok Number of successfully processed jobs
+# TYPE rr_jobs_jobs_ok counter
+rr_jobs_jobs_ok 0
+# HELP rr_jobs_jobs_requeue Number of re-queued jobs
+# TYPE rr_jobs_jobs_requeue counter
+rr_jobs_jobs_requeue 0
+# HELP rr_jobs_push_err Number of jobs push which was failed
+# TYPE rr_jobs_push_err counter
+rr_jobs_push_err 0
+# HELP rr_jobs_push_ok Number of job push
+# TYPE rr_jobs_push_ok counter
+rr_jobs_push_ok 0
+# HELP rr_jobs_total_workers Total number of workers used by the plugin
+# TYPE rr_jobs_total_workers gauge
+rr_jobs_total_workers 20
+# HELP rr_jobs_worker_memory_bytes Worker current memory usage
+# TYPE rr_jobs_worker_memory_bytes gauge
+rr_jobs_worker_memory_bytes{pid="124"} 3.9665664e+07
+rr_jobs_worker_memory_bytes{pid="125"} 3.9596032e+07
+rr_jobs_worker_memory_bytes{pid="126"} 3.9596032e+07
+rr_jobs_worker_memory_bytes{pid="127"} 3.9591936e+07
+rr_jobs_worker_memory_bytes{pid="128"} 3.9702528e+07
+rr_jobs_worker_memory_bytes{pid="129"} 3.964928e+07
+rr_jobs_worker_memory_bytes{pid="130"} 3.9686144e+07
+rr_jobs_worker_memory_bytes{pid="131"} 3.9682048e+07
+rr_jobs_worker_memory_bytes{pid="132"} 3.9510016e+07
+rr_jobs_worker_memory_bytes{pid="133"} 3.9518208e+07
+rr_jobs_worker_memory_bytes{pid="134"} 3.956736e+07
+rr_jobs_worker_memory_bytes{pid="135"} 3.9579648e+07
+rr_jobs_worker_memory_bytes{pid="136"} 3.9694336e+07
+rr_jobs_worker_memory_bytes{pid="137"} 3.9657472e+07
+rr_jobs_worker_memory_bytes{pid="138"} 3.9391232e+07
+rr_jobs_worker_memory_bytes{pid="139"} 3.9555072e+07
+rr_jobs_worker_memory_bytes{pid="140"} 3.9477248e+07
+rr_jobs_worker_memory_bytes{pid="141"} 3.9661568e+07
+rr_jobs_worker_memory_bytes{pid="142"} 3.96288e+07
+rr_jobs_worker_memory_bytes{pid="143"} 3.9636992e+07
+# HELP rr_jobs_worker_state Worker current state
+# TYPE rr_jobs_worker_state gauge
+rr_jobs_worker_state{pid="124",state="ready"} 0
+rr_jobs_worker_state{pid="125",state="ready"} 0
+rr_jobs_worker_state{pid="126",state="ready"} 0
+rr_jobs_worker_state{pid="127",state="ready"} 0
+rr_jobs_worker_state{pid="128",state="ready"} 0
+rr_jobs_worker_state{pid="129",state="ready"} 0
+rr_jobs_worker_state{pid="130",state="ready"} 0
+rr_jobs_worker_state{pid="131",state="ready"} 0
+rr_jobs_worker_state{pid="132",state="ready"} 0
+rr_jobs_worker_state{pid="133",state="ready"} 0
+rr_jobs_worker_state{pid="134",state="ready"} 0
+rr_jobs_worker_state{pid="135",state="ready"} 0
+rr_jobs_worker_state{pid="136",state="ready"} 0
+rr_jobs_worker_state{pid="137",state="ready"} 0
+rr_jobs_worker_state{pid="138",state="ready"} 0
+rr_jobs_worker_state{pid="139",state="ready"} 0
+rr_jobs_worker_state{pid="140",state="ready"} 0
+rr_jobs_worker_state{pid="141",state="ready"} 0
+rr_jobs_worker_state{pid="142",state="ready"} 0
+rr_jobs_worker_state{pid="143",state="ready"} 0
+# HELP rr_jobs_workers_invalid Workers currently in invalid,killing,destroyed,errored,inactive states
+# TYPE rr_jobs_workers_invalid gauge
+rr_jobs_workers_invalid 0
+# HELP rr_jobs_workers_memory_bytes Memory usage by workers.
+# TYPE rr_jobs_workers_memory_bytes gauge
+rr_jobs_workers_memory_bytes 7.92047616e+08
+# HELP rr_jobs_workers_ready Workers currently in ready state
+# TYPE rr_jobs_workers_ready gauge
+rr_jobs_workers_ready 20
+# HELP rr_jobs_workers_working Workers currently in working state
+# TYPE rr_jobs_workers_working gauge
+rr_jobs_workers_working 0
+# HELP rr_redis_pool_conn_idle_current Current number of idle connections in the pool
+# TYPE rr_redis_pool_conn_idle_current gauge
+rr_redis_pool_conn_idle_current 8
+# HELP rr_redis_pool_conn_stale_total Number of times a connection was removed from the pool because it was stale
+# TYPE rr_redis_pool_conn_stale_total counter
+rr_redis_pool_conn_stale_total 0
+# HELP rr_redis_pool_conn_total_current Current number of connections in the pool
+# TYPE rr_redis_pool_conn_total_current gauge
+rr_redis_pool_conn_total_current 8
+# HELP rr_redis_pool_hit_total Number of times a connection was found in the pool
+# TYPE rr_redis_pool_hit_total counter
+rr_redis_pool_hit_total 8977
+# HELP rr_redis_pool_miss_total Number of times a connection was not found in the pool
+# TYPE rr_redis_pool_miss_total counter
+rr_redis_pool_miss_total 8
+# HELP rr_redis_pool_timeout_total Number of times a timeout occurred when looking for a connection in the pool
+# TYPE rr_redis_pool_timeout_total counter
+rr_redis_pool_timeout_total 0
+# HELP rr_temporal_total_workers Total number of workers used by the plugin
+# TYPE rr_temporal_total_workers gauge
+rr_temporal_total_workers 13
+# HELP rr_temporal_worker_memory_bytes Worker current memory usage
+# TYPE rr_temporal_worker_memory_bytes gauge
+rr_temporal_worker_memory_bytes{pid="106"} 5.7257984e+07
+rr_temporal_worker_memory_bytes{pid="19"} 5.029888e+07
+rr_temporal_worker_memory_bytes{pid="20"} 5.0302976e+07
+rr_temporal_worker_memory_bytes{pid="21"} 5.7851904e+07
+rr_temporal_worker_memory_bytes{pid="22"} 5.0323456e+07
+rr_temporal_worker_memory_bytes{pid="23"} 5.044224e+07
+rr_temporal_worker_memory_bytes{pid="24"} 5.0434048e+07
+rr_temporal_worker_memory_bytes{pid="25"} 5.81632e+07
+rr_temporal_worker_memory_bytes{pid="26"} 5.0589696e+07
+rr_temporal_worker_memory_bytes{pid="27"} 5.0475008e+07
+rr_temporal_worker_memory_bytes{pid="28"} 5.8007552e+07
+rr_temporal_worker_memory_bytes{pid="29"} 5.0364416e+07
+rr_temporal_worker_memory_bytes{pid="30"} 5.7929728e+07
+# HELP rr_temporal_worker_state Worker current state
+# TYPE rr_temporal_worker_state gauge
+rr_temporal_worker_state{pid="106",state="ready"} 0
+rr_temporal_worker_state{pid="19",state="ready"} 0
+rr_temporal_worker_state{pid="20",state="ready"} 0
+rr_temporal_worker_state{pid="21",state="ready"} 0
+rr_temporal_worker_state{pid="22",state="ready"} 0
+rr_temporal_worker_state{pid="23",state="ready"} 0
+rr_temporal_worker_state{pid="24",state="ready"} 0
+rr_temporal_worker_state{pid="25",state="ready"} 0
+rr_temporal_worker_state{pid="26",state="ready"} 0
+rr_temporal_worker_state{pid="27",state="ready"} 0
+rr_temporal_worker_state{pid="28",state="ready"} 0
+rr_temporal_worker_state{pid="29",state="ready"} 0
+rr_temporal_worker_state{pid="30",state="ready"} 0
+# HELP rr_temporal_workers_invalid Workers currently in invalid,killing,destroyed,errored,inactive states
+# TYPE rr_temporal_workers_invalid gauge
+rr_temporal_workers_invalid 0
+# HELP rr_temporal_workers_memory_bytes Memory usage by workers
+# TYPE rr_temporal_workers_memory_bytes gauge
+rr_temporal_workers_memory_bytes 6.92441088e+08
+# HELP rr_temporal_workers_ready Workers currently in ready state
+# TYPE rr_temporal_workers_ready gauge
+rr_temporal_workers_ready 13
+# HELP rr_temporal_workers_working Workers currently in working state
+# TYPE rr_temporal_workers_working gauge
+rr_temporal_workers_working 0

@@ -91,7 +91,18 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
     }
 
     #[Test]
-    public function fayl_bolshe_limita_otklonyaetsya(): void
+    public function fayl_rovno_limitu_prinimaetsya(): void
+    {
+        $content = "PK\x03\x04" . str_repeat('a', 96);
+
+        $file = $this->useCase->handle($this->komanda($content, self::MAX_FILE_SIZE));
+
+        $this->assertSame(self::MAX_FILE_SIZE, $file->getSize());
+        $this->assertArrayHasKey('units/unit-1/file-id-1.zip', $this->fileStorage->saved);
+    }
+
+    #[Test]
+    public function fayl_na_odin_bait_bolshe_limita_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('mediateka.upload.file_is_too_large');
@@ -100,7 +111,25 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
     }
 
     #[Test]
-    public function content_length_bolshe_limita_otklonyaetsya_do_chteniya_potoka(): void
+    public function content_length_s_overhead_multipart_ne_otklonyaet_validnyi_fayl(): void
+    {
+        $content = "PK\x03\x04" . str_repeat('a', 96);
+
+        $file = $this->useCase->handle(new ZagruzitFaylUnita(
+            'unit-1',
+            'dump.zip',
+            self::MAX_FILE_SIZE,
+            self::MAX_FILE_SIZE + 512,
+            'user-1',
+            $this->potok($content)
+        ));
+
+        $this->assertSame(self::MAX_FILE_SIZE, $file->getSize());
+        $this->assertArrayHasKey('units/unit-1/file-id-1.zip', $this->fileStorage->saved);
+    }
+
+    #[Test]
+    public function content_length_slishkom_bolshoi_s_uchyotom_zapasa_otklonyaetsya(): void
     {
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('mediateka.upload.file_is_too_large');
@@ -109,7 +138,7 @@ final class ZagruzitFaylUnitaUseCaseTest extends TestCase
             'unit-1',
             'dump.zip',
             10,
-            self::MAX_FILE_SIZE + 1,
+            self::MAX_FILE_SIZE + ZagruzitFaylUnitaUseCase::CONTENT_LENGTH_ALLOWANCE + 1,
             'user-1',
             $this->potok("PK\x03\x04" . str_repeat('a', 6))
         ));

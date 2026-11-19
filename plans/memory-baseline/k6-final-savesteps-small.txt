@@ -1,0 +1,124 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /scripts/k6/save-steps.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5 max VUs, 25s max duration (incl. graceful stop):
+              * small: 5 looping VUs for 20s (exec: saveStepsSmall, gracefulStop: 5s)
+
+
+running (01.0s), 5/5 VUs, 242 complete and 0 interrupted iterations
+small   [   3% ] 5 VUs  00.6s/20s
+
+running (02.0s), 5/5 VUs, 706 complete and 0 interrupted iterations
+small   [   8% ] 5 VUs  01.6s/20s
+
+running (03.0s), 5/5 VUs, 1065 complete and 0 interrupted iterations
+small   [  13% ] 5 VUs  02.6s/20s
+
+running (04.0s), 5/5 VUs, 1072 complete and 0 interrupted iterations
+small   [  18% ] 5 VUs  03.6s/20s
+
+running (05.0s), 5/5 VUs, 1424 complete and 0 interrupted iterations
+small   [  23% ] 5 VUs  04.6s/20s
+
+running (06.0s), 5/5 VUs, 1859 complete and 0 interrupted iterations
+small   [  28% ] 5 VUs  05.6s/20s
+
+running (07.0s), 5/5 VUs, 2274 complete and 0 interrupted iterations
+small   [  33% ] 5 VUs  06.6s/20s
+
+running (08.0s), 5/5 VUs, 2341 complete and 0 interrupted iterations
+small   [  38% ] 5 VUs  07.6s/20s
+
+running (09.0s), 5/5 VUs, 2598 complete and 0 interrupted iterations
+small   [  43% ] 5 VUs  08.6s/20s
+
+running (10.0s), 5/5 VUs, 3029 complete and 0 interrupted iterations
+small   [  48% ] 5 VUs  09.6s/20s
+
+running (11.0s), 5/5 VUs, 3483 complete and 0 interrupted iterations
+small   [  53% ] 5 VUs  10.6s/20s
+
+running (12.0s), 5/5 VUs, 3637 complete and 0 interrupted iterations
+small   [  58% ] 5 VUs  11.6s/20s
+
+running (13.0s), 5/5 VUs, 3828 complete and 0 interrupted iterations
+small   [  63% ] 5 VUs  12.6s/20s
+
+running (14.0s), 5/5 VUs, 4262 complete and 0 interrupted iterations
+small   [  68% ] 5 VUs  13.6s/20s
+
+running (15.0s), 5/5 VUs, 4704 complete and 0 interrupted iterations
+small   [  73% ] 5 VUs  14.6s/20s
+
+running (16.0s), 5/5 VUs, 4912 complete and 0 interrupted iterations
+small   [  78% ] 5 VUs  15.6s/20s
+
+running (17.0s), 5/5 VUs, 5050 complete and 0 interrupted iterations
+small   [  83% ] 5 VUs  16.6s/20s
+
+running (18.0s), 5/5 VUs, 5453 complete and 0 interrupted iterations
+small   [  88% ] 5 VUs  17.6s/20s
+
+running (19.0s), 5/5 VUs, 5881 complete and 0 interrupted iterations
+small   [  93% ] 5 VUs  18.6s/20s
+
+running (20.0s), 5/5 VUs, 6171 complete and 0 interrupted iterations
+small   [  98% ] 5 VUs  19.6s/20s
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_failed{endpoint:save_steps}
+    ✓ 'rate==0' rate=0.00%
+
+    savesteps_small_duration{scenario:small}
+    ✓ 'p(95)<120' p(95)=20.21ms
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 12368   595.666148/s
+    checks_succeeded...: 100.00% 12368 out of 12368
+    checks_failed......: 0.00%   0 out of 12368
+
+    ✓ saveSteps small: HTTP 200
+    ✓ saveSteps small: true
+
+    CUSTOM
+    savesteps_small_duration.......: avg=16.06ms min=7.5ms  med=10.76ms max=780.38ms p(90)=15.67ms p(95)=20.21ms
+      { scenario:small }...........: avg=16.06ms min=7.5ms  med=10.76ms max=780.38ms p(90)=15.67ms p(95)=20.21ms
+
+    HTTP
+    http_req_duration..............: avg=16.13ms min=7.5ms  med=10.77ms max=780.38ms p(90)=15.69ms p(95)=20.25ms
+      { expected_response:true }...: avg=16.13ms min=7.5ms  med=10.77ms max=780.38ms p(90)=15.69ms p(95)=20.25ms
+    http_req_failed................: 0.00%  0 out of 6185
+      { endpoint:save_steps }......: 0.00%  0 out of 6184
+    http_reqs......................: 6185   297.881236/s
+
+    EXECUTION
+    iteration_duration.............: avg=16.29ms min=7.64ms med=10.98ms max=780.61ms p(90)=15.99ms p(95)=20.6ms 
+    iterations.....................: 6184   297.833074/s
+    vus............................: 5      min=5         max=5
+    vus_max........................: 5      min=5         max=5
+
+    NETWORK
+    data_received..................: 1.6 MB 79 kB/s
+    data_sent......................: 11 MB  532 kB/s
+
+
+
+
+running (20.8s), 0/5 VUs, 6184 complete and 0 interrupted iterations
+small ✓ [ 100% ] 5 VUs  20s

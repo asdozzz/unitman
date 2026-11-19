@@ -1,12 +1,17 @@
 services:
+  # HTTP-роль: только HTTP-пул RoadRunner (см. .rr.http.yaml).
+  # Порт 8080 и метрики 2112 остаются публичными как раньше.
   web:
-    build:
+    build: &unitman-web-build
       context: ./
       args:
         - CURRENT_USER_ID=${UID:-1000}
         - CURRENT_USER_GROUP=${GID:-1000}
+    # Один образ на все три роли: команда роли задаётся через command.
+    image: unitman-web
     restart: always
     user: root
+    command: rr serve -c .rr.http.yaml
     ports:
       - '${UNITMAN_API_PORT}:8080'
       - 2112:2112
@@ -14,8 +19,200 @@ services:
     environment:
       - "TEMPORAL_CLI_ADDRESS=temporal:7233"
       - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
+      # RPC-сокет HTTP-роли (совпадает с rpc.listen в .rr.http.yaml).
+      - "RR_RPC=tcp://127.0.0.1:6001"
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
+
+  # Роль Jobs + динамические сервисы планировщика (см. .rr.worker.yaml).
+  # 8080 наружу не публикуется: контейнер обслуживает только очередь и сервисы.
+  web-worker:
+    build: *unitman-web-build
+    image: unitman-web
+    restart: always
+    user: root
+    command: rr serve -c .rr.worker.yaml
+    expose:
+      - '2113'
+    environment:
+      - "TEMPORAL_CLI_ADDRESS=temporal:7233"
+      - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
+      # RPC-сокет роли jobs/сервисов (совпадает с rpc.listen в .rr.worker.yaml).
+      - "RR_RPC=tcp://127.0.0.1:6002"
+    volumes:
+      - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
+
+  # Роль Temporal activities (см. .rr.temporal.yaml).
+  web-temporal:
+    build: *unitman-web-build
+    image: unitman-web
+    restart: always
+    user: root
+    command: rr serve -c .rr.temporal.yaml
+    expose:
+      - '9091'
+    environment:
+      - "TEMPORAL_CLI_ADDRESS=temporal:7233"
+      - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
+      # RPC-сокет Temporal-роли (совпадает с rpc.listen в .rr.temporal.yaml).
+      - "RR_RPC=tcp://127.0.0.1:6003"
+    volumes:
+      - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
+
+  # ROLLBACK: одиночный RoadRunner со старым .rr.yaml (все роли в одном процессе).
+  # Сервис подключается только через профиль rr-single, поэтому обычный
+  # `docker compose up` его не запускает. Порты те же, что у web.
+  # Откат одной командой:
+  #   docker compose stop web web-worker web-temporal \
+  #     && docker compose --profile rr-single up -d web-single
+  web-single:
+    build: *unitman-web-build
+    image: unitman-web
+    restart: always
+    user: root
+    command: rr serve -c .rr.yaml
+    ports:
+      - '${UNITMAN_API_PORT}:8080'
+      - 2112:2112
+      - 30000:30000
+    # Temporal-метрики старого процесса остаются внутри сети.
+    expose:
+      - '9091'
+    environment:
+      - "TEMPORAL_CLI_ADDRESS=temporal:7233"
+      - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
+      # .rr.yaml читает RR_RPC из окружения (fallback 6001).
+      - "RR_RPC=tcp://127.0.0.1:6001"
+    volumes:
+      - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
+
+  ###> edge (Go) services — профиль edge ###
+  # Четыре сервиса edge используют один образ unitman-edge:dev (сборка ./go/edge).
+  # Пока профиль edge не включён, `docker compose up` их не собирает и не
+  # запускает: дефолтный стек, порт 8082 и PHP-путь остаются без изменений.
+  #
+  # Прямые host-порты по умолчанию НЕ публикуются (только expose внутри сети).
+  # Для прямого smoke раскомментируйте ports и задайте EDGE_*_PORT в .env.
+  # Канареечный доступ — через edge-gateway (EDGE_GATEWAY_PORT, по умолчанию 8090).
+
+  # Прогресс раннера: POST /api/runner/saveSteps, GET /api/runner/progress/{id}.
+  edge-progress:
+    profiles: ["edge"]
+    build: &edge-build
+      context: ./go/edge
+      dockerfile: Dockerfile
+    image: unitman-edge:dev
+    restart: always
+    command: ["progress"]
+    # ports:
+    #   - "${EDGE_PROGRESS_PORT:-18081}:8081"
+    expose:
+      - '8081'
+    environment:
+      - "REDIS_ADDR=redis:6379"
+      - "REDIS_USER=${REDIS_USER}"
+      # go-redis ходит под ACL-пользователем REDIS_USER, поэтому пароль берём
+      # из REDIS_USER_PASSWORD (REDIS_PASSWORD — legacy-переменная, см. .env.dist).
+      - "REDIS_PASSWORD=${REDIS_USER_PASSWORD}"
+      - "RUNNER_CALLBACK_SECRET=${RUNNER_CALLBACK_SECRET:-}"
+      - "CENTRIFUGO_API_ENDPOINT=http://centrifugo:8000/api"
+      - "CENTRIFUGO_API_KEY=${CENTRIFUGO_API_KEY:-}"
+      - "PROGRESS_TTL_SECONDS=7200"
+    depends_on:
+      redis:
+        condition: service_healthy
+      centrifugo:
+        condition: service_started
+    networks:
+      - default
+
+  # Потоковый шлюз медиа: PUT/GET/DELETE /media/{key...} в MinIO.
+  edge-media:
+    profiles: ["edge"]
+    build: *edge-build
+    image: unitman-edge:dev
+    restart: always
+    command: ["media"]
+    # ports:
+    #   - "${EDGE_MEDIA_PORT:-18082}:8082"
+    expose:
+      - '8082'
+    environment:
+      - "MINIO_ENDPOINT=http://minio:9000"
+      - "MINIO_BUCKET=${MEDIATEKA_BUCKET}"
+      - "MINIO_REGION=${MINIO_REGION:-us-east-1}"
+      # Каноничные для edge-media имена; значения по умолчанию — root-учётка MinIO.
+      # Если MINIO_ACCESS_KEY/MINIO_SECRET_KEY заданы явно, используются они.
+      - "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-${MINIO_ROOT_USER}}"
+      - "MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-${MINIO_ROOT_PASSWORD}}"
+      - "MINIO_USE_PATH_STYLE=true"
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - default
+
+  # Webhook-ингресс GitLab/GitHub: валидирует, ограничивает размер и проксирует
+  # события в существующий PHP-эндпоинт. Event store остаётся за PHP.
+  edge-webhook:
+    profiles: ["edge"]
+    build: *edge-build
+    image: unitman-edge:dev
+    restart: always
+    command: ["webhook"]
+    expose:
+      - '8084'
+    environment:
+      - "PHP_WEBHOOK_BASE_URL=${PHP_WEBHOOK_BASE_URL:-http://web:8080}"
+      - "WEBHOOK_MAX_BYTES=5242880"
+      - "GITLAB_WEBHOOK_SECRET=${GITLAB_WEBHOOK_SECRET:-}"
+      - "GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET:-}"
+      - "WEBHOOK_RATE_LIMIT_PER_SECOND=${WEBHOOK_RATE_LIMIT_PER_SECOND:-100}"
+    depends_on:
+      web:
+        condition: service_started
+    networks:
+      - default
+
+  # Экспортёр метрик Docker-контейнеров для Prometheus (только чтение сокета).
+  # GID группы сокета на хосте: stat -c '%g' /var/run/docker.sock
+  # и положите его в DOCKER_GID (.env). Резервное значение — 999.
+  edge-telemetry:
+    profiles: ["edge"]
+    build: *edge-build
+    image: unitman-edge:dev
+    restart: always
+    command: ["telemetry"]
+    # ports:
+    #   - "${EDGE_TELEMETRY_PORT:-18083}:8083"
+    expose:
+      - '8083'
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    group_add:
+      - "${DOCKER_GID:-999}"
+    networks:
+      - default
+
+  # Канареечный шлюз: прогресс, webhook и медиа уходят в Go-сервисы,
+  # всё остальное — в PHP (web:8080). Публикуется отдельный порт 8090,
+  # поэтому дефолтный API на UNITMAN_API_PORT (8082) не меняется.
+  edge-gateway:
+    profiles: ["edge"]
+    image: nginx:1.27-alpine
+    restart: always
+    ports:
+      - "${EDGE_GATEWAY_PORT:-8090}:8080"
+    volumes:
+      - "./.docker/nginx/edge.conf:/etc/nginx/conf.d/default.conf:ro"
+    depends_on:
+      - edge-progress
+      - edge-media
+      - edge-webhook
+      - web
+    networks:
+      - default
+  ###< edge (Go) services ###
 
   postgres:
     image: postgres:13.3
@@ -139,6 +336,36 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
+
+  # One-shot-инициализация Mediateka: ждём healthy minio и создаём бакет.
+  # Отдельный сервис нужен, чтобы web стартовал только после появления бакета
+  # (dc.mvp.yml: minio-init: condition: service_completed_successfully).
+  # Образ тот же, что у minio: официальные minio/minio и minio/mc удалены из
+  # Docker Hub, а в Bitnami-образе mc лежит по /opt/bitnami/minio-client/bin/mc
+  # — на этот же путь опирается healthcheck сервиса minio.
+  # $$ экранирует переменные: их раскрывает shell ВНУТРИ контейнера, а не compose
+  # на хосте (иначе подставились бы значения из .env хоста, а не окружения сервиса).
+  minio-init:
+    image: bitnamilegacy/minio:2025.4.22-debian-12-r1
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      # HOME у образа равен '/', процесс работает от uid 1001 — писать в корень
+      # нельзя, поэтому конфиг mc кладём в /tmp.
+      - MC_CONFIG_DIR=/tmp/.mc
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MEDIATEKA_BUCKET=${MEDIATEKA_BUCKET}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        MC=/opt/bitnami/minio-client/bin/mc
+        "$$MC" alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        "$$MC" mb --ignore-existing "local/$$MEDIATEKA_BUCKET"
 
   buggregator:
     image: ghcr.io/buggregator/server:2.3

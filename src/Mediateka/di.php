@@ -24,7 +24,9 @@ return function (ContainerConfigurator $configuration) {
         ->defaults()
         ->autowire()
         ->autoconfigure()
-        ->bind('$maxFileSize', '%env(int:MEDIATEKA_MAX_FILE_SIZE)%');
+        ->bind('$maxFileSize', '%env(int:MEDIATEKA_MAX_FILE_SIZE)%')
+        ->bind('$presignTtl', '%env(int:MEDIATEKA_PRESIGN_TTL)%')
+        ->bind('$uploadTokenSecret', '%env(APP_SECRET)%');
 
     $services->load('App\\Mediateka\\', './{Business,Infra,Acl,Api}')
         ->exclude([

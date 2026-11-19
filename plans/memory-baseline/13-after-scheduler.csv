@@ -1,0 +1,50 @@
+timestamp,pid,ppid,rss_kb,pss_kb,hwm_kb,role,cmd
+2026-11-19T05:58:35Z,1,0,94972,94964,102392,roadrunner,rr serve -c .rr.yaml
+2026-11-19T05:58:35Z,2944,1,50012,28241,50012,http,php public/index.php
+2026-11-19T05:58:35Z,2945,1,49912,28234,49912,http,php public/index.php
+2026-11-19T05:58:35Z,2946,1,50040,28242,50040,http,php public/index.php
+2026-11-19T05:58:35Z,2947,1,50016,28238,50016,http,php public/index.php
+2026-11-19T05:58:35Z,2948,1,50032,28243,50032,http,php public/index.php
+2026-11-19T05:58:35Z,2949,1,50076,28239,50076,http,php public/index.php
+2026-11-19T05:58:35Z,2950,1,49908,28234,49908,http,php public/index.php
+2026-11-19T05:58:35Z,2951,1,50020,28235,50020,http,php public/index.php
+2026-11-19T05:58:35Z,2952,1,49892,28234,49892,http,php public/index.php
+2026-11-19T05:58:35Z,2953,1,50372,28552,50372,http,php public/index.php
+2026-11-19T05:58:35Z,2954,1,49872,28233,49872,http,php public/index.php
+2026-11-19T05:58:35Z,2955,1,50148,28248,50148,http,php public/index.php
+2026-11-19T05:58:35Z,2956,1,50068,28241,50068,http,php public/index.php
+2026-11-19T05:58:35Z,2957,1,49992,28231,49992,http,php public/index.php
+2026-11-19T05:58:35Z,2958,1,50352,28548,50352,http,php public/index.php
+2026-11-19T05:58:35Z,2959,1,50260,28547,50260,http,php public/index.php
+2026-11-19T05:58:35Z,2960,1,49840,28227,49840,http,php public/index.php
+2026-11-19T05:58:35Z,2961,1,50320,28544,50320,http,php public/index.php
+2026-11-19T05:58:35Z,2962,1,50364,28543,50364,http,php public/index.php
+2026-11-19T05:58:35Z,2963,1,50304,28540,50304,http,php public/index.php
+2026-11-19T05:58:35Z,2964,1,50316,28549,50316,http,php public/index.php
+2026-11-19T05:58:35Z,2965,1,50004,28239,50004,http,php public/index.php
+2026-11-19T05:58:35Z,2966,1,50256,28543,50256,http,php public/index.php
+2026-11-19T05:58:35Z,2967,1,49940,28234,49940,http,php public/index.php
+2026-11-19T05:58:35Z,2968,1,50036,28244,50036,http,php public/index.php
+2026-11-19T05:58:35Z,2969,1,50292,28544,50292,http,php public/index.php
+2026-11-19T05:58:35Z,2970,1,50300,28553,50300,http,php public/index.php
+2026-11-19T05:58:35Z,2971,1,50352,28541,50352,http,php public/index.php
+2026-11-19T05:58:35Z,2972,1,50012,28243,50012,http,php public/index.php
+2026-11-19T05:58:35Z,2973,1,50044,28244,50044,http,php public/index.php
+2026-11-19T05:58:35Z,2974,1,49888,28230,49888,http,php public/index.php
+2026-11-19T05:58:35Z,2975,1,50288,28544,50288,http,php public/index.php
+2026-11-19T05:58:35Z,2976,1,66340,44330,66340,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3078,1,60488,38415,60488,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3079,1,60520,38410,60520,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3080,1,66340,43955,66340,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3081,1,66620,44169,66620,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3082,1,60652,38468,60652,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3083,1,66616,44177,66616,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3084,1,60504,38410,60504,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3085,1,60612,38424,60612,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3086,1,60456,38419,60456,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3087,1,60536,38419,60536,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3088,1,60520,38415,60520,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3089,1,60452,38423,60452,temporal,php bin/console temporal:workflow:runtime
+2026-11-19T05:58:35Z,3924,1,70196,46901,70196,console,php bin/console app:services:scheduler projections
+2026-11-19T05:58:35Z,3925,1,67964,44733,67964,console,php bin/console app:services:scheduler producers
+2026-11-19T05:58:35Z,3926,1,72540,49297,72540,console,php bin/console app:services:scheduler timers

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Runner\Infra\BackgroundJob;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\Runner\Infra\Workflow\RunnerHealthCheckWorkflow;
 use Psr\Log\LoggerInterface;
 use Temporal\Client\WorkflowClient;
@@ -22,6 +23,11 @@ final class RunnerHealthCheckWorkflowJob extends AbstractBackgroundJob
     public function getName(): string
     {
         return 'runner_health_check';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::timers;
     }
 
     private function getWorkflowJobOptions(): WorkflowOptions

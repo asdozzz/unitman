@@ -28,4 +28,20 @@ interface FileStorage
      * Временная ссылка на скачивание, доступная извне.
      */
     public function presignedGetUrl(string $key, ?string $downloadName = null, ?int $ttl = null): string;
+
+    /**
+     * Временная ссылка на прямую загрузку объекта (PUT).
+     *
+     * @param int $size ожидаемый размер объекта в байтах
+     * @param string $contentType MIME-тип загружаемого объекта
+     * @param int $ttl время жизни ссылки в секундах
+     */
+    public function presignedPutUrl(string $key, int $size, string $contentType, int $ttl): string;
+
+    /**
+     * Метаданные объекта (HEAD). null — объекта нет (HTTP 404).
+     *
+     * @return array{size: int, contentType: ?string}|null
+     */
+    public function stat(string $key): ?array;
 }

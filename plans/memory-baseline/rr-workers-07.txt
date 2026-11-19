@@ -1,0 +1,133 @@
+Workers of [service]:
+┌─────┬────────┬───────┬────────────────────────────────────┐
+│ PID │ MEMORY │ CPU % │              COMMAND               │
+├─────┼────────┼───────┼────────────────────────────────────┤
+│ 797 │ 50 MB  │ 0.08  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ opencode_session_unit_sync         │
+│ 810 │ 61 MB  │ 0.20  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochistka_dockera │
+│ 811 │ 61 MB  │ 0.21  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ runner_health_check                │
+│ 814 │ 60 MB  │ 0.20  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_proektov │
+│ 818 │ 61 MB  │ 0.22  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 822 │ 61 MB  │ 0.24  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 824 │ 61 MB  │ 0.22  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 825 │ 61 MB  │ 0.22  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 827 │ 61 MB  │ 0.23  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 829 │ 61 MB  │ 0.21  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 832 │ 61 MB  │ 0.22  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 835 │ 61 MB  │ 0.22  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 836 │ 61 MB  │ 0.22  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 838 │ 61 MB  │ 0.21  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start ochered_unitov   │
+│ 842 │ 61 MB  │ 0.16  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ otlozhennie_deistviya              │
+│ 843 │ 61 MB  │ 0.19  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ otpravkaZadachVOchered             │
+│ 844 │ 62 MB  │ 0.39  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ project_runner_jobs                │
+│ 850 │ 62 MB  │ 0.17  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ statistika_po_proektu              │
+│ 860 │ 61 MB  │ 0.17  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ udalenie_neaktivnih_unitov         │
+│ 892 │ 62 MB  │ 0.40  │ /usr/local/bin/php bin/console     │
+│     │        │       │ app:service:start unit_runner_jobs │
+│ 893 │ 65 MB  │ 0.42  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ webhook_event_puller               │
+│ 896 │ 61 MB  │ 0.17  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ webhook_event_sender               │
+│ 902 │ 62 MB  │ 0.37  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ websocket_project_event            │
+│ 904 │ 62 MB  │ 0.38  │ /usr/local/bin/php                 │
+│     │        │       │ bin/console app:service:start      │
+│     │        │       │ websocket_unit_event               │
+└─────┴────────┴───────┴────────────────────────────────────┘
+Workers of [jobs]:
+┌─────┬────────┬───────┬────────┬───────┬───────────────┐
+│ PID │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED    │
+├─────┼────────┼───────┼────────┼───────┼───────────────┤
+│ 124 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 125 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 126 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 127 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 128 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 129 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 130 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 131 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 132 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 133 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 134 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 135 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 136 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 137 │ ready  │ 0     │ 40 MB  │ 0.03  │ 8 minutes ago │
+│ 138 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 139 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 140 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 141 │ ready  │ 0     │ 40 MB  │ 0.03  │ 8 minutes ago │
+│ 142 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+│ 143 │ ready  │ 0     │ 40 MB  │ 0.04  │ 8 minutes ago │
+└─────┴────────┴───────┴────────┴───────┴───────────────┘
+Workers of [temporal]:
+┌─────┬────────┬───────┬────────┬───────┬───────────────┐
+│ PID │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED    │
+├─────┼────────┼───────┼────────┼───────┼───────────────┤
+│ 19  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 20  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 21  │ ready  │ 1     │ 58 MB  │ 0.10  │ 8 minutes ago │
+│ 22  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 23  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 24  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 25  │ ready  │ 1     │ 59 MB  │ 0.12  │ 8 minutes ago │
+│ 26  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 27  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 28  │ ready  │ 1     │ 59 MB  │ 0.11  │ 8 minutes ago │
+│ 29  │ ready  │ 0     │ 51 MB  │ 0.08  │ 8 minutes ago │
+│ 30  │ ready  │ 1     │ 59 MB  │ 0.09  │ 8 minutes ago │
+│ 106 │ ready  │ 12    │ 58 MB  │ 0.08  │ 8 minutes ago │
+└─────┴────────┴───────┴────────┴───────┴───────────────┘
+Workers of [http]:
+┌──────┬────────┬───────┬────────┬───────┬────────────────┐
+│ PID  │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED     │
+├──────┼────────┼───────┼────────┼───────┼────────────────┤
+│ 4257 │ ready  │ 51    │ 65 MB  │ 6.21  │ 47 seconds ago │
+│ 4258 │ ready  │ 49    │ 65 MB  │ 3.28  │ 47 seconds ago │
+│ 4259 │ ready  │ 42    │ 66 MB  │ 3.07  │ 47 seconds ago │
+│ 4260 │ ready  │ 39    │ 66 MB  │ 3.11  │ 47 seconds ago │
+│ 4267 │ ready  │ 39    │ 65 MB  │ 3.13  │ 47 seconds ago │
+│ 4274 │ ready  │ 40    │ 66 MB  │ 3.09  │ 47 seconds ago │
+│ 4275 │ ready  │ 37    │ 65 MB  │ 5.98  │ 46 seconds ago │
+│ 4279 │ ready  │ 41    │ 66 MB  │ 3.09  │ 46 seconds ago │
+│ 4280 │ ready  │ 43    │ 66 MB  │ 3.32  │ 46 seconds ago │
+│ 4281 │ ready  │ 38    │ 65 MB  │ 5.86  │ 46 seconds ago │
+│ 4285 │ ready  │ 40    │ 66 MB  │ 3.17  │ 46 seconds ago │
+│ 4286 │ ready  │ 35    │ 66 MB  │ 4.83  │ 46 seconds ago │
+└──────┴────────┴───────┴────────┴───────┴────────────────┘
+Jobs of [jobs]:
+┌────────┬─────────────────────────┬───────────┬─────────┬────────┬─────────┬──────────┐
+│ STATUS │        PIPELINE         │  DRIVER   │  QUEUE  │ ACTIVE │ DELAYED │ RESERVED │
+├────────┼─────────────────────────┼───────────┼─────────┼────────┼─────────┼──────────┤
+│ READY  │ sobitiya_iz_hranilisha  │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ webhook_event           │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ websocket_project_event │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ websocket_unit_event    │ beanstalk │ default │ 0      │ 0       │ 0        │
+└────────┴─────────────────────────┴───────────┴─────────┴────────┴─────────┴──────────┘

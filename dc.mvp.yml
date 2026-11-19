@@ -3,7 +3,7 @@ services:
     extends:
       file: common-services.yml
       service: web
-    depends_on:
+    depends_on: &mvp-depends-on
       beanstalk:
         condition: service_started
       centrifugo:
@@ -16,7 +16,7 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
-    environment:
+    environment: &mvp-environment
       - APP_ENV=prod
       - PHP_OPCACHE_ENABLE=1
       - PHP_OPCACHE_ENABLE_CLI=1
@@ -24,13 +24,70 @@ services:
       # В prod ошибки не должны попадать в тело ответа: только в лог.
       - PHP_DISPLAY_ERRORS=Off
       - PHP_LOG_ERRORS=On
-      # RoadRunner KV (kv.redis в .rr.yaml) читает эти переменные из окружения
+      # RoadRunner KV (kv.redis в .rr.*.yaml) читает эти переменные из окружения
       # процесса, а не из .env через Symfony Dotenv.
       - REDIS_USER=${REDIS_USER}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
-    volumes:
+    volumes: &mvp-volumes
       - ./config/jwt:/home/containeruser/www/config/jwt
+
+  # Роль Jobs + сервисы планировщика (см. .rr.worker.yaml).
+  web-worker:
+    extends:
+      file: common-services.yml
+      service: web-worker
+    depends_on: *mvp-depends-on
+    environment: *mvp-environment
+    volumes: *mvp-volumes
+
+  # Роль Temporal activities (см. .rr.temporal.yaml).
+  web-temporal:
+    extends:
+      file: common-services.yml
+      service: web-temporal
+    depends_on: *mvp-depends-on
+    environment: *mvp-environment
+    volumes: *mvp-volumes
+
+  # ROLLBACK: одиночный процесс со старым .rr.yaml. Одной командой:
+  #   docker compose -f dc.mvp.yml stop web web-worker web-temporal \
+  #     && docker compose -f dc.mvp.yml --profile rr-single up -d web-single
+  web-single:
+    profiles: ["rr-single"]
+    extends:
+      file: common-services.yml
+      service: web-single
+    depends_on: *mvp-depends-on
+    environment: *mvp-environment
+    volumes: *mvp-volumes
+
+  # Канареечные edge-сервисы (профиль edge). Без --profile edge не запускаются.
+  edge-progress:
+    extends:
+      file: common-services.yml
+      service: edge-progress
+
+  edge-media:
+    extends:
+      file: common-services.yml
+      service: edge-media
+
+  edge-webhook:
+    extends:
+      file: common-services.yml
+      service: edge-webhook
+
+  edge-telemetry:
+    extends:
+      file: common-services.yml
+      service: edge-telemetry
+
+  edge-gateway:
+    extends:
+      file: common-services.yml
+      service: edge-gateway
+
   postgres:
     extends:
       file: common-services.yml

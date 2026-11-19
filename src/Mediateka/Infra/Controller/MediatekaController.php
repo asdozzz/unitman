@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace App\Mediateka\Infra\Controller;
 
+use App\Mediateka\Business\Command\PodgotovitZagruzkuFayla;
 use App\Mediateka\Business\Command\PrikrepitFaylyKUnitu;
 use App\Mediateka\Business\Command\ZagruzitFaylUnita;
+use App\Mediateka\Business\Command\ZavershitZagruzkuFayla;
 use App\Mediateka\Business\Model\FaylUnita;
 use App\Mediateka\Business\Port\CurrentUserProvider;
+use App\Mediateka\Business\UseCase\PodgotovitZagruzkuFaylaUseCase;
 use App\Mediateka\Business\UseCase\PoluchitFaylUnitaQuery;
 use App\Mediateka\Business\UseCase\PoluchitFaylyUnitaQuery;
 use App\Mediateka\Business\UseCase\PoluchitSsylkuDlyaFaylaQuery;
 use App\Mediateka\Business\UseCase\PrikrepitFaylyKUnituUseCase;
 use App\Mediateka\Business\UseCase\UdalitFaylUseCase;
 use App\Mediateka\Business\UseCase\ZagruzitFaylUnitaUseCase;
+use App\Mediateka\Business\UseCase\ZavershitZagruzkuFaylaUseCase;
 use App\Utils\Model\Reponse\ErrorResponse\ErrorCodeEnum;
 use App\Utils\Model\Reponse\Response;
 use App\Utils\Service\ExceptionTranslator;
@@ -131,6 +135,194 @@ final class MediatekaController extends AbstractController
             } finally {
                 fclose($stream);
             }
+
+            return $this->json(Response::success($this->fileToArray($file)));
+        } catch (Throwable $e) {
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/mediateka/presign',
+        summary: 'Подготовить прямую загрузку zip-архива в MinIO',
+        description: 'Проверяет те же правила, что и /upload, но не принимает тело файла: возвращает presigned PUT URL, набор заголовков и подписанный uploadToken. Файл загружается клиентом напрямую в MinIO, после чего вызывается /finalize. unitId и projectId взаимоисключающие; без обоих создаётся черновик. contentType должен быть application/zip (пустое значение трактуется как application/zip). Размер size — точный размер файла в байтах, не больше MEDIATEKA_MAX_FILE_SIZE.',
+        tags: ['Mediateka'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'application/json',
+                schema: new OA\Schema(
+                    required: ['name', 'size'],
+                    properties: [
+                        new OA\Property(
+                            property: 'unitId',
+                            type: 'string',
+                            format: 'uuid',
+                            nullable: true,
+                            description: 'Идентификатор юнита; не передаётся одновременно с projectId'
+                        ),
+                        new OA\Property(
+                            property: 'projectId',
+                            type: 'string',
+                            format: 'uuid',
+                            nullable: true,
+                            description: 'Идентификатор проекта для архива каталога типов томов; не передаётся одновременно с unitId'
+                        ),
+                        new OA\Property(
+                            property: 'name',
+                            type: 'string',
+                            maxLength: 255,
+                            description: 'Отображаемое имя файла; нормализуется по правилам docker-тома',
+                            example: 'dump-bd.zip'
+                        ),
+                        new OA\Property(
+                            property: 'size',
+                            type: 'integer',
+                            format: 'int64',
+                            minimum: 1,
+                            description: 'Точный размер файла в байтах'
+                        ),
+                        new OA\Property(
+                            property: 'contentType',
+                            type: 'string',
+                            nullable: true,
+                            description: 'MIME-тип файла; допускается только application/zip',
+                            example: 'application/zip'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Параметры загрузки (SuccessEnvelope) либо ошибка валидации/хранилища (ErrorEnvelope) — в обоих случаях HTTP 200',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(
+                            required: ['status', 'data'],
+                            properties: [
+                                new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                                new OA\Property(
+                                    property: 'data',
+                                    required: ['fileId', 'storageKey', 'uploadUrl', 'method', 'headers', 'uploadToken', 'expiresAt'],
+                                    properties: [
+                                        new OA\Property(property: 'fileId', type: 'string', format: 'uuid'),
+                                        new OA\Property(property: 'storageKey', type: 'string'),
+                                        new OA\Property(property: 'uploadUrl', type: 'string', format: 'uri'),
+                                        new OA\Property(property: 'method', type: 'string', enum: ['PUT'], example: 'PUT'),
+                                        new OA\Property(
+                                            property: 'headers',
+                                            description: 'Заголовки для PUT-запроса',
+                                            type: 'object',
+                                            example: ['Content-Type' => 'application/zip']
+                                        ),
+                                        new OA\Property(property: 'uploadToken', type: 'string'),
+                                        new OA\Property(property: 'expiresAt', type: 'integer', format: 'int64', description: 'Unix timestamp истечения ссылки'),
+                                    ],
+                                    type: 'object'
+                                ),
+                            ],
+                            type: 'object'
+                        ),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
+    #[Route('/presign', methods: ['POST'])]
+    public function presign(
+        Request $request,
+        PodgotovitZagruzkuFaylaUseCase $useCase,
+        CurrentUserProvider $currentUserProvider
+    ): HttpResponse {
+        try {
+            $body = json_decode($request->getContent(), true);
+            if (!is_array($body)) {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.body_format_invalid')));
+            }
+
+            $size = $this->celoeIzTela($body, 'size');
+            if ($size === null) {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.body_format_invalid')));
+            }
+
+            $podgotovka = $useCase->handle(new PodgotovitZagruzkuFayla(
+                $this->strokaIzTela($body, 'unitId'),
+                $this->strokaIzTela($body, 'projectId'),
+                $this->strokaIzTela($body, 'name'),
+                $size,
+                $this->strokaIzTela($body, 'contentType'),
+                $currentUserProvider->getCurrentUserId()
+            ));
+
+            return $this->json(Response::success($podgotovka->toArray()));
+        } catch (Throwable $e) {
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/mediateka/finalize',
+        summary: 'Завершить прямую загрузку zip-архива',
+        description: 'Проверяет подпись и срок uploadToken, делает HEAD объекта в MinIO и требует, чтобы его фактический размер совпал с заявленным при presign. При успехе сохраняет файл в реестре и возвращает его в том же формате, что и /upload.',
+        tags: ['Mediateka'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'application/json',
+                schema: new OA\Schema(
+                    required: ['uploadToken'],
+                    properties: [
+                        new OA\Property(
+                            property: 'uploadToken',
+                            type: 'string',
+                            description: 'Токен, полученный от /api/mediateka/presign'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Файл сохранён (SuccessEnvelope) либо ошибка (ErrorEnvelope) — в обоих случаях HTTP 200',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(
+                            required: ['status', 'data'],
+                            properties: [
+                                new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                                new OA\Property(property: 'data', ref: '#/components/schemas/MediatekaFaylUnita'),
+                            ],
+                            type: 'object'
+                        ),
+                        new OA\Schema(ref: '#/components/schemas/ErrorEnvelope'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
+    #[Route('/finalize', methods: ['POST'])]
+    public function finalize(Request $request, ZavershitZagruzkuFaylaUseCase $useCase): HttpResponse
+    {
+        try {
+            $body = json_decode($request->getContent(), true);
+            if (!is_array($body)) {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.body_format_invalid')));
+            }
+
+            $uploadToken = $this->strokaIzTela($body, 'uploadToken');
+            if ($uploadToken === '') {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.upload.token_invalid')));
+            }
+
+            $file = $useCase->handle(new ZavershitZagruzkuFayla($uploadToken));
 
             return $this->json(Response::success($this->fileToArray($file)));
         } catch (Throwable $e) {
@@ -398,5 +590,33 @@ final class MediatekaController extends AbstractController
         }
 
         return (int) $rawValue;
+    }
+
+    /**
+     * @param array<array-key, mixed> $body
+     */
+    private function strokaIzTela(array $body, string $key): string
+    {
+        $value = $body[$key] ?? '';
+
+        return is_string($value) ? $value : '';
+    }
+
+    /**
+     * @param array<array-key, mixed> $body
+     */
+    private function celoeIzTela(array $body, string $key): ?int
+    {
+        $value = $body[$key] ?? null;
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && $value !== '' && ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        return null;
     }
 }

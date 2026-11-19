@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Unitman\Infra\BackgroundJob\UnitRunnerJobs;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\Unitman\Infra\Projection\ProzesUnitaProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
@@ -17,6 +18,11 @@ final class UnitRunnerJobs extends AbstractBackgroundJob
     function getName(): string
     {
         return 'unit_runner_jobs';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::projections;
     }
 
     function run(): bool

@@ -1,0 +1,49 @@
+version: "3"
+
+# Роль HTTP (контейнер web). Единственный пул — http.
+#
+# .rr.yaml остаётся fallback-конфигом одиночного процесса и НЕ изменяется.
+# В этой роли нет jobs, temporal и service: HTTP-код не публикует задачи в
+# beanstalk напрямую — он пишет их в БД (ZadachaDlyOcheredi), а отправкой
+# занимается background job otpravkaZadachVOchered в контейнере web-worker.
+# Секция lock не нужна: плагин lock в RoadRunner 3 включён по умолчанию, а
+# блокировки проекций используются только фоновыми задачами (web-worker).
+
+server:
+  command: "php public/index.php"
+  relay: pipes
+  access_logs: true
+  env:
+    - APP_RUNTIME: FluffyDiscord\RoadRunnerBundle\Runtime\Runtime
+
+logs:
+  level: error
+
+rpc:
+  # Адрес RPC-сокета этой роли. RR_RPC в контейнере web должен совпадать.
+  # BackgroundJobService/LockService/RedisService читают адрес из RR_RPC.
+  listen: tcp://127.0.0.1:6001
+
+http:
+  address: 0.0.0.0:8080
+  middleware: ["http_metrics", "gzip" ]
+  pool:
+    num_workers: ${RR_HTTP_NUM_WORKERS:-12}
+    max_jobs: 100 # Maximal count of worker executions. Zero (or nothing) means no limit.
+    supervisor:
+      max_worker_memory: 100 # Maximal worker memory usage in megabytes (soft limit). Zero means no limit.
+
+metrics:
+  address: 0.0.0.0:2112
+
+# RedisService (прогресс задач Runner) работает через RPC kv этой роли.
+kv:
+  redis:
+    driver: redis
+    config:
+      addrs:
+        - "redis:6379"
+      # Пользователь unitman создаётся в ACL с паролем REDIS_USER_PASSWORD
+      # (см. common-services.yml), поэтому для KV нужен именно он.
+      username: ${REDIS_USER}
+      password: ${REDIS_USER_PASSWORD}

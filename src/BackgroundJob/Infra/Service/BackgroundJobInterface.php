@@ -12,6 +12,8 @@ interface BackgroundJobInterface
     /** @return non-empty-string */
     public function getName(): string;
 
+    public function getGroup(): BackgroundJobGroup;
+
     public function run(): bool;
 
     /**

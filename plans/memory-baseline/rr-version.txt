@@ -1,0 +1,1 @@
+rr version 3.0.0 (build time: 2026-10-09T12:53:42+0000, go1.27.2), OS: linux, arch: amd64

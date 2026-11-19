@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\BackgroundJob\WebhookEvent;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\Unitman\Business\Model\WebhookEventJob;
 use App\Unitman\Infra\Jobs\WebhookEventJobHandler;
 use App\Unitman\Infra\Jobs\ZadachaDlyOcherediService;
@@ -20,6 +21,11 @@ final class WebhookEventSender extends AbstractBackgroundJob
     function getName(): string
     {
         return 'webhook_event_sender';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::timers;
     }
 
     function run(): bool

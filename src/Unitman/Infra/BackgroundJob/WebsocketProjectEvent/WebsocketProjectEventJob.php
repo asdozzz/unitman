@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\BackgroundJob\WebsocketProjectEvent;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\Unitman\Infra\Projection\WebsocketProjectEventProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
@@ -15,6 +16,11 @@ final class WebsocketProjectEventJob extends AbstractBackgroundJob
     function getName(): string
     {
         return 'websocket_project_event';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::projections;
     }
 
     function run(): bool

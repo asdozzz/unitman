@@ -10,12 +10,22 @@ use App\Mediateka\Business\Port\CanGenerateGuid;
 use App\Mediateka\Business\Port\FaylUnitaRepository;
 use App\Mediateka\Business\Port\FileStorage;
 use App\Mediateka\Business\Utils\ImyaFaylaDlyaDockerVolume;
+use App\Mediateka\Business\Utils\KlyuchHranilishchaFayla;
 use App\Mediateka\Business\Utils\ZipArhivValidator;
 use DomainException;
 
 final class ZagruzitFaylUnitaUseCase
 {
     public const NAME_MAX_LENGTH = 255;
+
+    /**
+     * Запас для multipart/form-data: Content-Length включает границы частей,
+     * заголовки и разделители, поэтому он всегда больше размера самого файла.
+     *
+     * Авторитетным считается размер файла (`$command->size`), а Content-Length
+     * используется только как грубая защита от заведомо огромных запросов.
+     */
+    public const CONTENT_LENGTH_ALLOWANCE = 1048576;
 
     public function __construct(
         private readonly FaylUnitaRepository $faylUnitaRepository,
@@ -51,7 +61,7 @@ final class ZagruzitFaylUnitaUseCase
         }
 
         $id = $this->canGenerateGuid->makeGuid();
-        $storageKey = $this->makeStorageKey($unitId, $projectId, $id);
+        $storageKey = KlyuchHranilishchaFayla::sdelat($unitId, $projectId, $id);
 
         $this->fileStorage->save($storageKey, $command->stream, $command->size, FaylUnita::MIME_TYPE_ZIP);
 
@@ -74,7 +84,12 @@ final class ZagruzitFaylUnitaUseCase
 
     private function proveritRazmer(ZagruzitFaylUnita $command): void
     {
-        if ($command->contentLength !== null && $command->contentLength > $this->maxFileSize) {
+        // Content-Length больше размера файла на служебные части multipart,
+        // поэтому сравниваем его с лимитом только с явным запасом.
+        if (
+            $command->contentLength !== null
+            && $command->contentLength > $this->maxFileSize + self::CONTENT_LENGTH_ALLOWANCE
+        ) {
             throw new DomainException('mediateka.upload.file_is_too_large');
         }
 
@@ -108,16 +123,4 @@ final class ZagruzitFaylUnitaUseCase
         return $id === '' ? null : $id;
     }
 
-    private function makeStorageKey(?string $unitId, ?string $projectId, string $fileId): string
-    {
-        if ($unitId !== null) {
-            return sprintf('units/%s/%s.zip', $unitId, $fileId);
-        }
-
-        if ($projectId !== null) {
-            return sprintf('projects/%s/%s.zip', $projectId, $fileId);
-        }
-
-        return sprintf('drafts/%s.zip', $fileId);
-    }
 }

@@ -18,6 +18,7 @@ use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
 use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
+use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\SobitiePayloadDecoder;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\SobitiyaIzHranilishaActivity;
 use App\Unitman\Infra\Repository\Unit\ProzesUnitaRepository;
 use App\Unitman\Tests\UseCase\Unit\AbstractUnitUseCase;
@@ -147,6 +148,48 @@ final class SobitiyaIzHranilishaActivityTest extends AbstractUnitUseCase
         $deistvie = reset($deistviya);
         self::assertInstanceOf(OtlozhennoeDeistvie::class, $deistvie);
         self::assertSame(TipSobitiya::VETKA_UDALENA, $deistvie->tipSobitiya);
+    }
+
+    /**
+     * Тело вебхука больше лимита отклоняется до разбора и не бросает исключение:
+     * иначе задание RoadRunner ушло бы в retry-цикл.
+     */
+    #[Test]
+    public function slishkom_bolshoi_payload_vozvrashchaet_stabilnii_kod(): void
+    {
+        [$projectId] = $this->podgotovka();
+
+        $result = $this->activity()->obrabotatZadachu(new SobitieIzHranilisha(
+            'sobitie-bolshoi',
+            $projectId,
+            str_repeat('a', SobitiePayloadDecoder::MAX_EVENT_PAYLOAD_BYTES + 1),
+        ));
+
+        self::assertSame(SobitiePayloadDecoder::ERROR_TOO_LARGE, $result);
+    }
+
+    #[Test]
+    public function bityi_json_vozvrashchaet_stabilnii_kod(): void
+    {
+        [$projectId] = $this->podgotovka();
+
+        $result = $this->activity()->obrabotatZadachu(
+            new SobitieIzHranilisha('sobitie-bitaya', $projectId, '{"ref":')
+        );
+
+        self::assertSame(SobitiePayloadDecoder::ERROR_MALFORMED, $result);
+    }
+
+    #[Test]
+    public function json_ne_obekt_vozvrashchaet_stabilnii_kod(): void
+    {
+        [$projectId] = $this->podgotovka();
+
+        $result = $this->activity()->obrabotatZadachu(
+            new SobitieIzHranilisha('sobitie-ne-obekt', $projectId, '"refs/heads/feature/123"')
+        );
+
+        self::assertSame(SobitiePayloadDecoder::ERROR_MALFORMED, $result);
     }
 
     /**

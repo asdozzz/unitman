@@ -53,6 +53,7 @@
         "symfony/serializer": "*",
         "symfony/string": "*",
         "symfony/translation": "*",
+        "symfony/twig-bundle": "7.*",
         "symfony/uid": "*",
         "symfony/validator": "*",
         "symfony/yaml": "*",

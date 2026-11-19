@@ -122,6 +122,57 @@ final class MinioFileStorage implements FileStorage
         );
     }
 
+    public function presignedPutUrl(string $key, int $size, string $contentType, int $ttl): string
+    {
+        [, $rawPath] = $this->hostAndPath($key);
+
+        // size и contentType входят в контракт порта, но в подпись не попадают:
+        // подписывается только host, а тело PUT не хэшируется (UNSIGNED-PAYLOAD).
+        return $this->signer->presignedPutUrl(
+            $this->settings->publicEndpoint,
+            $this->encodePath($rawPath),
+            $ttl
+        );
+    }
+
+    /**
+     * @return array{size: int, contentType: ?string}|null
+     */
+    public function stat(string $key): ?array
+    {
+        [$host, $rawPath] = $this->hostAndPath($key);
+
+        $signedHeaders = $this->signer->signRequest('HEAD', $rawPath, '', ['host' => $host]);
+
+        $response = $this->httpClient->request('HEAD', $this->url($rawPath), [
+            'headers' => $this->headersForRequest($signedHeaders),
+        ]);
+
+        $status = $response->getStatusCode();
+
+        if ($status === 404) {
+            return null;
+        }
+
+        if ($status < 200 || $status >= 300) {
+            throw new \RuntimeException(sprintf('Не удалось получить метаданные файла из хранилища (HTTP %d)', $status));
+        }
+
+        $headers = $response->getHeaders(false);
+        $size = $headers['content-length'][0] ?? null;
+
+        if (!is_string($size) || !ctype_digit($size)) {
+            throw new \RuntimeException('Хранилище не вернуло размер объекта');
+        }
+
+        $contentType = $headers['content-type'][0] ?? null;
+
+        return [
+            'size' => (int) $size,
+            'contentType' => is_string($contentType) && $contentType !== '' ? $contentType : null,
+        ];
+    }
+
     /**
      * @return array{0: string, 1: string} [host, rawPath]
      */

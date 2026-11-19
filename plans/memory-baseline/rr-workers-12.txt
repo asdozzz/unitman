@@ -1,0 +1,133 @@
+Workers of [service]:
+┌──────┬────────┬───────┬────────────────────────────────────┐
+│ PID  │ MEMORY │ CPU % │              COMMAND               │
+├──────┼────────┼───────┼────────────────────────────────────┤
+│ 1344 │ 60 MB  │ 1.60  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ opencode_session_unit_sync         │
+│ 1357 │ 70 MB  │ 2.58  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochistka_dockera │
+│ 1358 │ 70 MB  │ 2.44  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ runner_health_check                │
+│ 1367 │ 69 MB  │ 2.88  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_proektov │
+│ 1368 │ 69 MB  │ 2.84  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1369 │ 69 MB  │ 2.69  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1370 │ 69 MB  │ 2.73  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1371 │ 69 MB  │ 2.69  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1372 │ 69 MB  │ 2.77  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1373 │ 69 MB  │ 2.69  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1374 │ 70 MB  │ 2.58  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1376 │ 69 MB  │ 2.84  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1378 │ 69 MB  │ 2.73  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1380 │ 69 MB  │ 2.84  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start ochered_unitov   │
+│ 1382 │ 70 MB  │ 2.51  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ otlozhennie_deistviya              │
+│ 1384 │ 70 MB  │ 2.58  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ otpravkaZadachVOchered             │
+│ 1390 │ 72 MB  │ 3.17  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ project_runner_jobs                │
+│ 1392 │ 72 MB  │ 2.92  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ statistika_po_proektu              │
+│ 1396 │ 70 MB  │ 2.77  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ udalenie_neaktivnih_unitov         │
+│ 1399 │ 72 MB  │ 2.99  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:service:start unit_runner_jobs │
+│ 1408 │ 72 MB  │ 2.77  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ webhook_event_puller               │
+│ 1419 │ 70 MB  │ 2.62  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ webhook_event_sender               │
+│ 1428 │ 72 MB  │ 2.99  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ websocket_project_event            │
+│ 1451 │ 72 MB  │ 3.25  │ /usr/local/bin/php                 │
+│      │        │       │ bin/console app:service:start      │
+│      │        │       │ websocket_unit_event               │
+└──────┴────────┴───────┴────────────────────────────────────┘
+Workers of [temporal]:
+┌──────┬────────┬───────┬────────┬───────┬────────────────┐
+│ PID  │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED     │
+├──────┼────────┼───────┼────────┼───────┼────────────────┤
+│ 1122 │ ready  │ 6     │ 68 MB  │ 1.15  │ 57 seconds ago │
+│ 1246 │ ready  │ 0     │ 62 MB  │ 1.23  │ 54 seconds ago │
+│ 1247 │ ready  │ 1     │ 68 MB  │ 1.32  │ 54 seconds ago │
+│ 1248 │ ready  │ 0     │ 62 MB  │ 1.19  │ 54 seconds ago │
+│ 1249 │ ready  │ 1     │ 68 MB  │ 1.43  │ 54 seconds ago │
+│ 1250 │ ready  │ 0     │ 62 MB  │ 1.05  │ 54 seconds ago │
+│ 1251 │ ready  │ 0     │ 62 MB  │ 1.07  │ 54 seconds ago │
+│ 1252 │ ready  │ 0     │ 62 MB  │ 1.12  │ 54 seconds ago │
+│ 1253 │ ready  │ 0     │ 62 MB  │ 1.12  │ 54 seconds ago │
+│ 1254 │ ready  │ 0     │ 62 MB  │ 1.09  │ 54 seconds ago │
+│ 1255 │ ready  │ 0     │ 62 MB  │ 1.05  │ 54 seconds ago │
+│ 1256 │ ready  │ 0     │ 62 MB  │ 1.02  │ 54 seconds ago │
+│ 1257 │ ready  │ 0     │ 62 MB  │ 1.03  │ 54 seconds ago │
+└──────┴────────┴───────┴────────┴───────┴────────────────┘
+Workers of [jobs]:
+┌──────┬────────┬───────┬────────┬───────┬────────────────┐
+│ PID  │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED     │
+├──────┼────────┼───────┼────────┼───────┼────────────────┤
+│ 1125 │ ready  │ 0     │ 51 MB  │ 0.49  │ 57 seconds ago │
+│ 1126 │ ready  │ 0     │ 51 MB  │ 0.42  │ 57 seconds ago │
+│ 1127 │ ready  │ 0     │ 51 MB  │ 0.47  │ 57 seconds ago │
+│ 1128 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1129 │ ready  │ 0     │ 51 MB  │ 0.51  │ 57 seconds ago │
+│ 1130 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1131 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1132 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1133 │ ready  │ 0     │ 51 MB  │ 0.49  │ 57 seconds ago │
+│ 1134 │ ready  │ 0     │ 51 MB  │ 0.42  │ 57 seconds ago │
+│ 1135 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1136 │ ready  │ 0     │ 51 MB  │ 0.42  │ 57 seconds ago │
+│ 1137 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1138 │ ready  │ 0     │ 51 MB  │ 0.44  │ 57 seconds ago │
+│ 1139 │ ready  │ 0     │ 51 MB  │ 0.44  │ 57 seconds ago │
+│ 1140 │ ready  │ 0     │ 51 MB  │ 0.44  │ 57 seconds ago │
+│ 1141 │ ready  │ 0     │ 51 MB  │ 0.44  │ 57 seconds ago │
+│ 1142 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1143 │ ready  │ 0     │ 51 MB  │ 0.44  │ 57 seconds ago │
+│ 1144 │ ready  │ 0     │ 51 MB  │ 0.44  │ 57 seconds ago │
+└──────┴────────┴───────┴────────┴───────┴────────────────┘
+Workers of [http]:
+┌──────┬────────┬───────┬────────┬───────┬────────────────┐
+│ PID  │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED     │
+├──────┼────────┼───────┼────────┼───────┼────────────────┤
+│ 1112 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1113 │ ready  │ 0     │ 51 MB  │ 0.49  │ 57 seconds ago │
+│ 1114 │ ready  │ 0     │ 52 MB  │ 0.49  │ 57 seconds ago │
+│ 1115 │ ready  │ 0     │ 52 MB  │ 0.47  │ 57 seconds ago │
+│ 1116 │ ready  │ 0     │ 52 MB  │ 0.49  │ 57 seconds ago │
+│ 1117 │ ready  │ 0     │ 52 MB  │ 0.47  │ 57 seconds ago │
+│ 1118 │ ready  │ 0     │ 52 MB  │ 0.47  │ 57 seconds ago │
+│ 1119 │ ready  │ 0     │ 51 MB  │ 0.46  │ 57 seconds ago │
+│ 1120 │ ready  │ 0     │ 52 MB  │ 0.49  │ 57 seconds ago │
+│ 1121 │ ready  │ 0     │ 52 MB  │ 0.51  │ 57 seconds ago │
+│ 1123 │ ready  │ 0     │ 52 MB  │ 0.49  │ 57 seconds ago │
+│ 1124 │ ready  │ 0     │ 52 MB  │ 0.47  │ 57 seconds ago │
+└──────┴────────┴───────┴────────┴───────┴────────────────┘
+Jobs of [jobs]:
+┌────────┬─────────────────────────┬───────────┬─────────┬────────┬─────────┬──────────┐
+│ STATUS │        PIPELINE         │  DRIVER   │  QUEUE  │ ACTIVE │ DELAYED │ RESERVED │
+├────────┼─────────────────────────┼───────────┼─────────┼────────┼─────────┼──────────┤
+│ READY  │ sobitiya_iz_hranilisha  │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ webhook_event           │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ websocket_project_event │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ websocket_unit_event    │ beanstalk │ default │ 0      │ 0       │ 0        │
+└────────┴─────────────────────────┴───────────┴─────────┴────────┴─────────┴──────────┘

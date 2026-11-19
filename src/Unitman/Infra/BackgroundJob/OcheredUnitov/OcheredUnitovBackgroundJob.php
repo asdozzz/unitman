@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\BackgroundJob\OcheredUnitov;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use Psr\Log\LoggerInterface;
 
 final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
@@ -17,6 +18,11 @@ final class OcheredUnitovBackgroundJob extends AbstractBackgroundJob
     function getName(): string
     {
         return 'ochered_unitov';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::producers;
     }
 
     function run(): bool

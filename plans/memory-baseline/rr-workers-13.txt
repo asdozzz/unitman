@@ -1,0 +1,80 @@
+Workers of [http]:
+┌──────┬────────┬───────┬────────┬───────┬───────────────┐
+│ PID  │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED    │
+├──────┼────────┼───────┼────────┼───────┼───────────────┤
+│ 2953 │ ready  │ 0     │ 52 MB  │ 0.18  │ 2 minutes ago │
+│ 2958 │ ready  │ 0     │ 52 MB  │ 0.20  │ 2 minutes ago │
+│ 2959 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2961 │ ready  │ 0     │ 52 MB  │ 0.20  │ 2 minutes ago │
+│ 2962 │ ready  │ 0     │ 52 MB  │ 0.20  │ 2 minutes ago │
+│ 2963 │ ready  │ 0     │ 52 MB  │ 0.20  │ 2 minutes ago │
+│ 2964 │ ready  │ 0     │ 52 MB  │ 0.21  │ 2 minutes ago │
+│ 2966 │ ready  │ 0     │ 51 MB  │ 0.18  │ 2 minutes ago │
+│ 2969 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2970 │ ready  │ 0     │ 52 MB  │ 0.20  │ 2 minutes ago │
+│ 2971 │ ready  │ 0     │ 52 MB  │ 0.20  │ 2 minutes ago │
+│ 2975 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+└──────┴────────┴───────┴────────┴───────┴───────────────┘
+Workers of [service]:
+┌──────┬────────┬───────┬────────────────────────────────────┐
+│ PID  │ MEMORY │ CPU % │              COMMAND               │
+├──────┼────────┼───────┼────────────────────────────────────┤
+│ 3924 │ 72 MB  │ 3.00  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:services:scheduler projections │
+│ 3925 │ 70 MB  │ 2.09  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:services:scheduler producers   │
+│ 3926 │ 74 MB  │ 2.23  │ /usr/local/bin/php bin/console     │
+│      │        │       │ app:services:scheduler timers      │
+└──────┴────────┴───────┴────────────────────────────────────┘
+Workers of [temporal]:
+┌──────┬────────┬───────┬────────┬───────┬───────────────┐
+│ PID  │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED    │
+├──────┼────────┼───────┼────────┼───────┼───────────────┤
+│ 2976 │ ready  │ 8     │ 68 MB  │ 0.49  │ 2 minutes ago │
+│ 3078 │ ready  │ 0     │ 62 MB  │ 0.35  │ 2 minutes ago │
+│ 3079 │ ready  │ 0     │ 62 MB  │ 0.36  │ 2 minutes ago │
+│ 3080 │ ready  │ 1     │ 68 MB  │ 0.44  │ 2 minutes ago │
+│ 3081 │ ready  │ 1     │ 68 MB  │ 0.45  │ 2 minutes ago │
+│ 3082 │ ready  │ 0     │ 62 MB  │ 0.38  │ 2 minutes ago │
+│ 3083 │ ready  │ 1     │ 68 MB  │ 0.45  │ 2 minutes ago │
+│ 3084 │ ready  │ 0     │ 62 MB  │ 0.36  │ 2 minutes ago │
+│ 3085 │ ready  │ 0     │ 62 MB  │ 0.35  │ 2 minutes ago │
+│ 3086 │ ready  │ 0     │ 62 MB  │ 0.42  │ 2 minutes ago │
+│ 3087 │ ready  │ 0     │ 62 MB  │ 0.39  │ 2 minutes ago │
+│ 3088 │ ready  │ 0     │ 62 MB  │ 0.41  │ 2 minutes ago │
+│ 3089 │ ready  │ 0     │ 62 MB  │ 0.40  │ 2 minutes ago │
+└──────┴────────┴───────┴────────┴───────┴───────────────┘
+Workers of [jobs]:
+┌──────┬────────┬───────┬────────┬───────┬───────────────┐
+│ PID  │ STATUS │ EXECS │ MEMORY │ CPU % │    CREATED    │
+├──────┼────────┼───────┼────────┼───────┼───────────────┤
+│ 2944 │ ready  │ 0     │ 51 MB  │ 0.18  │ 2 minutes ago │
+│ 2945 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2946 │ ready  │ 0     │ 51 MB  │ 0.20  │ 2 minutes ago │
+│ 2947 │ ready  │ 0     │ 51 MB  │ 0.18  │ 2 minutes ago │
+│ 2948 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2949 │ ready  │ 0     │ 51 MB  │ 0.20  │ 2 minutes ago │
+│ 2950 │ ready  │ 0     │ 51 MB  │ 0.20  │ 2 minutes ago │
+│ 2951 │ ready  │ 0     │ 51 MB  │ 0.20  │ 2 minutes ago │
+│ 2952 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2954 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2955 │ ready  │ 0     │ 51 MB  │ 0.20  │ 2 minutes ago │
+│ 2956 │ ready  │ 0     │ 51 MB  │ 0.20  │ 2 minutes ago │
+│ 2957 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2960 │ ready  │ 0     │ 51 MB  │ 0.18  │ 2 minutes ago │
+│ 2965 │ ready  │ 0     │ 51 MB  │ 0.18  │ 2 minutes ago │
+│ 2967 │ ready  │ 0     │ 51 MB  │ 0.18  │ 2 minutes ago │
+│ 2968 │ ready  │ 0     │ 51 MB  │ 0.20  │ 2 minutes ago │
+│ 2972 │ ready  │ 0     │ 51 MB  │ 0.18  │ 2 minutes ago │
+│ 2973 │ ready  │ 0     │ 51 MB  │ 0.19  │ 2 minutes ago │
+│ 2974 │ ready  │ 0     │ 51 MB  │ 0.21  │ 2 minutes ago │
+└──────┴────────┴───────┴────────┴───────┴───────────────┘
+Jobs of [jobs]:
+┌────────┬─────────────────────────┬───────────┬─────────┬────────┬─────────┬──────────┐
+│ STATUS │        PIPELINE         │  DRIVER   │  QUEUE  │ ACTIVE │ DELAYED │ RESERVED │
+├────────┼─────────────────────────┼───────────┼─────────┼────────┼─────────┼──────────┤
+│ READY  │ sobitiya_iz_hranilisha  │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ webhook_event           │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ websocket_project_event │ beanstalk │ default │ 0      │ 0       │ 0        │
+│ READY  │ websocket_unit_event    │ beanstalk │ default │ 0      │ 0       │ 0        │
+└────────┴─────────────────────────┴───────────┴─────────┴────────┴─────────┴──────────┘

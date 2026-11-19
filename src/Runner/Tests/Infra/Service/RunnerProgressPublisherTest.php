@@ -163,6 +163,15 @@ final class InMemoryProgressStorage implements UmeetHranitProgressZadachi
     {
     }
 
+    public function zapisatSyrieProgress(
+        string $token,
+        string $stepsJson,
+        bool $finished,
+        bool $success,
+        int $unixtime,
+    ): void {
+    }
+
     public function zapisatSyrieShagi(string $token, string $stepsContent): void
     {
     }

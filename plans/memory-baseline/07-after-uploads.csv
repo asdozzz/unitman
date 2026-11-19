@@ -1,0 +1,71 @@
+timestamp,pid,ppid,rss_kb,pss_kb,hwm_kb,role,cmd
+2026-11-18T18:05:28Z,1,0,303024,303016,312704,roadrunner,rr serve -c .rr.yaml
+2026-11-18T18:05:28Z,106,1,56512,35369,56512,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,124,1,39332,18533,39332,http,php public/index.php
+2026-11-18T18:05:28Z,125,1,39264,18535,39264,http,php public/index.php
+2026-11-18T18:05:28Z,126,1,39264,18532,39264,http,php public/index.php
+2026-11-18T18:05:28Z,127,1,39260,18529,39260,http,php public/index.php
+2026-11-18T18:05:28Z,128,1,39368,18534,39368,http,php public/index.php
+2026-11-18T18:05:28Z,129,1,39316,18534,39316,http,php public/index.php
+2026-11-18T18:05:28Z,130,1,39352,18538,39352,http,php public/index.php
+2026-11-18T18:05:28Z,131,1,39348,18541,39348,http,php public/index.php
+2026-11-18T18:05:28Z,132,1,39180,18530,39232,http,php public/index.php
+2026-11-18T18:05:28Z,133,1,39188,18531,39188,http,php public/index.php
+2026-11-18T18:05:28Z,134,1,39236,18528,39236,http,php public/index.php
+2026-11-18T18:05:28Z,135,1,39248,18533,39384,http,php public/index.php
+2026-11-18T18:05:28Z,136,1,39360,18536,39360,http,php public/index.php
+2026-11-18T18:05:28Z,137,1,39324,18535,39332,http,php public/index.php
+2026-11-18T18:05:28Z,138,1,39064,18530,39104,http,php public/index.php
+2026-11-18T18:05:28Z,139,1,39224,18529,39224,http,php public/index.php
+2026-11-18T18:05:28Z,140,1,39148,18530,39260,http,php public/index.php
+2026-11-18T18:05:28Z,141,1,39328,18533,39448,http,php public/index.php
+2026-11-18T18:05:28Z,142,1,39296,18535,39296,http,php public/index.php
+2026-11-18T18:05:28Z,143,1,39304,18535,39320,http,php public/index.php
+2026-11-18T18:05:28Z,19,1,49716,29250,49716,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,20,1,49720,29241,49720,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,21,1,57092,36067,57092,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,22,1,49740,29253,49740,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,23,1,49856,29256,49856,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,24,1,49848,29247,49848,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,25,1,57396,36066,57396,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,26,1,50000,29269,50000,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,27,1,49888,29248,49888,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,28,1,57244,35971,57244,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,29,1,49780,29244,49780,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,30,1,57168,35947,57168,temporal,php bin/console temporal:workflow:runtime
+2026-11-18T18:05:28Z,4257,1,63916,40694,82812,http,php public/index.php
+2026-11-18T18:05:28Z,4258,1,63840,40689,82492,http,php public/index.php
+2026-11-18T18:05:28Z,4259,1,64784,41572,82488,http,php public/index.php
+2026-11-18T18:05:28Z,4260,1,64828,41635,82488,http,php public/index.php
+2026-11-18T18:05:28Z,4267,1,63872,40686,81324,http,php public/index.php
+2026-11-18T18:05:28Z,4274,1,64788,41656,82556,http,php public/index.php
+2026-11-18T18:05:28Z,4275,1,63912,40657,81880,http,php public/index.php
+2026-11-18T18:05:28Z,4279,1,64816,41617,82152,http,php public/index.php
+2026-11-18T18:05:28Z,4280,1,64804,41657,82656,http,php public/index.php
+2026-11-18T18:05:28Z,4281,1,63860,40658,82304,http,php public/index.php
+2026-11-18T18:05:28Z,4285,1,64872,41632,82740,http,php public/index.php
+2026-11-18T18:05:28Z,4286,1,64828,41560,82708,http,php public/index.php
+2026-11-18T18:05:28Z,797,1,48860,27214,48872,service,php bin/console app:service:start opencode_session_unit_sync
+2026-11-18T18:05:28Z,810,1,59596,36430,59616,service,php bin/console app:service:start ochistka_dockera
+2026-11-18T18:05:28Z,811,1,59612,36437,59612,service,php bin/console app:service:start runner_health_check
+2026-11-18T18:05:28Z,814,1,58876,36028,58876,service,php bin/console app:service:start ochered_proektov
+2026-11-18T18:05:28Z,818,1,59232,36434,59232,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,822,1,59408,36446,59408,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,824,1,59284,36436,59284,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,825,1,59360,36439,59360,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,827,1,59276,36436,59276,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,829,1,59296,36440,59296,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,832,1,59252,36432,59252,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,835,1,59436,36445,59436,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,836,1,59200,36436,59200,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,838,1,59324,36436,59324,service,php bin/console app:service:start ochered_unitov
+2026-11-18T18:05:28Z,842,1,59312,36457,59388,service,php bin/console app:service:start otlozhennie_deistviya
+2026-11-18T18:05:28Z,843,1,59316,36456,59316,service,php bin/console app:service:start otpravkaZadachVOchered
+2026-11-18T18:05:28Z,844,1,60852,38016,60852,service,php bin/console app:service:start project_runner_jobs
+2026-11-18T18:05:28Z,850,1,60912,38049,60912,service,php bin/console app:service:start statistika_po_proektu
+2026-11-18T18:05:28Z,860,1,59456,36480,59552,service,php bin/console app:service:start udalenie_neaktivnih_unitov
+2026-11-18T18:05:28Z,892,1,60936,38069,60936,service,php bin/console app:service:start unit_runner_jobs
+2026-11-18T18:05:28Z,893,1,63432,40496,63832,service,php bin/console app:service:start webhook_event_puller
+2026-11-18T18:05:28Z,896,1,59284,36470,59284,service,php bin/console app:service:start webhook_event_sender
+2026-11-18T18:05:28Z,902,1,60984,38125,60984,service,php bin/console app:service:start websocket_project_event
+2026-11-18T18:05:28Z,904,1,60972,38145,60972,service,php bin/console app:service:start websocket_unit_event

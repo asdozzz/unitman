@@ -14,8 +14,11 @@ use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\OtlozhitDeistvieNadUnitomUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
 use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
+use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\SobitiePayloadDecoder;
+use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\SobitiePayloadException;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter\StorageTypeAdapterFactory;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
+use Psr\Log\LoggerInterface;
 
 //TODO декомпозировать класс
 final class SobitiyaIzHranilishaActivity
@@ -40,6 +43,8 @@ final class SobitiyaIzHranilishaActivity
         private SozdatUnitSystemoiUseCase $sozdatUnitSystemoiUseCase,
         private ProverkaSvobodyUnita $proverkaSvobody,
         private OtlozhitDeistvieNadUnitomUseCase $otlozhitDeistvieNadUnitomUseCase,
+        private SobitiePayloadDecoder $payloadDecoder,
+        private LoggerInterface $logger,
     )
     {
     }
@@ -50,11 +55,30 @@ final class SobitiyaIzHranilishaActivity
         $repo = $this->repoRepository->getById($project->getRepoId());
         $adapter = $this->storageTypeAdapterFactory->getAdapter($repo->getType());
 
-        if (!$adapter->esliValidnoeSobitie($model)) {
+        /*
+         * Тело вебхука разбирается ровно один раз и передаётся адаптеру готовым
+         * объектом: раньше `json_decode` выполнялся и в `esliValidnoeSobitie`,
+         * и в `poluchitDannieSobitiya`. Ошибка разбора не пробрасывается выше —
+         * иначе задание RoadRunner ушло бы в retry-цикл.
+         */
+        try {
+            $payload = $this->payloadDecoder->decode($model->eventPayload);
+        } catch (SobitiePayloadException $e) {
+            $this->logger->warning($this->klyuchDlyaLoga($e->getMessage()), [
+                'sobitieId' => $model->id,
+                'projectId' => $model->projectId,
+                'payloadBytes' => strlen($model->eventPayload),
+                'limitBytes' => SobitiePayloadDecoder::MAX_EVENT_PAYLOAD_BYTES,
+            ]);
+
+            return $e->getMessage();
+        }
+
+        if (!$adapter->esliValidnoeSobitie($payload)) {
             return 'invalid';
         }
 
-        $dannieSobitiya = $adapter->poluchitDannieSobitiya($model);
+        $dannieSobitiya = $adapter->poluchitDannieSobitiya($payload);
 
         $result = match ($dannieSobitiya->tipSobitiya) {
             TipSobitiya::KOD_OBNOVLEN => $this->obnovitUnixtimePoslednegoIzmeneniya($project, $dannieSobitiya),
@@ -63,6 +87,17 @@ final class SobitiyaIzHranilishaActivity
         };
 
         return $result;
+    }
+
+    /**
+     * Переводит стабильный код ошибки декодера в ключ словаря для лога.
+     */
+    private function klyuchDlyaLoga(string $kod): string
+    {
+        return match ($kod) {
+            SobitiePayloadDecoder::ERROR_TOO_LARGE => 'sobitie_iz_hranilisha.payload_too_large',
+            default => 'sobitie_iz_hranilisha.payload_malformed',
+        };
     }
 
     private function sozdatUnit(Project $project, DannieSobitiya $dannieSobitiya): string

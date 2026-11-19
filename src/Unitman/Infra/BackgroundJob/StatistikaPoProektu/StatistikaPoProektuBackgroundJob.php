@@ -3,6 +3,7 @@
 namespace App\Unitman\Infra\BackgroundJob\StatistikaPoProektu;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\Unitman\Infra\Projection\StatistikaPoProektuProjection;
 use App\Utils\EventSauce\ProjectionsManager;
 
@@ -15,6 +16,11 @@ final class StatistikaPoProektuBackgroundJob extends AbstractBackgroundJob
     function getName(): string
     {
         return 'statistika_po_proektu';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::projections;
     }
 
     function run(): bool

@@ -82,6 +82,36 @@ final class SigV4Signer
         int $ttl = 3600,
         ?int $timestamp = null
     ): string {
+        return $this->presignedUrl('GET', $publicEndpoint, $path, $extraQuery, $ttl, $timestamp);
+    }
+
+    /**
+     * Presigned URL для прямой загрузки объекта (PUT).
+     *
+     * Ссылка подписывает только заголовок `host`: S3-совместимому хранилищу
+     * этого достаточно для PUT, а хэш тела не требуется (UNSIGNED-PAYLOAD).
+     * Клиент может передать Content-Type, но подпись от него не зависит.
+     */
+    public function presignedPutUrl(
+        string $publicEndpoint,
+        string $path,
+        int $ttl = 3600,
+        ?int $timestamp = null
+    ): string {
+        return $this->presignedUrl('PUT', $publicEndpoint, $path, [], $ttl, $timestamp);
+    }
+
+    /**
+     * @param array<string, string> $extraQuery
+     */
+    private function presignedUrl(
+        string $method,
+        string $publicEndpoint,
+        string $path,
+        array $extraQuery,
+        int $ttl,
+        ?int $timestamp
+    ): string {
         $now = $timestamp ?? time();
         $amzDate = gmdate('Ymd\THis\Z', $now);
         $dateStamp = substr($amzDate, 0, 8);
@@ -110,7 +140,7 @@ final class SigV4Signer
 
         $canonicalHeaders = 'host:' . $host . "\n";
         $canonicalRequest = implode("\n", [
-            'GET',
+            $method,
             $path,
             $canonicalQuery,
             $canonicalHeaders,

@@ -1,0 +1,16 @@
+NAME                                MEM USAGE / LIMIT     MEM %     CPU %
+grafana                             311.1MiB / 15.62GiB   1.94%     1.53%
+unitman-runner-unitman-proxy-1      5.902MiB / 15.62GiB   0.04%     0.00%
+prometheus                          30.72MiB / 15.62GiB   0.19%     0.45%
+exporter                            10.41MiB / 15.62GiB   0.07%     0.00%
+unitman-runner-unitman-registry-1   14.73MiB / 15.62GiB   0.09%     0.00%
+unitman-web-1                       2.312GiB / 15.62GiB   14.80%    3.76%
+temporal-ui                         7.727MiB / 15.62GiB   0.05%     0.00%
+temporal                            118.2MiB / 15.62GiB   0.74%     1.72%
+temporal-postgresql                 170MiB / 15.62GiB     1.06%     0.29%
+unitman-postgres-1                  115MiB / 15.62GiB     0.72%     2.36%
+unitman-minio-1                     374MiB / 15.62GiB     2.34%     0.17%
+redis                               18.79MiB / 512MiB     3.67%     0.20%
+centrifugo                          57.31MiB / 15.62GiB   0.36%     0.02%
+beanstalk                           668KiB / 15.62GiB     0.00%     0.02%
+unitman-buggregator-1               70.86MiB / 15.62GiB   0.44%     0.00%

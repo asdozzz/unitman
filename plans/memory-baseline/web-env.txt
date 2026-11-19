@@ -1,0 +1,12 @@
+PHP_ASC_URL=https://www.php.net/distributions/php-8.2.28.tar.xz.asc
+PHP_CFLAGS=-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+PHP_CPPFLAGS=-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+PHP_DISPLAY_ERRORS=On
+PHP_ERROR_REPORTING="E_ALL"
+PHP_INI_DIR=/usr/local/etc/php
+PHP_LDFLAGS=-Wl,-O1 -pie
+PHP_OPCACHE_ENABLE=0
+PHP_OPCACHE_ENABLE_CLI=0
+PHP_SHA256=af8c9153153a7f489153b7a74f2f29a5ee36f5cb2c6c6929c98411a577e89c91
+PHP_URL=https://www.php.net/distributions/php-8.2.28.tar.xz
+PHP_VERSION=8.2.28

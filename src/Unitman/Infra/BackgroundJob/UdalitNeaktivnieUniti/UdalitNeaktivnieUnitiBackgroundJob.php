@@ -2,6 +2,7 @@
 
 namespace App\Unitman\Infra\BackgroundJob\UdalitNeaktivnieUniti;
 
+use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\BackgroundJob\Infra\Service\BackgroundJobInterface;
 use App\Unitman\Business\UseCase\Unit\UdalitNeaktivnieUnitiUseCase;
 
@@ -14,6 +15,11 @@ final class UdalitNeaktivnieUnitiBackgroundJob  implements BackgroundJobInterfac
     function getName(): string
     {
         return 'udalenie_neaktivnih_unitov';
+    }
+
+    public function getGroup(): BackgroundJobGroup
+    {
+        return BackgroundJobGroup::timers;
     }
 
     function run(): bool

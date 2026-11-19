@@ -30,6 +30,23 @@ final class RunnerController extends AbstractController
      */
     private const MAX_STEPS_CONTENT_BYTES = 2560 * 1024;
 
+    /**
+     * Максимальное количество шагов в снапшоте.
+     *
+     * Общий лимит байт не мешает раннеру прислать десятки тысяч крошечных
+     * шагов: тогда основные затраты уходят не на JSON, а на сами PHP-массивы
+     * и повторную сериализацию для Centrifugo.
+     */
+    private const MAX_STEPS = 5000;
+
+    /**
+     * Максимальный размер поля `Response` одного шага.
+     *
+     * Вывод одной команды может быть произвольно большим: ограничиваем его,
+     * чтобы один шаг не занимал основную часть лимита снапшота.
+     */
+    private const MAX_STEP_RESPONSE_BYTES = 65536;
+
     #[OA\Post(
         path: '/api/runner/getDefaultRunnerActive',
         summary: 'Признак активности раннера по умолчанию',
@@ -124,27 +141,47 @@ final class RunnerController extends AbstractController
             throw new BadRequestHttpException('runner.steps_too_large');
         }
 
-        // Декодирование — до любых записей: битый JSON не должен оставлять
-        // мусор в KV и не должен перезаписывать предыдущий валидный снапшот.
+        // Декодирование и нормализация — до любых записей: битый JSON
+        // не должен оставлять мусор в KV и перезаписывать предыдущий снапшот.
         $steps = $this->decodeSteps($command->stepsContent);
 
         $progressStorage->zapisatSyrieShagi($command->responseId, $command->stepsContent);
 
+        // Сериализуем нормализованные шаги ровно один раз: готовый JSON
+        // уходит в KV как есть, без повторного кодирования массива.
+        $stepsJson = json_encode($steps, JSON_THROW_ON_ERROR);
+        $unixtime = time();
+
+        $progressStorage->zapisatSyrieProgress(
+            $command->responseId,
+            $stepsJson,
+            $command->finished,
+            $command->success,
+            $unixtime,
+        );
+
+        // Centrifugo публикуется из массива: сериализацию выполняет
+        // Centrifugo-клиент, ручное кодирование здесь только добавило бы копию.
         $progress = new RunnerProgress(
             $command->responseId,
             $steps,
             $command->finished,
             $command->success,
-            time(),
+            $unixtime,
         );
 
-        $progressStorage->zapisat($progress);
         $progressPublisher->publish($progress);
 
         return new JsonResponse(true);
     }
 
     /**
+     * Декодирует снапшот ровно один раз и нормализует шаги одним проходом.
+     *
+     * В отличие от `array_filter` + `array_map` промежуточные копии массива
+     * не создаются: не-массивы отбрасываются на месте, а элементы шагов
+     * нормализуются по ссылке.
+     *
      * @return list<array<array-key, mixed>>
      */
     private function decodeSteps(string $stepsContent): array
@@ -163,10 +200,43 @@ final class RunnerController extends AbstractController
             throw new BadRequestHttpException('runner.steps_malformed');
         }
 
-        /** @var list<array<array-key, mixed>> $steps */
-        $steps = array_values(array_filter($decoded, 'is_array'));
+        $steps = [];
 
-        return array_map($this->normalizeStep(...), $steps);
+        foreach ($decoded as &$step) {
+            if (!is_array($step)) {
+                continue;
+            }
+
+            $this->normalizeStep($step);
+            $this->assertStepResponseSize($step);
+
+            $steps[] = $step;
+
+            if (count($steps) > self::MAX_STEPS) {
+                throw new BadRequestHttpException('runner.steps_too_many');
+            }
+        }
+
+        unset($step, $decoded);
+
+        return $steps;
+    }
+
+    /**
+     * Проверяет размер поля `Response` шага.
+     *
+     * Нестроковые значения не проверяются: контракт ожидает строку вывода
+     * команды, остальное просто не является «тяжёлым» полем шага.
+     *
+     * @param array<array-key, mixed> $step
+     */
+    private function assertStepResponseSize(array $step): void
+    {
+        $response = $step['Response'] ?? null;
+
+        if (is_string($response) && strlen($response) > self::MAX_STEP_RESPONSE_BYTES) {
+            throw new BadRequestHttpException('runner.step_too_large');
+        }
     }
 
     /**
@@ -180,10 +250,12 @@ final class RunnerController extends AbstractController
      * - значение невалидно (не число, отрицательное, начало позже окончания) —
      *   поле отбрасывается, а не ломает приём прогресса целиком.
      *
+     * Шаг принимается по ссылке: нормализация выполняется на месте, без копии
+     * массива шага на каждый вызов.
+     *
      * @param array<array-key, mixed> $step
-     * @return array<array-key, mixed>
      */
-    private function normalizeStep(array $step): array
+    private function normalizeStep(array &$step): void
     {
         $rawStart = null;
         $found = false;
@@ -202,18 +274,18 @@ final class RunnerController extends AbstractController
         }
 
         if (!$found) {
-            return $step;
+            return;
         }
 
         // Числовая строка допустима: часть JSON-энкодеров отдаёт время строкой.
         if (!is_int($rawStart) && !(is_string($rawStart) && ctype_digit($rawStart))) {
-            return $step;
+            return;
         }
 
         $start = (int) $rawStart;
 
         if ($start < 0) {
-            return $step;
+            return;
         }
 
         $finish = $step['Unixtime'] ?? $step['unixtime'] ?? null;
@@ -224,11 +296,9 @@ final class RunnerController extends AbstractController
 
         // Начало позже окончания — заведомо битые данные.
         if (is_int($finish) && $start > $finish) {
-            return $step;
+            return;
         }
 
         $step['UnixtimeStart'] = $start;
-
-        return $step;
     }
 }

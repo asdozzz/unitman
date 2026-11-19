@@ -5,14 +5,31 @@ FROM ghcr.io/spiral/php-grpc:8.2
 
 # pcntl обязателен: app:service:start подписывается на SIGTERM/SIGINT
 # (RoadrunnerServiceCommand::getSubscribedSignals), без расширения это фатальная ошибка.
+#
+# pdo_pgsql — единственный драйвер PostgreSQL, нужный приложению: Doctrine DBAL
+# работает через PDO (postgresql://... в DATABASE_URL). Легаси-расширение pgsql
+# (функции pg_*) нигде в src/ не используется, поэтому в прод-образ не ставится.
+#
+# xdebug и xhprof в прод НЕ ставятся: это отладочные расширения, которые
+# заметно увеличивают память каждого воркера и стоимость каждого вызова.
 RUN --mount=type=bind,from=mlocati/php-extension-installer:2.12.0,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \
-     install-php-extensions pdo_pgsql pgsql pcntl xdebug xhprof && \
+     install-php-extensions pdo_pgsql pcntl && \
      apk del --no-cache ${PHPIZE_DEPS} ${BUILD_DEPENDS}
 
-COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
+# xdebug уже присутствует в базовом образе spiral/php-grpc
+# (conf.d/docker-php-ext-xdebug.ini + xdebug.so). Просто не просить его
+# у install-php-extensions недостаточно — убираем и ini-конфиг, и сам модуль:
+# zend_extension xdebug замедляет каждый вызов и заметно увеличивает RSS воркеров.
+RUN rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+          /usr/local/lib/php/extensions/*/xdebug.so
 
-RUN mkdir -p /tmp/xhprof_runs && \
-    echo 'xhprof.output_dir = /tmp/xhprof_runs' >> /usr/local/etc/php/conf.d/xhprof.ini
+# Прод-настройки PHP (OPcache, лимиты памяти и аплоада, realpath cache)
+# зашиваются в образ, чтобы действовать и без монтирования settings.ini
+# (docker run, отладка образа). Файлы из conf.d читаются после php.ini,
+# поэтому эти значения перекрывают базовые настройки образа.
+COPY --chown=root:root .docker/php/settings.ini /usr/local/etc/php/conf.d/zz-unitman-settings.ini
+
+COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
 
 ARG CURRENT_USER_ID=1000
 ARG CURRENT_USER_GROUP=1000
@@ -26,15 +43,24 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Единственный сервис на образе — RoadRunner. Порт HTTP-пула (см. .rr.yaml).
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
+# Прод-образ всегда собирается и запускается в env=prod: dev-бандлы
+# (DebugBundle, WebProfilerBundle, XhprofBuggregatorBundle — см. config/bundles.php)
+# в него не ставятся (composer install --no-dev), поэтому сборка кэша в dev-env
+# падает с "Class DebugBundle not found". Значение можно переопределить в compose.
+ENV APP_ENV=prod
+
 USER containeruser
 WORKDIR /home/containeruser/www
 
 # Слой зависимостей отдельно от исходников: правка кода не инвалидирует composer install.
+# --no-dev: в прод-образе нет phpunit/psalm/web-profiler и прочего отладочного кода.
+# --classmap-authoritative: автозагрузка только по classmap, без stat() по файловой системе
+# (ускоряет бутстрап воркеров и снижает I/O в RoadRunner).
 COPY --chown=containeruser:groupcontainer composer.json composer.lock ./
-RUN composer install --no-scripts --no-interaction
+RUN composer install --no-scripts --no-interaction --no-dev --classmap-authoritative
 
 COPY --chown=containeruser:groupcontainer . .
-RUN composer dump-autoload --optimize && \
+RUN composer dump-autoload --optimize --classmap-authoritative && \
     composer run-script post-install-cmd --no-interaction && \
     composer check-platform-reqs && \
     php bin/console cache:warmup

@@ -38,6 +38,12 @@ final class RunnerControllerSaveStepsTest extends TestCase
     /** Должно совпадать с RunnerController::MAX_STEPS_CONTENT_BYTES. */
     private const MAX_STEPS_CONTENT_BYTES = 2560 * 1024;
 
+    /** Должно совпадать с RunnerController::MAX_STEPS. */
+    private const MAX_STEPS = 5000;
+
+    /** Должно совпадать с RunnerController::MAX_STEP_RESPONSE_BYTES. */
+    private const MAX_STEP_RESPONSE_BYTES = 65536;
+
     public function test_validnyi_zapros_zapisyvaet_progress_i_publikuet(): void
     {
         $storage = new InMemorySaveStepsStorage();
@@ -60,6 +66,11 @@ final class RunnerControllerSaveStepsTest extends TestCase
         $this->assertSame('true', $response->getContent());
         $this->assertSame(200, $response->getStatusCode());
 
+        // Прогресс пишется через метод с готовым stepsJson — массив шагов
+        // не кодируется повторно; старый zapisat() не вызывается.
+        $this->assertSame(1, $storage->syrieProgressCalls);
+        $this->assertSame(0, $storage->zapisatCalls);
+
         $progress = $storage->poluchit(self::TOKEN);
         $this->assertNotNull($progress);
         $this->assertTrue($progress->finished);
@@ -69,6 +80,144 @@ final class RunnerControllerSaveStepsTest extends TestCase
         // Сырые шаги сохраняются под исходным ключом для обратной совместимости
         // с чтением шагов по ResponseId из результата активити.
         $this->assertSame($command->stepsContent, $storage->syrieShagi[self::TOKEN] ?? null);
+    }
+
+    public function test_payload_progressa_v_kv_dekodiruetsya_v_tot_zhe_runner_progress(): void
+    {
+        $storage = new InMemorySaveStepsStorage();
+        $storage->zaregistrirovat(self::TOKEN);
+
+        $command = $this->command(self::TOKEN, self::STEPS, true, true);
+
+        $this->saveSteps($command, new Request(), '', $storage);
+
+        $payloadRaw = $storage->progressPayloads[self::TOKEN] ?? null;
+        $this->assertNotNull($payloadRaw);
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode($payloadRaw, true, 512, JSON_THROW_ON_ERROR);
+
+        // Форма payload осталась прежней и совпадает с RunnerProgress::toArray().
+        $this->assertSame(
+            ['token', 'steps', 'finished', 'success', 'unixtime'],
+            array_keys($payload),
+        );
+        $this->assertSame(self::TOKEN, $payload['token']);
+        $this->assertSame(self::STEPS, $payload['steps']);
+        $this->assertTrue($payload['finished']);
+        $this->assertTrue($payload['success']);
+        $this->assertIsInt($payload['unixtime']);
+
+        // Обратное чтение из «KV» даёт эквивалентный снапшот.
+        $progress = $storage->poluchit(self::TOKEN);
+        $this->assertNotNull($progress);
+        $this->assertSame(self::STEPS, $progress->steps);
+        $this->assertSame($payload['unixtime'], $progress->unixtime);
+    }
+
+    public function test_syrie_shagi_sohranyayutsya_bez_normalizacii(): void
+    {
+        $storage = new InMemorySaveStepsStorage();
+        $storage->zaregistrirovat(self::TOKEN);
+
+        $content = json_encode([
+            [
+                'Command' => 'docker build',
+                'Response' => 'ok',
+                'Success' => true,
+                'Unixtime' => 1730000000,
+                'unixtimeStart' => '1729999975',
+            ],
+        ], JSON_THROW_ON_ERROR);
+
+        $this->saveSteps(new SaveStepsCommand(self::TOKEN, $content), new Request(), '', $storage);
+
+        // Сырые шаги — ровно присланный раннером JSON, без нормализации.
+        $this->assertSame($content, $storage->syrieShagi[self::TOKEN] ?? null);
+
+        $progress = $storage->poluchit(self::TOKEN);
+        $this->assertNotNull($progress);
+        $this->assertSame(1729999975, $progress->steps[0]['UnixtimeStart']);
+    }
+
+    public function test_limit_kolichestva_shagov_rovno_na_granice_dopuskaetsya(): void
+    {
+        $storage = new InMemorySaveStepsStorage();
+        $storage->zaregistrirovat(self::TOKEN);
+
+        $steps = array_fill(0, self::MAX_STEPS, ['Command' => 'step']);
+
+        $response = $this->saveSteps($this->command(self::TOKEN, $steps), new Request(), '', $storage);
+
+        $this->assertSame('true', $response->getContent());
+
+        $progress = $storage->poluchit(self::TOKEN);
+        $this->assertNotNull($progress);
+        $this->assertCount(self::MAX_STEPS, $progress->steps);
+    }
+
+    public function test_prevyshenie_kolichestva_shagov_otklonyaetsya(): void
+    {
+        $storage = new InMemorySaveStepsStorage();
+        $storage->zaregistrirovat(self::TOKEN);
+
+        $steps = array_fill(0, self::MAX_STEPS + 1, ['Command' => 'step']);
+
+        try {
+            $this->saveSteps($this->command(self::TOKEN, $steps), new Request(), '', $storage);
+            $this->fail('Ожидалось BadRequestHttpException');
+        } catch (BadRequestHttpException $e) {
+            $this->assertSame('runner.steps_too_many', $e->getMessage());
+            // Отклонение происходит до любых записей в KV.
+            $this->assertArrayNotHasKey(self::TOKEN, $storage->syrieShagi);
+            $this->assertSame(0, $storage->syrieProgressCalls);
+            $this->assertNull($storage->poluchit(self::TOKEN));
+        }
+    }
+
+    public function test_slishkom_bolshoi_response_otklonyaetsya(): void
+    {
+        $storage = new InMemorySaveStepsStorage();
+        $storage->zaregistrirovat(self::TOKEN);
+
+        $content = json_encode([
+            [
+                'Command' => 'docker logs',
+                'Response' => str_repeat('x', self::MAX_STEP_RESPONSE_BYTES + 1),
+                'Success' => true,
+                'Unixtime' => 1730000000,
+            ],
+        ], JSON_THROW_ON_ERROR);
+
+        try {
+            $this->saveSteps(new SaveStepsCommand(self::TOKEN, $content), new Request(), '', $storage);
+            $this->fail('Ожидалось BadRequestHttpException');
+        } catch (BadRequestHttpException $e) {
+            $this->assertSame('runner.step_too_large', $e->getMessage());
+            $this->assertArrayNotHasKey(self::TOKEN, $storage->syrieShagi);
+            $this->assertSame(0, $storage->syrieProgressCalls);
+            $this->assertNull($storage->poluchit(self::TOKEN));
+        }
+    }
+
+    public function test_response_rovno_na_granice_dopuskaetsya(): void
+    {
+        $storage = new InMemorySaveStepsStorage();
+        $storage->zaregistrirovat(self::TOKEN);
+
+        $content = json_encode([
+            [
+                'Command' => 'docker logs',
+                'Response' => str_repeat('x', self::MAX_STEP_RESPONSE_BYTES),
+                'Success' => true,
+                'Unixtime' => 1730000000,
+            ],
+        ], JSON_THROW_ON_ERROR);
+
+        $response = $this->saveSteps(new SaveStepsCommand(self::TOKEN, $content), new Request(), '', $storage);
+
+        $this->assertSame('true', $response->getContent());
+        $this->assertNotNull($storage->poluchit(self::TOKEN));
     }
 
     public function test_nevalidnaya_podpis_otklonyaetsya_bez_zapisi(): void
@@ -352,6 +501,17 @@ final class InMemorySaveStepsStorage implements UmeetHranitProgressZadachi
     /** @var array<string, string> */
     public array $syrieShagi = [];
 
+    /**
+     * Точные payload'ы, записанные через zapisatSyrieProgress().
+     *
+     * @var array<string, string>
+     */
+    public array $progressPayloads = [];
+
+    public int $syrieProgressCalls = 0;
+
+    public int $zapisatCalls = 0;
+
     /** @var array<string, int> */
     private array $registeredTokens = [];
 
@@ -360,7 +520,43 @@ final class InMemorySaveStepsStorage implements UmeetHranitProgressZadachi
 
     public function zapisat(RunnerProgress $progress): void
     {
+        ++$this->zapisatCalls;
         $this->progress[$progress->token] = $progress;
+    }
+
+    /**
+     * Повторяет адаптер: payload собирается из готового stepsJson,
+     * затем декодируется обратно, как это сделал бы читатель KV.
+     */
+    public function zapisatSyrieProgress(
+        string $token,
+        string $stepsJson,
+        bool $finished,
+        bool $success,
+        int $unixtime,
+    ): void {
+        ++$this->syrieProgressCalls;
+
+        $payload = '{"token":' . json_encode($token, JSON_THROW_ON_ERROR)
+            . ',"steps":' . $stepsJson
+            . ',"finished":' . ($finished ? 'true' : 'false')
+            . ',"success":' . ($success ? 'true' : 'false')
+            . ',"unixtime":' . $unixtime . '}';
+
+        $this->progressPayloads[$token] = $payload;
+
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+        /** @var list<array<array-key, mixed>> $normalizedSteps */
+        $normalizedSteps = array_values($decoded['steps']);
+
+        $this->progress[$token] = new RunnerProgress(
+            $token,
+            $normalizedSteps,
+            (bool) $decoded['finished'],
+            (bool) $decoded['success'],
+            (int) $decoded['unixtime'],
+        );
     }
 
     public function zapisatSyrieShagi(string $token, string $stepsContent): void

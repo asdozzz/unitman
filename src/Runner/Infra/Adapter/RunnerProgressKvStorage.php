@@ -39,6 +39,33 @@ final class RunnerProgressKvStorage implements UmeetHranitProgressZadachi, Umeet
         );
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Payload собирается конкатенацией: `$stepsJson` — уже готовый JSON
+     * массива шагов (контроллер кодирует его один раз), поэтому массив шагов
+     * здесь повторно не сериализуется.
+     */
+    public function zapisatSyrieProgress(
+        string $token,
+        string $stepsJson,
+        bool $finished,
+        bool $success,
+        int $unixtime,
+    ): void {
+        $payload = '{"token":' . json_encode($token, JSON_THROW_ON_ERROR)
+            . ',"steps":' . $stepsJson
+            . ',"finished":' . ($finished ? 'true' : 'false')
+            . ',"success":' . ($success ? 'true' : 'false')
+            . ',"unixtime":' . $unixtime . '}';
+
+        $this->redisService->setWithTtl(
+            $this->progressKey($token),
+            $payload,
+            self::TOKEN_TTL_SECONDS
+        );
+    }
+
     public function zapisatSyrieShagi(string $token, string $stepsContent): void
     {
         $this->redisService->setWithTtl($token, $stepsContent, self::TOKEN_TTL_SECONDS);
