@@ -148,6 +148,10 @@ return [
 
     // ─── OpenCode ────────────────────────────────────────────────────────────
     'opencode' => [
+        'notification' => [
+            'ids_required' => 'The notification IDs must not be empty',
+            'too_many_ids' => 'Too many notifications: at most 100 per request',
+        ],
         'session' => [
             'account_required' => 'The session owner is missing',
             'archive_reason_required' => 'The archive reason of the session is missing',

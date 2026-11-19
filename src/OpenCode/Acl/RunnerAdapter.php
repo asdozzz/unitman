@@ -8,7 +8,7 @@ use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
-use App\Runner\Api\RunnerApi;
+use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 
@@ -20,7 +20,7 @@ use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
  */
 final class RunnerAdapter implements UmeetVypolnyatHodOpenCode
 {
-    public function __construct(private RunnerApi $runnerApi)
+    public function __construct(private RunnerApiInterface $runnerApi)
     {
     }
 

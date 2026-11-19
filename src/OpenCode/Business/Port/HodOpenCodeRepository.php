@@ -27,6 +27,13 @@ interface HodOpenCodeRepository
     public function findBySessionId(string $sessionId): array;
 
     /**
+     * Ходы, которые ещё выполняются: вход watchdog'а завершения.
+     *
+     * @return list<HodOpenCode>
+     */
+    public function findVProzesse(int $limit): array;
+
+    /**
      * Последний ход сессии — именно он определяет, ждёт ли сессия ответа.
      */
     public function findPosledniiPoSessii(string $sessionId): ?HodOpenCode;

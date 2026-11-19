@@ -126,6 +126,21 @@ final class SqlHodOpenCodeRepository implements HodOpenCodeRepository
         return array_map(fn (array $row): HodOpenCode => $this->makeTurn($row), $rows);
     }
 
+    public function findVProzesse(int $limit): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative(
+            "SELECT * FROM $table
+             WHERE status = 'RUNNING'
+             ORDER BY created_at
+             LIMIT :limit",
+            ['limit' => $limit],
+            ['limit' => ParameterType::INTEGER]
+        );
+
+        return array_map(fn (array $row): HodOpenCode => $this->makeTurn($row), $rows);
+    }
+
     public function findPosledniiPoSessii(string $sessionId): ?HodOpenCode
     {
         $table = self::TABLE;

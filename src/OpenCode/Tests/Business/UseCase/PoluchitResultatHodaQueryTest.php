@@ -13,12 +13,17 @@ use App\OpenCode\Business\Model\StatusHoda;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
+use App\OpenCode\Business\Port\UmeetPeredavatUvedomleniyaOpenCode;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
+use App\OpenCode\Business\Port\UvedomleniyaOpenCodeRepository;
+use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Business\UseCase\PoluchitResultatHodaQuery;
 use App\OpenCode\Business\Utils\VladelecZanyatostiOpenCode;
+use App\OpenCode\Business\Utils\ZavershenieHodaOpenCode;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Опрос результата хода: фиксация результата и снятие захвата юнитов.
@@ -254,12 +259,30 @@ final class PoluchitResultatHodaQueryTest extends TestCase
                 static fn (string $workflowId): string => 'progress-' . $workflowId,
             );
 
+        $notifications = $this->createMock(UvedomleniyaOpenCodeRepository::class);
+        $notifications->method('save')->willReturn(false);
+
+        $publisher = $this->createMock(UmeetPeredavatUvedomleniyaOpenCode::class);
+        $uuid = $this->createMock(UuidGenerator::class);
+        $uuid->method('makeGuid')->willReturn('notification-1');
+
+        $zavershenie = new ZavershenieHodaOpenCode(
+            $turnRepository,
+            $sessionRepository,
+            $runner,
+            $bronirovanie,
+            $notifications,
+            $publisher,
+            $uuid,
+            $this->createMock(LoggerInterface::class),
+        );
+
         return new PoluchitResultatHodaQuery(
             $sessionRepository,
             $turnRepository,
             $credentials,
             $runner,
-            $bronirovanie,
+            $zavershenie,
         );
     }
 

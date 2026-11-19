@@ -6,23 +6,27 @@ namespace App\OpenCode\Infra\Controller;
 
 use App\OpenCode\Business\Command\ArhivirovatSessiyu;
 use App\OpenCode\Business\Command\NachatPrompt;
+use App\OpenCode\Business\Command\OtmetitUvedomleniyaProchitannimi;
 use App\OpenCode\Business\Command\OtvetitNaVopros;
 use App\OpenCode\Business\Command\PoluchitIstoriyuSessii;
 use App\OpenCode\Business\Command\PoluchitProgressHoda;
 use App\OpenCode\Business\Command\PoluchitResultatHoda;
 use App\OpenCode\Business\Command\PoluchitSostoyanieSessii;
 use App\OpenCode\Business\Command\PoluchitSpisokSessiy;
+use App\OpenCode\Business\Command\PoluchitUvedomleniyaOpenCode;
 use App\OpenCode\Business\Command\PrivezatSessiyuKUnitu;
 use App\OpenCode\Business\Command\SozdatSessiyu;
 use App\OpenCode\Business\ReadModel\HodOpenCodeReadModel;
 use App\OpenCode\Business\UseCase\ArhivirovatSessiyuUseCase;
 use App\OpenCode\Business\UseCase\NachatPromptUseCase;
+use App\OpenCode\Business\UseCase\OtmetitUvedomleniyaProchitannimiUseCase;
 use App\OpenCode\Business\UseCase\OtvetitNaVoprosUseCase;
 use App\OpenCode\Business\UseCase\PoluchitIstoriyuSessiiQuery;
 use App\OpenCode\Business\UseCase\PoluchitProgressHodaQuery;
 use App\OpenCode\Business\UseCase\PoluchitResultatHodaQuery;
 use App\OpenCode\Business\UseCase\PoluchitSostoyanieSessiiQuery;
 use App\OpenCode\Business\UseCase\PoluchitSpisokSessiyQuery;
+use App\OpenCode\Business\UseCase\PoluchitUvedomleniyaOpenCodeQuery;
 use App\OpenCode\Business\UseCase\PrivezatSessiyuKUnituUseCase;
 use App\OpenCode\Business\UseCase\SozdatSessiyuUseCase;
 use App\Utils\Model\Reponse\Response;
@@ -429,5 +433,133 @@ final class OpenCodeController extends AbstractController
         $useCase->handle($command);
 
         return $this->json(Response::successStub());
+    }
+
+    #[OA\Get(
+        path: '/api/opencode/uvedomleniya',
+        summary: 'Непрочитанные уведомления OpenCode и имя канала',
+        tags: ['OpenCode'],
+        parameters: [
+            new OA\Parameter(
+                name: 'limit',
+                description: 'Максимум уведомлений: 1..100, по умолчанию 50',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 50, minimum: 1, maximum: 100)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Канал уведомлений и непрочитанные уведомления текущего пользователя',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            required: ['channel', 'notifications'],
+                            properties: [
+                                new OA\Property(
+                                    property: 'channel',
+                                    type: 'string',
+                                    description: 'Готовое имя персонального Centrifugo-канала',
+                                    example: 'opencode_notifications#6f1c5e0a7d1f4d599a540c2f8a2e6f11'
+                                ),
+                                new OA\Property(
+                                    property: 'notifications',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        type: 'object',
+                                        required: ['eventType', 'id', 'sessionId', 'turnId', 'sessionTitle', 'status', 'kind', 'createdAt'],
+                                        properties: [
+                                            new OA\Property(property: 'eventType', type: 'string', enum: ['new_message'], example: 'new_message'),
+                                            new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+                                            new OA\Property(property: 'sessionId', type: 'string', format: 'uuid'),
+                                            new OA\Property(property: 'turnId', type: 'string', format: 'uuid'),
+                                            new OA\Property(property: 'sessionTitle', type: 'string', example: 'Рефакторинг модуля биллинга'),
+                                            new OA\Property(property: 'status', type: 'string', enum: ['ANSWERED', 'AWAITING_INPUT', 'FAILED'], example: 'ANSWERED'),
+                                            new OA\Property(property: 'kind', type: 'string', enum: ['ANSWER', 'QUESTION', 'ERROR'], nullable: true),
+                                            new OA\Property(property: 'createdAt', type: 'integer', example: 1762000000),
+                                        ]
+                                    )
+                                ),
+                            ]
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/uvedomleniya', methods: ['GET'])]
+    function uvedomleniya(Request $request, PoluchitUvedomleniyaOpenCodeQuery $query): HttpResponse
+    {
+        $command = new PoluchitUvedomleniyaOpenCode(
+            $request->query->getInt('limit', PoluchitUvedomleniyaOpenCode::DEFAULT_LIMIT),
+        );
+
+        return $this->json(Response::success($query->handle($command)->toArray()));
+    }
+
+    #[OA\Post(
+        path: '/api/opencode/otmetitUvedomleniyaProchitannimi',
+        summary: 'Захватить уведомления и пометить их прочитанными',
+        description: 'Возвращает только идентификаторы, которые именно этот запрос перевёл из непрочитанных в прочитанные: чужие, уже прочитанные и повторяющиеся идентификаторы отсутствуют.',
+        tags: ['OpenCode'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['ids'],
+                properties: [
+                    new OA\Property(
+                        property: 'ids',
+                        type: 'array',
+                        minItems: 1,
+                        maxItems: 100,
+                        uniqueItems: true,
+                        items: new OA\Items(type: 'string', format: 'uuid')
+                    ),
+                ],
+                type: 'object'
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Идентификаторы уведомлений, реально переведённых в прочитанные',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            required: ['ids'],
+                            properties: [
+                                new OA\Property(
+                                    property: 'ids',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string', format: 'uuid')
+                                ),
+                            ]
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/otmetitUvedomleniyaProchitannimi', methods: ['POST'])]
+    function otmetitUvedomleniyaProchitannimi(
+        OtmetitUvedomleniyaProchitannimi $command,
+        OtmetitUvedomleniyaProchitannimiUseCase $useCase,
+    ): HttpResponse {
+        return $this->json(Response::success(['ids' => $useCase->handle($command)]));
     }
 }
