@@ -133,6 +133,7 @@ final class ZavershenieHodaOpenCode
             $turn->getStatus()->value,
             $turn->getResult()?->kind,
             $now,
+            $session->getTip()->value,
         );
 
         try {

@@ -25,7 +25,7 @@ final class IdePort
     {
         $raw = $_ENV[self::ENV_NAME] ?? $_SERVER[self::ENV_NAME] ?? getenv(self::ENV_NAME);
 
-        if ($raw === false || $raw === null || $raw === '') {
+        if ($raw === false || $raw === '') {
             return self::DEFAULT_PORT;
         }
 

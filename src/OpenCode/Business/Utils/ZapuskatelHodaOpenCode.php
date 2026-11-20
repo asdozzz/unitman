@@ -7,6 +7,7 @@ namespace App\OpenCode\Business\Utils;
 use App\OpenCode\Business\Model\HodOpenCode;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
@@ -61,6 +62,19 @@ final class ZapuskatelHodaOpenCode
             $this->turnRepository->findBySessionId($session->getId()),
         );
 
+        $workspaceKontekst = null;
+
+        if ($session->estWorkspace()) {
+            // У workspace нет юнитов: раннер получает сам workspace и проекты.
+            $workspace = $session->getWorkspace();
+            $units = [];
+            $workspaceKontekst = new WorkspaceKontekst(
+                $session->getId(),
+                $workspace?->isReadOnly() ?? false,
+                $workspace?->getProjects() ?? [],
+            );
+        }
+
         $vladelec = VladelecZanyatostiOpenCode::dlyaHoda($turn->getId());
         $unitIds = $this->sobratIdUnitov($units);
         $zahvacheno = false;
@@ -80,6 +94,7 @@ final class ZapuskatelHodaOpenCode
                 $prompt,
                 $answers,
                 $history,
+                $workspaceKontekst,
             );
         } catch (\Throwable $e) {
             if ($zahvacheno) {
@@ -91,7 +106,11 @@ final class ZapuskatelHodaOpenCode
 
         $this->turnRepository->save($turn);
 
-        $session->podpisatPoPromptu($prompt, $now);
+        // Название workspace задано пользователем и не подменяется промптом.
+        if (!$session->estWorkspace()) {
+            $session->podpisatPoPromptu($prompt, $now);
+        }
+
         $session->otmetitIzmenenie($now);
 
         $this->sessionRepository->update($session);

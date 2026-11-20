@@ -129,6 +129,13 @@ final class OpenCodeController extends AbstractController
                 required: false,
                 schema: new OA\Schema(type: 'string', nullable: true)
             ),
+            new OA\Parameter(
+                name: 'type',
+                description: 'Тип сессии: unit или workspace (по умолчанию — все)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['unit', 'workspace'], nullable: true)
+            ),
         ],
         responses: [
             new OA\Response(
@@ -155,10 +162,12 @@ final class OpenCodeController extends AbstractController
     function spisokSessiy(Request $request, PoluchitSpisokSessiyQuery $query): HttpResponse
     {
         $search = trim($request->query->getString('search', ''));
+        $type = trim($request->query->getString('type', ''));
 
         $command = new PoluchitSpisokSessiy(
             $request->query->getBoolean('onlyActive', false),
             $search === '' ? null : $search,
+            $type === '' ? null : $type,
         );
 
         return $this->json(Response::success($query->handle($command)));
@@ -472,11 +481,12 @@ final class OpenCodeController extends AbstractController
                                     type: 'array',
                                     items: new OA\Items(
                                         type: 'object',
-                                        required: ['eventType', 'id', 'sessionId', 'turnId', 'sessionTitle', 'status', 'kind', 'createdAt'],
+                                        required: ['eventType', 'id', 'sessionId', 'sessionType', 'turnId', 'sessionTitle', 'status', 'kind', 'createdAt'],
                                         properties: [
                                             new OA\Property(property: 'eventType', type: 'string', enum: ['new_message'], example: 'new_message'),
                                             new OA\Property(property: 'id', type: 'string', format: 'uuid'),
                                             new OA\Property(property: 'sessionId', type: 'string', format: 'uuid'),
+                                            new OA\Property(property: 'sessionType', type: 'string', enum: ['unit', 'workspace'], example: 'unit'),
                                             new OA\Property(property: 'turnId', type: 'string', format: 'uuid'),
                                             new OA\Property(property: 'sessionTitle', type: 'string', example: 'Рефакторинг модуля биллинга'),
                                             new OA\Property(property: 'status', type: 'string', enum: ['ANSWERED', 'AWAITING_INPUT', 'FAILED'], example: 'ANSWERED'),

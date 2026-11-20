@@ -5,11 +5,24 @@ declare(strict_types=1);
 namespace App\OpenCode\Acl;
 
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
+use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
+use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Model\WorkspaceKontekst;
+use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
+use App\OpenCode\Business\Port\UuidGenerator;
+use App\OpenCode\Business\ReadModel\RezultatProverkiIzmeneniyWorkspace;
+use App\OpenCode\Business\Utils\SlugWorkspace;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\NachatHodOpenCode;
+use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
+use App\Runner\Business\Command\Workspace\ProektWorkspaceZapros;
+use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
+use App\Runner\Business\Command\Workspace\UdalitWorkspace;
+use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 
 /**
@@ -18,10 +31,15 @@ use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
  * Модуль OpenCode не знает про Temporal и про DTO раннера: он отдаёт
  * «намерение выполнить ход» и получает результат в собственной модели.
  */
-final class RunnerAdapter implements UmeetVypolnyatHodOpenCode
+final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWorkspace
 {
-    public function __construct(private RunnerApiInterface $runnerApi)
-    {
+    /** Лимит памяти workspace по умолчанию: переопределяется на стороне Go-раннера. */
+    private const DEFAULT_MEMORY_LIMIT = 3072;
+
+    public function __construct(
+        private RunnerApiInterface $runnerApi,
+        private UuidGenerator $uuidGenerator,
+    ) {
     }
 
     /**
@@ -36,14 +54,27 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode
         string $prompt,
         array $answers,
         array $history,
+        ?WorkspaceKontekst $workspace = null,
     ): string {
         $unitsPayload = [];
+        $workspaceProjects = [];
 
         foreach ($units as $privyazka) {
             $unitsPayload[] = [
                 'ProjectId' => $privyazka->unitProjectId,
                 'UnitId' => $privyazka->unitId,
             ];
+        }
+
+        if ($workspace !== null) {
+            foreach ($workspace->projects as $project) {
+                $workspaceProjects[] = [
+                    'ProjectId' => $project->projectId,
+                    'ProjectName' => $project->projectName,
+                    'ProjectCode' => $project->projectCode,
+                    'CanPush' => $project->canPush,
+                ];
+            }
         }
 
         $pervyiUnit = $units[0] ?? null;
@@ -60,6 +91,9 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode
                 $pervyiUnit?->unitProjectId,
                 $pervyiUnit?->unitId,
                 $unitsPayload,
+                $workspace?->workspaceId,
+                $workspace?->readOnly ?? false,
+                $workspaceProjects,
             ),
         );
     }
@@ -90,6 +124,175 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode
             $progress->success,
             $progress->unixtime,
         );
+    }
+
+    public function zapustit(SessiyaOpenCode $session): void
+    {
+        $workspace = $this->trebovatWorkspace($session);
+        $workflowId = $this->uuidGenerator->makeGuid();
+
+        $registered = $this->runnerApi->zapustitWorkspace(
+            $workflowId,
+            $this->sobratZapros($session, $workspace),
+        );
+
+        $workspace->zapomnitOperaciyu(
+            Workspace::OPERATION_CREATE,
+            $registered !== '' ? $registered : $workflowId,
+            time(),
+        );
+    }
+
+    public function ostanovit(SessiyaOpenCode $session): void
+    {
+        $workspace = $this->trebovatWorkspace($session);
+        $workflowId = $this->uuidGenerator->makeGuid();
+
+        $registered = $this->runnerApi->ostanovitWorkspace(
+            $workflowId,
+            new OstanovitWorkspace($session->getId()),
+        );
+
+        $workspace->zapomnitOperaciyu(
+            Workspace::OPERATION_STOP,
+            $registered !== '' ? $registered : $workflowId,
+            time(),
+        );
+    }
+
+    public function vosstanovit(SessiyaOpenCode $session): void
+    {
+        $workspace = $this->trebovatWorkspace($session);
+        $workflowId = $this->uuidGenerator->makeGuid();
+
+        $registered = $this->runnerApi->zapustitWorkspace(
+            $workflowId,
+            $this->sobratZapros($session, $workspace),
+        );
+
+        $workspace->zapomnitOperaciyu(
+            Workspace::OPERATION_START,
+            $registered !== '' ? $registered : $workflowId,
+            time(),
+        );
+    }
+
+    public function udalit(SessiyaOpenCode $session): void
+    {
+        $workspace = $this->trebovatWorkspace($session);
+        $workflowId = $this->uuidGenerator->makeGuid();
+
+        $registered = $this->runnerApi->udalitWorkspace(
+            $workflowId,
+            new UdalitWorkspace($session->getId()),
+        );
+
+        $workspace->zapomnitOperaciyu(
+            Workspace::OPERATION_DELETE,
+            $registered !== '' ? $registered : $workflowId,
+            time(),
+        );
+    }
+
+    public function poluchitIzmeneniya(SessiyaOpenCode $session): RezultatProverkiIzmeneniyWorkspace
+    {
+        $workspace = $this->trebovatWorkspace($session);
+
+        $projects = [];
+
+        foreach ($workspace->getProjects() as $project) {
+            $projects[] = [
+                'ProjectId' => $project->projectId,
+                'ProjectName' => $project->projectName,
+            ];
+        }
+
+        $result = $this->runnerApi->proveritIzmeneniyaWorkspace(
+            new ProveritIzmeneniyaWorkspace($session->getId(), $projects),
+        );
+
+        $mapped = [];
+
+        foreach ($result->Projects as $project) {
+            $mapped[] = [
+                'projectId' => $project['ProjectId'],
+                'name' => $project['Name'],
+                'dirty' => $project['Dirty'],
+                'files' => $project['Files'],
+            ];
+        }
+
+        return new RezultatProverkiIzmeneniyWorkspace($result->Success, $mapped);
+    }
+
+    public function poluchitRezultatOperacii(SessiyaOpenCode $session): ?string
+    {
+        $workspace = $this->trebovatWorkspace($session);
+        $workflowId = $workspace->getOperationWorkflowId();
+
+        if ($workflowId === '') {
+            return null;
+        }
+
+        return match ($workspace->getOperation()) {
+            Workspace::OPERATION_CREATE, Workspace::OPERATION_START => $this->rezultat(
+                $this->runnerApi->poluchitResultatZapuskaWorkspace($workflowId),
+            ),
+            Workspace::OPERATION_STOP => $this->rezultat(
+                $this->runnerApi->poluchitResultatOstanovkiWorkspace($workflowId),
+            ),
+            Workspace::OPERATION_DELETE => $this->rezultat(
+                $this->runnerApi->poluchitResultatUdaleniyaWorkspace($workflowId),
+            ),
+            default => null,
+        };
+    }
+
+    private function sobratZapros(SessiyaOpenCode $session, Workspace $workspace): ZapustitWorkspaceZapros
+    {
+        $projects = [];
+
+        foreach ($workspace->getProjects() as $project) {
+            $projects[] = new ProektWorkspaceZapros(
+                $project->projectId,
+                $project->projectName,
+                $project->projectCode,
+                $project->canPush,
+            );
+        }
+
+        return new ZapustitWorkspaceZapros(
+            $session->getId(),
+            $session->getTitle(),
+            SlugWorkspace::dlya($session->getTitle(), $session->getId()),
+            $workspace->getBranch(),
+            $workspace->isReadOnly(),
+            self::DEFAULT_MEMORY_LIMIT,
+            $projects,
+        );
+    }
+
+    private function trebovatWorkspace(SessiyaOpenCode $session): Workspace
+    {
+        $workspace = $session->getWorkspace();
+
+        if (!$session->estWorkspace() || $workspace === null) {
+            throw new \DomainException('opencode.workspace.not_found');
+        }
+
+        return $workspace;
+    }
+
+    private function rezultat(?object $result): ?string
+    {
+        if ($result === null) {
+            return null;
+        }
+
+        /** @var int|bool $success */
+        $success = $result->Success ?? 0;
+
+        return $success ? self::RESULT_SUCCESS : self::RESULT_FAILURE;
     }
 
     private function prevratit(ResultatHodaOpenCode $result): RezultatHodaOpenCode

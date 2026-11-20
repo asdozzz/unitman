@@ -4,6 +4,7 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Model\Project;
+use App\Unitman\Business\Model\Unit\Event\KonfigUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\OshibkaOstanovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaPodgotovkiUnitaUstanovlena;
 use App\Unitman\Business\Model\Unit\Event\OshibkaSborkiUnitaUstanovlena;
@@ -116,6 +117,53 @@ final class SpisokUnitovProjectionRedaktorLinkTest extends AbstractUnitUseCase
             'ошибка сборки' => [$sobitie(OshibkaSborkiUnitaUstanovlena::class)],
             'сборка завершена' => [$sobitie(UspehSborkiUnitaUstanovlen::class)],
         ];
+    }
+
+    #[Test]
+    function konfig_s_ws_portom_stroit_ssylki_cherez_proxy(): void
+    {
+        $this->sozdatReadModel();
+
+        $this->projection->handle(new Message(new KonfigUnitaUstanovlen(self::UNIT_ID, [
+            'services' => [
+                'web' => [
+                    'ports' => [
+                        ['port' => 80, 'type' => 'http', 'startUri' => '/test'],
+                        ['port' => 8080, 'type' => 'ws', 'startUri' => '/socket'],
+                        ['port' => 5043, 'type' => 'tcp'],
+                    ],
+                ],
+            ],
+        ])));
+
+        // ws через https-proxy становится wss, tcp остаётся прямым на юнит.
+        // assertEquals: после JSON-сериализации порядок ключей в link может отличаться.
+        $this->assertEquals(
+            [
+                [
+                    'service' => 'web',
+                    'path' => 'https://80.feature-123.my-app.proxy.example/test',
+                    'port' => 80,
+                    'protocol' => 'http',
+                    'startUri' => '/test',
+                ],
+                [
+                    'service' => 'web',
+                    'path' => 'wss://8080.feature-123.my-app.proxy.example/socket',
+                    'port' => 8080,
+                    'protocol' => 'ws',
+                    'startUri' => '/socket',
+                ],
+                [
+                    'service' => 'web',
+                    'path' => 'tcp://feature-123.my-app:5043',
+                    'port' => 5043,
+                    'protocol' => 'tcp',
+                    'startUri' => null,
+                ],
+            ],
+            $this->repository->getById(self::UNIT_ID)->links
+        );
     }
 
     /**

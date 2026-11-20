@@ -7,6 +7,7 @@ namespace App\OpenCode\Tests\Support;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
+use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 
 /**
@@ -61,6 +62,7 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
         string $prompt,
         array $answers,
         array $history,
+        ?WorkspaceKontekst $workspace = null,
     ): string {
         /** @var list<PrivyazkaKUnitu> $units */
         /** @var list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers */
@@ -86,6 +88,7 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
             'prompt' => $prompt,
             'answers' => $answers,
             'history' => $history,
+            'workspace' => $workspace,
         ];
 
         return $workflowId;

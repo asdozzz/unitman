@@ -446,6 +446,58 @@ stateDiagram-v2
 `POST /api/opencode/istoriyaSessii` с телом `{ "sessionId": "8f1e..." }`
 возвращает массив таких же объектов ходов, отсортированных по `seq`.
 
+### 3.6 Workspace-сессии (мультипроектные стенды)
+
+Кроме сессий, привязанных к юнитам (`tip = unit`), модуль OpenCode умеет
+создавать **workspace** (`tip = workspace`) — мультипроектный стенд с
+контейнером dind, OpenCode и multi-root VS Code. Workspace — это та же
+`SessiyaOpenCode`, но с вложенным value object `Workspace`; ходы, вопросы,
+прогресс, история и уведомления переиспользуются без изменений.
+
+Полное описание API, жизненного цикла, архива, томов и режима только-чтение —
+[`docs/workspaces.md`](workspaces.md:1). Зафиксированные контракты потоков —
+[`plans/workspace-contracts.md`](plans/workspace-contracts.md:1), реализация
+Go-раннера — `docs/workspaces.md` в репозитории `unitman-runner`.
+
+Ключевые отличия:
+
+| Аспект | Юнит-сессия (`unit`) | Workspace-сессия (`workspace`) |
+|---|---|---|
+| Единица работы | юнит (`unitId`) | проект (`projectId`), их до 20 |
+| Рабочий каталог | каталог юнита | `/workspace/<ProjectId>` для каждого проекта |
+| Контейнер | контейнер юнита | отдельный dind-контейнер + IDE |
+| Гейт хода | готовность всех юнитов | `status = RUNNING` и не в архиве |
+| Архив | логическая пометка | `docker compose stop`, тома сохраняются |
+| Удаление | не поддерживается | контейнер, тома, каталог и записи БД |
+
+Маршруты (все под JWT):
+
+| Метод | Путь | Тело | Ответ |
+|---|---|---|---|
+| `POST` | `/api/opencode/workspace/sozdat` | `name, branch, projectIds[], prompt, credentialId` | `{id, status}` |
+| `GET` | `/api/opencode/workspace/spisok` | query `onlyActive`, `search` | массив workspace |
+| `POST` | `/api/opencode/workspace/sostoyanie` | `workspaceId` | состояние workspace |
+| `POST` | `/api/opencode/workspace/arhivirovat` | `workspaceId, force?` | `{requiresConfirmation, dirtyProjects, status}` |
+| `POST` | `/api/opencode/workspace/vosstanovit` | `workspaceId` | `{status}` |
+| `POST` | `/api/opencode/workspace/udalit` | `workspaceId` | `data: null` |
+
+Промпты и ответы для workspace идут через существующие маршруты
+`/api/opencode/prompt`, `/otvetit`, `/poluchitResultatHoda`,
+`/poluchitProgressHoda`, `/istoriyaSessii`; `sessionId` = id workspace.
+
+Статусы (`StatusWorkspace`): `CREATING → RUNNING | ERROR`,
+`RUNNING → ARCHIVING | DELETING`, `ARCHIVING → ARCHIVED | ERROR`,
+`ARCHIVED → STARTING | DELETING`, `STARTING → RUNNING | ERROR`,
+`ERROR → STARTING | DELETING`. Переходы выполняет фоновая задача
+`ObrabotkaWorkspaceBackgroundJob` (`opencode_workspace_reconcile`, раз в 5
+секунд) через атомарный `perevestiStatusWorkspace`.
+
+Режим только-чтение: если у хотя бы одного проекта `canPush = false`,
+workspace создаётся с `readOnly = true`, токен удаляется из `origin`, а
+`pre-push`-хук запрещает push. `StorageUrl` с токеном не покидает Runner:
+`ZapustitWorkspaceZapros` его не содержит, токенизированный URL добавляет
+`RunnerApi` через порт `UmeetPoluchatUrlKlonaProekta`.
+
 ## 4. Контракт с Go-раннером
 
 Готовое задание для агента, работающего в репозитории Go-раннера, лежит

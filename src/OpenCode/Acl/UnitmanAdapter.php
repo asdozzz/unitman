@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\OpenCode\Acl;
 
 use App\OpenCode\Business\Model\ParametriSozdaniyaUnita;
+use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\SostoyanieUnita;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
+use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Utils\OcenkaGotovnostiUnita;
+use App\OpenCode\Business\Utils\SsylkaRedaktoraWorkspace;
 use App\Unitman\Api\UnitmanApi;
+use App\Unitman\Business\ReadModel\Project\ProektDlyaWorkspaceReadModel;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
 use App\Unitman\Business\Command\Unit\SozdatUnit\ZnacheniePeremenoi;
@@ -21,7 +25,7 @@ use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
  * OpenCode не знает про агрегат Unit и его состояния: наружу отдаётся
  * группа готовности, вычисленная единой матрицей `OcenkaGotovnostiUnita`.
  */
-final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUniti
+final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUniti, UmeetUpravlyatProektamiWorkspace
 {
     public function __construct(
         private UnitmanApi $unitmanApi,
@@ -67,6 +71,43 @@ final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUnit
     public function osvobodit(array $unitIds, string $vladelec): void
     {
         $this->unitmanApi->osvoboditZanyatostUnitov($unitIds, $vladelec);
+    }
+
+    /**
+     * @param list<string> $projectIds
+     *
+     * @return list<ProektWorkspace>
+     */
+    public function poluchitProekti(array $projectIds, string $accountId): array
+    {
+        $result = [];
+
+        foreach ($this->unitmanApi->poluchitProektiDlyaWorkspace($projectIds, $accountId) as $position => $project) {
+            $result[] = new ProektWorkspace(
+                $project->projectId,
+                $project->projectName,
+                $project->projectCode,
+                $project->canPush,
+                $position,
+            );
+        }
+
+        return $result;
+    }
+
+    public function poluchitSsylkuRedaktora(
+        string $projectId,
+        string $accountId,
+        string $workspaceSlug,
+    ): ?string {
+        $projects = $this->unitmanApi->poluchitProektiDlyaWorkspace([$projectId], $accountId);
+        $project = $projects[0] ?? null;
+
+        if (!$project instanceof ProektDlyaWorkspaceReadModel) {
+            return null;
+        }
+
+        return SsylkaRedaktoraWorkspace::postroit($workspaceSlug, $project->proxyHost, $project->idePort);
     }
 
     private function prevratit(SostoyanieUnitaReadModel $readModel): SostoyanieUnita

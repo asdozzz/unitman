@@ -23,6 +23,11 @@ final class SessiyaOpenCode
     /** Максимум юнитов на одну сессию: ограничивает размер multi-root workspace. */
     public const MAX_UNITS = 10;
 
+    /** Максимум проектов workspace-сессии. */
+    public const MAX_WORKSPACE_PROJECTS = 20;
+
+    private const WORKSPACE_NAME_MAX_LENGTH = 256;
+
     /** Причина архивации: все юниты сессии удалены (автоматическое обнаружение). */
     public const ARCHIVE_REASON_UNIT_DELETED = 'unit_deleted';
 
@@ -43,6 +48,8 @@ final class SessiyaOpenCode
         private ?string $archiveReason,
         private int $createdAt,
         private int $updatedAt,
+        private TipSessiiOpenCode $tip,
+        private ?Workspace $workspace,
     ) {
     }
 
@@ -76,6 +83,8 @@ final class SessiyaOpenCode
             null,
             $now,
             $now,
+            TipSessiiOpenCode::UNIT,
+            null,
         );
     }
 
@@ -109,6 +118,95 @@ final class SessiyaOpenCode
             $archiveReason,
             $createdAt,
             $updatedAt,
+            TipSessiiOpenCode::UNIT,
+            null,
+        );
+    }
+
+    /**
+     * Создание workspace-сессии: юнитов нет, название — это title сессии.
+     *
+     * @param list<ProektWorkspace> $projects
+     */
+    public static function createWorkspace(
+        string $id,
+        string $accountId,
+        string $credentialId,
+        string $name,
+        string $branch,
+        array $projects,
+        string $initialPrompt,
+        int $now,
+    ): self {
+        if (trim($accountId) === '') {
+            throw new \DomainException('opencode.session.account_required');
+        }
+
+        if (trim($credentialId) === '') {
+            throw new \DomainException('opencode.session.credential_required');
+        }
+
+        $name = trim($name);
+
+        if ($name === '') {
+            throw new \DomainException('opencode.workspace.name_required');
+        }
+
+        if (mb_strlen($name) > self::WORKSPACE_NAME_MAX_LENGTH) {
+            throw new \DomainException('opencode.workspace.name_too_long');
+        }
+
+        self::proveritKolichestvoProektovWorkspace($projects);
+
+        return new self(
+            $id,
+            $accountId,
+            $credentialId,
+            $name,
+            null,
+            [],
+            null,
+            null,
+            $now,
+            $now,
+            TipSessiiOpenCode::WORKSPACE,
+            Workspace::create($branch, $initialPrompt, $projects, $now),
+        );
+    }
+
+    /**
+     * Восстановление workspace-сессии из хранилища без молчаливой замены
+     * статуса и операции.
+     */
+    public static function restoreWorkspace(
+        string $id,
+        string $accountId,
+        string $credentialId,
+        string $name,
+        ?string $externalSessionId,
+        ?int $archivedAt,
+        ?string $archiveReason,
+        Workspace $workspace,
+        int $createdAt,
+        int $updatedAt,
+    ): self {
+        if ($archivedAt !== null && ($archiveReason === null || trim($archiveReason) === '')) {
+            throw new \DomainException('opencode.session.archive_reason_required');
+        }
+
+        return new self(
+            $id,
+            $accountId,
+            $credentialId,
+            $name,
+            $externalSessionId,
+            [],
+            $archivedAt,
+            $archiveReason,
+            $createdAt,
+            $updatedAt,
+            TipSessiiOpenCode::WORKSPACE,
+            $workspace,
         );
     }
 
@@ -130,6 +228,21 @@ final class SessiyaOpenCode
     public function getTitle(): string
     {
         return $this->title;
+    }
+
+    public function getTip(): TipSessiiOpenCode
+    {
+        return $this->tip;
+    }
+
+    public function estWorkspace(): bool
+    {
+        return $this->tip === TipSessiiOpenCode::WORKSPACE;
+    }
+
+    public function getWorkspace(): ?Workspace
+    {
+        return $this->workspace;
     }
 
     public function getExternalSessionId(): ?string
@@ -360,11 +473,26 @@ final class SessiyaOpenCode
      */
     public function podpisatPoPromptu(string $prompt, int $now): void
     {
-        if ($this->title !== '') {
+        // Название workspace задаётся пользователем и не подменяется промптом.
+        if ($this->estWorkspace() || $this->title !== '') {
             return;
         }
 
         $this->title = self::normalizeTitle($prompt);
+        $this->updatedAt = $now;
+    }
+
+    /**
+     * Снимает архив после успешного восстановления workspace.
+     */
+    public function snovaAktivna(int $now): void
+    {
+        if (!$this->estArhiv()) {
+            return;
+        }
+
+        $this->archivedAt = null;
+        $this->archiveReason = null;
         $this->updatedAt = $now;
     }
 
@@ -391,6 +519,20 @@ final class SessiyaOpenCode
      *
      * @return list<PrivyazkaKUnitu>
      */
+    /**
+     * @param list<ProektWorkspace> $projects
+     */
+    private static function proveritKolichestvoProektovWorkspace(array $projects): void
+    {
+        if ($projects === []) {
+            throw new \DomainException('opencode.workspace.projects_required');
+        }
+
+        if (count($projects) > self::MAX_WORKSPACE_PROJECTS) {
+            throw new \DomainException('opencode.workspace.too_many_projects');
+        }
+    }
+
     private static function normalizeUnits(array $units, bool $trebovatLimit): array
     {
         $unique = [];

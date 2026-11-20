@@ -15,6 +15,14 @@ use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
+use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatOstanovkiWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatProverkiIzmeneniyWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatUdaleniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatZapuskaWorkspace;
+use App\Runner\Business\Command\Workspace\UdalitWorkspace;
+use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
@@ -66,7 +74,24 @@ final class MemoryRunnerService implements RunnerApiInterface
 
     const HOD_OPENCODE = 'HOD_OPENCODE';
     const RESULTAT_HODA_OPENCODE = 'RESULTAT_HODA_OPENCODE';
+
+    const ZAPUSK_WORKSPACE = 'ZAPUSK_WORKSPACE';
+    const RESULTAT_ZAPUSKA_WORKSPACE = 'RESULTAT_ZAPUSKA_WORKSPACE';
+    const OSTANOVKA_WORKSPACE = 'OSTANOVKA_WORKSPACE';
+    const RESULTAT_OSTANOVKI_WORKSPACE = 'RESULTAT_OSTANOVKI_WORKSPACE';
+    const UDALENIE_WORKSPACE = 'UDALENIE_WORKSPACE';
+    const RESULTAT_UDALENIYA_WORKSPACE = 'RESULTAT_UDALENIYA_WORKSPACE';
+    const PROVERKA_IZMENENIY_WORKSPACE = 'PROVERKA_IZMENENIY_WORKSPACE';
+
+    /** @var array<string, list<array{response: mixed, expectedParams: mixed}>> */
     private array $responses = [];
+
+    /** @var array<string, ZapustitWorkspaceZapros> */
+    private array $workspaceCommands = [];
+
+    /** @var list<array{method: string, args: list<mixed>}> */
+    private array $calls = [];
+
     public function __construct()
     {
     }
@@ -74,6 +99,16 @@ final class MemoryRunnerService implements RunnerApiInterface
     public function addResponse(string $type, mixed $response, mixed $expectedParams = null): void
     {
         $this->responses[$type][] = ['response' => $response, 'expectedParams' => $expectedParams];
+    }
+
+    /**
+     * Журнал вызовов workspace-методов — для проверок в тестах.
+     *
+     * @return list<array{method: string, args: list<mixed>}>
+     */
+    public function getCalls(): array
+    {
+        return $this->calls;
     }
 
     private function getNextResponse(string $type): mixed
@@ -321,5 +356,154 @@ final class MemoryRunnerService implements RunnerApiInterface
             $response['expectedParams'](func_get_args());
         }
         return $response['response'];
+    }
+
+    public function zapustitWorkspace(string $workflowId, ZapustitWorkspaceZapros $command): string
+    {
+        $this->workspaceCommands[$workflowId] = $command;
+        $this->calls[] = ['method' => 'zapustitWorkspace', 'args' => [$workflowId, $command]];
+
+        if (empty($this->responses[self::ZAPUSK_WORKSPACE])) {
+            return $workflowId;
+        }
+
+        $response = $this->getNextResponse(self::ZAPUSK_WORKSPACE);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+
+        return $response['response'];
+    }
+
+    public function poluchitResultatZapuskaWorkspace(string $workflowId): ?ResultatZapuskaWorkspace
+    {
+        $this->calls[] = ['method' => 'poluchitResultatZapuskaWorkspace', 'args' => [$workflowId]];
+
+        if (!empty($this->responses[self::RESULTAT_ZAPUSKA_WORKSPACE])) {
+            $response = $this->getNextResponse(self::RESULTAT_ZAPUSKA_WORKSPACE);
+            if (!empty($response['expectedParams'])) {
+                $response['expectedParams'](func_get_args());
+            }
+
+            /** @var ResultatZapuskaWorkspace $result */
+            $result = $response['response'];
+
+            return $result;
+        }
+
+        $projects = [];
+        $command = $this->workspaceCommands[$workflowId] ?? null;
+        if ($command !== null) {
+            foreach ($command->Projects as $project) {
+                $projects[] = [
+                    'ProjectId' => $project->ProjectId,
+                    'Name' => $project->ProjectName,
+                    'Success' => true,
+                    'ErrorKey' => null,
+                ];
+            }
+        }
+
+        return new ResultatZapuskaWorkspace(1, [], $workflowId, $projects);
+    }
+
+    public function ostanovitWorkspace(string $workflowId, OstanovitWorkspace $command): string
+    {
+        $this->calls[] = ['method' => 'ostanovitWorkspace', 'args' => [$workflowId, $command]];
+
+        if (empty($this->responses[self::OSTANOVKA_WORKSPACE])) {
+            return $workflowId;
+        }
+
+        $response = $this->getNextResponse(self::OSTANOVKA_WORKSPACE);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+
+        return $response['response'];
+    }
+
+    public function poluchitResultatOstanovkiWorkspace(string $workflowId): ?ResultatOstanovkiWorkspace
+    {
+        $this->calls[] = ['method' => 'poluchitResultatOstanovkiWorkspace', 'args' => [$workflowId]];
+
+        if (!empty($this->responses[self::RESULTAT_OSTANOVKI_WORKSPACE])) {
+            $response = $this->getNextResponse(self::RESULTAT_OSTANOVKI_WORKSPACE);
+            if (!empty($response['expectedParams'])) {
+                $response['expectedParams'](func_get_args());
+            }
+
+            /** @var ResultatOstanovkiWorkspace $result */
+            $result = $response['response'];
+
+            return $result;
+        }
+
+        return new ResultatOstanovkiWorkspace(1, [], $workflowId);
+    }
+
+    public function udalitWorkspace(string $workflowId, UdalitWorkspace $command): string
+    {
+        $this->calls[] = ['method' => 'udalitWorkspace', 'args' => [$workflowId, $command]];
+
+        if (empty($this->responses[self::UDALENIE_WORKSPACE])) {
+            return $workflowId;
+        }
+
+        $response = $this->getNextResponse(self::UDALENIE_WORKSPACE);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+
+        return $response['response'];
+    }
+
+    public function poluchitResultatUdaleniyaWorkspace(string $workflowId): ?ResultatUdaleniyaWorkspace
+    {
+        $this->calls[] = ['method' => 'poluchitResultatUdaleniyaWorkspace', 'args' => [$workflowId]];
+
+        if (!empty($this->responses[self::RESULTAT_UDALENIYA_WORKSPACE])) {
+            $response = $this->getNextResponse(self::RESULTAT_UDALENIYA_WORKSPACE);
+            if (!empty($response['expectedParams'])) {
+                $response['expectedParams'](func_get_args());
+            }
+
+            /** @var ResultatUdaleniyaWorkspace $result */
+            $result = $response['response'];
+
+            return $result;
+        }
+
+        return new ResultatUdaleniyaWorkspace(1, [], $workflowId);
+    }
+
+    public function proveritIzmeneniyaWorkspace(
+        ProveritIzmeneniyaWorkspace $command,
+    ): ResultatProverkiIzmeneniyWorkspace {
+        $this->calls[] = ['method' => 'proveritIzmeneniyaWorkspace', 'args' => [$command]];
+
+        if (!empty($this->responses[self::PROVERKA_IZMENENIY_WORKSPACE])) {
+            $response = $this->getNextResponse(self::PROVERKA_IZMENENIY_WORKSPACE);
+            if (!empty($response['expectedParams'])) {
+                $response['expectedParams'](func_get_args());
+            }
+
+            /** @var ResultatProverkiIzmeneniyWorkspace $result */
+            $result = $response['response'];
+
+            return $result;
+        }
+
+        $projects = [];
+        foreach ($command->Projects as $project) {
+            $projects[] = [
+                'ProjectId' => $project['ProjectId'],
+                'Name' => $project['ProjectName'],
+                'Dirty' => false,
+                'Files' => [],
+            ];
+        }
+
+        return new ResultatProverkiIzmeneniyWorkspace(true, $projects);
     }
 }

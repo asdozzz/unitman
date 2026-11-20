@@ -15,4 +15,8 @@ return [
     \App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow::class,
     \App\Runner\Infra\Workflow\OpenCodeTurnWorkflow::class,
     \App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow::class,
+    \App\Runner\Infra\Workflow\ZapustitWorkspaceWorkflow::class,
+    \App\Runner\Infra\Workflow\OstanovitWorkspaceWorkflow::class,
+    \App\Runner\Infra\Workflow\UdalitWorkspaceWorkflow::class,
+    \App\Runner\Infra\Workflow\ProveritIzmeneniyaWorkspaceWorkflow::class,
 ];

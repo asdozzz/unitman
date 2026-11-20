@@ -22,6 +22,11 @@ interface StorageApiAdapter
 
     public function getUrlForInitProject(Repo $repo, Project $project): string;
 
+    /**
+     * Может ли пользователь пушить в проект хостинга.
+     */
+    public function canPush(Repo $repo, Project $project): bool;
+
     public function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string;
 
     public function poluchitProektiHranilisha(Repo $repo, ?string $query): array;

@@ -13,6 +13,9 @@ final class SessiyaOpenCodeReadModel
      * `unitId`/`unitProjectId` продублированы ради обратной совместимости: это первый
      * юнит, то есть рабочий каталог хода. Полный упорядоченный список — в `units`.
      *
+     * `type` различает обычную сессию (`unit`) и workspace. Для workspace
+     * заполнены `workspace` и `ideLink`; для unit-сессии они null.
+     *
      * @param list<PrivyazkaKUnituReadModel> $units
      */
     public function __construct(
@@ -27,11 +30,18 @@ final class SessiyaOpenCodeReadModel
         public readonly ?string $archiveReason,
         public readonly int $createdAt,
         public readonly int $updatedAt,
+        public readonly string $type = 'unit',
+        public readonly ?WorkspaceReadModel $workspace = null,
+        public readonly ?string $ideLink = null,
     ) {
     }
 
-    public static function izModela(SessiyaOpenCode $session): self
+    public static function izModela(SessiyaOpenCode $session, ?string $ideLink = null): self
     {
+        $workspace = $session->estWorkspace()
+            ? WorkspaceReadModel::izModela($session, $ideLink)
+            : null;
+
         return new self(
             $session->getId(),
             $session->getCredentialId(),
@@ -47,6 +57,9 @@ final class SessiyaOpenCodeReadModel
             $session->getArchiveReason(),
             $session->getCreatedAt(),
             $session->getUpdatedAt(),
+            $session->getTip()->value,
+            $workspace,
+            $workspace === null ? null : $ideLink,
         );
     }
 }

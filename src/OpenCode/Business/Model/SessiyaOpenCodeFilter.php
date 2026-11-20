@@ -8,7 +8,8 @@ namespace App\OpenCode\Business\Model;
  * Фильтр списка сессий пользователя.
  *
  * onlyActive = false (по умолчанию) — показываем все сессии, включая архивные;
- * search — подстрока названия сессии, ищется через LIKE.
+ * search — подстрока названия сессии, ищется через LIKE;
+ * type — тип сессии (unit|workspace), null — все типы.
  */
 final class SessiyaOpenCodeFilter
 {
@@ -17,6 +18,7 @@ final class SessiyaOpenCodeFilter
     public function __construct(
         private bool $onlyActive = false,
         private ?string $search = null,
+        private ?TipSessiiOpenCode $type = null,
     ) {
         $this->search = self::normalizeSearch($search);
     }
@@ -39,6 +41,11 @@ final class SessiyaOpenCodeFilter
     public function getSearch(): ?string
     {
         return $this->search;
+    }
+
+    public function getType(): ?TipSessiiOpenCode
+    {
+        return $this->type;
     }
 
     public function estPoisk(): bool

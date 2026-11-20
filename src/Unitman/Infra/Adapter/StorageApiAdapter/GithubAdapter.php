@@ -75,6 +75,15 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return $projectUrl;
     }
 
+    public function canPush(Repo $repo, Project $project): bool
+    {
+        $client = $this->githubClientFactory->makeClient($repo);
+        list($login, $code) = explode('/', $project->getCode());
+        $data = $client->repositories()->show($login, $code);
+
+        return PushPermission::izGithub($data);
+    }
+
 
     /**
      * @psalm-suppress InvalidReturnType

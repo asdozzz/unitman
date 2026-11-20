@@ -31,6 +31,7 @@ final class UvedomlenieONovomSoobsheniiOpenCodeTest extends TestCase
                 'eventType',
                 'id',
                 'sessionId',
+                'sessionType',
                 'turnId',
                 'sessionTitle',
                 'status',
@@ -43,11 +44,30 @@ final class UvedomlenieONovomSoobsheniiOpenCodeTest extends TestCase
         $this->assertSame('new_message', $payload['eventType']);
         $this->assertSame('n-1', $payload['id']);
         $this->assertSame('s-1', $payload['sessionId']);
+        $this->assertSame('unit', $payload['sessionType']);
         $this->assertSame('t-1', $payload['turnId']);
         $this->assertSame('Название сессии', $payload['sessionTitle']);
         $this->assertSame('ANSWERED', $payload['status']);
         $this->assertSame('ANSWER', $payload['kind']);
         $this->assertSame(1_700_000_000, $payload['createdAt']);
+    }
+
+    #[Test]
+    public function session_type_workspace_popadaet_v_publikaciyu(): void
+    {
+        $notification = new UvedomlenieONovomSoobsheniiOpenCode(
+            'n-2',
+            'acc-1',
+            'w-1',
+            't-2',
+            'payments-refactor',
+            'ANSWERED',
+            'ANSWER',
+            1_700_000_001,
+            'workspace',
+        );
+
+        $this->assertSame('workspace', $notification->toArray()['sessionType']);
     }
 
     #[Test]

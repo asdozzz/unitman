@@ -15,6 +15,16 @@ use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
+use App\Runner\Business\Command\Workspace\ProektWorkspaceCommand;
+use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatOstanovkiWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatProverkiIzmeneniyWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatUdaleniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatZapuskaWorkspace;
+use App\Runner\Business\Command\Workspace\UdalitWorkspace;
+use App\Runner\Business\Command\Workspace\ZapustitWorkspace;
+use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
@@ -34,6 +44,7 @@ use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Business\Port\UmeetChitatProgressZadachi;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
 use App\Runner\Business\Port\UmeetPoluchatRekvizityOpenCode;
+use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
 use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Service\RunnerProgressPublisher;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
@@ -47,7 +58,11 @@ use App\Runner\Infra\Workflow\NachatSbrosPodgotovkiWorkflow;
 use App\Runner\Infra\Workflow\NachatUdalenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow;
 use App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow;
+use App\Runner\Infra\Workflow\ProveritIzmeneniyaWorkspaceWorkflow;
+use App\Runner\Infra\Workflow\OstanovitWorkspaceWorkflow;
 use App\Runner\Infra\Workflow\RemoveProjectWorkflow;
+use App\Runner\Infra\Workflow\UdalitWorkspaceWorkflow;
+use App\Runner\Infra\Workflow\ZapustitWorkspaceWorkflow;
 use Carbon\CarbonInterval;
 use Symfony\Component\Serializer\SerializerInterface;
 use Temporal\Client\WorkflowClient;
@@ -68,6 +83,7 @@ final class RunnerApi implements RunnerApiInterface
         private UmeetHranitProgressZadachi $progressStorage,
         private UmeetChitatProgressZadachi $progressReader,
         private UmeetPoluchatRekvizityOpenCode $rekvizityOpenCode,
+        private UmeetPoluchatUrlKlonaProekta $urlKlonaProekta,
     )
     {
     }
@@ -503,6 +519,9 @@ final class RunnerApi implements RunnerApiInterface
             $command->ProjectId,
             $command->UnitId,
             $command->Units,
+            $command->WorkspaceId,
+            $command->WorkspaceReadOnly,
+            $command->WorkspaceProjects,
         );
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -556,5 +575,108 @@ final class RunnerApi implements RunnerApiInterface
         $result = $workflow->proverit($command);
 
         return $result;
+    }
+
+    public function zapustitWorkspace(string $workflowId, ZapustitWorkspaceZapros $command): string
+    {
+        // Токен не приходит от вызывающей стороны: URL клона дозапрашивается
+        // у Unitman здесь, и только обогащённая команда уходит в workflow.
+        $projects = [];
+
+        foreach ($command->Projects as $project) {
+            $projects[] = new ProektWorkspaceCommand(
+                $project->ProjectId,
+                $project->ProjectName,
+                $project->ProjectCode,
+                $this->urlKlonaProekta->poluchitUrlKlona($project->ProjectId),
+                $project->CanPush,
+            );
+        }
+
+        $activityCommand = new ZapustitWorkspace(
+            $command->WorkspaceId,
+            $command->WorkspaceName,
+            $command->WorkspaceSlug,
+            $command->Branch,
+            $command->ReadOnly,
+            $command->MemoryLimit,
+            $projects,
+        );
+
+        $this->zaregistrirovatProgressToken($workflowId);
+
+        $workflow = $this->workflowClient->newWorkflowStub(
+            ZapustitWorkspaceWorkflow::class,
+            WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(30))
+        );
+
+        $run = $this->workflowClient->start($workflow, $activityCommand);
+        return $run->getExecution()->getID();
+    }
+
+    public function poluchitResultatZapuskaWorkspace(string $workflowId): ?ResultatZapuskaWorkspace
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, ResultatZapuskaWorkspace::class);
+    }
+
+    public function ostanovitWorkspace(string $workflowId, OstanovitWorkspace $command): string
+    {
+        $this->zaregistrirovatProgressToken($workflowId);
+
+        $workflow = $this->workflowClient->newWorkflowStub(
+            OstanovitWorkspaceWorkflow::class,
+            WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
+        );
+
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
+
+    public function poluchitResultatOstanovkiWorkspace(string $workflowId): ?ResultatOstanovkiWorkspace
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, ResultatOstanovkiWorkspace::class);
+    }
+
+    public function udalitWorkspace(string $workflowId, UdalitWorkspace $command): string
+    {
+        $this->zaregistrirovatProgressToken($workflowId);
+
+        $workflow = $this->workflowClient->newWorkflowStub(
+            UdalitWorkspaceWorkflow::class,
+            WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
+        );
+
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
+
+    public function poluchitResultatUdaleniyaWorkspace(string $workflowId): ?ResultatUdaleniyaWorkspace
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, ResultatUdaleniyaWorkspace::class);
+    }
+
+    public function proveritIzmeneniyaWorkspace(
+        ProveritIzmeneniyaWorkspace $command,
+    ): ResultatProverkiIzmeneniyWorkspace {
+        $workflow = $this->workflowClient->newWorkflowStub(
+            ProveritIzmeneniyaWorkspaceWorkflow::class,
+            WorkflowOptions::new()
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::seconds(30))
+        );
+
+        return $workflow->proverit($command);
     }
 }

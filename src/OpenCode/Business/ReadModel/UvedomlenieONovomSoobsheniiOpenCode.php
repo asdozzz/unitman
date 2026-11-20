@@ -24,6 +24,7 @@ final class UvedomlenieONovomSoobsheniiOpenCode
         public readonly string $status,
         public readonly ?string $kind,
         public readonly int $createdAt,
+        public readonly string $sessionType = 'unit',
     ) {
     }
 
@@ -36,6 +37,7 @@ final class UvedomlenieONovomSoobsheniiOpenCode
             'eventType' => self::EVENT_TYPE,
             'id' => $this->id,
             'sessionId' => $this->sessionId,
+            'sessionType' => $this->sessionType,
             'turnId' => $this->turnId,
             'sessionTitle' => $this->sessionTitle,
             'status' => $this->status,

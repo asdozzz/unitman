@@ -111,6 +111,7 @@ final class ZavershenieHodaOpenCodeTest extends TestCase
         self::assertSame(self::SESSION_TITLE, $sohraneno->sessionTitle);
         self::assertSame(StatusHoda::ANSWERED->value, $sohraneno->status);
         self::assertSame(RezultatHodaOpenCode::KIND_ANSWER, $sohraneno->kind);
+        self::assertSame('unit', $sohraneno->sessionType);
     }
 
     #[Test]

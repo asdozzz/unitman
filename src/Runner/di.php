@@ -12,6 +12,7 @@ use App\Runner\Business\Port\UmeetHranitProgressZadachi;
 use App\Runner\Business\Port\UmeetObnovlyatSostoyanieKonteyneraUnita;
 use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
 use App\Runner\Business\Port\UmeetPoluchatRekvizityOpenCode;
+use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
 use App\Runner\Infra\Adapter\RamseyGuidGenerator;
 use App\Runner\Infra\Adapter\RunnerProgressKvStorage;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -33,6 +34,7 @@ return function (ContainerConfigurator $configuration) {
     $services->set(CanGenerateGuid::class, RamseyGuidGenerator::class);
     $services->set(UmeetObnovlyatStatistikuPoUnitam::class, UnitmanAdapter::class);
     $services->set(UmeetObnovlyatSostoyanieKonteyneraUnita::class, UnitmanAdapter::class);
+    $services->set(UmeetPoluchatUrlKlonaProekta::class, UnitmanAdapter::class);
     $services->set(UmeetPoluchatRekvizityOpenCode::class, AccountAdapter::class);
 
     // Оба порта прогресса указывают на один экземпляр: писатель и читатель

@@ -7,6 +7,7 @@ namespace App\OpenCode\Business\Utils;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\SostoyanieUnita;
+use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 
@@ -40,6 +41,14 @@ final class PropuskHodaOpenCode
     public function proverit(SessiyaOpenCode $session): array
     {
         $session->trebovatAktivnuyu();
+
+        if ($session->estWorkspace()) {
+            if ($session->getWorkspace()?->getStatus() !== StatusWorkspace::RUNNING) {
+                throw new \DomainException('opencode.workspace.not_running');
+            }
+
+            return [];
+        }
 
         if (!$session->privezanaKUnitu()) {
             return [];

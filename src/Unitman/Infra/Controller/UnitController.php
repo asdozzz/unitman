@@ -106,16 +106,22 @@ final class UnitController extends AbstractController
 
     #[OA\Post(
         path: '/api/unit/list',
-        summary: 'Список юнитов с фильтрацией',
+        summary: 'Список юнитов с фильтрацией, поиском и сортировкой',
+        description: 'Фильтр `filter` поддерживает `search` — подстроку по имени ИЛИ ветке, '
+            .'`statuses` — массив статусов (`running`, `busy`, `prepared`, `stopped`, `error`), '
+            .'а также `name`, `branch`, `projectId`, `onlyMine`, `unitId`, `unitIds`. '
+            .'Сортировка `filter.sort`: `created_desc` (по умолчанию), `updated_desc`, '
+            .'`name_asc`, `status_priority`. Неизвестные статусы и сортировки игнорируются.',
         tags: ['Unit'],
         requestBody: new OA\RequestBody(
             required: true,
+            description: 'Параметры фильтрации, поиска и сортировки списка юнитов',
             content: new OA\JsonContent(ref: '#/components/schemas/GetUnitList')
         ),
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Массив юнитов, ограниченный параметрами filter, limit и offset',
+                description: 'Массив юнитов, ограниченный фильтром, поиском, сортировкой, limit и offset',
                 content: new OA\JsonContent(
                     required: ['status', 'data'],
                     properties: [

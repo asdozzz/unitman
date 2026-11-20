@@ -7,8 +7,11 @@ use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\PoluchitSostoyanieUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Unit\TipZanyatosti;
+use App\Unitman\Business\ReadModel\Project\ProektDlyaWorkspaceReadModel;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
+use App\Unitman\Business\UseCase\Project\PoluchitProektiDlyaWorkspaceQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitUrlKlonaProektaQuery;
 use App\Unitman\Business\UseCase\Unit\ObnovitSostoyanieKonteyneraUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitStatistikuPoKonteineruUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OsvoboditZanyatostUnitovUseCase;
@@ -39,6 +42,8 @@ final class UnitmanApi
         private ZahvatitZanyatostUnitovUseCase $zahvatitZanyatostUnitovUseCase,
         private OsvoboditZanyatostUnitovUseCase $osvoboditZanyatostUnitovUseCase,
         private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
+        private PoluchitProektiDlyaWorkspaceQuery $poluchitProektiDlyaWorkspaceQuery,
+        private PoluchitUrlKlonaProektaQuery $poluchitUrlKlonaProektaQuery,
     )
     {
     }
@@ -120,6 +125,31 @@ final class UnitmanApi
     function poluchitZanyatostUnita(string $unitId): ZanyatostUnitaReadModel
     {
         return $this->poluchitZanyatostUnitaQuery->handle($unitId);
+    }
+
+    /**
+     * Проекты, доступные пользователю, для workspace-сессии OpenCode.
+     *
+     * Порядок `projectIds` сохраняется. `storageUrl` в ответе предназначен
+     * только для Runner и не должен отдаваться наружу через HTTP.
+     *
+     * @param list<string> $projectIds
+     * @return list<ProektDlyaWorkspaceReadModel>
+     * @throws \DomainException opencode.workspace.project_conflict|opencode.workspace.project_not_found
+     */
+    function poluchitProektiDlyaWorkspace(array $projectIds, string $accountId): array
+    {
+        return $this->poluchitProektiDlyaWorkspaceQuery->handle($projectIds, $accountId);
+    }
+
+    /**
+     * URL клонирования проекта с токеном. Только для Runner.
+     *
+     * @throws \DomainException opencode.workspace.project_not_found
+     */
+    function poluchitUrlKlonaProekta(string $projectId): string
+    {
+        return $this->poluchitUrlKlonaProektaQuery->handle($projectId);
     }
 
     /**

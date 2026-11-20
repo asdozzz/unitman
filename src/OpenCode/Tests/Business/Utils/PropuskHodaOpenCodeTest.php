@@ -7,9 +7,11 @@ namespace App\OpenCode\Tests\Business\Utils;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\SostoyanieUnita;
+use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Utils\PropuskHodaOpenCode;
+use App\OpenCode\Tests\Support\FabrikaWorkspace;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -140,6 +142,43 @@ final class PropuskHodaOpenCodeTest extends TestCase
 
         $this->assertTrue($session->estArhiv());
         $this->assertSame(SessiyaOpenCode::ARCHIVE_REASON_UNIT_DELETED, $session->getArchiveReason());
+    }
+
+    #[Test]
+    public function workspace_v_running_propuskaetsya_bez_obrashcheniya_k_unitman(): void
+    {
+        $this->unitami->expects($this->never())->method('poluchitSostoyanieUnita');
+        $this->repository->expects($this->never())->method('update');
+
+        $this->assertSame(
+            [],
+            $this->propusk->proverit(FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING)),
+        );
+    }
+
+    #[Test]
+    public function workspace_ne_v_running_blokiruetsya(): void
+    {
+        $this->unitami->expects($this->never())->method('poluchitSostoyanieUnita');
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('opencode.workspace.not_running');
+
+        $this->propusk->proverit(FabrikaWorkspace::vStatuse(StatusWorkspace::CREATING));
+    }
+
+    #[Test]
+    public function arhivnii_workspace_otklonyaetsya_kak_arhivnaya_sessiya(): void
+    {
+        $session = FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING);
+        $session->arhivirovat(SessiyaOpenCode::ARCHIVE_REASON_MANUAL, self::NOW + 1);
+
+        $this->unitami->expects($this->never())->method('poluchitSostoyanieUnita');
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('opencode.session.archived');
+
+        $this->propusk->proverit($session);
     }
 
     #[Test]

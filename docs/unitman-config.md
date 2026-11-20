@@ -224,11 +224,23 @@ services:
 
 | `type` | Шаблон ссылки |
 | --- | --- |
-| `http` (или не указан) | `{scheme}://{port}.{unit}.{project}.{proxyHost}` — через proxy host проекта |
-| любой другой (`ws`, `tcp`, …) | `{type}://{unit}.{project}:{port}` — напрямую на юнит |
+| `http` (или не указан) | `{scheme}://{port}.{unit}.{project}.{proxyHost}[:{proxyPort}]` — через proxy host проекта |
+| `ws`, `wss` | `{wsScheme}://{port}.{unit}.{project}.{proxyHost}[:{proxyPort}]` — через proxy host; схема зависит от proxy: `https` → `wss`, иначе `ws` |
+| прочие (`tcp`, …) | `{type}://{unit}.{project}:{port}` — напрямую на юнит |
 
 Протокол нормализуется (обрезка пробелов + нижний регистр). `startUri` дописывается в конец
 ссылки для любого протокола.
+
+Примеры при `proxyHost = https://unitman.example.ru`:
+
+- `http` на порту `8080` → `https://8080.myunit.myproject.unitman.example.ru`;
+- `ws` на порту `8080` (или `wss`) → `wss://8080.myunit.myproject.unitman.example.ru`;
+- при `proxyHost = http://unitman.example.ru` тот же `ws` → `ws://8080.myunit.myproject.unitman.example.ru`;
+- `tcp` на порту `5432` → `tcp://myunit.myproject:5432`.
+
+Для `http`, `ws` и `wss` proxy host обязателен: если он пуст или не содержит схему и хост
+(`parse_url` не даёт `scheme` + `host`), построение ссылки завершается ошибкой
+`unit.invalid_proxy_host`. Прямые протоколы (`tcp` и прочие) в proxy host не нуждаются.
 
 Порт read-only редактора файлов юнита (`UNITMAN_IDE_PORT`, по умолчанию `47000`) зарезервирован:
 указывать его в `services.*.ports` нельзя — IDE работает в network namespace юнита и сервис
@@ -300,9 +312,11 @@ variables:
 (обрезка пробелов + нижний регистр), пустое значение даёт `http`; недопустимый протокол —
 ошибка `unit.config.pomoschnik.type_invalid`.
 
-Ссылка строится по тому же правилу, что и для сервисов юнита: для `http` — через proxy host
-проекта, для остальных протоколов — `{type}://{unit}.{project}:{port}`. Вместо `startUri`
-из конфига подставляется `suffix` из запроса хелпера.
+Ссылка строится по тому же правилу, что и для сервисов юнита: для `http`, `ws` и `wss` — через
+proxy host проекта (для `ws`/`wss` схема выбирается по proxy: `https` → `wss`, иначе `ws`),
+для остальных протоколов — `{type}://{unit}.{project}:{port}`. Невалидный proxy host для
+`http`/`ws`/`wss` даёт `unit.invalid_proxy_host`. Вместо `startUri` из конфига подставляется
+`suffix` из запроса хелпера.
 
 При создании юнита клиент передаёт вместе со значением `targetUnitId`, и Unitman сохраняет
 связь «переменная → целевой юнит», а также собирает ссылку на выбранный стенд.

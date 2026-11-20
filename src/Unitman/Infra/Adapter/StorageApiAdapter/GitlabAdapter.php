@@ -82,6 +82,14 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return $projectUrl;
     }
 
+    public function canPush(Repo $repo, Project $project): bool
+    {
+        $client = $this->clientFactory->makeClient($repo);
+        $data = $client->projects()->show($project->getCode());
+
+        return PushPermission::izGitlab($data);
+    }
+
     public function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string
     {
         $client = $this->clientFactory->makeClient($repo);

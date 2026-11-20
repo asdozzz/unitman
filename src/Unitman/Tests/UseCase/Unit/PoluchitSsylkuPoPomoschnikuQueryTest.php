@@ -79,13 +79,18 @@ final class PoluchitSsylkuPoPomoschnikuQueryTest extends AbstractUnitUseCase
         $resultWithSuffixNoSlash = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId, 'api/v2'));
         $this->assertEquals(['link' => 'https://8080.task-123.uwin.testcase.ru/api/v2'], $resultWithSuffixNoSlash);
 
-        // ws-порт: ссылка строится напрямую на юнит, без proxy host и без wss
+        // ws-порт: ссылка идёт через https-proxy проекта и маппится в wss;
+        // startUri из конфига ('/socket') без suffix не подмешивается
         $wsResult = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdC, 'web', 8080, $unitCId, null, 'ws'));
-        $this->assertEquals(['link' => 'ws://task-789.uwin:8080'], $wsResult);
+        $this->assertEquals(['link' => 'wss://8080.task-789.uwin.testcase.ru'], $wsResult);
 
-        // ws-порт с суффиксом
+        // ws-порт с суффиксом: suffix подставляется вместо startUri
         $wsResultWithSuffix = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdC, 'web', 8080, $unitCId, '/socket', 'ws'));
-        $this->assertEquals(['link' => 'ws://task-789.uwin:8080/socket'], $wsResultWithSuffix);
+        $this->assertEquals(['link' => 'wss://8080.task-789.uwin.testcase.ru/socket'], $wsResultWithSuffix);
+
+        // suffix без ведущего слеша нормализуется и для ws
+        $wsResultWithSuffixNoSlash = $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdC, 'web', 8080, $unitCId, 'socket', 'ws'));
+        $this->assertEquals(['link' => 'wss://8080.task-789.uwin.testcase.ru/socket'], $wsResultWithSuffixNoSlash);
 
         // ws-порт не находится по протоколу по умолчанию (http)
         try {

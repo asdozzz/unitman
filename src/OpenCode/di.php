@@ -13,7 +13,9 @@ use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetOpredelyatKanalUvedomleniyOpenCode;
 use App\OpenCode\Business\Port\UmeetPeredavatUvedomleniyaOpenCode;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
+use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UvedomleniyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UuidGenerator;
@@ -54,6 +56,8 @@ return function (ContainerConfigurator $configuration) {
     // Порты бизнес-слоя -> Acl-адаптеры чужих модулей.
     $services->set(UmeetProveryatRekvizityOpenCode::class, AccountAdapter::class);
     $services->set(UmeetVypolnyatHodOpenCode::class, RunnerAdapter::class);
+    $services->set(UmeetUpravlyatWorkspace::class, RunnerAdapter::class);
     $services->set(UmeetUpravlyatUnitami::class, UnitmanAdapter::class);
     $services->set(UmeetBronirovatUniti::class, UnitmanAdapter::class);
+    $services->set(UmeetUpravlyatProektamiWorkspace::class, UnitmanAdapter::class);
 };

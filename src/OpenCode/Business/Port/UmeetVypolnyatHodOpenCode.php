@@ -7,6 +7,7 @@ namespace App\OpenCode\Business\Port;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
+use App\OpenCode\Business\Model\WorkspaceKontekst;
 
 /**
  * Исполнение хода диалога на стороне Runner.
@@ -37,6 +38,7 @@ interface UmeetVypolnyatHodOpenCode
         string $prompt,
         array $answers,
         array $history,
+        ?WorkspaceKontekst $workspace = null,
     ): string;
 
     /**

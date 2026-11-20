@@ -6,6 +6,7 @@ namespace App\OpenCode\Business\Port;
 
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
+use App\OpenCode\Business\Model\StatusWorkspace;
 
 interface SessiyaOpenCodeRepository
 {
@@ -36,4 +37,27 @@ interface SessiyaOpenCodeRepository
      * @return list<SessiyaOpenCode>
      */
     public function findAktivnieSUnitom(int $limit): array;
+
+    /**
+     * Активные workspace-сессии — вход для фоновой сверки операций.
+     *
+     * @return list<SessiyaOpenCode>
+     */
+    public function findAktivnieWorkspace(int $limit): array;
+
+    /**
+     * Атомарный переход статуса workspace. Возвращает true, если строка была обновлена.
+     *
+     * @param list<StatusWorkspace> $from
+     */
+    public function perevestiStatusWorkspace(
+        string $sessionId,
+        array $from,
+        StatusWorkspace $to,
+    ): bool;
+
+    /**
+     * Полное удаление workspace: проекты, workspace, ходы, уведомления, сессия.
+     */
+    public function deleteWorkspace(string $sessionId): void;
 }

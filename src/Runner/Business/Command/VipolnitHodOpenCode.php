@@ -18,6 +18,7 @@ final class VipolnitHodOpenCode
      * @param list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $Answers
      * @param list<array{Role: string, Text: string}> $History
      * @param list<array{ProjectId: string, UnitId: string}> $Units
+     * @param list<array{ProjectId: string, ProjectName: string, ProjectCode: string, CanPush: bool}> $WorkspaceProjects
      */
     public function __construct(
         public readonly ?string $SessionId,
@@ -30,6 +31,9 @@ final class VipolnitHodOpenCode
         public readonly ?string $ProjectId = null,
         public readonly ?string $UnitId = null,
         public readonly array $Units = [],
+        public readonly ?string $WorkspaceId = null,
+        public readonly bool $WorkspaceReadOnly = false,
+        public readonly array $WorkspaceProjects = [],
     )
     {
     }

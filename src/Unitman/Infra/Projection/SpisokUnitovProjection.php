@@ -219,7 +219,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
                         isset($portData['type']) ? (string)$portData['type'] : null
                     );
 
-                    // http — через proxy host проекта, остальные протоколы — напрямую
+                    // http, ws и wss — через proxy host проекта (для ws/wss схема
+                    // выбирается по схеме proxy); остальные протоколы — напрямую
                     // на юнит: `{type}://{unit}.{project}:{port}`.
                     $link = SsylkaServisaUtil::sformirovat(
                         $protocol,

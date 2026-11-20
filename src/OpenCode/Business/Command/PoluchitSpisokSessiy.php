@@ -18,6 +18,7 @@ readonly class PoluchitSpisokSessiy
     public function __construct(
         public bool $onlyActive = false,
         public ?string $search = null,
+        public ?string $type = null,
     ) {
     }
 }

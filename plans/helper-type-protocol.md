@@ -20,6 +20,13 @@
 Принятое решение: юниты не меняем; хелпер повторяет формат юнитов — `ws://<unit>.<project>:<port>`,
 без proxy host и без `wss`. `suffix`/`startUri` дописывается так же, как в проекции юнитов.
 
+> **Обновление (подзадача C плана `unit-ws-links-and-compact-link-labels`).** Решение по `ws`
+> пересмотрено: `ws`/`wss` теперь строятся через proxy host по тому же правилу, что и `http`
+> (см. [`SsylkaServisaUtil`](src/Unitman/Business/Utils/SsylkaServisaUtil.php:21)): часть
+> `{port}.{unit}.{project}.{proxyHost}[:{proxyPort}]`, схема маппится `https` → `wss`,
+> `http` → `ws`. Прямые ссылки `{type}://{unit}.{project}:{port}` остаются только для `tcp`
+> и прочих протоколов. История ниже не переписана.
+
 ## 3. Изменения
 
 ### 3.1 VO хелпера

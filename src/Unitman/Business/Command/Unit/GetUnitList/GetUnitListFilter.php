@@ -16,6 +16,17 @@ final class GetUnitListFilter
         public readonly ?string $unitId = null,
         /** @var string[] */
         public readonly array $unitIds = [],
+        /** Подстрока по имени ИЛИ ветке (регистронезависимый поиск). Пустая строка — без фильтра. */
+        public readonly ?string $search = null,
+        /**
+         * Статусы юнитов для фильтрации: `running`, `busy`, `prepared`, `stopped`, `error`.
+         * Неизвестные значения игнорируются; пустой массив — без фильтра.
+         *
+         * @var string[]
+         */
+        public readonly array $statuses = [],
+        /** Сортировка: `created_desc`, `updated_desc`, `name_asc`, `status_priority`. По умолчанию `created_desc`. */
+        public readonly string $sort = 'created_desc',
     )
     {
     }

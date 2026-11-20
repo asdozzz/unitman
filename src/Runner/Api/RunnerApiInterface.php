@@ -14,6 +14,14 @@ use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
+use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatOstanovkiWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatProverkiIzmeneniyWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatUdaleniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatZapuskaWorkspace;
+use App\Runner\Business\Command\Workspace\UdalitWorkspace;
+use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
@@ -79,6 +87,53 @@ interface RunnerApiInterface
     public function poluchitResultatDeistviya(string $workflowId): ?ResultatDeistviyaUnita;
 
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ?ResultatProverkiKonteineraUnita;
+
+    /**
+     * Запуск workspace-стенда.
+     *
+     * Публичный запрос **не содержит токен**: `StorageUrl` для каждого проекта
+     * дозапрашивается у Unitman через ACL-порт внутри Runner, после чего
+     * обогащённая команда уходит в workflow.
+     *
+     * @return string id workflow запуска
+     */
+    public function zapustitWorkspace(string $workflowId, ZapustitWorkspaceZapros $command): string;
+
+    /**
+     * Результат запуска workspace; null — workflow ещё не завершён.
+     */
+    public function poluchitResultatZapuskaWorkspace(string $workflowId): ?ResultatZapuskaWorkspace;
+
+    /**
+     * Остановка workspace-стенда.
+     *
+     * @return string id workflow остановки
+     */
+    public function ostanovitWorkspace(string $workflowId, OstanovitWorkspace $command): string;
+
+    /**
+     * Результат остановки workspace; null — workflow ещё не завершён.
+     */
+    public function poluchitResultatOstanovkiWorkspace(string $workflowId): ?ResultatOstanovkiWorkspace;
+
+    /**
+     * Удаление workspace-стенда.
+     *
+     * @return string id workflow удаления
+     */
+    public function udalitWorkspace(string $workflowId, UdalitWorkspace $command): string;
+
+    /**
+     * Результат удаления workspace; null — workflow ещё не завершён.
+     */
+    public function poluchitResultatUdaleniyaWorkspace(string $workflowId): ?ResultatUdaleniyaWorkspace;
+
+    /**
+     * Синхронная проверка незакоммиченных изменений в проектах workspace.
+     */
+    public function proveritIzmeneniyaWorkspace(
+        ProveritIzmeneniyaWorkspace $command,
+    ): ResultatProverkiIzmeneniyWorkspace;
 
     /**
      * Старт одного хода диалога с OpenCode.

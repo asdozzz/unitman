@@ -507,11 +507,24 @@ nelmio_api_doc:
                 OpenCodeSession:
                     type: object
                     description: 'Сессия OpenCode (SessiyaOpenCodeReadModel)'
-                    required: [id, credentialId, title, units, archived, createdAt, updatedAt]
+                    required: [id, credentialId, title, units, archived, createdAt, updatedAt, type]
                     properties:
                         id:
                             type: string
                             format: uuid
+                        type:
+                            type: string
+                            enum: [unit, workspace]
+                            description: 'Тип сессии: `unit` — диалог по юнитам, `workspace` — workspace-сессия'
+                        ideLink:
+                            type: string
+                            nullable: true
+                            description: 'Ссылка на редактор workspace; null для unit-сессий и если proxy host первого проекта пуст'
+                        workspace:
+                            nullable: true
+                            description: 'Данные workspace для type = workspace'
+                            allOf:
+                                - $ref: '#/components/schemas/Workspace'
                         credentialId:
                             type: string
                             format: uuid
@@ -566,6 +579,191 @@ nelmio_api_doc:
                             type: string
                             format: uuid
                             description: 'Проект юнита: передаётся в раннер как ProjectId'
+                SozdatWorkspace:
+                    type: object
+                    description: 'Создание workspace-сессии: имя, ветка, проекты и первый промпт'
+                    required: [name, branch, projectIds, prompt, credentialId]
+                    properties:
+                        name:
+                            type: string
+                            maxLength: 256
+                            description: 'Название workspace, уникальное в рамках аккаунта'
+                            example: payments-refactor
+                        branch:
+                            type: string
+                            maxLength: 256
+                            example: feature/payments
+                        projectIds:
+                            type: array
+                            minItems: 1
+                            maxItems: 20
+                            uniqueItems: true
+                            description: 'Доступные пользователю проекты в нужном порядке; дубликат даёт `opencode.workspace.project_conflict`, недоступный проект — `opencode.workspace.project_not_found`'
+                            items:
+                                type: string
+                                format: uuid
+                        prompt:
+                            type: string
+                            minLength: 1
+                            description: 'Первый промпт; запускается автоматически после успешного старта контейнера'
+                        credentialId:
+                            type: string
+                            format: uuid
+                WorkspaceProject:
+                    type: object
+                    description: 'Проект workspace (ProektWorkspaceReadModel). Токен клонирования наружу не отдаётся'
+                    required: [projectId, projectName, projectCode, canPush, positionIndex]
+                    properties:
+                        projectId:
+                            type: string
+                            format: uuid
+                        projectName:
+                            type: string
+                        projectCode:
+                            type: string
+                        canPush:
+                            type: boolean
+                            description: 'false — workspace работает в режиме только-чтение'
+                        positionIndex:
+                            type: integer
+                Workspace:
+                    type: object
+                    description: 'Workspace-сессия (WorkspaceReadModel)'
+                    required: [id, name, branch, status, readOnly, archived, projects, createdAt, updatedAt]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        name:
+                            type: string
+                        branch:
+                            type: string
+                        status:
+                            type: string
+                            enum: [CREATING, STARTING, RUNNING, ARCHIVING, ARCHIVED, DELETING, ERROR]
+                        readOnly:
+                            type: boolean
+                        archived:
+                            type: boolean
+                            description: 'Логический архив: выставляется после успешной остановки контейнера'
+                        archiveReason:
+                            type: string
+                            nullable: true
+                            enum: [manual, unit_deleted]
+                        errorKey:
+                            type: string
+                            nullable: true
+                        projects:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/WorkspaceProject'
+                        ideLink:
+                            type: string
+                            nullable: true
+                        createdAt:
+                            type: integer
+                            example: 1762000000
+                        updatedAt:
+                            type: integer
+                            example: 1762000000
+                SostoyanieWorkspace:
+                    type: object
+                    description: 'Состояние workspace (SostoyanieWorkspaceReadModel)'
+                    required: [id, name, branch, status, readOnly, archived, projects, canAcceptMessages]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        name:
+                            type: string
+                        branch:
+                            type: string
+                        status:
+                            type: string
+                            enum: [CREATING, STARTING, RUNNING, ARCHIVING, ARCHIVED, DELETING, ERROR]
+                        readOnly:
+                            type: boolean
+                        archived:
+                            type: boolean
+                        archiveReason:
+                            type: string
+                            nullable: true
+                        errorKey:
+                            type: string
+                            nullable: true
+                        projects:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/WorkspaceProject'
+                        ideLink:
+                            type: string
+                            nullable: true
+                        canAcceptMessages:
+                            type: boolean
+                            description: 'status = RUNNING И сессия не в архиве И последний ход не RUNNING'
+                        lastTurnId:
+                            type: string
+                            nullable: true
+                        lastTurnStatus:
+                            type: string
+                            nullable: true
+                            enum: [RUNNING, AWAITING_INPUT, ANSWERED, FAILED]
+                ArhivirovatWorkspace:
+                    type: object
+                    required: [workspaceId]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                        force:
+                            type: boolean
+                            default: false
+                            description: 'Пропустить проверку незакоммиченных изменений'
+                RezultatArhivaciiWorkspace:
+                    type: object
+                    required: [requiresConfirmation, dirtyProjects, status]
+                    properties:
+                        requiresConfirmation:
+                            type: boolean
+                        dirtyProjects:
+                            type: array
+                            items:
+                                type: object
+                                required: [projectId, name, files]
+                                properties:
+                                    projectId:
+                                        type: string
+                                        format: uuid
+                                    name:
+                                        type: string
+                                    files:
+                                        type: array
+                                        items:
+                                            type: string
+                        status:
+                            type: string
+                            enum: [CREATING, STARTING, RUNNING, ARCHIVING, ARCHIVED, DELETING, ERROR]
+                PoluchitSostoyanieWorkspace:
+                    type: object
+                    required: [workspaceId]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                VosstanovitWorkspace:
+                    type: object
+                    required: [workspaceId]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                UdalitWorkspace:
+                    type: object
+                    required: [workspaceId]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
                 OpenCodeTurnLaunch:
                     type: object
                     description: 'Ход запущен: клиент подписывается на progressChannel и опрашивает /poluchitResultatHoda по turnId'

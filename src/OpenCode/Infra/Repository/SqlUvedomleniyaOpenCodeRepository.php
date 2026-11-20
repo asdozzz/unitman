@@ -23,14 +23,15 @@ final class SqlUvedomleniyaOpenCodeRepository implements UvedomleniyaOpenCodeRep
         $table = self::TABLE;
         $affected = $this->connection->executeStatement(
             "insert into $table
-                (id, account_id, session_id, turn_id, session_title, status, kind, created_at, read_at)
+                (id, account_id, session_id, session_type, turn_id, session_title, status, kind, created_at, read_at)
              values
-                (:id, :account_id, :session_id, :turn_id, :session_title, :status, :kind, :created_at, null)
+                (:id, :account_id, :session_id, :session_type, :turn_id, :session_title, :status, :kind, :created_at, null)
              on conflict (turn_id) do nothing",
             [
                 'id' => $notification->id,
                 'account_id' => $notification->accountId,
                 'session_id' => $notification->sessionId,
+                'session_type' => $notification->sessionType,
                 'turn_id' => $notification->turnId,
                 'session_title' => $notification->sessionTitle,
                 'status' => $notification->status,
@@ -41,6 +42,7 @@ final class SqlUvedomleniyaOpenCodeRepository implements UvedomleniyaOpenCodeRep
                 'id' => ParameterType::STRING,
                 'account_id' => ParameterType::STRING,
                 'session_id' => ParameterType::STRING,
+                'session_type' => ParameterType::STRING,
                 'turn_id' => ParameterType::STRING,
                 'session_title' => ParameterType::STRING,
                 'status' => ParameterType::STRING,
@@ -100,6 +102,7 @@ final class SqlUvedomleniyaOpenCodeRepository implements UvedomleniyaOpenCodeRep
     private static function izStroki(array $row): UvedomlenieONovomSoobsheniiOpenCode
     {
         $kind = $row['kind'] ?? null;
+        $sessionType = $row['session_type'] ?? 'unit';
 
         return new UvedomlenieONovomSoobsheniiOpenCode(
             (string) $row['id'],
@@ -110,6 +113,7 @@ final class SqlUvedomleniyaOpenCodeRepository implements UvedomleniyaOpenCodeRep
             (string) $row['status'],
             is_string($kind) && $kind !== '' ? $kind : null,
             (int) $row['created_at'],
+            is_string($sessionType) && $sessionType !== '' ? $sessionType : 'unit',
         );
     }
 }

@@ -1829,6 +1829,22 @@
                                 "null"
                             ]
                         }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "\u0422\u0438\u043f \u0441\u0435\u0441\u0441\u0438\u0438: unit \u0438\u043b\u0438 workspace (\u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e \u2014 \u0432\u0441\u0435)",
+                        "required": false,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "unit",
+                                "workspace"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -2365,6 +2381,7 @@
                                                             "eventType",
                                                             "id",
                                                             "sessionId",
+                                                            "sessionType",
                                                             "turnId",
                                                             "sessionTitle",
                                                             "status",
@@ -2386,6 +2403,14 @@
                                                             "sessionId": {
                                                                 "type": "string",
                                                                 "format": "uuid"
+                                                            },
+                                                            "sessionType": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "unit",
+                                                                    "workspace"
+                                                                ],
+                                                                "example": "unit"
                                                             },
                                                             "turnId": {
                                                                 "type": "string",
@@ -2506,6 +2531,383 @@
                                                 }
                                             },
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/sozdat": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0421\u043e\u0437\u0434\u0430\u0442\u044c workspace-\u0441\u0435\u0441\u0441\u0438\u044e",
+                "operationId": "post_app_opencode_infra_workspace_sozdat",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SozdatWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0438 \u0441\u0442\u0430\u0442\u0443\u0441 \u0441\u043e\u0437\u0434\u0430\u043d\u043d\u043e\u0433\u043e workspace",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "CREATING",
+                                                        "STARTING",
+                                                        "RUNNING",
+                                                        "ARCHIVING",
+                                                        "ARCHIVED",
+                                                        "DELETING",
+                                                        "ERROR"
+                                                    ],
+                                                    "example": "CREATING"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/spisok": {
+            "get": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a workspace-\u0441\u0435\u0441\u0441\u0438\u0439 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                "operationId": "get_app_opencode_infra_workspace_spisok",
+                "parameters": [
+                    {
+                        "name": "onlyActive",
+                        "in": "query",
+                        "description": "\u0422\u043e\u043b\u044c\u043a\u043e \u043d\u0435\u0430\u0440\u0445\u0438\u0432\u043d\u044b\u0435 workspace (\u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e \u043f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u044e\u0442\u0441\u044f \u0432\u0441\u0435)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "\u041f\u043e\u0434\u0441\u0442\u0440\u043e\u043a\u0430 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u044f workspace (\u043f\u043e\u0438\u0441\u043a \u0447\u0435\u0440\u0435\u0437 LIKE)",
+                        "required": false,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Workspace \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Workspace"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/sostoyanie": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 workspace: \u043f\u0440\u0438\u0447\u0438\u043d\u0430 \u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u043a\u0438 \u0445\u043e\u0434\u043e\u0432 \u0438 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439 \u0445\u043e\u0434",
+                "operationId": "post_app_opencode_infra_workspace_sostoyanie",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PoluchitSostoyanieWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 workspace \u0434\u043b\u044f \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SostoyanieWorkspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/arhivirovat": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0410\u0440\u0445\u0438\u0432\u0438\u0440\u043e\u0432\u0430\u0442\u044c workspace (\u043f\u0440\u0438 \u043d\u0435\u0437\u0430\u043a\u043e\u043c\u043c\u0438\u0447\u0435\u043d\u043d\u044b\u0445 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f\u0445 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 force)",
+                "operationId": "post_app_opencode_infra_workspace_arhivirovat",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ArhivirovatWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043f\u043e\u043f\u044b\u0442\u043a\u0438 \u0430\u0440\u0445\u0438\u0432\u0430\u0446\u0438\u0438",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/RezultatArhivaciiWorkspace"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/vosstanovit": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0412\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u0430\u0440\u0445\u0438\u0432\u043d\u044b\u0439 workspace",
+                "operationId": "post_app_opencode_infra_workspace_vosstanovit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VosstanovitWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041d\u043e\u0432\u044b\u0439 \u0441\u0442\u0430\u0442\u0443\u0441 workspace",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "required": [
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "CREATING",
+                                                        "STARTING",
+                                                        "RUNNING",
+                                                        "ARCHIVING",
+                                                        "ARCHIVED",
+                                                        "DELETING",
+                                                        "ERROR"
+                                                    ],
+                                                    "example": "STARTING"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/udalit": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c workspace: \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u044b \u0438 \u0442\u043e\u043c\u0430 \u0443\u0434\u0430\u043b\u044f\u0435\u0442 Runner, \u0437\u0430\u043f\u0438\u0441\u0438 \u0411\u0414 \u2014 \u0444\u043e\u043d\u043e\u0432\u0430\u044f \u0437\u0430\u0434\u0430\u0447\u0430",
+                "operationId": "post_app_opencode_infra_workspace_udalit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UdalitWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u0443\u0434\u0430\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u043f\u0443\u0449\u0435\u043d\u043e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u0443\u0434\u0430\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u043f\u0443\u0449\u0435\u043d\u043e",
+                                            "type": "null"
                                         }
                                     },
                                     "type": "object"
@@ -5066,9 +5468,11 @@
                 "tags": [
                     "Unit"
                 ],
-                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u044e\u043d\u0438\u0442\u043e\u0432 \u0441 \u0444\u0438\u043b\u044c\u0442\u0440\u0430\u0446\u0438\u0435\u0439",
+                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u044e\u043d\u0438\u0442\u043e\u0432 \u0441 \u0444\u0438\u043b\u044c\u0442\u0440\u0430\u0446\u0438\u0435\u0439, \u043f\u043e\u0438\u0441\u043a\u043e\u043c \u0438 \u0441\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u043e\u0439",
+                "description": "\u0424\u0438\u043b\u044c\u0442\u0440 `filter` \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 `search` \u2014 \u043f\u043e\u0434\u0441\u0442\u0440\u043e\u043a\u0443 \u043f\u043e \u0438\u043c\u0435\u043d\u0438 \u0418\u041b\u0418 \u0432\u0435\u0442\u043a\u0435, `statuses` \u2014 \u043c\u0430\u0441\u0441\u0438\u0432 \u0441\u0442\u0430\u0442\u0443\u0441\u043e\u0432 (`running`, `busy`, `prepared`, `stopped`, `error`), \u0430 \u0442\u0430\u043a\u0436\u0435 `name`, `branch`, `projectId`, `onlyMine`, `unitId`, `unitIds`. \u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430 `filter.sort`: `created_desc` (\u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e), `updated_desc`, `name_asc`, `status_priority`. \u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0435 \u0441\u0442\u0430\u0442\u0443\u0441\u044b \u0438 \u0441\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0438 \u0438\u0433\u043d\u043e\u0440\u0438\u0440\u0443\u044e\u0442\u0441\u044f.",
                 "operationId": "post_app_unitman_infra_unit_list",
                 "requestBody": {
+                    "description": "\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0444\u0438\u043b\u044c\u0442\u0440\u0430\u0446\u0438\u0438, \u043f\u043e\u0438\u0441\u043a\u0430 \u0438 \u0441\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0438 \u0441\u043f\u0438\u0441\u043a\u0430 \u044e\u043d\u0438\u0442\u043e\u0432",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -5080,7 +5484,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "\u041c\u0430\u0441\u0441\u0438\u0432 \u044e\u043d\u0438\u0442\u043e\u0432, \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u043d\u044b\u0439 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u0430\u043c\u0438 filter, limit \u0438 offset",
+                        "description": "\u041c\u0430\u0441\u0441\u0438\u0432 \u044e\u043d\u0438\u0442\u043e\u0432, \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u043d\u044b\u0439 \u0444\u0438\u043b\u044c\u0442\u0440\u043e\u043c, \u043f\u043e\u0438\u0441\u043a\u043e\u043c, \u0441\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u043e\u0439, limit \u0438 offset",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -7399,12 +7803,39 @@
                     "units",
                     "archived",
                     "createdAt",
-                    "updatedAt"
+                    "updatedAt",
+                    "type"
                 ],
                 "properties": {
                     "id": {
                         "type": "string",
                         "format": "uuid"
+                    },
+                    "type": {
+                        "description": "\u0422\u0438\u043f \u0441\u0435\u0441\u0441\u0438\u0438: `unit` \u2014 \u0434\u0438\u0430\u043b\u043e\u0433 \u043f\u043e \u044e\u043d\u0438\u0442\u0430\u043c, `workspace` \u2014 workspace-\u0441\u0435\u0441\u0441\u0438\u044f",
+                        "type": "string",
+                        "enum": [
+                            "unit",
+                            "workspace"
+                        ]
+                    },
+                    "ideLink": {
+                        "description": "\u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440 workspace; null \u0434\u043b\u044f unit-\u0441\u0435\u0441\u0441\u0438\u0439 \u0438 \u0435\u0441\u043b\u0438 proxy host \u043f\u0435\u0440\u0432\u043e\u0433\u043e \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043f\u0443\u0441\u0442",
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "workspace": {
+                        "description": "\u0414\u0430\u043d\u043d\u044b\u0435 workspace \u0434\u043b\u044f type = workspace",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Workspace"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "credentialId": {
                         "description": "\u0420\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b, \u043f\u043e\u0434 \u043a\u043e\u0442\u043e\u0440\u044b\u043c\u0438 \u0441\u043e\u0437\u0434\u0430\u043d\u0430 \u0441\u0435\u0441\u0441\u0438\u044f",
@@ -7486,6 +7917,356 @@
                     },
                     "unitProjectId": {
                         "description": "\u041f\u0440\u043e\u0435\u043a\u0442 \u044e\u043d\u0438\u0442\u0430: \u043f\u0435\u0440\u0435\u0434\u0430\u0451\u0442\u0441\u044f \u0432 \u0440\u0430\u043d\u043d\u0435\u0440 \u043a\u0430\u043a ProjectId",
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "type": "object"
+            },
+            "SozdatWorkspace": {
+                "description": "\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 workspace-\u0441\u0435\u0441\u0441\u0438\u0438: \u0438\u043c\u044f, \u0432\u0435\u0442\u043a\u0430, \u043f\u0440\u043e\u0435\u043a\u0442\u044b \u0438 \u043f\u0435\u0440\u0432\u044b\u0439 \u043f\u0440\u043e\u043c\u043f\u0442",
+                "required": [
+                    "name",
+                    "branch",
+                    "projectIds",
+                    "prompt",
+                    "credentialId"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 workspace, \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u043e\u0435 \u0432 \u0440\u0430\u043c\u043a\u0430\u0445 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430",
+                        "type": "string",
+                        "maxLength": 256,
+                        "example": "payments-refactor"
+                    },
+                    "branch": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "example": "feature/payments"
+                    },
+                    "projectIds": {
+                        "description": "\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u044b\u0435 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044e \u043f\u0440\u043e\u0435\u043a\u0442\u044b \u0432 \u043d\u0443\u0436\u043d\u043e\u043c \u043f\u043e\u0440\u044f\u0434\u043a\u0435; \u0434\u0443\u0431\u043b\u0438\u043a\u0430\u0442 \u0434\u0430\u0451\u0442 `opencode.workspace.project_conflict`, \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b\u0439 \u043f\u0440\u043e\u0435\u043a\u0442 \u2014 `opencode.workspace.project_not_found`",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "maxItems": 20,
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "prompt": {
+                        "description": "\u041f\u0435\u0440\u0432\u044b\u0439 \u043f\u0440\u043e\u043c\u043f\u0442; \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u0442\u0441\u044f \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438 \u043f\u043e\u0441\u043b\u0435 \u0443\u0441\u043f\u0435\u0448\u043d\u043e\u0433\u043e \u0441\u0442\u0430\u0440\u0442\u0430 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u0430",
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "credentialId": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "type": "object"
+            },
+            "WorkspaceProject": {
+                "description": "\u041f\u0440\u043e\u0435\u043a\u0442 workspace (ProektWorkspaceReadModel). \u0422\u043e\u043a\u0435\u043d \u043a\u043b\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u043d\u0430\u0440\u0443\u0436\u0443 \u043d\u0435 \u043e\u0442\u0434\u0430\u0451\u0442\u0441\u044f",
+                "required": [
+                    "projectId",
+                    "projectName",
+                    "projectCode",
+                    "canPush",
+                    "positionIndex"
+                ],
+                "properties": {
+                    "projectId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "projectName": {
+                        "type": "string"
+                    },
+                    "projectCode": {
+                        "type": "string"
+                    },
+                    "canPush": {
+                        "description": "false \u2014 workspace \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0432 \u0440\u0435\u0436\u0438\u043c\u0435 \u0442\u043e\u043b\u044c\u043a\u043e-\u0447\u0442\u0435\u043d\u0438\u0435",
+                        "type": "boolean"
+                    },
+                    "positionIndex": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "Workspace": {
+                "description": "Workspace-\u0441\u0435\u0441\u0441\u0438\u044f (WorkspaceReadModel)",
+                "required": [
+                    "id",
+                    "name",
+                    "branch",
+                    "status",
+                    "readOnly",
+                    "archived",
+                    "projects",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "branch": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "CREATING",
+                            "STARTING",
+                            "RUNNING",
+                            "ARCHIVING",
+                            "ARCHIVED",
+                            "DELETING",
+                            "ERROR"
+                        ]
+                    },
+                    "readOnly": {
+                        "type": "boolean"
+                    },
+                    "archived": {
+                        "description": "\u041b\u043e\u0433\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u0430\u0440\u0445\u0438\u0432: \u0432\u044b\u0441\u0442\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043f\u043e\u0441\u043b\u0435 \u0443\u0441\u043f\u0435\u0448\u043d\u043e\u0439 \u043e\u0441\u0442\u0430\u043d\u043e\u0432\u043a\u0438 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u0430",
+                        "type": "boolean"
+                    },
+                    "archiveReason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "manual",
+                            "unit_deleted"
+                        ]
+                    },
+                    "errorKey": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "projects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkspaceProject"
+                        }
+                    },
+                    "ideLink": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "createdAt": {
+                        "type": "integer",
+                        "example": 1762000000
+                    },
+                    "updatedAt": {
+                        "type": "integer",
+                        "example": 1762000000
+                    }
+                },
+                "type": "object"
+            },
+            "SostoyanieWorkspace": {
+                "description": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 workspace (SostoyanieWorkspaceReadModel)",
+                "required": [
+                    "id",
+                    "name",
+                    "branch",
+                    "status",
+                    "readOnly",
+                    "archived",
+                    "projects",
+                    "canAcceptMessages"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "branch": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "CREATING",
+                            "STARTING",
+                            "RUNNING",
+                            "ARCHIVING",
+                            "ARCHIVED",
+                            "DELETING",
+                            "ERROR"
+                        ]
+                    },
+                    "readOnly": {
+                        "type": "boolean"
+                    },
+                    "archived": {
+                        "type": "boolean"
+                    },
+                    "archiveReason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "errorKey": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "projects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkspaceProject"
+                        }
+                    },
+                    "ideLink": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "canAcceptMessages": {
+                        "description": "status = RUNNING \u0418 \u0441\u0435\u0441\u0441\u0438\u044f \u043d\u0435 \u0432 \u0430\u0440\u0445\u0438\u0432\u0435 \u0418 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439 \u0445\u043e\u0434 \u043d\u0435 RUNNING",
+                        "type": "boolean"
+                    },
+                    "lastTurnId": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "lastTurnStatus": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "RUNNING",
+                            "AWAITING_INPUT",
+                            "ANSWERED",
+                            "FAILED"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "ArhivirovatWorkspace": {
+                "required": [
+                    "workspaceId"
+                ],
+                "properties": {
+                    "workspaceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "force": {
+                        "description": "\u041f\u0440\u043e\u043f\u0443\u0441\u0442\u0438\u0442\u044c \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0443 \u043d\u0435\u0437\u0430\u043a\u043e\u043c\u043c\u0438\u0447\u0435\u043d\u043d\u044b\u0445 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0439",
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "type": "object"
+            },
+            "RezultatArhivaciiWorkspace": {
+                "required": [
+                    "requiresConfirmation",
+                    "dirtyProjects",
+                    "status"
+                ],
+                "properties": {
+                    "requiresConfirmation": {
+                        "type": "boolean"
+                    },
+                    "dirtyProjects": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "projectId",
+                                "name",
+                                "files"
+                            ],
+                            "properties": {
+                                "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "files": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "CREATING",
+                            "STARTING",
+                            "RUNNING",
+                            "ARCHIVING",
+                            "ARCHIVED",
+                            "DELETING",
+                            "ERROR"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "PoluchitSostoyanieWorkspace": {
+                "required": [
+                    "workspaceId"
+                ],
+                "properties": {
+                    "workspaceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "type": "object"
+            },
+            "VosstanovitWorkspace": {
+                "required": [
+                    "workspaceId"
+                ],
+                "properties": {
+                    "workspaceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "type": "object"
+            },
+            "UdalitWorkspace": {
+                "required": [
+                    "workspaceId"
+                ],
+                "properties": {
+                    "workspaceId": {
                         "type": "string",
                         "format": "uuid"
                     }
@@ -11062,6 +11843,38 @@
                                 }
                             }
                         ]
+                    },
+                    "search": {
+                        "title": "\u041f\u043e\u0434\u0441\u0442\u0440\u043e\u043a\u0430 \u043f\u043e \u0438\u043c\u0435\u043d\u0438 \u0418\u041b\u0418 \u0432\u0435\u0442\u043a\u0435 (\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u043e\u043d\u0435\u0437\u0430\u0432\u0438\u0441\u0438\u043c\u044b\u0439 \u043f\u043e\u0438\u0441\u043a). \u041f\u0443\u0441\u0442\u0430\u044f \u0441\u0442\u0440\u043e\u043a\u0430 \u2014 \u0431\u0435\u0437 \u0444\u0438\u043b\u044c\u0442\u0440\u0430.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "default": null
+                    },
+                    "statuses": {
+                        "title": "\u0421\u0442\u0430\u0442\u0443\u0441\u044b \u044e\u043d\u0438\u0442\u043e\u0432 \u0434\u043b\u044f \u0444\u0438\u043b\u044c\u0442\u0440\u0430\u0446\u0438\u0438: `running`, `busy`, `prepared`, `stopped`, `error`.",
+                        "description": "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0435 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u0438\u0433\u043d\u043e\u0440\u0438\u0440\u0443\u044e\u0442\u0441\u044f; \u043f\u0443\u0441\u0442\u043e\u0439 \u043c\u0430\u0441\u0441\u0438\u0432 \u2014 \u0431\u0435\u0437 \u0444\u0438\u043b\u044c\u0442\u0440\u0430.",
+                        "default": [],
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "sort": {
+                        "title": "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430: `created_desc`, `updated_desc`, `name_asc`, `status_priority`. \u041f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e `created_desc`.",
+                        "type": "string",
+                        "default": "created_desc"
                     }
                 },
                 "type": "object"

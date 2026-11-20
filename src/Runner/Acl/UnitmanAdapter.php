@@ -5,14 +5,23 @@ namespace App\Runner\Acl;
 use App\Runner\Business\Model\RunnerState\DockerContainerStats;
 use App\Runner\Business\Port\UmeetObnovlyatSostoyanieKonteyneraUnita;
 use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
+use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
 use App\Unitman\Api\UnitmanApi;
 use App\Unitman\Business\Command\Unit\ObnovitSostoyanieKonteyneraUnita;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 
-final class UnitmanAdapter implements UmeetObnovlyatStatistikuPoUnitam, UmeetObnovlyatSostoyanieKonteyneraUnita
+final class UnitmanAdapter implements
+    UmeetObnovlyatStatistikuPoUnitam,
+    UmeetObnovlyatSostoyanieKonteyneraUnita,
+    UmeetPoluchatUrlKlonaProekta
 {
     public function __construct(private UnitmanApi $unitmanApi)
     {
+    }
+
+    public function poluchitUrlKlona(string $projectId): string
+    {
+        return $this->unitmanApi->poluchitUrlKlonaProekta($projectId);
     }
 
     /**

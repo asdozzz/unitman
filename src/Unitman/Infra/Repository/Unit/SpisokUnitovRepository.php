@@ -146,6 +146,14 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
             $params['branch'] = '%'.$query->filter->branch.'%';
         }
 
+        // Единый поиск: подстрока по имени ИЛИ ветке. Пустая строка — без фильтра.
+        if ($query->filter->search !== null && trim($query->filter->search) !== '') {
+            $whereArr[] = "(t.payload->>'name' ILIKE :search OR t.payload->>'branch' ILIKE :search)";
+            $params['search'] = '%'.$query->filter->search.'%';
+        }
+
+        $this->dobavitUsloviePoStatusam($whereArr, $query->filter->statuses);
+
         $this->dobavitUsloviePoProektam($whereArr, $params, $types, $projectIds, $query->filter->projectId);
 
         $this->dobavitUsloviePoSvyazyam($whereArr, $params, $types, $query->filter->unitIds);
@@ -153,7 +161,9 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         $where = "WHERE ".join(' AND ', $whereArr);
 
         $rows = $this->connection->fetchAllAssociative(
-            $this->sqlSNanyatostyu("$table t", $where)." ORDER BY t.id desc LIMIT :limit OFFSET :offset",
+            $this->sqlSNanyatostyu("$table t", $where)
+                ." ORDER BY ".$this->sqlOrderBy($query->filter->sort)
+                ." LIMIT :limit OFFSET :offset",
             $params,
             $types
         );
@@ -164,6 +174,123 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         }
 
         return $result;
+    }
+
+    /**
+     * Фильтр по статусам: одно условие `AND (cond_1 OR cond_2 ...)`.
+     *
+     * Предикаты взаимоисключающие и повторяют приоритет `deriveUnitUiState`:
+     * error → busy → running → prepared → stopped. Неизвестные значения
+     * игнорируются; если валидных статусов нет, фильтр не добавляется.
+     *
+     * @param string[] $whereArr
+     * @param string[] $statuses
+     */
+    private function dobavitUsloviePoStatusam(array &$whereArr, array $statuses): void
+    {
+        $usloviya = [];
+
+        foreach ($statuses as $status) {
+            $predicate = $this->sqlStatusPredicate($status);
+            if ($predicate !== null) {
+                $usloviya[] = $predicate;
+            }
+        }
+
+        if ($usloviya === []) {
+            return;
+        }
+
+        $whereArr[] = '('.join(' OR ', $usloviya).')';
+    }
+
+    /**
+     * SQL-предикат одного статуса. Используется и фильтром, и рангом сортировки,
+     * чтобы условия не дублировались.
+     *
+     * @return string|null null для неизвестного статуса
+     */
+    private function sqlStatusPredicate(string $status): ?string
+    {
+        $oshibka = $this->sqlOshibka();
+        $zanyat = $this->sqlZanyatBezOshibki();
+        $zapushen = $this->sqlZapushen();
+        $estZapusk = $this->sqlEstNachatZapusk();
+
+        return match ($status) {
+            'error' => "({$oshibka})",
+            'busy' => "(NOT {$oshibka} AND {$zanyat})",
+            'running' => "(NOT {$oshibka} AND NOT {$zanyat} AND {$zapushen})",
+            'prepared' => "(NOT {$oshibka} AND NOT {$zanyat} AND NOT {$zapushen} AND {$estZapusk})",
+            'stopped' => "(NOT {$oshibka} AND NOT {$zanyat} AND NOT {$zapushen} AND NOT {$estZapusk})",
+            default => null,
+        };
+    }
+
+    private function sqlOshibka(): string
+    {
+        return "COALESCE((t.payload->>'error')::boolean, false)";
+    }
+
+    private function sqlZapushen(): string
+    {
+        return "COALESCE((t.payload->>'zapushen')::boolean, false)";
+    }
+
+    /**
+     * Занятость без учёта ошибки: явный захват `opencode_hod` либо незавершённый
+     * процесс в `payload->'prozesi'`. Ошибка проверяется отдельно — в
+     * `deriveUnitUiState` она имеет наивысший приоритет.
+     */
+    private function sqlZanyatBezOshibki(): string
+    {
+        return "(COALESCE(z.tip = 'opencode_hod', false) OR EXISTS (
+            SELECT 1
+            FROM jsonb_array_elements(COALESCE(t.payload->'prozesi', '[]'::jsonb)) AS prozes
+            WHERE prozes->>'state' NOT IN ('SUCCESS', 'ERROR', 'CANCLED')
+        ))";
+    }
+
+    private function sqlEstNachatZapusk(): string
+    {
+        // Функциональная форма оператора `?`: literal `?` в SQL DBAL принимает
+        // за позиционный параметр, поэтому используем jsonb_exists.
+        return "COALESCE(jsonb_exists(t.payload->'commands', 'nachatZapusk'), false)";
+    }
+
+    /**
+     * ORDER BY по выбранной сортировке. Неизвестное значение трактуется как
+     * `created_desc`, чтобы не менять поведение по умолчанию.
+     */
+    private function sqlOrderBy(string $sort): string
+    {
+        return match ($sort) {
+            'updated_desc' => "(t.payload->>'unixtimePoslednegoObnovleniyaUnita')::bigint DESC NULLS LAST, t.id DESC",
+            'name_asc' => "lower(t.payload->>'name') ASC, t.id DESC",
+            'status_priority' => $this->sqlStatusRank()
+                ." ASC, (t.payload->>'unixtimePoslednegoObnovleniyaUnita')::bigint DESC NULLS LAST, t.id DESC",
+            default => "t.id DESC",
+        };
+    }
+
+    /**
+     * Ранг статуса для `status_priority`: error=0, busy=1, running=2,
+     * prepared=3, stopped=4. Строится по тем же предикатам, что и фильтр.
+     */
+    private function sqlStatusRank(): string
+    {
+        $rank = 'CASE';
+
+        foreach (['error' => 0, 'busy' => 1, 'running' => 2, 'prepared' => 3] as $status => $value) {
+            $predicate = $this->sqlStatusPredicate($status);
+            if ($predicate === null) {
+                continue;
+            }
+
+            $rank .= " WHEN ".$predicate." THEN $value";
+        }
+
+        return $rank.' ELSE 4 END';
     }
 
     /**

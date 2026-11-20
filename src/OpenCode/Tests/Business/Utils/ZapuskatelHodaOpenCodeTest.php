@@ -6,6 +6,8 @@ namespace App\OpenCode\Tests\Business\Utils;
 
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\StatusWorkspace;
+use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
@@ -13,6 +15,7 @@ use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Business\Utils\VladelecZanyatostiOpenCode;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
+use App\OpenCode\Tests\Support\FabrikaWorkspace;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -148,6 +151,66 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         $sessiya = SessiyaOpenCode::create('session-1', 'account-1', 'credential-1', null, [], 1000);
 
         $zapuskatel->zapustit($sessiya, 'Привет', [], []);
+    }
+
+    #[Test]
+    public function workspace_ne_zahvatyvaet_unity_i_peredayot_kontekst(): void
+    {
+        $bronirovanie = $this->createMock(UmeetBronirovatUniti::class);
+        $bronirovanie->expects($this->never())->method('zahvatit');
+        $bronirovanie->expects($this->never())->method('osvobodit');
+
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->once())->method('save');
+
+        $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $sessionRepository->expects($this->once())->method('update');
+
+        $zahvachennyiKontekst = null;
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->once())
+            ->method('nachatHod')
+            ->willReturnCallback(
+                static function (
+                    string $workflowId,
+                    string $accountId,
+                    string $credentialId,
+                    ?string $sessionId,
+                    array $units,
+                    string $prompt,
+                    array $answers,
+                    array $history,
+                    ?WorkspaceKontekst $workspace = null,
+                ) use (&$zahvachennyiKontekst): string {
+                    $zahvachennyiKontekst = $workspace;
+
+                    return $workflowId;
+                }
+            );
+
+        $zapuskatel = new ZapuskatelHodaOpenCode(
+            $turnRepository,
+            $sessionRepository,
+            $runner,
+            $this->uuidGenerator(),
+            $bronirovanie,
+        );
+
+        $sessiya = FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING);
+
+        $zapuskatel->zapustit($sessiya, 'Первый промпт', [], []);
+
+        $this->assertInstanceOf(WorkspaceKontekst::class, $zahvachennyiKontekst);
+        $this->assertSame('workspace-1', $zahvachennyiKontekst->workspaceId);
+        $this->assertFalse($zahvachennyiKontekst->readOnly);
+        $this->assertSame(['project-1'], array_map(
+            static fn ($project): string => $project->projectId,
+            $zahvachennyiKontekst->projects,
+        ));
+        $this->assertSame('payments-refactor', $sessiya->getTitle(), 'Название workspace не подменяется промптом');
     }
 
     private function uuidGenerator(): UuidGenerator
