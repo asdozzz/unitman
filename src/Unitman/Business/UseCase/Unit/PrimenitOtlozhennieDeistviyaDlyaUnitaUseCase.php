@@ -126,7 +126,7 @@ final class PrimenitOtlozhennieDeistviyaDlyaUnitaUseCase
     {
         match ($tipSobitiya) {
             TipSobitiya::KOD_OBNOVLEN => $this->dobavitProzesObnovleniyaUseCase->handleSystem($unitId),
-            TipSobitiya::VETKA_UDALENA => $this->dobavitProzesUdaleniyaUseCase->handleSystem($unitId),
+            TipSobitiya::VETKA_UDALENA, TipSobitiya::VETKA_SMERZHENA => $this->dobavitProzesUdaleniyaUseCase->handleSystem($unitId),
             TipSobitiya::VETKA_SOZDANA => throw new \DomainException('unit.otlozhennoe_deistvie.tip_ne_podderzhan'),
         };
     }

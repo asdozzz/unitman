@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Unitman\Tests\Infra\Jobs\SobitiyaIzHranilisha;
 
+use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\SobitieIzHranilisha;
@@ -150,6 +151,172 @@ final class SobitiyaIzHranilishaActivityTest extends AbstractUnitUseCase
         self::assertSame(TipSobitiya::VETKA_UDALENA, $deistvie->tipSobitiya);
     }
 
+    #[Test]
+    public function svobodnii_unit_pri_merzhe_v_main_zapuskaet_udalenie(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        $result = $this->activity()->obrabotatZadachu($this->sobitieMergeRequesta($projectId));
+
+        self::assertSame(SobitiyaIzHranilishaActivity::OK, $result);
+        self::assertTrue($this->estProzesUdaleniya($unitId));
+        self::assertSame(
+            [],
+            $this->otlozhennie()->poluchitGotovieDlyaUnita($unitId, $this->neskolkoMinutVpered()),
+            'свободный юнит не должен порождать отложенных намерений',
+        );
+    }
+
+    #[Test]
+    public function zanyatii_unit_pri_merzhe_poluchaet_otlozhennoe_udalenie(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        $this->zahvatit($unitId);
+
+        $result = $this->activity()->obrabotatZadachu($this->sobitieMergeRequesta($projectId));
+
+        self::assertSame(SobitiyaIzHranilishaActivity::DEFERRED, $result);
+
+        $deistviya = $this->otlozhennie()->poluchitGotovieDlyaUnita($unitId, $this->neskolkoMinutVpered());
+
+        self::assertCount(1, $deistviya);
+
+        $deistvie = reset($deistviya);
+        self::assertInstanceOf(OtlozhennoeDeistvie::class, $deistvie);
+        self::assertSame(TipSobitiya::VETKA_SMERZHENA, $deistvie->tipSobitiya);
+        self::assertSame(self::VETKA, $deistvie->payload['vetka']);
+
+        self::assertFalse(
+            $this->estProzesUdaleniya($unitId),
+            'пока юнит занят, процесс удаления запускаться не должен',
+        );
+    }
+
+    #[Test]
+    public function merzh_ne_v_main_ne_udaliayet_unit(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        $result = $this->activity()->obrabotatZadachu(
+            $this->sobitieMergeRequesta($projectId, self::VETKA, 'develop')
+        );
+
+        self::assertSame(SobitiyaIzHranilishaActivity::NOT_MAIN_BRANCH, $result);
+        self::assertFalse($this->estProzesUdaleniya($unitId));
+        self::assertSame(
+            [],
+            $this->otlozhennie()->poluchitGotovieDlyaUnita($unitId, $this->neskolkoMinutVpered()),
+        );
+    }
+
+    #[Test]
+    public function push_v_main_s_merge_kommitom_zapuskaet_udalenie(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        $result = $this->activity()->obrabotatZadachu($this->sobitiePushSMergeKommitom($projectId));
+
+        self::assertSame(SobitiyaIzHranilishaActivity::OK, $result);
+        self::assertTrue($this->estProzesUdaleniya($unitId));
+    }
+
+    #[Test]
+    public function push_v_feature_s_merge_kommitom_ne_zapuskaet_udalenie(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        $this->activity()->obrabotatZadachu(
+            $this->sobitiePushSMergeKommitom($projectId, self::VETKA, 'feature/inner')
+        );
+
+        self::assertFalse($this->estProzesUdaleniya($unitId));
+    }
+
+    #[Test]
+    public function merzh_pri_vikluchennom_avtoudalenii_ne_zapuskaet_udalenie(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        /** @var ProjectRepository $projectRepository */
+        $projectRepository = self::$container->get(ProjectRepository::class);
+        $project = $projectRepository->getById($projectId);
+        $project->obnovitNastrokiHuka(new ObnovitNastroikiHuka($projectId, true, true, false, false));
+        $projectRepository->save($project);
+
+        $result = $this->activity()->obrabotatZadachu($this->sobitieMergeRequesta($projectId));
+
+        self::assertSame(SobitiyaIzHranilishaActivity::OK, $result);
+        self::assertFalse($this->estProzesUdaleniya($unitId));
+    }
+
+    #[Test]
+    public function merzh_vitesnyaet_otlozhennoe_obnovlenie_koda(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        $this->otlozhennie()->otlozhit(
+            $unitId,
+            $projectId,
+            TipSobitiya::KOD_OBNOVLEN,
+            ['vetka' => self::VETKA, 'unixtime' => 1_760_000_000, 'tip_sobitiya' => TipSobitiya::KOD_OBNOVLEN->value],
+            new \DateTimeImmutable(),
+        );
+
+        $this->zahvatit($unitId);
+
+        $result = $this->activity()->obrabotatZadachu($this->sobitieMergeRequesta($projectId));
+
+        self::assertSame(SobitiyaIzHranilishaActivity::DEFERRED, $result);
+
+        $deistviya = $this->otlozhennie()->poluchitGotovieDlyaUnita($unitId, $this->neskolkoMinutVpered());
+
+        self::assertCount(1, $deistviya, 'слияние должно вытеснить отложенное обновление кода');
+
+        $deistvie = reset($deistviya);
+        self::assertInstanceOf(OtlozhennoeDeistvie::class, $deistvie);
+        self::assertSame(TipSobitiya::VETKA_SMERZHENA, $deistvie->tipSobitiya);
+    }
+
+    #[Test]
+    public function merzh_zameshaet_otlozhennoe_udalenie_vetki(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka();
+
+        $this->otlozhennie()->otlozhit(
+            $unitId,
+            $projectId,
+            TipSobitiya::VETKA_UDALENA,
+            ['vetka' => self::VETKA, 'unixtime' => 1_760_000_000, 'tip_sobitiya' => TipSobitiya::VETKA_UDALENA->value],
+            new \DateTimeImmutable(),
+        );
+
+        $this->zahvatit($unitId);
+
+        $result = $this->activity()->obrabotatZadachu($this->sobitieMergeRequesta($projectId));
+
+        self::assertSame(SobitiyaIzHranilishaActivity::DEFERRED, $result);
+
+        $deistviya = $this->otlozhennie()->poluchitGotovieDlyaUnita($unitId, $this->neskolkoMinutVpered());
+
+        self::assertCount(1, $deistviya, 'два намерения удаления не должны сосуществовать');
+
+        $deistvie = reset($deistviya);
+        self::assertInstanceOf(OtlozhennoeDeistvie::class, $deistvie);
+        self::assertSame(TipSobitiya::VETKA_SMERZHENA, $deistvie->tipSobitiya);
+    }
+
+    #[Test]
+    public function pull_request_v_main_zapuskaet_udalenie_dlya_github(): void
+    {
+        [$projectId, $unitId] = $this->podgotovka(RepoType::GITHUB);
+
+        $result = $this->activity()->obrabotatZadachu($this->sobitiePullRequesta($projectId));
+
+        self::assertSame(SobitiyaIzHranilishaActivity::OK, $result);
+        self::assertTrue($this->estProzesUdaleniya($unitId));
+    }
+
     /**
      * Тело вебхука больше лимита отклоняется до разбора и не бросает исключение:
      * иначе задание RoadRunner ушло бы в retry-цикл.
@@ -197,7 +364,7 @@ final class SobitiyaIzHranilishaActivityTest extends AbstractUnitUseCase
      *
      * @return array{0: string, 1: string} идентификаторы проекта и юнита
      */
-    private function podgotovka(): array
+    private function podgotovka(RepoType $repoType = RepoType::GITLAB): array
     {
         $userId = Uuid::uuid7()->toString();
         $unitId = Uuid::uuid7()->toString();
@@ -210,7 +377,7 @@ final class SobitiyaIzHranilishaActivityTest extends AbstractUnitUseCase
         self::$container->set(CanGenerateGuid::class, $guidGenerator);
 
         $repoId = Uuid::uuid7()->toString();
-        $repo = $this->stubRepo($repoId, RepoType::GITLAB, 'repoName', 'http://repoUrl');
+        $repo = $this->stubRepo($repoId, $repoType, 'repoName', 'http://repoUrl');
         $repo->accessConfirm();
 
         /** @var RepoRepository $repoRepository */
@@ -311,6 +478,67 @@ final class SobitiyaIzHranilishaActivityTest extends AbstractUnitUseCase
             'after' => 'bf2c3d4e',
             'commits' => [
                 ['timestamp' => '2025-10-09T10:00:00+00:00'],
+            ],
+        ]));
+    }
+
+    /**
+     * Событие GitLab о слиянии merge request в основную ветку проекта.
+     */
+    private function sobitieMergeRequesta(
+        string $projectId,
+        string $vetka = self::VETKA,
+        string $celVetka = 'master',
+    ): SobitieIzHranilisha {
+        return new SobitieIzHranilisha('sobitie-merge', $projectId, (string)json_encode([
+            'object_kind' => 'merge_request',
+            'object_attributes' => [
+                'action' => 'merge',
+                'state' => 'merged',
+                'source_branch' => $vetka,
+                'target_branch' => $celVetka,
+                'merged_at' => '2026-11-20T10:00:00+00:00',
+            ],
+        ]));
+    }
+
+    /**
+     * Push-событие с merge-коммитом: цель берётся из ref, источник — из сообщения.
+     */
+    private function sobitiePushSMergeKommitom(
+        string $projectId,
+        string $refVetka = 'master',
+        string $vetkaIstochnika = self::VETKA,
+    ): SobitieIzHranilisha {
+        return new SobitieIzHranilisha('sobitie-push-merge', $projectId, (string)json_encode([
+            'event_name' => 'push',
+            'ref' => 'refs/heads/' . $refVetka,
+            'before' => 'ae1b2c3d',
+            'after' => 'bf2c3d4e',
+            'commits' => [
+                [
+                    'message' => "Merge branch '" . $vetkaIstochnika . "' into '" . $refVetka . "'",
+                    'timestamp' => '2026-11-20T10:00:00+00:00',
+                ],
+            ],
+        ]));
+    }
+
+    /**
+     * Событие GitHub о слиянии pull request.
+     */
+    private function sobitiePullRequesta(
+        string $projectId,
+        string $vetka = self::VETKA,
+        string $celVetka = 'master',
+    ): SobitieIzHranilisha {
+        return new SobitieIzHranilisha('sobitie-pull-request', $projectId, (string)json_encode([
+            'action' => 'closed',
+            'pull_request' => [
+                'merged' => true,
+                'merged_at' => '2026-11-20T10:00:00+00:00',
+                'head' => ['ref' => $vetka],
+                'base' => ['ref' => $celVetka],
             ],
         ]));
     }

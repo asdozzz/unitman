@@ -11,5 +11,11 @@ interface StorageTypeAdapter
 {
     public function esliValidnoeSobitie(SobitiePayload $payload): bool;
     public function isSupport(RepoType $repoType): bool;
-    function poluchitDannieSobitiya(SobitiePayload $payload): DannieSobitiya;
+
+    /**
+     * @param string $mainBranch основная ветка проекта: нужна, чтобы отличить
+     *                            push в неё от push в ветку юнита и корректно
+     *                            определить факт слияния.
+     */
+    function poluchitDannieSobitiya(SobitiePayload $payload, string $mainBranch): DannieSobitiya;
 }

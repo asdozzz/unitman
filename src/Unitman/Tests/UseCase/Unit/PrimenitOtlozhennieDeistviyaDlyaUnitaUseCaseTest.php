@@ -221,6 +221,29 @@ final class PrimenitOtlozhennieDeistviyaDlyaUnitaUseCaseTest extends TestCase
     }
 
     #[Test]
+    public function svobodnii_unit_primenyaet_otlozhennoe_sliyanie_kak_udalenie(): void
+    {
+        $otlozhennie = $this->createMock(OtlozhennieDeistviyaRepository::class);
+        $otlozhennie->method('poluchitGotovieDlyaUnita')->willReturn([
+            $this->deistvie(TipSobitiya::VETKA_SMERZHENA),
+        ]);
+        $otlozhennie->expects($this->once())
+            ->method('udovletvorit')
+            ->with(self::UNIT_ID, TipSobitiya::VETKA_SMERZHENA);
+        $otlozhennie->expects($this->never())->method('otmetitPopytku');
+        $otlozhennie->expects($this->never())->method('udalitPoUnituITipu');
+
+        $unitRepository = $this->createMock(UnitRepository::class);
+        $unitRepository->method('getById')->willReturn($this->unit());
+        $unitRepository->expects($this->once())->method('save');
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())->method('info');
+
+        $this->useCase($otlozhennie, $unitRepository, $logger)->handle(self::UNIT_ID);
+    }
+
+    #[Test]
     public function padenie_vnutrennego_scenariya_ne_teryaet_namerenie(): void
     {
         $otlozhennie = $this->createMock(OtlozhennieDeistviyaRepository::class);

@@ -27,6 +27,11 @@ final class SobitiyaIzHranilishaActivity
     const EMPTY_IDS = 'empty ids';
 
     /**
+     * Слияние произошло не в основную ветку проекта: юнит удалять не нужно.
+     */
+    const NOT_MAIN_BRANCH = 'not_main_branch';
+
+    /**
      * Событие принято, но применить его сразу нельзя: юнит занят ходом
      * OpenCode, намерение сохранено и будет применено автоматически.
      */
@@ -78,12 +83,13 @@ final class SobitiyaIzHranilishaActivity
             return 'invalid';
         }
 
-        $dannieSobitiya = $adapter->poluchitDannieSobitiya($payload);
+        $dannieSobitiya = $adapter->poluchitDannieSobitiya($payload, $project->getMainBranchName());
 
         $result = match ($dannieSobitiya->tipSobitiya) {
             TipSobitiya::KOD_OBNOVLEN => $this->obnovitUnixtimePoslednegoIzmeneniya($project, $dannieSobitiya),
             TipSobitiya::VETKA_UDALENA => $this->udalitUniti($project, $dannieSobitiya),
-            TipSobitiya::VETKA_SOZDANA => $this->sozdatUnit($project, $dannieSobitiya)
+            TipSobitiya::VETKA_SOZDANA => $this->sozdatUnit($project, $dannieSobitiya),
+            TipSobitiya::VETKA_SMERZHENA => $this->obrabotatMerzh($project, $dannieSobitiya),
         };
 
         return $result;
@@ -187,6 +193,23 @@ final class SobitiyaIzHranilishaActivity
         return $otlozheno > 0 ? self::DEFERRED : self::OK;
     }
 
+    /**
+     * Слияние ветки в основную ветку проекта трактуем как завершение работы
+     * над юнитом: ветка может остаться в репозитории, но юнит больше не нужен.
+     * Поведение совпадает с удалением ветки, включая флаг `avtoudalenie` и
+     * откладывание, если юнит занят.
+     */
+    private function obrabotatMerzh(Project $project, DannieSobitiya $dannieSobitiya): string
+    {
+        if ($dannieSobitiya->celVetka !== null
+            && $dannieSobitiya->celVetka !== $project->getMainBranchName()
+        ) {
+            return self::NOT_MAIN_BRANCH;
+        }
+
+        return $this->udalitUniti($project, $dannieSobitiya);
+    }
+
     private function udalitUniti(Project $project, DannieSobitiya $dannieSobitiya): string
     {
         if (!$project->poluchitNastroikiHuka()->avtoudalenie) {
@@ -213,7 +236,7 @@ final class SobitiyaIzHranilishaActivity
                 if (!$this->proverkaSvobody->svoboden($unit)) {
                     $this->otlozhitDeistvieNadUnitomUseCase->handle(
                         $unit,
-                        TipSobitiya::VETKA_UDALENA,
+                        $dannieSobitiya->tipSobitiya,
                         $dannieSobitiya
                     );
                     $otlozheno++;

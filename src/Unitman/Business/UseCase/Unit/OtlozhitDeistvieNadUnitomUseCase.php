@@ -17,8 +17,10 @@ use Psr\Log\LoggerInterface;
  * нельзя. Джоб вебхука ретраится ограниченное число раз и теряет событие —
  * поэтому намерение сохраняется в БД и живёт до первого освобождения юнита.
  *
- * Приоритет `VETKA_UDALENA` над `KOD_OBNOVLEN` реализован здесь: удаление
- * ветки отменяет смысл её обновления, и держать оба намерения незачем.
+ * Приоритет удаления над `KOD_OBNOVLEN` реализован здесь: и удаление ветки,
+ * и её слияние отменяют смысл обновления. Намерения удаления и слияния
+ * взаимоисключающие — оба ведут к удалению юнита, поэтому второе заменяет
+ * первое и не создаёт второй процесс.
  */
 final class OtlozhitDeistvieNadUnitomUseCase
 {
@@ -32,8 +34,9 @@ final class OtlozhitDeistvieNadUnitomUseCase
     {
         $unitId = $unit->getId();
 
-        if ($tipSobitiya === TipSobitiya::VETKA_UDALENA) {
+        if ($this->esliUdalenie($tipSobitiya)) {
             $this->otlozhennieRepository->udalitPoUnituITipu($unitId, TipSobitiya::KOD_OBNOVLEN);
+            $this->otlozhennieRepository->udalitPoUnituITipu($unitId, $this->drugayaPrichinaUdaleniya($tipSobitiya));
         }
 
         $this->otlozhennieRepository->otlozhit(
@@ -59,5 +62,18 @@ final class OtlozhitDeistvieNadUnitomUseCase
             'tipSobitiya' => $tipSobitiya->value,
             'unixtime' => $dannieSobitiya->unixtime,
         ]);
+    }
+
+    private function esliUdalenie(TipSobitiya $tipSobitiya): bool
+    {
+        return $tipSobitiya === TipSobitiya::VETKA_UDALENA
+            || $tipSobitiya === TipSobitiya::VETKA_SMERZHENA;
+    }
+
+    private function drugayaPrichinaUdaleniya(TipSobitiya $tipSobitiya): TipSobitiya
+    {
+        return $tipSobitiya === TipSobitiya::VETKA_UDALENA
+            ? TipSobitiya::VETKA_SMERZHENA
+            : TipSobitiya::VETKA_UDALENA;
     }
 }
