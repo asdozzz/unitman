@@ -36,6 +36,24 @@ final class SozdatUnitUseCase
     }
 
     /**
+     * Создание юнита с информационным признаком защищённой ветки (plan §7.3).
+     *
+     * Юнит создаётся штатно; `vetkaZashishena` носит информационный характер.
+     *
+     * @return array{id: string, vetkaZashishena: bool}
+     */
+    function handleSVetkoy(SozdatUnit $command): array
+    {
+        $project = $this->projectRepository->getById($command->projectId);
+        $unitId = $this->handle($command);
+
+        return [
+            'id' => $unitId,
+            'vetkaZashishena' => $project->soderzhitZashishennuyuVetku($command->branch),
+        ];
+    }
+
+    /**
      * Создание юнита от имени явно переданного пользователя: этим путём
      * пользуются интеграции (сессии OpenCode), у которых нет текущего запроса.
      * Права проверяются по тому же пользователю, что и в обычном сценарии.

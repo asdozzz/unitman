@@ -39,8 +39,18 @@ final class ImitaciyaUpravleniyaProektamiWorkspace implements UmeetUpravlyatProe
         $this->ssylki[$projectId] = $link;
     }
 
-    public function poluchitProekti(array $projectIds, string $accountId): array
-    {
+    /**
+     * @param list<string>          $projectIds
+     * @param array<string, string> $projectBranches
+     *
+     * @return list<ProektWorkspace>
+     */
+    public function poluchitProekti(
+        array $projectIds,
+        string $accountId,
+        string $branch = '',
+        array $projectBranches = [],
+    ): array {
         $result = [];
 
         foreach ($projectIds as $position => $projectId) {
@@ -56,6 +66,8 @@ final class ImitaciyaUpravleniyaProektamiWorkspace implements UmeetUpravlyatProe
                 $project->projectCode,
                 $project->canPush,
                 $position,
+                $project->mainBranch,
+                $projectBranches[$projectId] ?? $branch,
             );
         }
 
@@ -68,5 +80,26 @@ final class ImitaciyaUpravleniyaProektamiWorkspace implements UmeetUpravlyatProe
         string $workspaceSlug,
     ): ?string {
         return $this->ssylki[$projectId] ?? null;
+    }
+
+    public function poluchitSsylkuPoPortu(
+        string $projectId,
+        string $accountId,
+        string $workspaceSlug,
+        int $port,
+        ?string $type = null,
+        ?string $suffix = null,
+    ): ?string {
+        if (($this->ssylki[$projectId] ?? null) === null) {
+            return null;
+        }
+
+        $link = 'http://'.$port.'.'.$workspaceSlug.'.workspaces.example.test';
+
+        if ($suffix !== null && $suffix !== '') {
+            $link .= str_starts_with($suffix, '/') ? $suffix : '/'.$suffix;
+        }
+
+        return $link;
     }
 }

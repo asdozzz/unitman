@@ -19,6 +19,10 @@ use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\PeremenieUnitaZapolneni;
 use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\PometitKakSlomanii;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVyklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktorOtkreplenOtUnitu;
+use App\Unitman\Business\Model\Unit\Event\RedaktorPrikreplenKUnitu;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
@@ -37,6 +41,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
+use App\Unitman\Business\Model\Unit\Event\ZadachiDobavleniVProzesUnita;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
@@ -96,6 +101,14 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         return [
             StatistikaPoKonteineruObnovlena::class,
         ];
+    }
+
+    /**
+     * Read-модель списка юнитов не хранит задачи внутри процесса,
+     * поэтому событие осознанно не меняет её данные.
+     */
+    function handleZadachiDobavleniVProzesUnita(ZadachiDobavleniVProzesUnita $fact): void
+    {
     }
 
     function handleDobavlenProzesVUnit(DobavlenProzesVUnit $fact): void
@@ -566,6 +579,49 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         }
         $readModel = $readModel->copyAndUpdateData($data);
         $this->repository->update($readModel);
+    }
+
+    function handleRedaktirovanieUnitaVklucheno(RedaktirovanieUnitaVklucheno $fact): void
+    {
+        $readModel = $this->repository->getById($fact->unitId);
+        $this->repository->update($readModel->copyAndUpdateData([
+            'redaktirovanieVklucheno' => true,
+        ]));
+    }
+
+    function handleRedaktirovanieUnitaVyklucheno(RedaktirovanieUnitaVyklucheno $fact): void
+    {
+        $readModel = $this->repository->getById($fact->unitId);
+        $this->repository->update($readModel->copyAndUpdateData([
+            'redaktirovanieVklucheno' => false,
+        ]));
+    }
+
+    function handleRedaktorPrikreplenKUnitu(RedaktorPrikreplenKUnitu $fact): void
+    {
+        $readModel = $this->repository->getById($fact->unitId);
+        $redaktory = $readModel->redaktory;
+
+        if (!in_array($fact->userId, $redaktory, true)) {
+            $redaktory[] = $fact->userId;
+        }
+
+        $this->repository->update($readModel->copyAndUpdateData([
+            'redaktory' => $redaktory,
+        ]));
+    }
+
+    function handleRedaktorOtkreplenOtUnitu(RedaktorOtkreplenOtUnitu $fact): void
+    {
+        $readModel = $this->repository->getById($fact->unitId);
+        $redaktory = array_values(array_filter(
+            $readModel->redaktory,
+            static fn (string $id): bool => $id !== $fact->userId,
+        ));
+
+        $this->repository->update($readModel->copyAndUpdateData([
+            'redaktory' => $redaktory,
+        ]));
     }
 
     function init(): void

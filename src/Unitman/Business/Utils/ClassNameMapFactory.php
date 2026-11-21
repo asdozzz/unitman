@@ -2,6 +2,11 @@
 
 namespace App\Unitman\Business\Utils;
 
+use App\Unitman\Business\Model\LichniyToken;
+use App\Unitman\Business\Model\LichniyToken\Event\LichniyTokenDobavlen;
+use App\Unitman\Business\Model\LichniyToken\Event\LichniyTokenUdalen;
+use App\Unitman\Business\Model\LichniyToken\Event\PravaLichnogoTokenaObnovleni;
+use App\Unitman\Business\Model\LichniyToken\LichniyTokenId;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
@@ -36,6 +41,10 @@ use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\PeremenieUnitaZapolneni;
 use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVyklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktorOtkreplenOtUnitu;
+use App\Unitman\Business\Model\Unit\Event\RedaktorPrikreplenKUnitu;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
@@ -64,6 +73,12 @@ final class ClassNameMapFactory
             RepoWasDeleted::class => UnitmanClassNameMapEnum::RepoWasDeleted,
             RepoWasAdded::class => UnitmanClassNameMapEnum::RepoWasAdded,
 
+            LichniyToken::class => UnitmanClassNameMapEnum::LichniyToken,
+            LichniyTokenId::class => UnitmanClassNameMapEnum::LichniyTokenId,
+            LichniyTokenDobavlen::class => UnitmanClassNameMapEnum::LichniyTokenDobavlen,
+            LichniyTokenUdalen::class => UnitmanClassNameMapEnum::LichniyTokenUdalen,
+            PravaLichnogoTokenaObnovleni::class => UnitmanClassNameMapEnum::PravaLichnogoTokenaObnovleni,
+
             Project::class => UnitmanClassNameMapEnum::Project,
             ProjectId::class => UnitmanClassNameMapEnum::ProjectId,
             ProjectWasAdded::class => UnitmanClassNameMapEnum::ProjectWasAdded,
@@ -83,6 +98,7 @@ final class ClassNameMapFactory
             Project\Event\PeremenayaUdalenaIzProekta::class => UnitmanClassNameMapEnum::PeremenayaUdalenaIzProekta,
             Project\Event\ZnacheniePeremnoiProektaIzmeneno::class => UnitmanClassNameMapEnum::ZnacheniePeremnoiProektaIzmeneno,
             Project\Event\NastroikiHukaProektaUstanovleni::class => UnitmanClassNameMapEnum::NastroikiHukaProektaUstanovleni,
+            Project\Event\ZashishennieVetkiProektaUstanovleni::class => UnitmanClassNameMapEnum::ZashishennieVetkiProektaUstanovleni,
             Project\Event\OchistkaProektaNachalas::class => UnitmanClassNameMapEnum::OchistkaProektaNachalas,
             Project\Event\OshibkaOchistkiProektaUstanovlena::class => UnitmanClassNameMapEnum::OshibkaOchistkiProektaUstanovlena,
             Project\Event\UspehOchistkiProektaUstanovlen::class => UnitmanClassNameMapEnum::UspehOchistkiProektaUstanovlen,
@@ -124,6 +140,10 @@ final class ClassNameMapFactory
             Unit\Event\UspehDeistviyaUstanovlen::class => UnitmanClassNameMapEnum::UspehDeistviyaUstanovlen,
             Unit\Event\OshibkaDeistviyaUstanovlena::class => UnitmanClassNameMapEnum::OshibkaDeistviyaUstanovlena,
             Unit\Event\UnitSbroshenDoSostoyaniyaSborki::class => UnitmanClassNameMapEnum::UnitSbroshenDoSostoyaniyaSborki,
+            RedaktirovanieUnitaVklucheno::class => UnitmanClassNameMapEnum::RedaktirovanieUnitaVklucheno,
+            RedaktirovanieUnitaVyklucheno::class => UnitmanClassNameMapEnum::RedaktirovanieUnitaVyklucheno,
+            RedaktorPrikreplenKUnitu::class => UnitmanClassNameMapEnum::RedaktorPrikreplenKUnitu,
+            RedaktorOtkreplenOtUnitu::class => UnitmanClassNameMapEnum::RedaktorOtkreplenOtUnitu,
             Unit\Event\ZadachaUnitaOtmenena::class => UnitmanClassNameMapEnum::ZadachaUnitaOtmenena,
             Unit\Event\PometitKakSlomanii::class => UnitmanClassNameMapEnum::PometitKakSlomanii,
         ];

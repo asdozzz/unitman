@@ -29,12 +29,17 @@ final class PoluchitProektiDlyaWorkspaceQuery
     }
 
     /**
-     * @param list<string> $projectIds
+     * @param list<string>          $projectIds
+     * @param array<string, string> $projectBranches переопределения ветки по projectId
      * @return list<ProektDlyaWorkspaceReadModel>
-     * @throws \DomainException opencode.workspace.project_conflict|opencode.workspace.project_not_found
+     * @throws \DomainException opencode.workspace.project_conflict|opencode.workspace.project_not_found|opencode.workspace.branch_protected
      */
-    public function handle(array $projectIds, string $accountId): array
-    {
+    public function handle(
+        array $projectIds,
+        string $accountId,
+        string $branch = '',
+        array $projectBranches = [],
+    ): array {
         $dostupnieProekti = $this->dostupnieProekti($accountId);
 
         $uvidennieProekti = [];
@@ -57,10 +62,19 @@ final class PoluchitProektiDlyaWorkspaceQuery
                 throw new \DomainException('opencode.workspace.project_not_found');
             }
 
+            $vetkaProekta = $projectBranches[$projectId] ?? $branch;
+
+            if ($vetkaProekta !== '' && $project->soderzhitZashishennuyuVetku($vetkaProekta)) {
+                // Имя проекта в detail помогает пользователю понять, какой
+                // именно проект запрещает выбранную ветку.
+                throw new \DomainException('opencode.workspace.branch_protected: '.$project->getName());
+            }
+
             $result[] = new ProektDlyaWorkspaceReadModel(
                 projectId: $project->getId(),
                 projectName: $project->getName(),
                 projectCode: $project->getCode(),
+                mainBranch: $project->getMainBranchName(),
                 proxyHost: (string) $project->getProxyHost(),
                 canPush: $this->proverkaPusha->canPush($repo, $project),
                 storageUrl: $this->urlKlonaProekta->poluchitUrlKlonaProekta($repo, $project),

@@ -32,6 +32,10 @@ use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
 use App\Unitman\Business\Model\Unit\Event\UdalenieUnitaNachalos;
 use App\Unitman\Business\Model\Unit\Event\UnitSbroshenDoSostoyaniyaSborki;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVyklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktorOtkreplenOtUnitu;
+use App\Unitman\Business\Model\Unit\Event\RedaktorPrikreplenKUnitu;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdan;
 use App\Unitman\Business\Model\Unit\Event\UnitSozdanSystemoi;
 use App\Unitman\Business\Model\Unit\Event\UspehDeistviyaUstanovlen;
@@ -138,6 +142,18 @@ final class Unit implements AggregateRoot
 
 
     private bool $isDeleted = false;
+
+    /**
+     * Режим редактирования файлов юнита: включается явно автором/админом.
+     */
+    private bool $redaktirovanieVklucheno = false;
+
+    /**
+     * Прикреплённые редакторы (идентификаторы пользователей).
+     *
+     * @var string[]
+     */
+    private array $redaktory = [];
 
     private ?UnitBranch $newBranch = null;
 
@@ -1619,6 +1635,139 @@ final class Unit implements AggregateRoot
     function getAuthorId(): ?string
     {
         return $this->authorId;
+    }
+
+    /**
+     * Включение режима редактирования файлов юнита.
+     *
+     * Проект передаётся аргументом: домен не ходит в репозитории и не знает
+     * о токенах. Защищённая ветка запрещает редактирование.
+     *
+     * Идемпотентно: повторное включение не пишет событие (решение 15.10-а).
+     */
+    public function vklyuchitRedaktirovanie(Project $project): void
+    {
+        $this->proveritDostupnostRedaktirovaniya($project);
+
+        if ($this->redaktirovanieVklucheno) {
+            return;
+        }
+
+        $this->recordThat(new RedaktirovanieUnitaVklucheno($this->getId()));
+    }
+
+    private function applyRedaktirovanieUnitaVklucheno(RedaktirovanieUnitaVklucheno $fact): void
+    {
+        $this->redaktirovanieVklucheno = true;
+    }
+
+    /**
+     * Выключение режима редактирования. Идемпотентно.
+     *
+     * Защищённая ветка не блокирует выключение: редактирование должно всегда
+     * можно было безопасно отключить.
+     */
+    public function vykluchitRedaktirovanie(Project $project): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if (!$this->redaktirovanieVklucheno) {
+            return;
+        }
+
+        $this->recordThat(new RedaktirovanieUnitaVyklucheno($this->getId()));
+    }
+
+    private function applyRedaktirovanieUnitaVyklucheno(RedaktirovanieUnitaVyklucheno $fact): void
+    {
+        $this->redaktirovanieVklucheno = false;
+    }
+
+    public function prikrepitRedaktora(string $userId, Project $project): void
+    {
+        $this->proveritDostupnostRedaktirovaniya($project);
+
+        $userId = trim($userId);
+
+        if ($userId === '') {
+            throw new DomainException('unit.redaktor.redaktor_ne_nayden');
+        }
+
+        if (in_array($userId, $this->redaktory, true)) {
+            throw new DomainException('unit.redaktor.redaktor_uzhe_prikreplen');
+        }
+
+        $this->recordThat(new RedaktorPrikreplenKUnitu($this->getId(), $userId, time()));
+    }
+
+    private function applyRedaktorPrikreplenKUnitu(RedaktorPrikreplenKUnitu $fact): void
+    {
+        if (!in_array($fact->userId, $this->redaktory, true)) {
+            $this->redaktory[] = $fact->userId;
+        }
+    }
+
+    /**
+     * Открепление редактора. Идемпотентно: если пользователь не прикреплён,
+     * событие не пишется.
+     */
+    public function otkrepitRedaktora(string $userId, Project $project): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        $userId = trim($userId);
+
+        if ($userId === '' || !in_array($userId, $this->redaktory, true)) {
+            return;
+        }
+
+        $this->recordThat(new RedaktorOtkreplenOtUnitu($this->getId(), $userId));
+    }
+
+    private function applyRedaktorOtkreplenOtUnitu(RedaktorOtkreplenOtUnitu $fact): void
+    {
+        $this->redaktory = array_values(array_filter(
+            $this->redaktory,
+            static fn (string $id): bool => $id !== $fact->userId,
+        ));
+    }
+
+    /**
+     * Общие доменные проверки режима редактирования: юнит не удалён, ветка
+     * не защищена. Защищённые ветки не денормализуются — сверка идёт по
+     * актуальному проекту.
+     */
+    private function proveritDostupnostRedaktirovaniya(Project $project): void
+    {
+        if ($this->isDeleted) {
+            throw new DomainException('unit.udalen');
+        }
+
+        if ($project->soderzhitZashishennuyuVetku($this->getBranch())) {
+            throw new DomainException('unit.redaktor.vetka_zashishena');
+        }
+    }
+
+    public function getRedaktirovanieVklucheno(): bool
+    {
+        return $this->redaktirovanieVklucheno;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getRedaktory(): array
+    {
+        return $this->redaktory;
+    }
+
+    public function isSozdanSystemoi(): bool
+    {
+        return $this->unitSozdanSystemoi;
     }
 
     /**

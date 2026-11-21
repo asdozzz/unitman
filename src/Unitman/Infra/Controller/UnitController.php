@@ -79,12 +79,12 @@ final class UnitController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Пустой ответ: команда создания юнита принята. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
+                description: 'Юнит создан: идентификатор и признак защищённой ветки. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
                 content: new OA\JsonContent(
                     required: ['status', 'data'],
                     properties: [
                         new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
-                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: команда создания юнита принята'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/SozdatUnitResult'),
                     ],
                     type: 'object'
                 )
@@ -97,8 +97,7 @@ final class UnitController extends AbstractController
     public function sozdat(SozdatUnit $command, SozdatUnitUseCase $useCase): Response
     {
         try {
-            $useCase->handle($command);
-            return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+            return $this->json(\App\Utils\Model\Reponse\Response::success($useCase->handleSVetkoy($command)));
         } catch (\Error $error) {
             return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
         }

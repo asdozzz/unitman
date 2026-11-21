@@ -21,6 +21,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
 use App\Unitman\Business\Model\Project\Event\UspehOchistkiProektaUstanovlen;
+use App\Unitman\Business\Model\Project\Event\ZashishennieVetkiProektaUstanovleni;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\ReadModel\Project\OcheredProektovReadModel;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
@@ -81,6 +82,7 @@ final class OcheredProektovProjection extends AbstractProjection implements Unit
             ProjectWasEnabled::class,
             UserAddedToProject::class,
             UserRemovedFromProject::class,
+            ZashishennieVetkiProektaUstanovleni::class,
             ZnacheniePeremnoiProektaIzmeneno::class
         ];
     }

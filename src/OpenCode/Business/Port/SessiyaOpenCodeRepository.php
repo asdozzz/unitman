@@ -39,7 +39,11 @@ interface SessiyaOpenCodeRepository
     public function findAktivnieSUnitom(int $limit): array;
 
     /**
-     * Активные workspace-сессии — вход для фоновой сверки операций.
+     * Workspace-сессии — вход для фоновой сверки операций.
+     *
+     * Помимо неархивных сессий сюда попадают архивные, у которых workspace
+     * в транзитном статусе: удаление архива и восстановление из архива тоже
+     * должны досверяться (иначе они навсегда залипают в `DELETING`/`STARTING`).
      *
      * @return list<SessiyaOpenCode>
      */

@@ -9,6 +9,10 @@ namespace App\OpenCode\Business\Model;
  *
  * `group` — результат единой матрицы готовности (`OcenkaGotovnostiUnita`):
  * сессия может принимать сообщения только в группе `ready`.
+ *
+ * Поля прав редактирования (`authorId`, `redaktirovanieVklucheno`,
+ * `vetkaZashishena`, `redaktory`) — снимок для вычисления read-only режима
+ * хода; сами права проверяет `OpredelitelRezhimaHodaOpenCode`.
  */
 final class SostoyanieUnita
 {
@@ -19,6 +23,10 @@ final class SostoyanieUnita
     /**
      * @param bool $zanyat над юнитом идёт операция: активити Unitman или чужой ход OpenCode
      * @param string|null $prichinaZanyatosti `prozes` | `opencode_hod` — для подсказки в интерфейсе
+     * @param string|null $authorId автор юнита
+     * @param bool $redaktirovanieVklucheno режим редактирования включён автором
+     * @param bool $vetkaZashishena ветка юнита входит в защищённые ветки проекта
+     * @param list<string> $redaktory прикреплённые редакторы (идентификаторы пользователей)
      */
     public function __construct(
         public readonly bool $exists,
@@ -29,6 +37,10 @@ final class SostoyanieUnita
         public readonly string $group,
         public readonly bool $zanyat = false,
         public readonly ?string $prichinaZanyatosti = null,
+        public readonly ?string $authorId = null,
+        public readonly bool $redaktirovanieVklucheno = false,
+        public readonly bool $vetkaZashishena = false,
+        public readonly array $redaktory = [],
     )
     {
     }

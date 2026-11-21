@@ -41,6 +41,20 @@ final class StatusWorkspaceTest extends TestCase
     }
 
     #[Test]
+    public function tranzitnie_soderzhat_tolko_nezavershennie_operacii(): void
+    {
+        $this->assertSame(
+            [
+                StatusWorkspace::CREATING,
+                StatusWorkspace::STARTING,
+                StatusWorkspace::ARCHIVING,
+                StatusWorkspace::DELETING,
+            ],
+            StatusWorkspace::tranzitnie(),
+        );
+    }
+
+    #[Test]
     public function iz_stroki_vosstanavlivaet_status(): void
     {
         $this->assertSame(StatusWorkspace::RUNNING, StatusWorkspace::izStroki('RUNNING'));

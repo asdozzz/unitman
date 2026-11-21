@@ -11,6 +11,7 @@ final class ProjectList
     /**
      * @param ProjectUsersList[] $users
      * @param ProjectListVariable[] $variables
+     * @param string[] $zashishennieVetki
      * */
     public function __construct(
         public readonly string $id,
@@ -25,7 +26,8 @@ final class ProjectList
         public array $users = [],
         public array $variables = [],
         public bool $waitResultRunner = false,
-        public int $memoryLimit = 3072
+        public int $memoryLimit = 3072,
+        public array $zashishennieVetki = []
     )
     {
     }

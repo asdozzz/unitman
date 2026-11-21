@@ -8,11 +8,13 @@ use App\OpenCode\Business\Model\ParametriSozdaniyaUnita;
 use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\SostoyanieUnita;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
+use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Utils\OcenkaGotovnostiUnita;
 use App\OpenCode\Business\Utils\SsylkaRedaktoraWorkspace;
 use App\Unitman\Api\UnitmanApi;
+use App\Unitman\Business\Utils\SsylkaServisaUtil;
 use App\Unitman\Business\ReadModel\Project\ProektDlyaWorkspaceReadModel;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
@@ -25,8 +27,15 @@ use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
  * OpenCode не знает про агрегат Unit и его состояния: наружу отдаётся
  * группа готовности, вычисленная единой матрицей `OcenkaGotovnostiUnita`.
  */
-final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUniti, UmeetUpravlyatProektamiWorkspace
+final class UnitmanAdapter implements
+    UmeetUpravlyatUnitami,
+    UmeetBronirovatUniti,
+    UmeetUpravlyatProektamiWorkspace,
+    UmeetPoluchatTokenRedaktirovaniyaUnita
 {
+    /** Псевдо-проект workspace в proxy-хосте: `${slug}.workspaces`. */
+    private const WORKSPACE_PSEUDO_PROJECT = 'workspaces';
+
     public function __construct(
         private UnitmanApi $unitmanApi,
         private OcenkaGotovnostiUnita $ocenkaGotovnostiUnita,
@@ -44,6 +53,15 @@ final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUnit
     public function proveritDostupKUnitu(string $unitId, string $accountId): bool
     {
         return $this->unitmanApi->proveritDostupKUnitu($unitId, $accountId);
+    }
+
+    /**
+     * Расшифрованный личный токен владельца. Acl только делегирует вызов:
+     * какие токены подходят, решает Unitman.
+     */
+    public function poluchitTokenDlyRedaktirovaniyaUnita(string $unitId, string $accountId): string
+    {
+        return $this->unitmanApi->poluchitTokenDlyRedaktirovaniyaUnita($unitId, $accountId);
     }
 
     public function sozdatUnit(ParametriSozdaniyaUnita $parametri, string $accountId): string
@@ -74,21 +92,28 @@ final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUnit
     }
 
     /**
-     * @param list<string> $projectIds
+     * @param list<string>          $projectIds
+     * @param array<string, string> $projectBranches
      *
      * @return list<ProektWorkspace>
      */
-    public function poluchitProekti(array $projectIds, string $accountId): array
-    {
+    public function poluchitProekti(
+        array $projectIds,
+        string $accountId,
+        string $branch = '',
+        array $projectBranches = [],
+    ): array {
         $result = [];
 
-        foreach ($this->unitmanApi->poluchitProektiDlyaWorkspace($projectIds, $accountId) as $position => $project) {
+        foreach ($this->unitmanApi->poluchitProektiDlyaWorkspace($projectIds, $accountId, $branch, $projectBranches) as $position => $project) {
             $result[] = new ProektWorkspace(
                 $project->projectId,
                 $project->projectName,
                 $project->projectCode,
                 $project->canPush,
                 $position,
+                $project->mainBranch,
+                $projectBranches[$project->projectId] ?? $branch,
             );
         }
 
@@ -110,6 +135,50 @@ final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUnit
         return SsylkaRedaktoraWorkspace::postroit($workspaceSlug, $project->proxyHost, $project->idePort);
     }
 
+    /**
+     * Workspace-контейнер называется `${slug}.workspaces`, поэтому ссылка
+     * строится тем же правилом, что и у юнитов: псевдо-проект `workspaces`.
+     */
+    public function poluchitSsylkuPoPortu(
+        string $projectId,
+        string $accountId,
+        string $workspaceSlug,
+        int $port,
+        ?string $type = null,
+        ?string $suffix = null,
+    ): ?string {
+        $projects = $this->unitmanApi->poluchitProektiDlyaWorkspace([$projectId], $accountId);
+        $project = $projects[0] ?? null;
+
+        if (!$project instanceof ProektDlyaWorkspaceReadModel) {
+            return null;
+        }
+
+        if ($project->proxyHost === null || trim($project->proxyHost) === '') {
+            return null;
+        }
+
+        try {
+            $link = SsylkaServisaUtil::sformirovat(
+                $type,
+                $port,
+                $workspaceSlug,
+                self::WORKSPACE_PSEUDO_PROJECT,
+                $project->proxyHost,
+            );
+        } catch (\DomainException) {
+            // Пустой или некорректный proxy host: ссылку построить нельзя,
+            // но workspace при этом продолжает работать.
+            return null;
+        }
+
+        if ($suffix !== null && $suffix !== '') {
+            $link .= str_starts_with($suffix, '/') ? $suffix : '/'.$suffix;
+        }
+
+        return $link;
+    }
+
     private function prevratit(SostoyanieUnitaReadModel $readModel): SostoyanieUnita
     {
         return new SostoyanieUnita(
@@ -121,6 +190,10 @@ final class UnitmanAdapter implements UmeetUpravlyatUnitami, UmeetBronirovatUnit
             $this->ocenkaGotovnostiUnita->ocenit($readModel->exists, $readModel->code, $readModel->zanyat),
             $readModel->zanyat,
             $readModel->prichinaZanyatosti,
+            $readModel->authorId,
+            $readModel->redaktirovanieVklucheno,
+            $readModel->vetkaZashishena,
+            array_values($readModel->redaktory),
         );
     }
 

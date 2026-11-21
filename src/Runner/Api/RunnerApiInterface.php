@@ -3,6 +3,7 @@
 namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
@@ -13,6 +14,7 @@ use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
+use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
 use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
@@ -72,6 +74,17 @@ interface RunnerApiInterface
     public function poluchitResultatSborki(string $workflowId): ?ResultatSbrokiUnita;
     public function nachatUdalenieUnita(string $workflowId, NachatUdalenieUnita $command): string;
     public function poluchitResultatUdaleniyaUnita(string $workflowId): ?ResultatUdaleniyaUnita;
+
+    /**
+     * Пересоздание IDE-сайдкара уже подготовленного юнита с новым режимом.
+     */
+    public function izmenitRezhimRedaktoraUnita(string $workflowId, IzmenitRezhimRedaktoraUnita $command): string;
+
+    /**
+     * Подготовка редакторской сессии юнита под личным токеном пользователя.
+     */
+    public function podgotovitSessiyuRedaktora(string $workflowId, PodgotovitSessiyuRedaktora $command): string;
+
     public function nachatPodgotovkuUnita(string $workflowId, NachatPodgotovkuUnita $command): string;
     public function nachatObnovlenieUnita(string $workflowId, NachatObnovlenieUnita $command): string;
     public function nachatSbrosPodgotovkiUnita(string $workflowId, NachatSbrosPodgotovkiUnita $command): string;

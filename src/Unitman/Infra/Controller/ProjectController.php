@@ -26,6 +26,7 @@ use App\Unitman\Business\Command\Project\ProveritProxyHost;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
+use App\Unitman\Business\Command\Project\UstanovitZashishennieVetkiProekta;
 use App\Unitman\Business\UseCase\Project\AddProjectUseCase;
 use App\Unitman\Business\UseCase\Project\AddUserToProjectUseCase;
 use App\Unitman\Business\UseCase\Project\DisableProjectUseCase;
@@ -49,6 +50,7 @@ use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiPro
 use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
+use App\Unitman\Business\UseCase\Project\UstanovitZashishennieVetkiProektaUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
 use App\Unitman\Infra\Service\ServiceProverkiProxyHost;
@@ -276,6 +278,53 @@ final class ProjectController extends AbstractController
     {
         $id = $useCase->handle($command);
         $postavitVOcheredNaSborkuUseCase->handle(new PostavitVOcheredNaSborku($id));
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[OA\Post(
+        path: '/api/project/ustanovitZashishennieVetki',
+        summary: 'Установить защищённые ветки проекта',
+        tags: ['Project'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['id'],
+                properties: [
+                    new OA\Property(property: 'id', type: 'string'),
+                    new OA\Property(
+                        property: 'zashishennieVetki',
+                        description: 'Список масок защищённых веток (wildcard * как в GitLab)',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    ),
+                ],
+                type: 'object'
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Пустой ответ: защищённые ветки проекта установлены',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: защищённые ветки проекта установлены'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/ustanovitZashishennieVetki', methods: ['POST'])]
+    public function ustanovitZashishennieVetki(
+        #[MapRequestPayload] UstanovitZashishennieVetkiProekta $command,
+        UstanovitZashishennieVetkiProektaUseCase $useCase
+    ): Response
+    {
+        $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 

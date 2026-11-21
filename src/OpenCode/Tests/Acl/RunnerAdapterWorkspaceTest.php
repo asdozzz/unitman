@@ -38,6 +38,7 @@ final class RunnerAdapterWorkspaceTest extends TestCase
                     self::assertCount(1, $command->Projects);
                     self::assertSame('project-1', $command->Projects[0]->ProjectId);
                     self::assertTrue($command->Projects[0]->CanPush);
+                    self::assertSame('main', $command->Projects[0]->MainBranch);
 
                     return true;
                 }

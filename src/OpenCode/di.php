@@ -12,6 +12,7 @@ use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetOpredelyatKanalUvedomleniyOpenCode;
 use App\OpenCode\Business\Port\UmeetPeredavatUvedomleniyaOpenCode;
+use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
@@ -60,4 +61,5 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UmeetUpravlyatUnitami::class, UnitmanAdapter::class);
     $services->set(UmeetBronirovatUniti::class, UnitmanAdapter::class);
     $services->set(UmeetUpravlyatProektamiWorkspace::class, UnitmanAdapter::class);
+    $services->set(UmeetPoluchatTokenRedaktirovaniyaUnita::class, UnitmanAdapter::class);
 };

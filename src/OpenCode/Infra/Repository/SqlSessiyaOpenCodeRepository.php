@@ -177,19 +177,44 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
         return $this->makeSessions($rows);
     }
 
+    /**
+     * Workspace-сессии для фоновой сверки операций.
+     *
+     * Возвращаются все неархивные сессии, а также архивные, у которых workspace
+     * в транзитном статусе. Без второго условия удаление архива
+     * (`ARCHIVED → DELETING`) и восстановление из архива (`ARCHIVED → STARTING`)
+     * никто бы не досверял: строка навсегда оставалась бы в `DELETING`/
+     * `STARTING`, а интерфейс бесконечно крутил спиннер.
+     *
+     * Неархивные завершённые операции отбрасываются фильтром `archived_at`,
+     * поэтому транзитные архивные сессии не вытесняют их из батча.
+     */
     public function findAktivnieWorkspace(int $limit): array
     {
         $table = self::TABLE;
         $workspaceTable = self::WORKSPACE_TABLE;
+        $tranzit = array_map(
+            static fn (StatusWorkspace $status): string => $status->value,
+            StatusWorkspace::tranzitnie(),
+        );
+
         $rows = $this->connection->fetchAllAssociative(
             "SELECT s.* FROM $table s
              INNER JOIN $workspaceTable w ON w.session_id = s.id
              WHERE s.tip = :tip
-               AND s.archived_at is null
+               AND (s.archived_at is null OR w.status = any(:tranzit))
              ORDER BY s.updated_at ASC, s.id
              LIMIT :limit",
-            ['tip' => TipSessiiOpenCode::WORKSPACE->value, 'limit' => max(1, $limit)],
-            ['tip' => ParameterType::STRING, 'limit' => ParameterType::INTEGER]
+            [
+                'tip' => TipSessiiOpenCode::WORKSPACE->value,
+                'tranzit' => '{' . implode(',', $tranzit) . '}',
+                'limit' => max(1, $limit),
+            ],
+            [
+                'tip' => ParameterType::STRING,
+                'tranzit' => ParameterType::STRING,
+                'limit' => ParameterType::INTEGER,
+            ]
         );
 
         return $this->makeSessions($rows);
@@ -408,6 +433,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                     'project_id' => $project->projectId,
                     'project_name' => $project->projectName,
                     'project_code' => $project->projectCode,
+                    'main_branch' => $project->mainBranch,
+                    'branch' => $project->branch,
                     'can_push' => $project->canPush,
                     'position_index' => $project->positionIndex,
                     'created_at' => $session->getCreatedAt(),
@@ -417,6 +444,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                     'project_id' => ParameterType::STRING,
                     'project_name' => ParameterType::STRING,
                     'project_code' => ParameterType::STRING,
+                    'main_branch' => ParameterType::STRING,
+                    'branch' => ParameterType::STRING,
                     'can_push' => ParameterType::BOOLEAN,
                     'position_index' => ParameterType::INTEGER,
                     'created_at' => ParameterType::INTEGER,
@@ -486,7 +515,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
         }
 
         $projectRows = $this->connection->fetchAllAssociative(
-            "SELECT session_id, project_id, project_name, project_code, can_push, position_index FROM $projectTable
+            "SELECT session_id, project_id, project_name, project_code, main_branch, branch, can_push, position_index FROM $projectTable
              WHERE session_id IN (:sessionIds)
              ORDER BY session_id ASC, position_index ASC",
             ['sessionIds' => $sessionIds],
@@ -505,6 +534,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                 (string) $projectRow['project_code'],
                 self::toBool($projectRow['can_push'] ?? false),
                 (int) ($projectRow['position_index'] ?? 0),
+                is_string($projectRow['main_branch'] ?? null) ? $projectRow['main_branch'] : '',
+                is_string($projectRow['branch'] ?? null) ? $projectRow['branch'] : '',
             );
         }
 

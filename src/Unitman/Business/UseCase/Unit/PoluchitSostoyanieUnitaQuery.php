@@ -3,7 +3,9 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\PoluchitSostoyanieUnita;
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Unit;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
@@ -12,6 +14,7 @@ final class PoluchitSostoyanieUnitaQuery
 {
     public function __construct(
         private UnitRepository $unitRepository,
+        private ProjectRepository $projectRepository,
         private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
     )
     {
@@ -48,6 +51,7 @@ final class PoluchitSostoyanieUnitaQuery
         }
 
         $zanyatost = $this->poluchitZanyatostUnitaQuery->dlyaUnita($unit);
+        $vetkaZashishena = $this->vetkaZashishena($unit);
 
         return SostoyanieUnitaReadModel::izUnita(
             $code,
@@ -57,7 +61,25 @@ final class PoluchitSostoyanieUnitaQuery
             $unit->getAuthorId(),
             $zanyatost->zanyat(),
             $this->prichinaZanyatosti($zanyatost),
+            $unit->getRedaktirovanieVklucheno(),
+            $vetkaZashishena,
+            $unit->getRedaktory(),
         );
+    }
+
+    /**
+     * Защищённые ветки не денормализуются в юнит: сверка идёт по проекту.
+     * Недоступный проект трактуется как «ветка не защищена».
+     */
+    private function vetkaZashishena(Unit $unit): bool
+    {
+        try {
+            $project = $this->projectRepository->getById($unit->getProjectId());
+        } catch (\DomainException) {
+            return false;
+        }
+
+        return $project->soderzhitZashishennuyuVetku($unit->getBranch());
     }
 
     /**

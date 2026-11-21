@@ -21,6 +21,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
 use App\Unitman\Business\Model\Project\Event\UspehOchistkiProektaUstanovlen;
+use App\Unitman\Business\Model\Project\Event\ZashishennieVetkiProektaUstanovleni;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\ReadModel\ProjectList;
@@ -80,9 +81,15 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             ProjectList\ProjectListStateType::NEW,
             new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie),
             $fact->proxyHost,
-            memoryLimit: $fact->memoryLimit
+            memoryLimit: $fact->memoryLimit,
+            zashishennieVetki: $fact->zashishennieVetki
         );
         $this->projectListRepository->insert($projectList);
+    }
+
+    function handleZashishennieVetkiProektaUstanovleni(ZashishennieVetkiProektaUstanovleni $fact): void
+    {
+        $this->projectListRepository->updateZashishennieVetki($fact->id, $fact->zashishennieVetki);
     }
 
     function handleNastroikiHukaProektaUstanovleni(NastroikiHukaProektaUstanovleni $fact): void

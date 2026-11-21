@@ -17,6 +17,7 @@ final class ProektWorkspaceCommand
         public readonly string $ProjectCode,
         public readonly string $StorageUrl,
         public readonly bool $CanPush,
+        public readonly string $MainBranch,
     ) {
     }
 }

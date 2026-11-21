@@ -602,6 +602,20 @@ nelmio_api_doc:
                             items:
                                 type: string
                                 format: uuid
+                        projectBranches:
+                            type: array
+                            description: 'Необязательные переопределения ветки для отдельных проектов. Проект должен входить в `projectIds` (иначе `opencode.workspace.project_not_found`), дубликат проекта — `opencode.workspace.project_conflict`, пустая или слишком длинная ветка — `opencode.workspace.branch_required` / `opencode.workspace.branch_too_long`, защищённая ветка — `opencode.workspace.branch_protected` (в тексте ошибки имя проекта)'
+                            items:
+                                type: object
+                                required: [projectId, branch]
+                                properties:
+                                    projectId:
+                                        type: string
+                                        format: uuid
+                                    branch:
+                                        type: string
+                                        maxLength: 256
+                                        example: hotfix/payments
                         prompt:
                             type: string
                             minLength: 1
@@ -612,7 +626,7 @@ nelmio_api_doc:
                 WorkspaceProject:
                     type: object
                     description: 'Проект workspace (ProektWorkspaceReadModel). Токен клонирования наружу не отдаётся'
-                    required: [projectId, projectName, projectCode, canPush, positionIndex]
+                    required: [projectId, projectName, projectCode, canPush, positionIndex, branch]
                     properties:
                         projectId:
                             type: string
@@ -626,6 +640,9 @@ nelmio_api_doc:
                             description: 'false — workspace работает в режиме только-чтение'
                         positionIndex:
                             type: integer
+                        branch:
+                            type: string
+                            description: 'Фактическая ветка проекта в workspace (переопределение или общая ветка workspace)'
                 Workspace:
                     type: object
                     description: 'Workspace-сессия (WorkspaceReadModel)'
@@ -764,6 +781,40 @@ nelmio_api_doc:
                         workspaceId:
                             type: string
                             format: uuid
+                PoluchitSsylkuWorkspace:
+                    type: object
+                    description: 'Ссылка на произвольный порт workspace-контейнера. Владелец проверяется по текущему аккаунту, статус workspace должен быть RUNNING'
+                    required: [workspaceId, port]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                        port:
+                            type: integer
+                            minimum: 1
+                            maximum: 65535
+                            description: 'Порт внутри workspace-контейнера; вне 1–65535 — `opencode.workspace.invalid_port`'
+                            example: 47000
+                        suffix:
+                            type: string
+                            nullable: true
+                            description: 'Путь, который дописывается к базовой ссылке; ведущий `/` нормализуется'
+                            example: /api/v1
+                        type:
+                            type: string
+                            nullable: true
+                            default: http
+                            description: 'Протокол ссылки: `http` (по умолчанию), `ws`, `wss` — через proxy host; остальные — напрямую на контейнер'
+                            example: http
+                WorkspaceLinkHolder:
+                    type: object
+                    description: Ссылка на сервис workspace
+                    required: [link]
+                    properties:
+                        link:
+                            type: string
+                            format: uri
+                            example: 'http://47000.payments-refactor-1a2b3c4d.workspaces.example.com'
                 OpenCodeTurnLaunch:
                     type: object
                     description: 'Ход запущен: клиент подписывается на progressChannel и опрашивает /poluchitResultatHoda по turnId'
@@ -1540,6 +1591,119 @@ nelmio_api_doc:
                             nullable: true
                             description: Unix timestamp обнаружения расхождения
                             example: 1730000000
+                        redaktirovanieVklucheno:
+                            type: boolean
+                            description: Режим редактирования файлов юнита включён
+                            example: false
+                        redaktory:
+                            type: array
+                            description: Прикреплённые редакторы (идентификаторы пользователей)
+                            items:
+                                type: string
+                        vetkaZashishena:
+                            type: boolean
+                            description: Ветка юнита входит в защищённые ветки проекта
+                            example: false
+                        redaktorMode:
+                            oneOf:
+                                - type: string
+                                  enum: [view, edit, locked]
+                                - type: 'null'
+                            description: 'Вычисляемый режим редактора: `view`|`edit`|`locked`; `null` — не вычислен'
+                            example: view
+                        moguRedaktirovat:
+                            type: boolean
+                            nullable: true
+                            description: Может ли текущий пользователь править файлы юнита; `null` — не вычислено
+                            example: true
+                        prichinaZapreta:
+                            oneOf:
+                                - type: string
+                                  enum: [protected_branch, net_tokena]
+                                - type: 'null'
+                            description: 'Причина запрета редактирования: `protected_branch`|`net_tokena`; `null` — запрета нет'
+                            example: protected_branch
+                # --- Unitman: ответы редактора и личных токенов ---
+                LichniyTokenPublic:
+                    type: object
+                    description: Публичное представление личного токена (без секрета и шифротекста)
+                    required: [id, repoId, nazvanie, tokenHint, obyomPrav, proektySPushom, proverenoV, bezPravNaRedaktirovanie]
+                    properties:
+                        id:
+                            type: string
+                        repoId:
+                            type: string
+                        nazvanie:
+                            type: string
+                        tokenHint:
+                            type: string
+                            description: Подсказка токена (последние символы), открытый секрет не возвращается
+                        obyomPrav:
+                            type: string
+                            enum: [vse, spisok]
+                        proektySPushom:
+                            type: array
+                            items:
+                                type: string
+                        proverenoV:
+                            type: integer
+                            example: 1730000000
+                        bezPravNaRedaktirovanie:
+                            type: boolean
+                            description: Токен не даёт прав на редактирование
+                            example: false
+                RedaktorUnita:
+                    type: object
+                    description: Состояние одного прикреплённого редактора юнита
+                    required: [userId, imya, imeetTokenNaProekt]
+                    properties:
+                        userId:
+                            type: string
+                        imya:
+                            type: string
+                        imeetTokenNaProekt:
+                            type: boolean
+                SpisokRedaktorov:
+                    type: object
+                    description: Список редакторов юнита с состоянием их личных токенов
+                    required: [unitId, redaktirovanieVklucheno, redaktory]
+                    properties:
+                        unitId:
+                            type: string
+                        redaktirovanieVklucheno:
+                            type: boolean
+                            example: false
+                        redaktory:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/RedaktorUnita'
+                SsylkaRedaktora:
+                    type: object
+                    description: Персональная подписанная ссылка редактора
+                    required: [ssylka, redaktorMode, expiresAt]
+                    properties:
+                        ssylka:
+                            type: string
+                            description: Полный URL редактора либо подписанный токен режима
+                        redaktorMode:
+                            type: string
+                            enum: [view, edit, locked]
+                        expiresAt:
+                            type: integer
+                            description: unixtime истечения подписи
+                            example: 1730000000
+                SozdatUnitResult:
+                    type: object
+                    description: Результат создания юнита
+                    required: [id, vetkaZashishena]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        vetkaZashishena:
+                            type: boolean
+                            description: Ветка созданного юнита входит в защищённые ветки проекта
+                            example: false
                 UnitProcess:
                     type: object
                     description: Процесс юнита (UnitProcess::toArray)
@@ -2045,7 +2209,7 @@ nelmio_api_doc:
                 ProjectListItem:
                     type: object
                     description: Проект (read-модель ProjectList)
-                    required: [id, repoId, code, name, mainBranch, isActive, state, nastroikiHukaProekta, proxyHost, users, variables, waitResultRunner, memoryLimit]
+                    required: [id, repoId, code, name, mainBranch, isActive, state, nastroikiHukaProekta, proxyHost, users, variables, waitResultRunner, memoryLimit, zashishennieVetki]
                     properties:
                         id:
                             type: string
@@ -2085,6 +2249,12 @@ nelmio_api_doc:
                         memoryLimit:
                             type: integer
                             example: 3072
+                        zashishennieVetki:
+                            type: array
+                            description: Список масок защищённых веток (wildcard * как в GitLab)
+                            items:
+                                type: string
+                            example: ['main', 'release/*']
                 ProjectHookSettings:
                     type: object
                     description: Настройки webhook проекта (NastroikiHukaProekta)

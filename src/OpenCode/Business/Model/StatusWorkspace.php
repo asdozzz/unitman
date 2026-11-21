@@ -26,6 +26,20 @@ enum StatusWorkspace: string
     }
 
     /**
+     * Статусы, в которых операцию ещё выполняет фоновая задача.
+     *
+     * Архивная сессия тоже может находиться в транзитном статусе (удаление
+     * архива или его восстановление), поэтому сверка не должна отбрасывать
+     * такие workspace только по признаку `archived_at`.
+     *
+     * @return list<self>
+     */
+    public static function tranzitnie(): array
+    {
+        return [self::CREATING, self::STARTING, self::ARCHIVING, self::DELETING];
+    }
+
+    /**
      * @throws \DomainException если значение статуса неизвестно
      */
     public static function izStroki(string $value): self

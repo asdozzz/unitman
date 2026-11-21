@@ -3106,6 +3106,198 @@
                 "security": []
             }
         },
+        "/api/lichniyToken/dobavit": {
+            "post": {
+                "tags": [
+                    "LichniyToken"
+                ],
+                "summary": "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043b\u0438\u0447\u043d\u044b\u0439 \u0442\u043e\u043a\u0435\u043d \u0445\u0440\u0430\u043d\u0438\u043b\u0438\u0449\u0430",
+                "operationId": "post_app_unitman_infra_lichniytoken_dobavit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DobavitLichniyToken"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0422\u043e\u043a\u0435\u043d \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d; \u0441\u0435\u043a\u0440\u0435\u0442 \u043d\u0435 \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442\u0441\u044f, \u0442\u043e\u043b\u044c\u043a\u043e hint",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/LichniyTokenPublic"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/lichniyToken/spisok": {
+            "post": {
+                "tags": [
+                    "LichniyToken"
+                ],
+                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u043b\u0438\u0447\u043d\u044b\u0445 \u0442\u043e\u043a\u0435\u043d\u043e\u0432 (\u0430\u0434\u043c\u0438\u043d \u2014 \u0432\u0441\u0435)",
+                "operationId": "post_app_unitman_infra_lichniytoken_spisok",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SpisokLichnihTokenov"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u043f\u0438\u0441\u043e\u043a \u0442\u043e\u043a\u0435\u043d\u043e\u0432 \u0431\u0435\u0437 \u0441\u0435\u043a\u0440\u0435\u0442\u043e\u0432",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LichniyTokenPublic"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/lichniyToken/pereproverit": {
+            "post": {
+                "tags": [
+                    "LichniyToken"
+                ],
+                "summary": "\u041f\u0435\u0440\u0435\u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043f\u0440\u0430\u0432\u0430 \u043b\u0438\u0447\u043d\u043e\u0433\u043e \u0442\u043e\u043a\u0435\u043d\u0430",
+                "operationId": "post_app_unitman_infra_lichniytoken_pereproverit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PereproveritLichniyToken"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041e\u0431\u043d\u043e\u0432\u043b\u0451\u043d\u043d\u044b\u0439 \u043e\u0431\u044a\u0451\u043c \u043f\u0440\u0430\u0432",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/LichniyTokenPublic"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/lichniyToken/udalit": {
+            "post": {
+                "tags": [
+                    "LichniyToken"
+                ],
+                "summary": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043b\u0438\u0447\u043d\u044b\u0439 \u0442\u043e\u043a\u0435\u043d",
+                "operationId": "post_app_unitman_infra_lichniytoken_udalit",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UdalitLichniyToken"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u0442\u043e\u043a\u0435\u043d \u0443\u0434\u0430\u043b\u0451\u043d"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
         "/api/project/list": {
             "post": {
                 "tags": [
@@ -3424,6 +3616,75 @@
                                         },
                                         "data": {
                                             "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u043f\u0440\u043e\u0435\u043a\u0442 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d",
+                                            "type": "null"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/project/ustanovitZashishennieVetki": {
+            "post": {
+                "tags": [
+                    "Project"
+                ],
+                "summary": "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0435 \u0432\u0435\u0442\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430",
+                "operationId": "post_app_unitman_infra_project_ustanovitzashishennievetki",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "zashishennieVetki": {
+                                        "description": "\u0421\u043f\u0438\u0441\u043e\u043a \u043c\u0430\u0441\u043e\u043a \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0445 \u0432\u0435\u0442\u043e\u043a (wildcard * \u043a\u0430\u043a \u0432 GitLab)",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0435 \u0432\u0435\u0442\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u044b",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0435 \u0432\u0435\u0442\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u044b",
                                             "type": "null"
                                         }
                                     },
@@ -4965,6 +5226,232 @@
                 }
             }
         },
+        "/api/unit/vklyuchitRedaktirovanie": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0444\u0430\u0439\u043b\u043e\u0432 \u044e\u043d\u0438\u0442\u0430",
+                "operationId": "post_app_unitman_infra_redaktor_vklyuchitredaktirovanie",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VklyuchitRedaktirovanieUnita"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0420\u0435\u0436\u0438\u043c \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0432\u043a\u043b\u044e\u0447\u0451\u043d (\u0438\u0434\u0435\u043c\u043f\u043e\u0442\u0435\u043d\u0442\u043d\u043e)"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/unit/vykluchitRedaktirovanie": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "\u0412\u044b\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0444\u0430\u0439\u043b\u043e\u0432 \u044e\u043d\u0438\u0442\u0430",
+                "operationId": "post_app_unitman_infra_redaktor_vykluchitredaktirovanie",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VykluchitRedaktirovanieUnita"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0420\u0435\u0436\u0438\u043c \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d (\u0438\u0434\u0435\u043c\u043f\u043e\u0442\u0435\u043d\u0442\u043d\u043e)"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/unit/prikrepitRedaktora": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "\u041f\u0440\u0438\u043a\u0440\u0435\u043f\u0438\u0442\u044c \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430 \u043a \u044e\u043d\u0438\u0442\u0443",
+                "operationId": "post_app_unitman_infra_redaktor_prikrepitredaktora",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PrikrepitRedaktoraKUnitu"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0420\u0435\u0434\u0430\u043a\u0442\u043e\u0440 \u043f\u0440\u0438\u043a\u0440\u0435\u043f\u043b\u0451\u043d"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/unit/otkrepitRedaktora": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "\u041e\u0442\u043a\u0440\u0435\u043f\u0438\u0442\u044c \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430 \u043e\u0442 \u044e\u043d\u0438\u0442\u0430",
+                "operationId": "post_app_unitman_infra_redaktor_otkrepitredaktora",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OtkrepitRedaktoraOtUnita"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0420\u0435\u0434\u0430\u043a\u0442\u043e\u0440 \u043e\u0442\u043a\u0440\u0435\u043f\u043b\u0451\u043d (\u0438\u0434\u0435\u043c\u043f\u043e\u0442\u0435\u043d\u0442\u043d\u043e)"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/unit/redaktory": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u043e\u0432 \u044e\u043d\u0438\u0442\u0430 \u0441 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435\u043c \u0438\u0445 \u0442\u043e\u043a\u0435\u043d\u043e\u0432",
+                "operationId": "post_app_unitman_infra_redaktor_redaktory",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SpisokRedaktorovUnita"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u043f\u0438\u0441\u043e\u043a \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u043e\u0432",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SpisokRedaktorov"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/unit/poluchitSsylkuRedaktora": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "\u041f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u044c\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u0430\u043d\u043d\u0430\u044f \u0441\u0441\u044b\u043b\u043a\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430",
+                "operationId": "post_app_unitman_infra_redaktor_poluchitssylkuredaktora",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PoluchitSsylkuRedaktora"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u0441\u044b\u043b\u043a\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430; \u043b\u0438\u0447\u043d\u044b\u0439 \u0442\u043e\u043a\u0435\u043d \u043d\u0435 \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442\u0441\u044f",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SsylkaRedaktora"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
         "/api/repo/add": {
             "post": {
                 "tags": [
@@ -5428,7 +5915,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u043a\u043e\u043c\u0430\u043d\u0434\u0430 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u044e\u043d\u0438\u0442\u0430 \u043f\u0440\u0438\u043d\u044f\u0442\u0430. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
+                        "description": "\u042e\u043d\u0438\u0442 \u0441\u043e\u0437\u0434\u0430\u043d: \u0438\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0438 \u043f\u0440\u0438\u0437\u043d\u0430\u043a \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u043e\u0439 \u0432\u0435\u0442\u043a\u0438. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5445,8 +5932,7 @@
                                             "example": "success"
                                         },
                                         "data": {
-                                            "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u043a\u043e\u043c\u0430\u043d\u0434\u0430 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u044e\u043d\u0438\u0442\u0430 \u043f\u0440\u0438\u043d\u044f\u0442\u0430",
-                                            "type": "null"
+                                            "$ref": "#/components/schemas/SozdatUnitResult"
                                         }
                                     },
                                     "type": "object"
@@ -9575,6 +10061,206 @@
                             "null"
                         ],
                         "example": 1730000000
+                    },
+                    "redaktirovanieVklucheno": {
+                        "description": "\u0420\u0435\u0436\u0438\u043c \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0444\u0430\u0439\u043b\u043e\u0432 \u044e\u043d\u0438\u0442\u0430 \u0432\u043a\u043b\u044e\u0447\u0451\u043d",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "redaktory": {
+                        "description": "\u041f\u0440\u0438\u043a\u0440\u0435\u043f\u043b\u0451\u043d\u043d\u044b\u0435 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u044b (\u0438\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440\u044b \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0435\u0439)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "vetkaZashishena": {
+                        "description": "\u0412\u0435\u0442\u043a\u0430 \u044e\u043d\u0438\u0442\u0430 \u0432\u0445\u043e\u0434\u0438\u0442 \u0432 \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0435 \u0432\u0435\u0442\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "redaktorMode": {
+                        "description": "\u0412\u044b\u0447\u0438\u0441\u043b\u044f\u0435\u043c\u044b\u0439 \u0440\u0435\u0436\u0438\u043c \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430: `view`|`edit`|`locked`; `null` \u2014 \u043d\u0435 \u0432\u044b\u0447\u0438\u0441\u043b\u0435\u043d",
+                        "example": "view",
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "view",
+                                    "edit",
+                                    "locked"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "moguRedaktirovat": {
+                        "description": "\u041c\u043e\u0436\u0435\u0442 \u043b\u0438 \u0442\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c \u043f\u0440\u0430\u0432\u0438\u0442\u044c \u0444\u0430\u0439\u043b\u044b \u044e\u043d\u0438\u0442\u0430; `null` \u2014 \u043d\u0435 \u0432\u044b\u0447\u0438\u0441\u043b\u0435\u043d\u043e",
+                        "type": [
+                            "boolean",
+                            "null"
+                        ],
+                        "example": true
+                    },
+                    "prichinaZapreta": {
+                        "description": "\u041f\u0440\u0438\u0447\u0438\u043d\u0430 \u0437\u0430\u043f\u0440\u0435\u0442\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f: `protected_branch`|`net_tokena`; `null` \u2014 \u0437\u0430\u043f\u0440\u0435\u0442\u0430 \u043d\u0435\u0442",
+                        "example": "protected_branch",
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "protected_branch",
+                                    "net_tokena"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "LichniyTokenPublic": {
+                "description": "\u041f\u0443\u0431\u043b\u0438\u0447\u043d\u043e\u0435 \u043f\u0440\u0435\u0434\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043b\u0438\u0447\u043d\u043e\u0433\u043e \u0442\u043e\u043a\u0435\u043d\u0430 (\u0431\u0435\u0437 \u0441\u0435\u043a\u0440\u0435\u0442\u0430 \u0438 \u0448\u0438\u0444\u0440\u043e\u0442\u0435\u043a\u0441\u0442\u0430)",
+                "required": [
+                    "id",
+                    "repoId",
+                    "nazvanie",
+                    "tokenHint",
+                    "obyomPrav",
+                    "proektySPushom",
+                    "proverenoV",
+                    "bezPravNaRedaktirovanie"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "repoId": {
+                        "type": "string"
+                    },
+                    "nazvanie": {
+                        "type": "string"
+                    },
+                    "tokenHint": {
+                        "description": "\u041f\u043e\u0434\u0441\u043a\u0430\u0437\u043a\u0430 \u0442\u043e\u043a\u0435\u043d\u0430 (\u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0435 \u0441\u0438\u043c\u0432\u043e\u043b\u044b), \u043e\u0442\u043a\u0440\u044b\u0442\u044b\u0439 \u0441\u0435\u043a\u0440\u0435\u0442 \u043d\u0435 \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442\u0441\u044f",
+                        "type": "string"
+                    },
+                    "obyomPrav": {
+                        "type": "string",
+                        "enum": [
+                            "vse",
+                            "spisok"
+                        ]
+                    },
+                    "proektySPushom": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "proverenoV": {
+                        "type": "integer",
+                        "example": 1730000000
+                    },
+                    "bezPravNaRedaktirovanie": {
+                        "description": "\u0422\u043e\u043a\u0435\u043d \u043d\u0435 \u0434\u0430\u0451\u0442 \u043f\u0440\u0430\u0432 \u043d\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "RedaktorUnita": {
+                "description": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u043e\u0434\u043d\u043e\u0433\u043e \u043f\u0440\u0438\u043a\u0440\u0435\u043f\u043b\u0451\u043d\u043d\u043e\u0433\u043e \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430 \u044e\u043d\u0438\u0442\u0430",
+                "required": [
+                    "userId",
+                    "imya",
+                    "imeetTokenNaProekt"
+                ],
+                "properties": {
+                    "userId": {
+                        "type": "string"
+                    },
+                    "imya": {
+                        "type": "string"
+                    },
+                    "imeetTokenNaProekt": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "SpisokRedaktorov": {
+                "description": "\u0421\u043f\u0438\u0441\u043e\u043a \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u043e\u0432 \u044e\u043d\u0438\u0442\u0430 \u0441 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435\u043c \u0438\u0445 \u043b\u0438\u0447\u043d\u044b\u0445 \u0442\u043e\u043a\u0435\u043d\u043e\u0432",
+                "required": [
+                    "unitId",
+                    "redaktirovanieVklucheno",
+                    "redaktory"
+                ],
+                "properties": {
+                    "unitId": {
+                        "type": "string"
+                    },
+                    "redaktirovanieVklucheno": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "redaktory": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RedaktorUnita"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "SsylkaRedaktora": {
+                "description": "\u041f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u044c\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u0430\u043d\u043d\u0430\u044f \u0441\u0441\u044b\u043b\u043a\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430",
+                "required": [
+                    "ssylka",
+                    "redaktorMode",
+                    "expiresAt"
+                ],
+                "properties": {
+                    "ssylka": {
+                        "description": "\u041f\u043e\u043b\u043d\u044b\u0439 URL \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0430 \u043b\u0438\u0431\u043e \u043f\u043e\u0434\u043f\u0438\u0441\u0430\u043d\u043d\u044b\u0439 \u0442\u043e\u043a\u0435\u043d \u0440\u0435\u0436\u0438\u043c\u0430",
+                        "type": "string"
+                    },
+                    "redaktorMode": {
+                        "type": "string",
+                        "enum": [
+                            "view",
+                            "edit",
+                            "locked"
+                        ]
+                    },
+                    "expiresAt": {
+                        "description": "unixtime \u0438\u0441\u0442\u0435\u0447\u0435\u043d\u0438\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u0438",
+                        "type": "integer",
+                        "example": 1730000000
+                    }
+                },
+                "type": "object"
+            },
+            "SozdatUnitResult": {
+                "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u044e\u043d\u0438\u0442\u0430",
+                "required": [
+                    "id",
+                    "vetkaZashishena"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "vetkaZashishena": {
+                        "description": "\u0412\u0435\u0442\u043a\u0430 \u0441\u043e\u0437\u0434\u0430\u043d\u043d\u043e\u0433\u043e \u044e\u043d\u0438\u0442\u0430 \u0432\u0445\u043e\u0434\u0438\u0442 \u0432 \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0435 \u0432\u0435\u0442\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430",
+                        "type": "boolean",
+                        "example": false
                     }
                 },
                 "type": "object"
@@ -10522,7 +11208,8 @@
                     "users",
                     "variables",
                     "waitResultRunner",
-                    "memoryLimit"
+                    "memoryLimit",
+                    "zashishennieVetki"
                 ],
                 "properties": {
                     "id": {
@@ -10586,6 +11273,17 @@
                     "memoryLimit": {
                         "type": "integer",
                         "example": 3072
+                    },
+                    "zashishennieVetki": {
+                        "description": "\u0421\u043f\u0438\u0441\u043e\u043a \u043c\u0430\u0441\u043e\u043a \u0437\u0430\u0449\u0438\u0449\u0451\u043d\u043d\u044b\u0445 \u0432\u0435\u0442\u043e\u043a (wildcard * \u043a\u0430\u043a \u0432 GitLab)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "main",
+                            "release/*"
+                        ]
                     }
                 },
                 "type": "object"
@@ -11335,6 +12033,50 @@
                 },
                 "type": "object"
             },
+            "DobavitLichniyToken": {
+                "required": [
+                    "repoId",
+                    "token",
+                    "nazvanie"
+                ],
+                "properties": {
+                    "repoId": {
+                        "type": "string"
+                    },
+                    "token": {
+                        "type": "string"
+                    },
+                    "nazvanie": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "SpisokLichnihTokenov": {
+                "type": "object"
+            },
+            "PereproveritLichniyToken": {
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "UdalitLichniyToken": {
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "GetProjectList": {
                 "properties": {
                     "limit": {
@@ -11401,6 +12143,51 @@
                     "memoryLimit": {
                         "type": "integer",
                         "default": 0
+                    },
+                    "zashishennieVetki": {
+                        "default": [],
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UstanovitZashishennieVetkiProekta": {
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "zashishennieVetki": {
+                        "default": [],
+                        "oneOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
                     }
                 },
                 "type": "object"
@@ -11664,6 +12451,80 @@
                     "proxyHost": {
                         "type": "string",
                         "default": ""
+                    }
+                },
+                "type": "object"
+            },
+            "VklyuchitRedaktirovanieUnita": {
+                "required": [
+                    "unitId"
+                ],
+                "properties": {
+                    "unitId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "VykluchitRedaktirovanieUnita": {
+                "required": [
+                    "unitId"
+                ],
+                "properties": {
+                    "unitId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PrikrepitRedaktoraKUnitu": {
+                "required": [
+                    "unitId",
+                    "userId"
+                ],
+                "properties": {
+                    "unitId": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "OtkrepitRedaktoraOtUnita": {
+                "required": [
+                    "unitId",
+                    "userId"
+                ],
+                "properties": {
+                    "unitId": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "SpisokRedaktorovUnita": {
+                "required": [
+                    "unitId"
+                ],
+                "properties": {
+                    "unitId": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PoluchitSsylkuRedaktora": {
+                "required": [
+                    "unitId"
+                ],
+                "properties": {
+                    "unitId": {
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -12022,6 +12883,10 @@
         {
             "name": "OpenCode",
             "description": "\u0421\u0435\u0441\u0441\u0438\u0438 \u0438 \u0445\u043e\u0434\u044b OpenCode (\u0432\u043e\u043f\u0440\u043e\u0441\u044b, \u043e\u0442\u0432\u0435\u0442\u044b, \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441)"
+        },
+        {
+            "name": "LichniyToken",
+            "description": "LichniyToken"
         },
         {
             "name": "VolumeType",

@@ -18,6 +18,7 @@ final class ProektWorkspaceZapros
         public readonly string $ProjectName,
         public readonly string $ProjectCode,
         public readonly bool $CanPush,
+        public readonly string $MainBranch,
     ) {
     }
 }

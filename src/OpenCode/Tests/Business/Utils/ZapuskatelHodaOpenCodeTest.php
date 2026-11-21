@@ -6,13 +6,17 @@ namespace App\OpenCode\Tests\Business\Utils;
 
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\SostoyanieUnita;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
+use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
+use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
+use App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode;
 use App\OpenCode\Business\Utils\VladelecZanyatostiOpenCode;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
 use App\OpenCode\Tests\Support\FabrikaWorkspace;
@@ -20,16 +24,21 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Захват юнитов при старте хода и освобождение при отказе.
+ * Захват юнитов при старте хода, освобождение при отказе и режим хода (15.7-а).
  *
  * Главный инвариант: если раннер не принял ход, юнит не должен остаться
  * занятым до истечения TTL. Обратная ошибка (освободить чужой захват) тоже
  * недопустима — освобождаем только то, что захватили сами.
+ *
+ * Режим: RW только для автора/редактора при включённом редактировании и
+ * незащищённой ветке; в этом случае запрашивается личный токен. RO-ход
+ * токен не запрашивает вовсе.
  */
 final class ZapuskatelHodaOpenCodeTest extends TestCase
 {
     private const TURN_ID = 'turn-1';
     private const WORKFLOW_ID = 'workflow-1';
+    private const ACCOUNT_ID = 'account-1';
 
     #[Test]
     public function yuniti_zahvatyvayutsya_do_starta_hoda(): void
@@ -48,11 +57,10 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
         $sessionRepository->expects($this->once())->method('update');
 
-        $zapuskatel = new ZapuskatelHodaOpenCode(
+        $zapuskatel = $this->zapuskatel(
             $turnRepository,
             $sessionRepository,
             $this->createMock(UmeetVypolnyatHodOpenCode::class),
-            $this->uuidGenerator(),
             $bronirovanie,
         );
 
@@ -81,11 +89,10 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
         $sessionRepository->expects($this->never())->method('update');
 
-        $zapuskatel = new ZapuskatelHodaOpenCode(
+        $zapuskatel = $this->zapuskatel(
             $turnRepository,
             $sessionRepository,
             $runner,
-            $this->uuidGenerator(),
             $bronirovanie,
         );
 
@@ -111,11 +118,10 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         $turnRepository->method('sleduyushiiSeq')->willReturn(1);
         $turnRepository->method('findBySessionId')->willReturn([]);
 
-        $zapuskatel = new ZapuskatelHodaOpenCode(
+        $zapuskatel = $this->zapuskatel(
             $turnRepository,
             $this->createMock(SessiyaOpenCodeRepository::class),
             $runner,
-            $this->uuidGenerator(),
             $bronirovanie,
         );
 
@@ -126,7 +132,7 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
     }
 
     #[Test]
-    public function sessiya_bez_unitei_ne_zahvatyvaet_nichego(): void
+    public function sessiya_bez_unitei_ne_zahvatyvaet_nichego_i_ne_zaprashivaet_token(): void
     {
         $bronirovanie = $this->createMock(UmeetBronirovatUniti::class);
         $bronirovanie->expects($this->never())->method('zahvatit');
@@ -140,15 +146,32 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
         $sessionRepository->expects($this->once())->method('update');
 
-        $zapuskatel = new ZapuskatelHodaOpenCode(
-            $turnRepository,
-            $sessionRepository,
-            $this->createMock(UmeetVypolnyatHodOpenCode::class),
-            $this->uuidGenerator(),
-            $bronirovanie,
-        );
+        $unitami = $this->createMock(UmeetUpravlyatUnitami::class);
+        $unitami->expects($this->never())->method('poluchitSostoyanieUnita');
 
-        $sessiya = SessiyaOpenCode::create('session-1', 'account-1', 'credential-1', null, [], 1000);
+        $tokeny = $this->createMock(UmeetPoluchatTokenRedaktirovaniyaUnita::class);
+        $tokeny->expects($this->never())->method('poluchitTokenDlyRedaktirovaniyaUnita');
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->once())
+            ->method('nachatHod')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                $this->anything(),
+                $this->anything(),
+                [],
+                $this->anything(),
+                $this->anything(),
+                $this->anything(),
+                null,
+                false,
+                null,
+            );
+
+        $zapuskatel = $this->zapuskatel($turnRepository, $sessionRepository, $runner, $bronirovanie, $unitami, $tokeny);
+
+        $sessiya = SessiyaOpenCode::create('session-1', self::ACCOUNT_ID, 'credential-1', null, [], 1000);
 
         $zapuskatel->zapustit($sessiya, 'Привет', [], []);
     }
@@ -168,7 +191,15 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
         $sessionRepository->expects($this->once())->method('update');
 
+        $unitami = $this->createMock(UmeetUpravlyatUnitami::class);
+        $unitami->expects($this->never())->method('poluchitSostoyanieUnita');
+
+        $tokeny = $this->createMock(UmeetPoluchatTokenRedaktirovaniyaUnita::class);
+        $tokeny->expects($this->never())->method('poluchitTokenDlyRedaktirovaniyaUnita');
+
         $zahvachennyiKontekst = null;
+        $poluchenReadOnly = null;
+        $poluchenToken = null;
 
         $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
         $runner->expects($this->once())
@@ -184,20 +215,18 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
                     array $answers,
                     array $history,
                     ?WorkspaceKontekst $workspace = null,
-                ) use (&$zahvachennyiKontekst): string {
+                    bool $readOnly = false,
+                    ?string $token = null,
+                ) use (&$zahvachennyiKontekst, &$poluchenReadOnly, &$poluchenToken): string {
                     $zahvachennyiKontekst = $workspace;
+                    $poluchenReadOnly = $readOnly;
+                    $poluchenToken = $token;
 
                     return $workflowId;
                 }
             );
 
-        $zapuskatel = new ZapuskatelHodaOpenCode(
-            $turnRepository,
-            $sessionRepository,
-            $runner,
-            $this->uuidGenerator(),
-            $bronirovanie,
-        );
+        $zapuskatel = $this->zapuskatel($turnRepository, $sessionRepository, $runner, $bronirovanie, $unitami, $tokeny);
 
         $sessiya = FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING);
 
@@ -206,11 +235,386 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         $this->assertInstanceOf(WorkspaceKontekst::class, $zahvachennyiKontekst);
         $this->assertSame('workspace-1', $zahvachennyiKontekst->workspaceId);
         $this->assertFalse($zahvachennyiKontekst->readOnly);
+        $this->assertFalse($poluchenReadOnly, 'Workspace не является unit-ходом: unit-режим не выставляется');
+        $this->assertNull($poluchenToken, 'Workspace не получает личный токен');
         $this->assertSame(['project-1'], array_map(
             static fn ($project): string => $project->projectId,
             $zahvachennyiKontekst->projects,
         ));
         $this->assertSame('payments-refactor', $sessiya->getTitle(), 'Название workspace не подменяется промптом');
+    }
+
+    #[Test]
+    public function avtor_pri_vklyuchennom_redaktirovanii_poluchaet_rw_i_token(): void
+    {
+        $zaprosyTokena = [];
+
+        [$readOnly, $token] = $this->zapustitSOdnymUnitom(
+            $this->sostoyanie(authorId: self::ACCOUNT_ID, editing: true),
+            static function (string $unitId, string $accountId) use (&$zaprosyTokena): string {
+                $zaprosyTokena[] = [$unitId, $accountId];
+
+                return 'personal-secret';
+            },
+        );
+
+        self::assertFalse($readOnly);
+        self::assertSame('personal-secret', $token);
+        self::assertSame([['unit-1', self::ACCOUNT_ID]], $zaprosyTokena);
+    }
+
+    #[Test]
+    public function prikreplennii_redaktor_poluchaet_rw_i_svoy_token(): void
+    {
+        $zaprosyTokena = [];
+
+        [$readOnly, $token] = $this->zapustitSOdnymUnitom(
+            $this->sostoyanie(authorId: 'author-1', editing: true, redaktory: [self::ACCOUNT_ID]),
+            static function (string $unitId, string $accountId) use (&$zaprosyTokena): string {
+                $zaprosyTokena[] = [$unitId, $accountId];
+
+                return 'editor-secret';
+            },
+        );
+
+        self::assertFalse($readOnly);
+        self::assertSame('editor-secret', $token);
+        self::assertSame([['unit-1', self::ACCOUNT_ID]], $zaprosyTokena);
+    }
+
+    #[Test]
+    public function postoronniy_hod_read_only_i_ne_zaprashivaet_token(): void
+    {
+        [$readOnly, $token] = $this->zapustitSOdnymUnitom(
+            $this->sostoyanie(authorId: 'author-1', editing: true, redaktory: ['editor-1']),
+        );
+
+        self::assertTrue($readOnly);
+        self::assertNull($token);
+    }
+
+    #[Test]
+    public function vyklyuchennoe_redaktirovanie_delaet_hod_read_only(): void
+    {
+        [$readOnly, $token] = $this->zapustitSOdnymUnitom(
+            $this->sostoyanie(authorId: self::ACCOUNT_ID, editing: false),
+        );
+
+        self::assertTrue($readOnly);
+        self::assertNull($token);
+    }
+
+    #[Test]
+    public function zashishennaya_vetka_delaet_hod_read_only_dazhe_dlya_avtora(): void
+    {
+        [$readOnly, $token] = $this->zapustitSOdnymUnitom(
+            $this->sostoyanie(authorId: self::ACCOUNT_ID, editing: true, protectedBranch: true),
+        );
+
+        self::assertTrue($readOnly);
+        self::assertNull($token);
+    }
+
+    #[Test]
+    public function otsutstvie_lichnogo_tokena_otklonyaet_rw_hod(): void
+    {
+        $bronirovanie = $this->createMock(UmeetBronirovatUniti::class);
+        $bronirovanie->expects($this->never())->method('zahvatit');
+        $bronirovanie->expects($this->never())->method('osvobodit');
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->never())->method('nachatHod');
+
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->never())->method('save');
+
+        $tokeny = $this->createMock(UmeetPoluchatTokenRedaktirovaniyaUnita::class);
+        $tokeny->expects($this->once())
+            ->method('poluchitTokenDlyRedaktirovaniyaUnita')
+            ->with('unit-1', self::ACCOUNT_ID)
+            ->willThrowException(new \DomainException('unit.redaktor.net_lichnogo_tokena'));
+
+        $zapuskatel = $this->zapuskatel(
+            $turnRepository,
+            $this->createMock(SessiyaOpenCodeRepository::class),
+            $runner,
+            $bronirovanie,
+            $this->unitami($this->sostoyanie(authorId: self::ACCOUNT_ID, editing: true)),
+            $tokeny,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.redaktor.net_lichnogo_tokena');
+
+        $zapuskatel->zapustit($this->sessiya(), 'Привет', [], [$this->privyazka('unit-1', 'project-1')]);
+    }
+
+    #[Test]
+    public function token_bez_prav_na_proekt_otklonyaet_rw_hod(): void
+    {
+        $tokeny = $this->createMock(UmeetPoluchatTokenRedaktirovaniyaUnita::class);
+        $tokeny->expects($this->once())
+            ->method('poluchitTokenDlyRedaktirovaniyaUnita')
+            ->willThrowException(new \DomainException('unit.redaktor.token_bez_prav_na_proekt'));
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->never())->method('nachatHod');
+
+        $zapuskatel = $this->zapuskatel(
+            $this->turnRepositoryBezSohraneniya(),
+            $this->createMock(SessiyaOpenCodeRepository::class),
+            $runner,
+            $this->createMock(UmeetBronirovatUniti::class),
+            $this->unitami($this->sostoyanie(authorId: self::ACCOUNT_ID, editing: true)),
+            $tokeny,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.redaktor.token_bez_prav_na_proekt');
+
+        $zapuskatel->zapustit($this->sessiya(), 'Привет', [], [$this->privyazka('unit-1', 'project-1')]);
+    }
+
+    #[Test]
+    public function esli_hotya_bu_odin_unit_read_only_to_ves_hod_read_only_i_bez_tokena(): void
+    {
+        $unitami = $this->createMock(UmeetUpravlyatUnitami::class);
+        $unitami->method('poluchitSostoyanieUnita')->willReturnCallback(
+            static function (string $unitId): SostoyanieUnita {
+                if ($unitId === 'unit-2') {
+                    return new SostoyanieUnita(
+                        true,
+                        'USPESHNO_ZAPUSHEN',
+                        'project-2',
+                        'unit-2',
+                        'main',
+                        SostoyanieUnita::GROUP_READY,
+                        false,
+                        null,
+                        'author-1',
+                        true,
+                        false,
+                        [],
+                    );
+                }
+
+                return new SostoyanieUnita(
+                    true,
+                    'USPESHNO_ZAPUSHEN',
+                    'project-1',
+                    'unit-1',
+                    'main',
+                    SostoyanieUnita::GROUP_READY,
+                    false,
+                    null,
+                    self::ACCOUNT_ID,
+                    true,
+                    false,
+                    [],
+                );
+            },
+        );
+
+        $tokeny = $this->createMock(UmeetPoluchatTokenRedaktirovaniyaUnita::class);
+        $tokeny->expects($this->never())->method('poluchitTokenDlyRedaktirovaniyaUnita');
+
+        $poluchenReadOnly = null;
+        $poluchenToken = 'sentinel';
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->once())
+            ->method('nachatHod')
+            ->willReturnCallback(
+                static function (
+                    string $workflowId,
+                    string $accountId,
+                    string $credentialId,
+                    ?string $sessionId,
+                    array $units,
+                    string $prompt,
+                    array $answers,
+                    array $history,
+                    ?WorkspaceKontekst $workspace = null,
+                    bool $readOnly = false,
+                    ?string $token = null,
+                ) use (&$poluchenReadOnly, &$poluchenToken): string {
+                    $poluchenReadOnly = $readOnly;
+                    $poluchenToken = $token;
+
+                    return $workflowId;
+                }
+            );
+
+        $zapuskatel = $this->zapuskatel(
+            $this->turnRepository(),
+            $this->saveSessionRepository(),
+            $runner,
+            $this->createMock(UmeetBronirovatUniti::class),
+            $unitami,
+            $tokeny,
+        );
+
+        $zapuskatel->zapustit($this->sessiya(), 'Привет', [], $this->privyazki());
+
+        self::assertTrue($poluchenReadOnly);
+        self::assertNull($poluchenToken);
+    }
+
+    private function zapuskatel(
+        HodOpenCodeRepository $turnRepository,
+        SessiyaOpenCodeRepository $sessionRepository,
+        UmeetVypolnyatHodOpenCode $runner,
+        UmeetBronirovatUniti $bronirovanie,
+        ?UmeetUpravlyatUnitami $unitami = null,
+        ?UmeetPoluchatTokenRedaktirovaniyaUnita $tokeny = null,
+    ): ZapuskatelHodaOpenCode {
+        return new ZapuskatelHodaOpenCode(
+            $turnRepository,
+            $sessionRepository,
+            $runner,
+            $this->uuidGenerator(),
+            $bronirovanie,
+            $unitami ?? $this->unitami($this->sostoyanie(authorId: 'author-x', editing: true)),
+            $tokeny ?? $this->tokeny(),
+            new OpredelitelRezhimaHodaOpenCode(),
+        );
+    }
+
+    /**
+     * Запускает ход с одним юнитом и возвращает, что получил раннер.
+     *
+     * @param callable(string, string): string|null $tokenResolver
+     *
+     * @return array{bool, string|null}
+     */
+    private function zapustitSOdnymUnitom(
+        SostoyanieUnita $sostoyanie,
+        ?callable $tokenResolver = null,
+    ): array {
+        $tokeny = $this->createMock(UmeetPoluchatTokenRedaktirovaniyaUnita::class);
+
+        if ($tokenResolver !== null) {
+            $tokeny->method('poluchitTokenDlyRedaktirovaniyaUnita')->willReturnCallback($tokenResolver);
+        } else {
+            $tokeny->expects($this->never())->method('poluchitTokenDlyRedaktirovaniyaUnita');
+        }
+
+        $poluchenReadOnly = null;
+        $poluchenToken = 'sentinel';
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->once())
+            ->method('nachatHod')
+            ->willReturnCallback(
+                static function (
+                    string $workflowId,
+                    string $accountId,
+                    string $credentialId,
+                    ?string $sessionId,
+                    array $units,
+                    string $prompt,
+                    array $answers,
+                    array $history,
+                    ?WorkspaceKontekst $workspace = null,
+                    bool $readOnly = false,
+                    ?string $token = null,
+                ) use (&$poluchenReadOnly, &$poluchenToken): string {
+                    $poluchenReadOnly = $readOnly;
+                    $poluchenToken = $token;
+
+                    return $workflowId;
+                }
+            );
+
+        $zapuskatel = $this->zapuskatel(
+            $this->turnRepository(),
+            $this->saveSessionRepository(),
+            $runner,
+            $this->createMock(UmeetBronirovatUniti::class),
+            $this->unitami($sostoyanie),
+            $tokeny,
+        );
+
+        $zapuskatel->zapustit(
+            $this->sessiya(),
+            'Привет',
+            [],
+            [$this->privyazka('unit-1', 'project-1')],
+        );
+
+        return [$poluchenReadOnly, $poluchenToken];
+    }
+
+    private function unitami(SostoyanieUnita $sostoyanie): UmeetUpravlyatUnitami
+    {
+        $unitami = $this->createMock(UmeetUpravlyatUnitami::class);
+        $unitami->method('poluchitSostoyanieUnita')->willReturn($sostoyanie);
+
+        return $unitami;
+    }
+
+    private function tokeny(): UmeetPoluchatTokenRedaktirovaniyaUnita
+    {
+        $tokeny = $this->createMock(UmeetPoluchatTokenRedaktirovaniyaUnita::class);
+        $tokeny->method('poluchitTokenDlyRedaktirovaniyaUnita')->willReturn('personal-secret');
+
+        return $tokeny;
+    }
+
+    private function turnRepository(): HodOpenCodeRepository
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->once())->method('save');
+
+        return $turnRepository;
+    }
+
+    private function turnRepositoryBezSohraneniya(): HodOpenCodeRepository
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->never())->method('save');
+
+        return $turnRepository;
+    }
+
+    private function saveSessionRepository(): SessiyaOpenCodeRepository
+    {
+        $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $sessionRepository->expects($this->once())->method('update');
+
+        return $sessionRepository;
+    }
+
+    /**
+     * @param list<string> $redaktory
+     */
+    private function sostoyanie(
+        bool $exists = true,
+        ?string $authorId = self::ACCOUNT_ID,
+        bool $editing = true,
+        bool $protectedBranch = false,
+        array $redaktory = [],
+    ): SostoyanieUnita {
+        return new SostoyanieUnita(
+            $exists,
+            'USPESHNO_ZAPUSHEN',
+            'project-1',
+            'unit-1',
+            'main',
+            SostoyanieUnita::GROUP_READY,
+            false,
+            null,
+            $authorId,
+            $editing,
+            $protectedBranch,
+            $redaktory,
+        );
     }
 
     private function uuidGenerator(): UuidGenerator
@@ -233,14 +637,19 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         ];
     }
 
+    private function privyazka(string $unitId, string $projectId): PrivyazkaKUnitu
+    {
+        return PrivyazkaKUnitu::izZnacheniy($unitId, $projectId);
+    }
+
     private function sessiya(): SessiyaOpenCode
     {
         return SessiyaOpenCode::create(
             'session-1',
-            'account-1',
+            self::ACCOUNT_ID,
             'credential-1',
             null,
-            $this->privyazki(),
+            [$this->privyazka('unit-1', 'project-1')],
             1000,
         );
     }

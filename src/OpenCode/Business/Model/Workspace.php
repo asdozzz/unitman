@@ -53,7 +53,7 @@ final class Workspace
     ): self {
         $branch = self::normalizeBranch($branch);
         $initialPrompt = self::normalizePrompt($initialPrompt);
-        $projects = self::normalizeProjects($projects);
+        $projects = self::normalizeProjects($projects, $branch);
 
         return new self(
             $branch,
@@ -90,10 +90,12 @@ final class Workspace
         int $createdAt,
         int $updatedAt,
     ): self {
+        $branch = self::normalizeBranch($branch);
+
         return new self(
-            self::normalizeBranch($branch),
+            $branch,
             self::normalizePrompt($initialPrompt),
-            self::normalizeProjects($projects),
+            self::normalizeProjects($projects, $branch),
             $status,
             $readOnly,
             $errorKey,
@@ -250,7 +252,7 @@ final class Workspace
      *
      * @return list<ProektWorkspace>
      */
-    private static function normalizeProjects(array $projects): array
+    private static function normalizeProjects(array $projects, string $workspaceBranch = ''): array
     {
         if ($projects === []) {
             throw new \DomainException('opencode.workspace.projects_required');
@@ -265,6 +267,13 @@ final class Workspace
             }
 
             $seen[$project->projectId] = true;
+
+            // Старые снимки не содержат ветку проекта: фактической веткой
+            // становится общая ветка workspace.
+            if ($project->branch === '' && $workspaceBranch !== '') {
+                $project = $project->sVetkoy($workspaceBranch);
+            }
+
             $unique[] = $project;
         }
 

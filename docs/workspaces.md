@@ -165,6 +165,11 @@ stateDiagram-v2
 | `DELETING` | опрос `poluchitResultatUdaleniyaWorkspace`; успех → `deleteWorkspace`; ошибка → `ERROR` |
 | `RUNNING` | первый промпт, если `initialPromptStartedAt = null` |
 
+В выборку для сверки попадают и **архивные** сессии с транзитным статусом
+workspace: удаление архива (`ARCHIVED → DELETING`) и восстановление из архива
+(`ARCHIVED → STARTING`) иначе никто бы не досверял, и они навсегда залипали бы
+в `DELETING`/`STARTING`.
+
 Защита от двойной обработки — атомарный `perevestiStatusWorkspace` с
 ожидаемыми статусами.
 

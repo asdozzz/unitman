@@ -123,6 +123,17 @@ final class SqlProjectListRepository implements CanFindProjectDouble, CanGetProj
         $this->update($project);
     }
 
+    /**
+     * @param string[] $zashishennieVetki
+     */
+    function updateZashishennieVetki(string $projectId, array $zashishennieVetki): void
+    {
+        $project = $this->getById($projectId);
+        $project->zashishennieVetki = $zashishennieVetki;
+
+        $this->update($project);
+    }
+
     public function isExistDouble(string $projectCode, string $projectName): bool
     {
         $table = self::TABLE;

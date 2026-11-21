@@ -38,7 +38,10 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     units: list<array{unitId: string, unitProjectId: string}>,
      *     prompt: string,
      *     answers: list<array{QuestionId: string, OptionId: string|null, Text: string|null}>,
-     *     history: list<array{Role: string, Text: string}>
+     *     history: list<array{Role: string, Text: string}>,
+     *     workspace: WorkspaceKontekst|null,
+     *     readOnly: bool,
+     *     token: string|null
      * }>
      */
     private array $vyzovy = [];
@@ -63,6 +66,8 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
         array $answers,
         array $history,
         ?WorkspaceKontekst $workspace = null,
+        bool $readOnly = false,
+        ?string $token = null,
     ): string {
         /** @var list<PrivyazkaKUnitu> $units */
         /** @var list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers */
@@ -89,6 +94,8 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
             'answers' => $answers,
             'history' => $history,
             'workspace' => $workspace,
+            'readOnly' => $readOnly,
+            'token' => $token,
         ];
 
         return $workflowId;
@@ -120,7 +127,10 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     units: list<array{unitId: string, unitProjectId: string}>,
      *     prompt: string,
      *     answers: list<array{QuestionId: string, OptionId: string|null, Text: string|null}>,
-     *     history: list<array{Role: string, Text: string}>
+     *     history: list<array{Role: string, Text: string}>,
+     *     workspace: WorkspaceKontekst|null,
+     *     readOnly: bool,
+     *     token: string|null
      * }>
      */
     public function vyzovy(): array
@@ -144,7 +154,10 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     units: list<array{unitId: string, unitProjectId: string}>,
      *     prompt: string,
      *     answers: list<array{QuestionId: string, OptionId: string|null, Text: string|null}>,
-     *     history: list<array{Role: string, Text: string}>
+     *     history: list<array{Role: string, Text: string}>,
+     *     workspace: WorkspaceKontekst|null,
+     *     readOnly: bool,
+     *     token: string|null
      * }|null
      */
     public function posledniiVyzov(): ?array

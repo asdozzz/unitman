@@ -12,6 +12,8 @@ final class SostoyanieUnitaReadModel
     /**
      * @param bool $zanyat идёт операция над юнитом: внешний захват или незавершённый процесс
      * @param string|null $prichinaZanyatosti `prozes` | `opencode_hod`, если юнит занят
+     * @param string[] $redaktory прикреплённые редакторы (идентификаторы пользователей)
+     * @param bool $vetkaZashishena ветка юнита входит в защищённые ветки проекта
      */
     public function __construct(
         public readonly bool $exists,
@@ -22,6 +24,9 @@ final class SostoyanieUnitaReadModel
         public readonly ?string $authorId = null,
         public readonly bool $zanyat = false,
         public readonly ?string $prichinaZanyatosti = null,
+        public readonly bool $redaktirovanieVklucheno = false,
+        public readonly bool $vetkaZashishena = false,
+        public readonly array $redaktory = [],
     )
     {
     }
@@ -34,6 +39,9 @@ final class SostoyanieUnitaReadModel
         return new self(false);
     }
 
+    /**
+     * @param string[] $redaktory
+     */
     public static function izUnita(
         string $code,
         string $projectId,
@@ -42,8 +50,23 @@ final class SostoyanieUnitaReadModel
         ?string $authorId,
         bool $zanyat = false,
         ?string $prichinaZanyatosti = null,
+        bool $redaktirovanieVklucheno = false,
+        bool $vetkaZashishena = false,
+        array $redaktory = [],
     ): self
     {
-        return new self(true, $code, $projectId, $name, $branch, $authorId, $zanyat, $prichinaZanyatosti);
+        return new self(
+            true,
+            $code,
+            $projectId,
+            $name,
+            $branch,
+            $authorId,
+            $zanyat,
+            $prichinaZanyatosti,
+            $redaktirovanieVklucheno,
+            $vetkaZashishena,
+            $redaktory,
+        );
     }
 }

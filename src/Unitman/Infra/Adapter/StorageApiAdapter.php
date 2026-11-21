@@ -27,6 +27,16 @@ interface StorageApiAdapter
      */
     public function canPush(Repo $repo, Project $project): bool;
 
+    /**
+     * Может ли указанный (личный) токен пушить в проект хостинга.
+     */
+    public function canPushTokenom(string $token, Repo $repo, Project $project): bool;
+
+    /**
+     * Валиден ли произвольный токен хранилища для указанного Repo.
+     */
+    public function proveritToken(string $token, Repo $repo): bool;
+
     public function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string;
 
     public function poluchitProektiHranilisha(Repo $repo, ?string $query): array;

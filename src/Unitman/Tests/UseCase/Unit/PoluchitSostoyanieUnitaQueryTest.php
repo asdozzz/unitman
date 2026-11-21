@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
+use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Unit\PoluchitSostoyanieUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\UnitId;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
@@ -95,13 +98,87 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
         $this->assertOtsutstvuet($query->handle(new PoluchitSostoyanieUnita(self::UNIT_ID)));
     }
 
-    private function query(UnitRepository $repository): PoluchitSostoyanieUnitaQuery
+    #[Test]
+    public function sostoyanie_soderzhit_redaktorov_i_zashishennost_vetki(): void
+    {
+        $project = Project::addProject(
+            'project-1',
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300, ['main']),
+            'author-1',
+        );
+
+        $unit = Unit::sozdatUnit(
+            self::UNIT_ID,
+            'author-1',
+            'prozes-1',
+            new SozdatUnit('project-1', 'unit-name', 'feature/1', [], 3000),
+        );
+        $unit->vklyuchitRedaktirovanie($project);
+        $unit->prikrepitRedaktora('editor-1', $project);
+
+        $repository = $this->createMock(UnitRepository::class);
+        $repository->method('getById')->willReturn($unit);
+
+        $projectRepository = $this->createMock(ProjectRepository::class);
+        $projectRepository->method('getById')->willReturn($project);
+
+        $query = $this->query($repository, $projectRepository);
+        $readModel = $query->handle(new PoluchitSostoyanieUnita(self::UNIT_ID));
+
+        self::assertTrue($readModel->redaktirovanieVklucheno);
+        self::assertFalse($readModel->vetkaZashishena);
+        self::assertSame(['editor-1'], $readModel->redaktory);
+        self::assertSame('author-1', $readModel->authorId);
+    }
+
+    #[Test]
+    public function sostoyanie_otmechaet_zashishennuyu_vetku(): void
+    {
+        $project = Project::addProject(
+            'project-1',
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300, ['release/*']),
+            'author-1',
+        );
+
+        $unit = Unit::sozdatUnit(
+            self::UNIT_ID,
+            'author-1',
+            'prozes-1',
+            new SozdatUnit('project-1', 'unit-name', 'release/1.2', [], 3000),
+        );
+
+        $repository = $this->createMock(UnitRepository::class);
+        $repository->method('getById')->willReturn($unit);
+
+        $projectRepository = $this->createMock(ProjectRepository::class);
+        $projectRepository->method('getById')->willReturn($project);
+
+        $query = $this->query($repository, $projectRepository);
+        $readModel = $query->handle(new PoluchitSostoyanieUnita(self::UNIT_ID));
+
+        self::assertTrue($readModel->vetkaZashishena);
+        self::assertFalse($readModel->redaktirovanieVklucheno);
+        self::assertSame([], $readModel->redaktory);
+    }
+
+    private function query(
+        UnitRepository $repository,
+        ?ProjectRepository $projectRepository = null,
+    ): PoluchitSostoyanieUnitaQuery
     {
         $zanyatostRepository = $this->createMock(ZanyatostUnitaRepository::class);
         $zanyatostRepository->method('poluchitAktivnuyu')->willReturn(null);
 
+        if ($projectRepository === null) {
+            $projectRepository = $this->createMock(ProjectRepository::class);
+            $projectRepository
+                ->method('getById')
+                ->willThrowException(new \DomainException('project.not_found'));
+        }
+
         return new PoluchitSostoyanieUnitaQuery(
             $repository,
+            $projectRepository,
             new PoluchitZanyatostUnitaQuery($repository, $zanyatostRepository),
         );
     }

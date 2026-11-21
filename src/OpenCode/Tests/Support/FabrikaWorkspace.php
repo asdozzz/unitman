@@ -21,8 +21,9 @@ final class FabrikaWorkspace
         string $code = 'services/api',
         bool $canPush = true,
         int $position = 0,
+        string $mainBranch = 'main',
     ): ProektWorkspace {
-        return new ProektWorkspace($projectId, $name, $code, $canPush, $position);
+        return new ProektWorkspace($projectId, $name, $code, $canPush, $position, $mainBranch);
     }
 
     /**

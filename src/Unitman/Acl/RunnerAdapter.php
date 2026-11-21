@@ -4,6 +4,7 @@ namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\ImageConfig;
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
@@ -12,6 +13,7 @@ use App\Runner\Business\Command\NachatSborkuUnita;
 use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
+use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Unitman\Business\Model\Project;
@@ -124,7 +126,15 @@ final class RunnerAdapter implements RunnerService
             throw new \DomainException('Конфиг не найден');
         }
         $imageConfig = new ImageConfig($konfigStadiiSborki->obraz, $konfigStadiiSborki->dopolnitelnieKomandi);
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings, $unit->getBranch(), $imageConfig, $volumes);
+        // Режим IDE пересчитывается при подготовке (15.11-а, 15.13-б): если
+        // редактирование включено, ветка не защищена и юнит создан не системой,
+        // сайдкар поднимается сразу в RW. Старый раннер поле игнорирует.
+        $rezhimRedaktora = $unit->getRedaktirovanieVklucheno()
+            && !$unit->isSozdanSystemoi()
+            && !$project->soderzhitZashishennuyuVetku($unit->getBranch())
+                ? 'edit'
+                : 'view';
+        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings, $unit->getBranch(), $imageConfig, $volumes, $rezhimRedaktora);
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
@@ -193,6 +203,30 @@ final class RunnerAdapter implements RunnerService
         $command = new NachatUdalenieUnita($unit->getProjectId(), $project->getName(), $unit->getId() ,$unit->getName(), $storageUrl);
         $workflowId = $this->runnerApi->nachatUdalenieUnita($jobId, $command);
         return new JobId($workflowId);
+    }
+
+    public function izmenitRezhimRedaktora(string $unitId, string $mode): void
+    {
+        $workflowId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $this->runnerApi->izmenitRezhimRedaktoraUnita(
+            $workflowId,
+            new IzmenitRezhimRedaktoraUnita($unitId, $mode),
+        );
+    }
+
+    public function podgotovitSessiyuRedaktora(
+        string $unitId,
+        string $userId,
+        string $mode,
+        string $token,
+        ?string $userName = null,
+        ?string $userEmail = null,
+    ): void {
+        $workflowId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $this->runnerApi->podgotovitSessiyuRedaktora(
+            $workflowId,
+            new PodgotovitSessiyuRedaktora($unitId, $userId, $mode, $token, $userName, $userEmail),
+        );
     }
 
     public function poluchitResultatSborki(string $jobId): ResultatSborkiUnita

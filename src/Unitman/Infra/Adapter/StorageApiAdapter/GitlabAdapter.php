@@ -90,6 +90,26 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return PushPermission::izGitlab($data);
     }
 
+    public function canPushTokenom(string $token, Repo $repo, Project $project): bool
+    {
+        $client = $this->clientFactory->makeClientWithToken($repo, $token);
+        $data = $client->projects()->show($project->getCode());
+
+        return PushPermission::izGitlab($data);
+    }
+
+    public function proveritToken(string $token, Repo $repo): bool
+    {
+        try {
+            $client = $this->clientFactory->makeClientWithToken($repo, $token);
+            $client->users()->me();
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     public function poluchitKonfigIzHranilisha(Repo $repo, string $projectCode, string $branchName): string
     {
         $client = $this->clientFactory->makeClient($repo);

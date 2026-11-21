@@ -55,6 +55,8 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         array $answers,
         array $history,
         ?WorkspaceKontekst $workspace = null,
+        bool $readOnly = false,
+        ?string $token = null,
     ): string {
         $unitsPayload = [];
         $workspaceProjects = [];
@@ -94,6 +96,8 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
                 $workspace?->workspaceId,
                 $workspace?->readOnly ?? false,
                 $workspaceProjects,
+                $readOnly,
+                $token,
             ),
         );
     }
@@ -258,6 +262,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
                 $project->projectName,
                 $project->projectCode,
                 $project->canPush,
+                $project->mainBranch,
             );
         }
 

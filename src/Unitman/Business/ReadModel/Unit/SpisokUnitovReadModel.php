@@ -37,6 +37,12 @@ final class SpisokUnitovReadModel
      * @param string|null $redaktorLink ссылка на read-only редактор файлов юнита:
      *        появляется после успешной подготовки, очищается при сбросе подготовки
      *        или пересборке; `null` — редактор недоступен
+     * @param bool $redaktirovanieVklucheno режим редактирования файлов юнита
+     * @param string[] $redaktory прикреплённые редакторы (идентификаторы пользователей)
+     * @param bool $vetkaZashishena ветка юнита входит в защищённые ветки проекта
+     * @param string|null $redaktorMode вычисляемый режим: `view`|`edit`|`locked`
+     * @param bool|null $moguRedaktirovat может ли текущий пользователь править файлы
+     * @param string|null $prichinaZapreta причина запрета: `protected_branch`|`net_tokena`|`null`
      */
     public function __construct(
         public readonly string $id,
@@ -63,7 +69,13 @@ final class SpisokUnitovReadModel
         public readonly ?string $containerStateMismatchExpected = null,
         public readonly ?string $containerStateMismatchActual = null,
         public readonly ?int $containerStateMismatchDetectedAt = null,
-        public readonly ?string $redaktorLink = null
+        public readonly ?string $redaktorLink = null,
+        public readonly bool $redaktirovanieVklucheno = false,
+        public readonly array $redaktory = [],
+        public readonly bool $vetkaZashishena = false,
+        public readonly ?string $redaktorMode = null,
+        public readonly ?bool $moguRedaktirovat = null,
+        public readonly ?string $prichinaZapreta = null,
     )
     {
     }
@@ -123,6 +135,25 @@ final class SpisokUnitovReadModel
             ? ($props['redaktorLink'] === null ? null : (string) $props['redaktorLink'])
             : $this->redaktorLink;
 
+        $redaktirovanieVklucheno = array_key_exists('redaktirovanieVklucheno', $props)
+            ? (bool) $props['redaktirovanieVklucheno']
+            : $this->redaktirovanieVklucheno;
+        $redaktory = array_key_exists('redaktory', $props)
+            ? array_values(array_map(static fn (mixed $id): string => (string) $id, (array) $props['redaktory']))
+            : $this->redaktory;
+        $vetkaZashishena = array_key_exists('vetkaZashishena', $props)
+            ? (bool) $props['vetkaZashishena']
+            : $this->vetkaZashishena;
+        $redaktorMode = array_key_exists('redaktorMode', $props)
+            ? ($props['redaktorMode'] === null ? null : (string) $props['redaktorMode'])
+            : $this->redaktorMode;
+        $moguRedaktirovat = array_key_exists('moguRedaktirovat', $props)
+            ? ($props['moguRedaktirovat'] === null ? null : (bool) $props['moguRedaktirovat'])
+            : $this->moguRedaktirovat;
+        $prichinaZapreta = array_key_exists('prichinaZapreta', $props)
+            ? ($props['prichinaZapreta'] === null ? null : (string) $props['prichinaZapreta'])
+            : $this->prichinaZapreta;
+
         $containerStateMismatch = array_key_exists('containerStateMismatch', $props)
             ? (bool) $props['containerStateMismatch']
             : $this->containerStateMismatch;
@@ -180,7 +211,13 @@ final class SpisokUnitovReadModel
             $containerStateMismatchExpected,
             $containerStateMismatchActual,
             $containerStateMismatchDetectedAt,
-            $redaktorLink
+            $redaktorLink,
+            $redaktirovanieVklucheno,
+            $redaktory,
+            $vetkaZashishena,
+            $redaktorMode,
+            $moguRedaktirovat,
+            $prichinaZapreta,
         );
     }
 }

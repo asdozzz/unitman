@@ -244,6 +244,7 @@ final class SessiyaOpenCodeWorkspaceTest extends TestCase
             'services/' . $projectId,
             $canPush,
             $positionIndex,
+            'main',
         );
     }
 }

@@ -231,6 +231,7 @@ final class WorkspaceTest extends TestCase
             'services/' . $projectId,
             $canPush,
             $positionIndex,
+            'main',
         );
     }
 }

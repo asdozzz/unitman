@@ -9,9 +9,14 @@ final class GitlabClientFactory
 {
     public function makeClient(Repo $repo): Client
     {
+        return $this->makeClientWithToken($repo, $repo->getCredentials()->token);
+    }
+
+    public function makeClientWithToken(Repo $repo, string $token): Client
+    {
         $client = new Client();
         $client->setUrl($repo->getCredentials()->url);
-        $client->authenticate($repo->getCredentials()->token, Client::AUTH_HTTP_TOKEN);
+        $client->authenticate($token, Client::AUTH_HTTP_TOKEN);
 
         return $client;
     }

@@ -81,11 +81,14 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
         $this->assertContains('opencode_session_unit', $deletedTables);
         $this->assertContains('opencode_workspace_project', $deletedTables);
 
-        $projectInserts = array_filter(
+        $projectInserts = array_values(array_filter(
             $inserts,
             static fn (array $insert): bool => $insert['table'] === 'opencode_workspace_project'
-        );
+        ));
         $this->assertCount(2, $projectInserts);
+        $this->assertSame('main', $projectInserts[0]['data']['main_branch']);
+        $this->assertSame(ParameterType::STRING, $projectInserts[0]['types']['main_branch']);
+        $this->assertSame('develop', $projectInserts[1]['data']['main_branch']);
     }
 
     #[Test]
@@ -107,6 +110,7 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
                                 'project_id' => 'p-1',
                                 'project_name' => 'api',
                                 'project_code' => 'services/api',
+                                'main_branch' => 'main',
                                 'can_push' => true,
                                 'position_index' => 0,
                             ],
@@ -115,6 +119,7 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
                                 'project_id' => 'p-2',
                                 'project_name' => 'web',
                                 'project_code' => 'services/web',
+                                'main_branch' => 'develop',
                                 'can_push' => false,
                                 'position_index' => 1,
                             ],
@@ -172,7 +177,9 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
         $this->assertTrue($workspace->isReadOnly());
         $this->assertCount(2, $workspace->getProjects());
         $this->assertSame('p-1', $workspace->getProjects()[0]->projectId);
+        $this->assertSame('main', $workspace->getProjects()[0]->mainBranch);
         $this->assertFalse($workspace->getProjects()[1]->canPush);
+        $this->assertSame('develop', $workspace->getProjects()[1]->mainBranch);
 
         $this->assertStringContainsString('tip = :tip', $fetched[0]['sql']);
         $this->assertSame('workspace', $fetched[0]['params']['tip']);
@@ -285,7 +292,7 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
     }
 
     #[Test]
-    public function find_aktivnie_workspace_beret_tolko_workspace_i_ogranichivaet_limit(): void
+    public function find_aktivnie_workspace_beret_workspace_i_arhivnie_v_tranzitnom_statuse(): void
     {
         $zapros = null;
 
@@ -307,8 +314,15 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
         $this->assertNotNull($zapros);
         $this->assertStringContainsString('INNER JOIN opencode_workspace w', $zapros['sql']);
         $this->assertStringContainsString('s.tip = :tip', $zapros['sql']);
-        $this->assertStringContainsString('s.archived_at is null', $zapros['sql']);
+        // Архивные сессии не отбрасываются, если операция ещё транзитная:
+        // иначе удаление архива и восстановление из архива залипают навсегда.
+        $this->assertStringContainsString(
+            '(s.archived_at is null OR w.status = any(:tranzit))',
+            $zapros['sql'],
+        );
         $this->assertSame('workspace', $zapros['params']['tip']);
+        $this->assertSame('{CREATING,STARTING,ARCHIVING,DELETING}', $zapros['params']['tranzit']);
+        $this->assertSame(ParameterType::STRING, $zapros['types']['tranzit']);
         $this->assertSame(50, $zapros['params']['limit']);
     }
 
@@ -321,8 +335,8 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
             'payments-refactor',
             'feature/payments',
             [
-                new ProektWorkspace('p-1', 'api', 'services/api', true, 0),
-                new ProektWorkspace('p-2', 'web', 'services/web', false, 1),
+                new ProektWorkspace('p-1', 'api', 'services/api', true, 0, 'main'),
+                new ProektWorkspace('p-2', 'web', 'services/web', false, 1, 'develop'),
             ],
             'Сделай рефакторинг',
             self::NOW,

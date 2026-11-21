@@ -169,6 +169,7 @@ return [
         ],
         'workspace' => [
             'archived' => 'The workspace is archived',
+            'branch_protected' => 'The branch is protected in one of the projects and cannot be used for a workspace',
             'branch_required' => 'The workspace branch must not be empty',
             'branch_too_long' => 'The workspace branch is too long',
             'confirmation_required' => 'The workspace has uncommitted changes: confirm the operation',
@@ -242,6 +243,12 @@ return [
         'user_has_system_role' => 'The system account cannot be added to a project',
         'user_not_found' => 'The user was not found',
         'user_not_found_in_project' => 'The user is not a member of the project',
+        'zashishennie_vetki' => [
+            'pusta_stroka' => 'A protected branch pattern must not be empty',
+            'slishkom_dlinnaya' => 'A protected branch pattern is too long',
+            'dublikat' => 'The protected branch pattern is duplicated',
+            'slishkom_mnogo' => 'Too many protected branch patterns',
+        ],
         'variable' => [
             'code_is_empty' => 'The variable code must not be empty',
             'duplicate' => 'The variable is already defined',
@@ -331,6 +338,23 @@ return [
         'access_denied' => 'Access denied',
     ],
 
+    // ─── Personal storage tokens ─────────────────────────────────────────────
+    'lichniy_token' => [
+        'ne_nayden' => 'The personal token was not found',
+        'chuzhoy' => 'The personal token belongs to another user',
+        'pustoy_token' => 'The token must not be empty',
+        'ne_validen' => 'The token is invalid for the selected repository',
+        'dublikat' => 'The same token is already added for this repository',
+        'id_is_empty' => 'The personal token ID must not be empty',
+        'vladelec_ne_ukazan' => 'The personal token owner is not specified',
+        'repo_ne_ukazan' => 'The personal token repository is not specified',
+        'pustoe_nazvanie' => 'The personal token name must not be empty',
+        'key_not_configured' => 'Personal token encryption key is not configured',
+        'invalid_key' => 'Invalid personal token encryption key',
+        'encrypt_failed' => 'Failed to encrypt the personal token',
+        'decrypt_failed' => 'Failed to decrypt the personal token',
+    ],
+
     // ─── Units ───────────────────────────────────────────────────────────────
     'unit' => [
         'author_must_have_system_role' => 'Only the system account can create a unit on behalf of the system',
@@ -381,6 +405,18 @@ return [
             'tip_neizvesten' => 'Unknown unit occupancy type',
         ],
         'zapushen' => 'The unit is already running',
+        'redaktor' => [
+            'net_lichnogo_tokena' => 'The user has no personal token for the unit repository',
+            'token_bez_prav_na_proekt' => 'The personal token has no rights on the unit project',
+            'ne_avtor' => 'Only the unit author or an admin with a personal token can manage unit editors',
+            'vetka_zashishena' => 'Editing is forbidden for the protected branch of the unit',
+            'redaktor_uzhe_prikreplen' => 'The user is already attached as an editor of the unit',
+            'redaktor_ne_nayden' => 'The user to attach as an editor was not found',
+            'redaktor_bez_tokena' => 'The user has no personal token with rights on the unit project',
+            'net_dostupa_k_proektu' => 'The user has no access to the unit project',
+            'ssylka_nevalidna' => 'The editor link is invalid',
+            'ssylka_istekla' => 'The editor link has expired',
+        ],
         'config' => [
             'prepare_is_empty' => 'The "prepare" block must not be empty',
             'resetPrepare_is_empty' => 'The "reset_prepare" block must not be empty',

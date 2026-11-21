@@ -19,6 +19,7 @@ final class ProektWorkspaceReadModel
         public readonly string $projectCode,
         public readonly bool $canPush,
         public readonly int $positionIndex,
+        public readonly string $branch,
     ) {
     }
 
@@ -30,11 +31,12 @@ final class ProektWorkspaceReadModel
             $project->projectCode,
             $project->canPush,
             $project->positionIndex,
+            $project->branch,
         );
     }
 
     /**
-     * @return array{projectId: string, projectName: string, projectCode: string, canPush: bool, positionIndex: int}
+     * @return array{projectId: string, projectName: string, projectCode: string, canPush: bool, positionIndex: int, branch: string}
      */
     public function toArray(): array
     {
@@ -44,6 +46,7 @@ final class ProektWorkspaceReadModel
             'projectCode' => $this->projectCode,
             'canPush' => $this->canPush,
             'positionIndex' => $this->positionIndex,
+            'branch' => $this->branch,
         ];
     }
 }

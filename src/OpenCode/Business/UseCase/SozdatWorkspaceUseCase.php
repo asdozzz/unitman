@@ -24,6 +24,8 @@ use App\OpenCode\Business\Port\UuidGenerator;
  */
 final class SozdatWorkspaceUseCase
 {
+    private const BRANCH_MAX_LENGTH = 256;
+
     public function __construct(
         private SessiyaOpenCodeRepository $sessionRepository,
         private UmeetProveryatRekvizityOpenCode $credentials,
@@ -43,6 +45,7 @@ final class SozdatWorkspaceUseCase
         $name = trim($command->name);
         $branch = trim($command->branch);
         $projectIds = $this->normalizeProjectIds($command->projectIds);
+        $projectBranches = $this->normalizeProjectBranches($command->projectBranches, $projectIds);
 
         if (count($projectIds) > SessiyaOpenCode::MAX_WORKSPACE_PROJECTS) {
             throw new \DomainException('opencode.workspace.too_many_projects');
@@ -51,7 +54,9 @@ final class SozdatWorkspaceUseCase
         $this->proveritUnikalnostImeni($accountId, $name);
 
         $projects = $this->normalizeProjects(
-            $this->projectami->poluchitProekti($projectIds, $accountId),
+            $this->projectami->poluchitProekti($projectIds, $accountId, $branch, $projectBranches),
+            $projectBranches,
+            $branch,
         );
 
         $session = SessiyaOpenCode::createWorkspace(
@@ -112,6 +117,51 @@ final class SozdatWorkspaceUseCase
         return $result;
     }
 
+    /**
+     * Переопределения веток: проект обязан входить в `projectIds`, ветка —
+     * быть непустой и не длиннее лимита, дубликат проекта запрещён.
+     *
+     * @param list<array{projectId?: mixed, branch?: mixed}> $projectBranches
+     * @param list<string>                                   $projectIds
+     *
+     * @return array<string, string> projectId => branch
+     */
+    private function normalizeProjectBranches(array $projectBranches, array $projectIds): array
+    {
+        $dostupnie = array_fill_keys($projectIds, true);
+        $result = [];
+
+        foreach ($projectBranches as $item) {
+            $projectId = is_array($item) && is_string($item['projectId'] ?? null)
+                ? trim($item['projectId'])
+                : '';
+
+            if ($projectId === '' || !isset($dostupnie[$projectId])) {
+                throw new \DomainException('opencode.workspace.project_not_found');
+            }
+
+            if (isset($result[$projectId])) {
+                throw new \DomainException('opencode.workspace.project_conflict');
+            }
+
+            $branch = is_array($item) && is_string($item['branch'] ?? null)
+                ? trim($item['branch'])
+                : '';
+
+            if ($branch === '') {
+                throw new \DomainException('opencode.workspace.branch_required');
+            }
+
+            if (mb_strlen($branch) > self::BRANCH_MAX_LENGTH) {
+                throw new \DomainException('opencode.workspace.branch_too_long');
+            }
+
+            $result[$projectId] = $branch;
+        }
+
+        return $result;
+    }
+
     private function proveritUnikalnostImeni(string $accountId, string $name): void
     {
         $filter = new SessiyaOpenCodeFilter(false, null, TipSessiiOpenCode::WORKSPACE);
@@ -124,11 +174,15 @@ final class SozdatWorkspaceUseCase
     }
 
     /**
-     * @param list<ProektWorkspace> $projects
+     * Фиксирует фактическую ветку каждого проекта: переопределение из
+     * `projectBranches`, иначе общая ветка workspace.
+     *
+     * @param list<ProektWorkspace>   $projects
+     * @param array<string, string>   $projectBranches
      *
      * @return list<ProektWorkspace>
      */
-    private function normalizeProjects(array $projects): array
+    private function normalizeProjects(array $projects, array $projectBranches = [], string $commonBranch = ''): array
     {
         $result = [];
 
@@ -139,6 +193,8 @@ final class SozdatWorkspaceUseCase
                 $project->projectCode,
                 $project->canPush,
                 count($result),
+                $project->mainBranch,
+                $projectBranches[$project->projectId] ?? $commonBranch,
             );
         }
 

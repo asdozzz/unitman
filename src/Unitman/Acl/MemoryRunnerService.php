@@ -5,6 +5,7 @@ namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
+use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Command\NachatOstanovkuUnita;
@@ -13,6 +14,7 @@ use App\Runner\Business\Command\NachatSborkuUnita;
 use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
+use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
@@ -82,6 +84,9 @@ final class MemoryRunnerService implements RunnerApiInterface
     const UDALENIE_WORKSPACE = 'UDALENIE_WORKSPACE';
     const RESULTAT_UDALENIYA_WORKSPACE = 'RESULTAT_UDALENIYA_WORKSPACE';
     const PROVERKA_IZMENENIY_WORKSPACE = 'PROVERKA_IZMENENIY_WORKSPACE';
+
+    const IZMENIT_REZHIM_REDAKTORA = 'IZMENIT_REZHIM_REDAKTORA';
+    const PODGOTOVIT_SESSIYU_REDAKTORA = 'PODGOTOVIT_SESSIYU_REDAKTORA';
 
     /** @var array<string, list<array{response: mixed, expectedParams: mixed}>> */
     private array $responses = [];
@@ -337,6 +342,38 @@ final class MemoryRunnerService implements RunnerApiInterface
         if (!empty($response['expectedParams'])) {
             $response['expectedParams'](func_get_args());
         }
+        return $response['response'];
+    }
+
+    public function izmenitRezhimRedaktoraUnita(string $workflowId, IzmenitRezhimRedaktoraUnita $command): string
+    {
+        $this->calls[] = ['method' => 'izmenitRezhimRedaktoraUnita', 'args' => [$workflowId, $command]];
+
+        if (empty($this->responses[self::IZMENIT_REZHIM_REDAKTORA])) {
+            return $workflowId;
+        }
+
+        $response = $this->getNextResponse(self::IZMENIT_REZHIM_REDAKTORA);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+
+        return $response['response'];
+    }
+
+    public function podgotovitSessiyuRedaktora(string $workflowId, PodgotovitSessiyuRedaktora $command): string
+    {
+        $this->calls[] = ['method' => 'podgotovitSessiyuRedaktora', 'args' => [$workflowId, $command]];
+
+        if (empty($this->responses[self::PODGOTOVIT_SESSIYU_REDAKTORA])) {
+            return $workflowId;
+        }
+
+        $response = $this->getNextResponse(self::PODGOTOVIT_SESSIYU_REDAKTORA);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+
         return $response['response'];
     }
 

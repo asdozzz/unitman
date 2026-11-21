@@ -11,6 +11,8 @@ use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
+use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
+use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
 
@@ -37,6 +39,9 @@ final class ZapuskatelHodaOpenCode
         private UmeetVypolnyatHodOpenCode $runner,
         private UuidGenerator $uuidGenerator,
         private UmeetBronirovatUniti $bronirovanie,
+        private UmeetUpravlyatUnitami $unitami,
+        private UmeetPoluchatTokenRedaktirovaniyaUnita $tokeny,
+        private OpredelitelRezhimaHodaOpenCode $rezhimHoda,
     ) {
     }
 
@@ -75,6 +80,15 @@ final class ZapuskatelHodaOpenCode
             );
         }
 
+        // Режим вычисляется до захвата юнитов: если личный токен для RW-хода
+        // не нашёлся, ход отклоняется сразу, не оставив захват висеть до TTL.
+        $readOnly = false;
+        $token = null;
+
+        if ($units !== []) {
+            [$readOnly, $token] = $this->opredelitRezhim($units, $session->getAccountId());
+        }
+
         $vladelec = VladelecZanyatostiOpenCode::dlyaHoda($turn->getId());
         $unitIds = $this->sobratIdUnitov($units);
         $zahvacheno = false;
@@ -95,6 +109,8 @@ final class ZapuskatelHodaOpenCode
                 $answers,
                 $history,
                 $workspaceKontekst,
+                $readOnly,
+                $token,
             );
         } catch (\Throwable $e) {
             if ($zahvacheno) {
@@ -116,6 +132,39 @@ final class ZapuskatelHodaOpenCode
         $this->sessionRepository->update($session);
 
         return $turn;
+    }
+
+    /**
+     * Решение 15.7-а для хода по юниту.
+     *
+     * Ход RW только если ВСЕ юниты сессии разрешают правку: если хотя бы один
+     * юнит read-only, весь multi-root ход read-only и токен не запрашивается.
+     * Токен берётся для первого юнита (cwd хода) — именно в нём выполняются
+     * commit/push.
+     *
+     * @param list<PrivyazkaKUnitu> $units
+     *
+     * @return array{bool, string|null}
+     *
+     * @throws \DomainException unit.redaktor.net_lichnogo_tokena|unit.redaktor.token_bez_prav_na_proekt
+     */
+    private function opredelitRezhim(array $units, string $accountId): array
+    {
+        $pervyiUnit = reset($units);
+
+        foreach ($units as $privyazka) {
+            $sostoyanie = $this->unitami->poluchitSostoyanieUnita($privyazka->unitId);
+
+            if ($this->rezhimHoda->readOnly($sostoyanie, $accountId)) {
+                return [true, null];
+            }
+        }
+
+        if (!$pervyiUnit instanceof PrivyazkaKUnitu) {
+            return [true, null];
+        }
+
+        return [false, $this->tokeny->poluchitTokenDlyRedaktirovaniyaUnita($pervyiUnit->unitId, $accountId)];
     }
 
     /**

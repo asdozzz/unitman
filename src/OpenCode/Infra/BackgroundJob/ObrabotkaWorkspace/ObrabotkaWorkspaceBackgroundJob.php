@@ -20,6 +20,10 @@ use Psr\Log\LoggerInterface;
  * Каждый переход выполняется атомарно (`perevestiStatusWorkspace` с ожидаемыми
  * статусами), поэтому повторный запуск не создаёт вторую остановку/удаление.
  * Ошибка одного workspace логируется и не прерывает обработку пачки.
+ *
+ * В выборку входят и архивные сессии с транзитным статусом workspace: удаление
+ * архива (`ARCHIVED → DELETING`) и восстановление из архива
+ * (`ARCHIVED → STARTING`) нельзя терять, иначе они навсегда залипают.
  */
 final class ObrabotkaWorkspaceBackgroundJob extends AbstractBackgroundJob
 {

@@ -3,6 +3,7 @@
 namespace App\Runner\Api;
 
 use App\Runner\Business\Command\InitProjectCommand;
+use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Command\VipolnitHodOpenCode;
@@ -13,6 +14,7 @@ use App\Runner\Business\Command\NachatSborkuUnita;
 use App\Runner\Business\Command\NachatSbrosPodgotovkiUnita;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Command\NachatZapuskUnita;
+use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
@@ -30,8 +32,10 @@ use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaRezhimaRedaktora;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
+use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiSessiiRedaktora;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatPodgotovkiUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatProverkiKonteineraUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
@@ -48,6 +52,7 @@ use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
 use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Service\RunnerProgressPublisher;
 use App\Runner\Infra\Workflow\InitProjectWorkflow;
+use App\Runner\Infra\Workflow\IzmenitRezhimRedaktoraUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
 use App\Runner\Infra\Workflow\OpenCodeTurnWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
@@ -57,6 +62,7 @@ use App\Runner\Infra\Workflow\NachatSborkuUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatSbrosPodgotovkiWorkflow;
 use App\Runner\Infra\Workflow\NachatUdalenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatZapuskUnitaWorkflow;
+use App\Runner\Infra\Workflow\PodgotovitSessiyuRedaktoraWorkflow;
 use App\Runner\Infra\Workflow\ProveritKonteinerUnitaWorkflow;
 use App\Runner\Infra\Workflow\ProveritIzmeneniyaWorkspaceWorkflow;
 use App\Runner\Infra\Workflow\OstanovitWorkspaceWorkflow;
@@ -207,6 +213,44 @@ final class RunnerApi implements RunnerApiInterface
 
         $workflow = $this->workflowClient->newWorkflowStub(
             NachatPodgotovkuUnitaWorkflow::class,
+            WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
+        );
+
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
+
+    /**
+     * Пересоздание IDE-сайдкара подготовленного юнита с новым режимом.
+     */
+    public function izmenitRezhimRedaktoraUnita(string $workflowId, IzmenitRezhimRedaktoraUnita $command): string
+    {
+        $this->zaregistrirovatProgressToken($workflowId);
+
+        $workflow = $this->workflowClient->newWorkflowStub(
+            IzmenitRezhimRedaktoraUnitaWorkflow::class,
+            WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
+        );
+
+        $run = $this->workflowClient->start($workflow, $command);
+        return $run->getExecution()->getID();
+    }
+
+    /**
+     * Подготовка редакторской сессии юнита под личным токеном пользователя.
+     */
+    public function podgotovitSessiyuRedaktora(string $workflowId, PodgotovitSessiyuRedaktora $command): string
+    {
+        $this->zaregistrirovatProgressToken($workflowId);
+
+        $workflow = $this->workflowClient->newWorkflowStub(
+            PodgotovitSessiyuRedaktoraWorkflow::class,
             WorkflowOptions::new()
                 ->withWorkflowId($workflowId)
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
@@ -522,6 +566,8 @@ final class RunnerApi implements RunnerApiInterface
             $command->WorkspaceId,
             $command->WorkspaceReadOnly,
             $command->WorkspaceProjects,
+            $command->ReadOnly,
+            $command->Token,
         );
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -590,6 +636,7 @@ final class RunnerApi implements RunnerApiInterface
                 $project->ProjectCode,
                 $this->urlKlonaProekta->poluchitUrlKlona($project->ProjectId),
                 $project->CanPush,
+                $project->MainBranch,
             );
         }
 

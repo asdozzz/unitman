@@ -68,4 +68,25 @@ interface RunnerService
     public function poluchitProgressZadachi(string $jobId): ?RunnerJobProgress;
 
     public function proveritKonteinerUnita(Unit $unit, Project $project): bool;
+
+    /**
+     * Пересоздание IDE-сайдкара подготовленного юнита с новым режимом.
+     *
+     * @param string $mode `view`|`edit`
+     */
+    public function izmenitRezhimRedaktora(string $unitId, string $mode): void;
+
+    /**
+     * Подготовка редакторской сессии юнита под личным токеном пользователя.
+     *
+     * @param string $mode `view`|`edit`
+     */
+    public function podgotovitSessiyuRedaktora(
+        string $unitId,
+        string $userId,
+        string $mode,
+        string $token,
+        ?string $userName = null,
+        ?string $userEmail = null,
+    ): void;
 }

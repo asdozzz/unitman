@@ -9,6 +9,9 @@ final class NachatPodgotovkuUnita
 {
     /**
      * @param Volume[] $Volumes
+     * @param string $RezhimRedaktora режим IDE-сайдкара: `view`|`edit`.
+     *        Необязателен для обратной совместимости: старые вызовы и старый
+     *        раннер поле не передают/игнорируют, по умолчанию — `view`.
      */
     public function __construct(
         public readonly string $ProjectId,
@@ -22,7 +25,8 @@ final class NachatPodgotovkuUnita
         public readonly ContainerSettings $ContainerSettings,
         public readonly string $Branch,
         public readonly ImageConfig $ImageConfig,
-        public readonly array $Volumes = []
+        public readonly array $Volumes = [],
+        public readonly string $RezhimRedaktora = 'view'
     )
     {
     }

@@ -9,6 +9,7 @@ use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
+use App\Unitman\Business\Command\Project\UstanovitZashishennieVetkiProekta;
 use App\Unitman\Business\Model\Project\Event\NastroikiHukaProektaUstanovleni;
 use App\Unitman\Business\Model\Project\Event\OchistkaProektaNachalas;
 use App\Unitman\Business\Model\Project\Event\OshibkaOchistkiProektaUstanovlena;
@@ -28,6 +29,7 @@ use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
 use App\Unitman\Business\Model\Project\Event\UspehOchistkiProektaUstanovlen;
+use App\Unitman\Business\Model\Project\Event\ZashishennieVetkiProektaUstanovleni;
 use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\NastroikiHuka;
 use App\Unitman\Business\Model\Project\ProjectCode;
@@ -57,6 +59,14 @@ final class Project implements AggregateRoot
      * @template-use AggregateRootBehaviour<ProjectId>
      * */
     use AggregateRootBehaviour;
+
+    private const MAX_ZASHISHENNIH_VETOK = 50;
+    private const MAX_DLINA_ZASHISHENNOI_VETKI = 256;
+
+    /**
+     * @var string[]
+     */
+    private array $zashishennieVetki = [];
 
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private string $repoId;
@@ -103,7 +113,8 @@ final class Project implements AggregateRoot
         $project = new self($projectId);
         ProjectName::validate($command->projectName);
         ProjectContainerSettings::validateMemory($command->memoryLimit);
-        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost, memoryLimit: $command->memoryLimit));
+        self::validateZashishennieVetki($command->zashishennieVetki);
+        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost, memoryLimit: $command->memoryLimit, zashishennieVetki: $command->zashishennieVetki));
         $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
     }
@@ -118,6 +129,7 @@ final class Project implements AggregateRoot
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
         $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie, $fact->obnovlenieBezSbrosaPodgotovki);
+        $this->zashishennieVetki = $fact->zashishennieVetki;
     }
 
     public function proverkaProektaDlyNachlaOchistki(): void
@@ -675,5 +687,90 @@ final class Project implements AggregateRoot
     public function poluchitMemoryLimit(): int
     {
         return $this->projectContainerSettings->memoryLimit;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function poluchitZashishennieVetki(): array
+    {
+        return $this->zashishennieVetki;
+    }
+
+    public function ustanovitZashishennieVetki(UstanovitZashishennieVetkiProekta $command): void
+    {
+        if ($this->dataAboutRemoving) {
+            throw new DomainException('project.removing');
+        }
+
+        self::validateZashishennieVetki($command->zashishennieVetki);
+
+        $this->recordThat(new ZashishennieVetkiProektaUstanovleni($this->getId(), $command->zashishennieVetki));
+    }
+
+    private function applyZashishennieVetkiProektaUstanovleni(ZashishennieVetkiProektaUstanovleni $fact): void
+    {
+        $this->zashishennieVetki = $fact->zashishennieVetki;
+    }
+
+    /**
+     * Проверяет, входит ли ветка в список защищённых.
+     *
+     * Семантика wildcard как в GitLab: `*` соответствует любой последовательности
+     * символов, включая `/`. Сопоставление привязано ко всему имени ветки.
+     */
+    public function soderzhitZashishennuyuVetku(string $branch): bool
+    {
+        foreach ($this->zashishennieVetki as $pattern) {
+            if (self::vetkaSootvetstvuetPatternu($branch, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function vetkaSootvetstvuetPatternu(string $branch, string $pattern): bool
+    {
+        if (!str_contains($pattern, '*')) {
+            return $branch === $pattern;
+        }
+
+        $segments = explode('*', $pattern);
+        $quoted = array_map(
+            static fn (string $segment): string => preg_quote($segment, '/'),
+            $segments
+        );
+        $regex = '/\A' . implode('.*', $quoted) . '\z/s';
+
+        return preg_match($regex, $branch) === 1;
+    }
+
+    /**
+     * @param array<array-key, mixed> $vetki
+     */
+    private static function validateZashishennieVetki(array $vetki): void
+    {
+        if (count($vetki) > self::MAX_ZASHISHENNIH_VETOK) {
+            throw new DomainException('project.zashishennie_vetki.slishkom_mnogo');
+        }
+
+        $seen = [];
+
+        foreach ($vetki as $vetka) {
+            if (!is_string($vetka) || $vetka === '') {
+                throw new DomainException('project.zashishennie_vetki.pusta_stroka');
+            }
+
+            if (mb_strlen($vetka) > self::MAX_DLINA_ZASHISHENNOI_VETKI) {
+                throw new DomainException('project.zashishennie_vetki.slishkom_dlinnaya');
+            }
+
+            if (in_array($vetka, $seen, true)) {
+                throw new DomainException('project.zashishennie_vetki.dublikat');
+            }
+
+            $seen[] = $vetka;
+        }
     }
 }

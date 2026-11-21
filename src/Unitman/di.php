@@ -7,8 +7,16 @@ namespace App\Unitman;
 use App\App\Infra\EventStore\AuthorMessageDecorator;
 use App\Mediateka\Business\Port\FileLinkChecker;
 use App\Unitman\Acl\MediatekaAdapter;
+use App\Unitman\Business\Model\LichniyToken;
 use App\Unitman\Business\Port\CanGenerateGuid;
+use App\Unitman\Business\Port\LichniyToken\LichniyTokenListRepository;
+use App\Unitman\Business\Port\LichniyToken\LichniyTokenRepository;
 use App\Unitman\Business\Port\MediatekaService;
+use App\Unitman\Business\Port\Project\UmeetProveryatPushTokenom;
+use App\Unitman\Business\Port\Redaktor\UmeetPodpisivatSsylkuRedaktora;
+use App\Unitman\Business\Port\Repo\UmeetProveryatTokenHranilisha;
+use App\Unitman\Business\Port\UmeetShifrovatSekrety;
+use App\Unitman\Business\Port\Unit\UmeetPoluchatTokenRedaktirovaniya;
 use App\Unitman\Business\Port\Project\CanGetProjectRunnerJobs;
 use App\Unitman\Business\Port\Queue\ZadachaVOchered;
 use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
@@ -19,8 +27,14 @@ use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\Port\VolumeType\VolumeTypeFileRepository;
 use App\Unitman\Business\Port\VolumeType\VolumeTypeRepository;
 use App\Unitman\Business\Utils\ClassNameMapFactory;
+use App\Unitman\Infra\Adapter\HmacRedaktorLinkSigner;
+use App\Unitman\Infra\Adapter\PersonalTokenOpenSslShifr;
+use App\Unitman\Infra\Adapter\PersonalTokenResolver;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\Adapter\StorageApiAdapter\WorkspaceProjectStorageAdapter;
 use App\Unitman\Infra\Adapter\ZadachaVOcheredAdapter;
+use App\Unitman\Infra\Repository\LichniyToken\SqlLichniyTokenListRepository;
+use App\Unitman\Infra\Repository\LichniyToken\SqlLichniyTokenRepository;
 use App\Unitman\Infra\Repository\Project\ProjectRunnerJobRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SqlOtlozhennieDeistviyaRepository;
@@ -46,6 +60,7 @@ use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
 use Doctrine\DBAL\Connection;
 use EventSauce\EventSourcing\DefaultHeadersDecorator;
+use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\ExplicitlyMappedClassNameInflector;
 use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
@@ -58,11 +73,16 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return function (ContainerConfigurator $configuration) {
+    // Пустой fallback: если переменная не задана, фича личных токенов просто
+    // выключена (ошибка возникнет лишь при фактическом использовании шифра).
+    $configuration->parameters()->set('lichniy_token_credentials_key', '');
+
     $services = $configuration->services()
         ->defaults()
         ->autowire()
         ->autoconfigure()
         ->bind('$appEnv','%env(APP_ENV)%')
+        ->bind('$lichniyTokenCredentialsKey','%env(default:lichniy_token_credentials_key:LICHNIY_TOKEN_CREDENTIALS_KEY)%')
         ->bind('$roadRunnerRpcAddress','%env(RR_RPC)%');
 
     $services->load('App\\Unitman\\', './{Business,Infra,Acl,Api}')
@@ -185,4 +205,68 @@ return function (ContainerConfigurator $configuration) {
 
     $services->set(WebhookEventJobHandler::class)
         ->tag('roadrunner_jobs.handler');
+
+    // ─── Личные токены хранилищ ──────────────────────────────────────────────
+    $services->set(UmeetShifrovatSekrety::class, PersonalTokenOpenSslShifr::class);
+    $services->alias(UmeetProveryatPushTokenom::class, WorkspaceProjectStorageAdapter::class);
+    $services->alias(UmeetProveryatTokenHranilisha::class, WorkspaceProjectStorageAdapter::class);
+    $services->alias(UmeetPoluchatTokenRedaktirovaniya::class, PersonalTokenResolver::class);
+    $services->alias(UmeetPodpisivatSsylkuRedaktora::class, HmacRedaktorLinkSigner::class);
+
+    $services->set('unitman.lichniy_token.event_serializer', ConstructingMessageSerializer::class)
+        ->args([
+            service('unitman.event_type_mapper'),
+            service(PayloadSerializerSupportingObjectMapperAndSerializablePayload::class),
+        ]);
+
+    $services->set('unitman.lichniy_token.message_repository', DoctrineMessageRepository::class)
+        ->args([
+            service(Connection::class),
+            'unitman_lichniy_token_event_store',
+            service('unitman.lichniy_token.event_serializer'),
+            0,
+            service(DefaultTableSchema::class),
+            service(StringIdEncoder::class),
+        ]);
+
+    $services->set('unitman.lichniy_token.default_decorator', DefaultHeadersDecorator::class)
+        ->args([service('unitman.event_type_mapper')]);
+
+    $services->set('unitman.lichniy_token.message_decorator', MessageDecoratorChain::class)
+        ->args([
+            service('unitman.lichniy_token.default_decorator'),
+            service(AuthorMessageDecorator::class),
+        ]);
+
+    $services->set('unitman.lichniy_token.stream_repository', DoctrineStreamRepository::class)
+        ->args([
+            service(Connection::class),
+            'unitman_lichniy_token_event_store',
+            service('unitman.lichniy_token.event_serializer'),
+            service('unitman.event_type_mapper'),
+            service('unitman.lichniy_token.message_decorator'),
+            service('unitman.lichniy_token.message_repository'),
+        ]);
+
+    $services->set('unitman.lichniy_token.projections_manager', ProjectionsManager::class)
+        ->arg('$projections', tagged_iterator('unitman.lichniy_token.projection'))
+        ->arg('$checkpointStore', service('app.checkpoint_store'))
+        ->arg('$eventsRepository', service('unitman.lichniy_token.stream_repository'));
+
+    $services->set('unitman.lichniy_token.event_store', EventSourcedAggregateRootRepository::class)
+        ->args([
+            LichniyToken::class,
+            service('unitman.lichniy_token.message_repository'),
+            null,
+            service('unitman.lichniy_token.message_decorator'),
+            service('unitman.event_type_mapper'),
+        ]);
+
+    $services->set(SqlLichniyTokenRepository::class)
+        ->args([
+            service('unitman.lichniy_token.projections_manager'),
+        ]);
+
+    $services->alias(LichniyTokenRepository::class, SqlLichniyTokenRepository::class);
+    $services->alias(LichniyTokenListRepository::class, SqlLichniyTokenListRepository::class);
 };

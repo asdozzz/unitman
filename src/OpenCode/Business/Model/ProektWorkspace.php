@@ -16,6 +16,27 @@ final class ProektWorkspace
         public readonly string $projectCode,
         public readonly bool $canPush,
         public readonly int $positionIndex,
+        public readonly string $mainBranch = '',
+        public readonly string $branch = '',
     ) {
+    }
+
+    /**
+     * Копия проекта с фактической веткой workspace.
+     *
+     * Модель неизменяемая, поэтому fallback на общую ветку workspace
+     * материализуется отдельным экземпляром.
+     */
+    public function sVetkoy(string $branch): self
+    {
+        return new self(
+            $this->projectId,
+            $this->projectName,
+            $this->projectCode,
+            $this->canPush,
+            $this->positionIndex,
+            $this->mainBranch,
+            $branch,
+        );
     }
 }

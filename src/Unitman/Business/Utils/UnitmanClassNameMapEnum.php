@@ -11,6 +11,12 @@ enum UnitmanClassNameMapEnum: string
     case CredentialsOfRepoWasChanged = 'CredentialsOfRepoWasChanged';
     case RepoWasDeleted = 'RepoWasDeleted';
 
+    case LichniyToken = 'LichniyToken';
+    case LichniyTokenId = 'LichniyTokenId';
+    case LichniyTokenDobavlen = 'LichniyTokenDobavlen';
+    case LichniyTokenUdalen = 'LichniyTokenUdalen';
+    case PravaLichnogoTokenaObnovleni = 'PravaLichnogoTokenaObnovleni';
+
     case Project = 'Project';
     case ProjectId = 'ProjectId';
     case ProjectWasAdded = 'ProjectWasAdded';
@@ -31,6 +37,7 @@ enum UnitmanClassNameMapEnum: string
     case PeremenayaUdalenaIzProekta = 'PeremenayaUdalenaIzProekta';
     case ZnacheniePeremnoiProektaIzmeneno = 'ZnacheniePeremnoiProektaIzmeneno';
     case NastroikiHukaProektaUstanovleni = 'NastroikiHukaProektaUstanovleni';
+    case ZashishennieVetkiProektaUstanovleni = 'ZashishennieVetkiProektaUstanovleni';
 
     case OchistkaProektaNachalas = 'OchistkaProektaNachalas';
     case OshibkaOchistkiProektaUstanovlena = 'OshibkaOchistkiProektaUstanovlena';
@@ -75,6 +82,11 @@ enum UnitmanClassNameMapEnum: string
     case OshibkaDeistviyaUstanovlena = 'OshibkaDeistviyaUstanovlena';
 
     case UnitSbroshenDoSostoyaniyaSborki = 'UnitSbroshenDoSostoyaniyaSborki';
+
+    case RedaktirovanieUnitaVklucheno = 'RedaktirovanieUnitaVklucheno';
+    case RedaktirovanieUnitaVyklucheno = 'RedaktirovanieUnitaVyklucheno';
+    case RedaktorPrikreplenKUnitu = 'RedaktorPrikreplenKUnitu';
+    case RedaktorOtkreplenOtUnitu = 'RedaktorOtkreplenOtUnitu';
 
     case DobavlenProzesVUnit = 'DobavlenProzesVUnit';
     case DeistviePrikreplenoKJobe = 'DeistviePrikreplenoKJobe';

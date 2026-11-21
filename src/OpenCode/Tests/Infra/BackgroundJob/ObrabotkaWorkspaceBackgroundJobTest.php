@@ -225,6 +225,9 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
             $runner,
             $uuid,
             $bronirovanie,
+            $this->createMock(\App\OpenCode\Business\Port\UmeetUpravlyatUnitami::class),
+            $this->createMock(\App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita::class),
+            new \App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode(),
         );
     }
 }

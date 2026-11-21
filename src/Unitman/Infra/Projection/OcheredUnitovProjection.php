@@ -19,6 +19,10 @@ use App\Unitman\Business\Model\Unit\Event\OstanovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\PeremenieUnitaZapolneni;
 use App\Unitman\Business\Model\Unit\Event\PodgotovkaUnitaNachalas;
 use App\Unitman\Business\Model\Unit\Event\PometitKakSlomanii;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktirovanieUnitaVyklucheno;
+use App\Unitman\Business\Model\Unit\Event\RedaktorOtkreplenOtUnitu;
+use App\Unitman\Business\Model\Unit\Event\RedaktorPrikreplenKUnitu;
 use App\Unitman\Business\Model\Unit\Event\SborkaUnitNachalas;
 use App\Unitman\Business\Model\Unit\Event\SbrosPodgotovkiNachalsya;
 use App\Unitman\Business\Model\Unit\Event\SlomaniyUnitUdalen;
@@ -37,6 +41,7 @@ use App\Unitman\Business\Model\Unit\Event\UspehUdaleniyaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\VipolnenieDeistviyaNachalos;
 use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
+use App\Unitman\Business\Model\Unit\Event\ZadachiDobavleniVProzesUnita;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Utils\UnitmanClassNameMapEnum;
 use App\Unitman\Infra\Repository\Unit\OcheredUnitovRepository;
@@ -89,6 +94,12 @@ final class OcheredUnitovProjection extends AbstractProjection implements Unitma
             PeremenieUnitaZapolneni::class,
             KodVetkiIzmenilsyaVHranilishe::class,
             StatistikaPoKonteineruObnovlena::class,
+            // События режима редактирования и задач в процессе на очередь не влияют.
+            RedaktirovanieUnitaVklucheno::class,
+            RedaktirovanieUnitaVyklucheno::class,
+            RedaktorPrikreplenKUnitu::class,
+            RedaktorOtkreplenOtUnitu::class,
+            ZadachiDobavleniVProzesUnita::class,
         ];
     }
 

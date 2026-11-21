@@ -27,6 +27,7 @@ final class WorkspaceDtoTest extends TestCase
             'services/api',
             'https://oauth2:token@gitlab.example/services/api.git',
             true,
+            'main',
         );
 
         $command = new ZapustitWorkspace(
@@ -55,6 +56,7 @@ final class WorkspaceDtoTest extends TestCase
             'api',
             'services/api',
             true,
+            'main',
         );
 
         $request = new ZapustitWorkspaceZapros(
@@ -79,6 +81,7 @@ final class WorkspaceDtoTest extends TestCase
         self::assertSame('api', $project->ProjectName);
         self::assertSame('services/api', $project->ProjectCode);
         self::assertTrue($project->CanPush);
+        self::assertSame('main', $project->MainBranch);
 
         self::assertFalse(
             $this->hasStorageUrlProperty(ZapustitWorkspaceZapros::class),
@@ -109,6 +112,7 @@ final class WorkspaceDtoTest extends TestCase
             'services/api',
             'https://oauth2:token@gitlab.example/services/api.git',
             false,
+            'master',
         );
 
         self::assertSame('project-1', $project->ProjectId);
@@ -116,6 +120,7 @@ final class WorkspaceDtoTest extends TestCase
         self::assertSame('services/api', $project->ProjectCode);
         self::assertSame('https://oauth2:token@gitlab.example/services/api.git', $project->StorageUrl);
         self::assertFalse($project->CanPush);
+        self::assertSame('master', $project->MainBranch);
     }
 
     public function test_ostanovit_i_udalit_workspace_sohranyayut_id(): void

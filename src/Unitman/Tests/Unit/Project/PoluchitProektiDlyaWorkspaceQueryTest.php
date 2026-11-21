@@ -95,15 +95,85 @@ final class PoluchitProektiDlyaWorkspaceQueryTest extends TestCase
         self::assertSame([], $query->handle([], self::ACCOUNT_ID));
     }
 
+    public function testMainBranchZapolnyaetsyaIzProekta(): void
+    {
+        $projects = ['p1' => $this->proekt('p1', 'r1', mainBranch: 'develop')];
+        $repos = ['r1' => $this->repo('r1')];
+
+        $query = $this->query($projects, $repos, ['p1']);
+
+        $result = $query->handle(['p1'], self::ACCOUNT_ID);
+
+        self::assertCount(1, $result);
+        self::assertSame('develop', $result[0]->mainBranch);
+    }
+
+    public function testZashishennayaVetkaOtkidaetsyaDazheEsliZashishenTolkoOdinProekt(): void
+    {
+        $projects = [
+            'p1' => $this->proekt('p1', 'r1'),
+            'p2' => $this->proekt('p2', 'r2', zashishennieVetki: ['release/*']),
+        ];
+        $repos = [
+            'r1' => $this->repo('r1'),
+            'r2' => $this->repo('r2'),
+        ];
+
+        $query = $this->query($projects, $repos, ['p1', 'p2']);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('opencode.workspace.branch_protected');
+
+        $query->handle(['p1', 'p2'], self::ACCOUNT_ID, 'release/2024');
+    }
+
+    public function testPustayaVetkaNeProveryaetZashitu(): void
+    {
+        $projects = ['p1' => $this->proekt('p1', 'r1', zashishennieVetki: ['main'])];
+        $repos = ['r1' => $this->repo('r1')];
+
+        $query = $this->query($projects, $repos, ['p1']);
+
+        $result = $query->handle(['p1'], self::ACCOUNT_ID);
+
+        self::assertCount(1, $result);
+    }
+
+    public function testNezashishennayaNepustayaVetkaUspeh(): void
+    {
+        $projects = ['p1' => $this->proekt('p1', 'r1', zashishennieVetki: ['main', 'release/*'])];
+        $repos = ['r1' => $this->repo('r1')];
+
+        $query = $this->query($projects, $repos, ['p1']);
+
+        $result = $query->handle(['p1'], self::ACCOUNT_ID, 'feature-test');
+
+        self::assertCount(1, $result);
+        self::assertSame('p1', $result[0]->projectId);
+    }
+
+    /**
+     * @param string[] $zashishennieVetki
+     */
     private function proekt(
         string $projectId,
         string $repoId,
         string $code = 'services/api',
         string $name = 'api',
+        string $mainBranch = 'main',
+        array $zashishennieVetki = [],
     ): Project {
         return Project::addProject(
             $projectId,
-            new AddProject($repoId, $code, $name, 'main', 'https://api.example.test', memoryLimit: 512),
+            new AddProject(
+                $repoId,
+                $code,
+                $name,
+                $mainBranch,
+                'https://api.example.test',
+                memoryLimit: 512,
+                zashishennieVetki: $zashishennieVetki,
+            ),
             self::ACCOUNT_ID,
         );
     }

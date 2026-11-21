@@ -108,6 +108,9 @@ final class RunnerApiWorkspaceTest extends TestCase
             $started->Projects[0]->StorageUrl,
         );
 
+        // ...и базовой веткой проекта из публичного запроса.
+        self::assertSame('main', $started->Projects[0]->MainBranch);
+
         // ...а публичный запрос токена не содержит.
         self::assertFalse($this->hasProperty($request, 'StorageUrl'));
         self::assertFalse($this->hasProperty($request->Projects[0], 'StorageUrl'));
@@ -331,6 +334,7 @@ final class RunnerApiWorkspaceTest extends TestCase
                     'api',
                     'services/api',
                     true,
+                    'main',
                 ),
             ],
         );

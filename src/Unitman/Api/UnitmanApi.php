@@ -17,6 +17,7 @@ use App\Unitman\Business\UseCase\Unit\ObnovitStatistikuPoKonteineruUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OsvoboditZanyatostUnitovUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitSostoyanieUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitZanyatostUnitaQuery;
+use App\Unitman\Business\Port\Unit\UmeetPoluchatTokenRedaktirovaniya;
 use App\Unitman\Business\UseCase\Unit\ProdvinutCiklUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ProveritDostupKUnituUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
@@ -44,6 +45,7 @@ final class UnitmanApi
         private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
         private PoluchitProektiDlyaWorkspaceQuery $poluchitProektiDlyaWorkspaceQuery,
         private PoluchitUrlKlonaProektaQuery $poluchitUrlKlonaProektaQuery,
+        private UmeetPoluchatTokenRedaktirovaniya $umeetPoluchatTokenRedaktirovaniya,
     )
     {
     }
@@ -133,13 +135,18 @@ final class UnitmanApi
      * Порядок `projectIds` сохраняется. `storageUrl` в ответе предназначен
      * только для Runner и не должен отдаваться наружу через HTTP.
      *
-     * @param list<string> $projectIds
+     * @param list<string>          $projectIds
+     * @param array<string, string> $projectBranches переопределения ветки по projectId
      * @return list<ProektDlyaWorkspaceReadModel>
-     * @throws \DomainException opencode.workspace.project_conflict|opencode.workspace.project_not_found
+     * @throws \DomainException opencode.workspace.project_conflict|opencode.workspace.project_not_found|opencode.workspace.branch_protected
      */
-    function poluchitProektiDlyaWorkspace(array $projectIds, string $accountId): array
-    {
-        return $this->poluchitProektiDlyaWorkspaceQuery->handle($projectIds, $accountId);
+    function poluchitProektiDlyaWorkspace(
+        array $projectIds,
+        string $accountId,
+        string $branch = '',
+        array $projectBranches = [],
+    ): array {
+        return $this->poluchitProektiDlyaWorkspaceQuery->handle($projectIds, $accountId, $branch, $projectBranches);
     }
 
     /**
@@ -150,6 +157,18 @@ final class UnitmanApi
     function poluchitUrlKlonaProekta(string $projectId): string
     {
         return $this->poluchitUrlKlonaProektaQuery->handle($projectId);
+    }
+
+    /**
+     * Расшифрованный личный токен пользователя, покрывающий проект юнита.
+     *
+     * Только для Runner/OpenCode: токен не должен попадать в HTTP-ответы.
+     *
+     * @throws \DomainException unit.redaktor.net_lichnogo_tokena|unit.redaktor.token_bez_prav_na_proekt
+     */
+    function poluchitTokenDlyRedaktirovaniyaUnita(string $unitId, string $accountId): string
+    {
+        return $this->umeetPoluchatTokenRedaktirovaniya->poluchitToken($unitId, $accountId);
     }
 
     /**

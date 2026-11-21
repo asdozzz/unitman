@@ -84,6 +84,27 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return PushPermission::izGithub($data);
     }
 
+    public function canPushTokenom(string $token, Repo $repo, Project $project): bool
+    {
+        $client = $this->githubClientFactory->makeClientWithToken($repo, $token);
+        list($login, $code) = explode('/', $project->getCode());
+        $data = $client->repositories()->show($login, $code);
+
+        return PushPermission::izGithub($data);
+    }
+
+    public function proveritToken(string $token, Repo $repo): bool
+    {
+        try {
+            $client = $this->githubClientFactory->makeClientWithToken($repo, $token);
+            $client->currentUser()->show();
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
 
     /**
      * @psalm-suppress InvalidReturnType

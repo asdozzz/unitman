@@ -19,4 +19,6 @@ return [
     \App\Runner\Infra\Workflow\OstanovitWorkspaceWorkflow::class,
     \App\Runner\Infra\Workflow\UdalitWorkspaceWorkflow::class,
     \App\Runner\Infra\Workflow\ProveritIzmeneniyaWorkspaceWorkflow::class,
+    \App\Runner\Infra\Workflow\IzmenitRezhimRedaktoraUnitaWorkflow::class,
+    \App\Runner\Infra\Workflow\PodgotovitSessiyuRedaktoraWorkflow::class,
 ];

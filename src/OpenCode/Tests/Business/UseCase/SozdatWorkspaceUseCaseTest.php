@@ -39,10 +39,10 @@ final class SozdatWorkspaceUseCaseTest extends TestCase
         $projectami = $this->createMock(UmeetUpravlyatProektamiWorkspace::class);
         $projectami->expects($this->once())
             ->method('poluchitProekti')
-            ->with(['project-1', 'project-2'], 'account-1')
+            ->with(['project-1', 'project-2'], 'account-1', 'feature/payments')
             ->willReturn([
-                FabrikaWorkspace::proekt('project-1', 'api', 'services/api', true, 0),
-                FabrikaWorkspace::proekt('project-2', 'web', 'apps/web', false, 1),
+                FabrikaWorkspace::proekt('project-1', 'api', 'services/api', true, 0, 'main'),
+                FabrikaWorkspace::proekt('project-2', 'web', 'apps/web', false, 1, 'develop'),
             ]);
 
         $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
@@ -68,6 +68,41 @@ final class SozdatWorkspaceUseCaseTest extends TestCase
                 $saved->getWorkspace()?->getProjects() ?? [],
             ),
         );
+        $this->assertSame(
+            ['main', 'develop'],
+            array_map(
+                static fn (ProektWorkspace $project): string => $project->mainBranch,
+                $saved->getWorkspace()?->getProjects() ?? [],
+            ),
+        );
+    }
+
+    #[Test]
+    public function zashishennaya_vetka_ne_sozdaet_sessiyu(): void
+    {
+        $repository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $repository->method('findByAccountId')->willReturn([]);
+        $repository->expects($this->never())->method('save');
+        $repository->expects($this->never())->method('update');
+
+        $projectami = $this->createMock(UmeetUpravlyatProektamiWorkspace::class);
+        $projectami->expects($this->once())
+            ->method('poluchitProekti')
+            ->with(['project-1'], 'account-1', 'feature/payments')
+            ->willThrowException(new \DomainException('opencode.workspace.branch_protected'));
+
+        $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
+        $manager->expects($this->never())->method('zapustit');
+
+        $uuid = $this->createMock(UuidGenerator::class);
+        $uuid->expects($this->never())->method('makeGuid');
+
+        $useCase = new SozdatWorkspaceUseCase($repository, $this->credentials(), $projectami, $manager, $uuid);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('opencode.workspace.branch_protected');
+
+        $useCase->handle($this->komanda(['project-1']));
     }
 
     #[Test]
