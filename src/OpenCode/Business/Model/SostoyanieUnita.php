@@ -47,4 +47,22 @@ final class SostoyanieUnita
     )
     {
     }
+
+    /**
+     * Пользователь является автором или прикреплённым редактором юнита.
+     */
+    public function yavlyaetsyaRedaktorom(string $accountId): bool
+    {
+        $accountId = trim($accountId);
+
+        if ($accountId === '') {
+            return false;
+        }
+
+        if ($this->authorId !== null && $this->authorId === $accountId) {
+            return true;
+        }
+
+        return in_array($accountId, $this->redaktory, true);
+    }
 }

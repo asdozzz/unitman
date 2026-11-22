@@ -9,6 +9,10 @@ use App\OpenCode\Acl\RunnerAdapter;
 use App\OpenCode\Acl\UnitmanAdapter;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\UnitSession\Port\UnitSessionRepository;
+use App\OpenCode\Business\UnitSession\Port\UnitSessionTurnRepository;
+use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
+use App\OpenCode\Business\Workspace\Port\WorkspaceTurnRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetOpredelyatKanalUvedomleniyOpenCode;
 use App\OpenCode\Business\Port\UmeetPeredavatUvedomleniyaOpenCode;
@@ -24,6 +28,10 @@ use App\OpenCode\Infra\Adapter\RamseyUuidGenerator;
 use App\OpenCode\Infra\Repository\SqlHodOpenCodeRepository;
 use App\OpenCode\Infra\Repository\SqlSessiyaOpenCodeRepository;
 use App\OpenCode\Infra\Repository\SqlUvedomleniyaOpenCodeRepository;
+use App\OpenCode\Infra\Repository\UnitSession\SqlUnitSessionRepository;
+use App\OpenCode\Infra\Repository\UnitSession\SqlUnitSessionTurnRepository;
+use App\OpenCode\Infra\Repository\Workspace\SqlWorkspaceSessionRepository;
+use App\OpenCode\Infra\Repository\Workspace\SqlWorkspaceTurnRepository;
 use App\OpenCode\Infra\Service\CentrifugoUvedomleniyaOpenCode;
 use App\OpenCode\Infra\Service\KanalUvedomleniyOpenCode;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -41,12 +49,22 @@ return function (ContainerConfigurator $configuration) {
             './Business/Command',
             './Business/Model',
             './Business/ReadModel',
+            './Business/UnitSession/Model',
+            './Business/UnitSession/ReadModel',
+            './Business/Workspace/Model',
+            './Business/Workspace/ReadModel',
         ])
         ->public();
 
     // Порты бизнес-слоя -> инфраструктурные реализации модуля.
     $services->set(SessiyaOpenCodeRepository::class, SqlSessiyaOpenCodeRepository::class);
     $services->set(HodOpenCodeRepository::class, SqlHodOpenCodeRepository::class);
+
+    // Независимые агрегаты: у workspace и unit-сессии свои репозитории.
+    $services->set(UnitSessionRepository::class, SqlUnitSessionRepository::class);
+    $services->set(UnitSessionTurnRepository::class, SqlUnitSessionTurnRepository::class);
+    $services->set(WorkspaceSessionRepository::class, SqlWorkspaceSessionRepository::class);
+    $services->set(WorkspaceTurnRepository::class, SqlWorkspaceTurnRepository::class);
     $services->set(UuidGenerator::class, RamseyUuidGenerator::class);
 
     // Уведомления о новых сообщениях OpenCode.

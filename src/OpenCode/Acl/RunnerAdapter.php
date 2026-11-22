@@ -238,18 +238,30 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
             return null;
         }
 
-        return match ($workspace->getOperation()) {
-            Workspace::OPERATION_CREATE, Workspace::OPERATION_START => $this->rezultat(
-                $this->runnerApi->poluchitResultatZapuskaWorkspace($workflowId),
-            ),
-            Workspace::OPERATION_STOP => $this->rezultat(
-                $this->runnerApi->poluchitResultatOstanovkiWorkspace($workflowId),
-            ),
-            Workspace::OPERATION_DELETE => $this->rezultat(
-                $this->runnerApi->poluchitResultatUdaleniyaWorkspace($workflowId),
-            ),
-            default => null,
-        };
+        try {
+            return match ($workspace->getOperation()) {
+                Workspace::OPERATION_CREATE, Workspace::OPERATION_START => $this->rezultat(
+                    $this->runnerApi->poluchitResultatZapuskaWorkspace($workflowId),
+                ),
+                Workspace::OPERATION_STOP => $this->rezultat(
+                    $this->runnerApi->poluchitResultatOstanovkiWorkspace($workflowId),
+                ),
+                Workspace::OPERATION_DELETE => $this->rezultat(
+                    $this->runnerApi->poluchitResultatUdaleniyaWorkspace($workflowId),
+                ),
+                default => null,
+            };
+        } catch (\Throwable $error) {
+            // Workflow исчез из Temporal (чистка, потеря данных окружения):
+            // ждать результат бессмысленно, сверка зависла бы в транзитном
+            // статусе навсегда, а интерфейс крутил бы спиннер вечно. FAILURE
+            // заставляет фоновую сверку пометить workspace как ERROR.
+            if ($error->getMessage() === 'runner.workflow_unit_not_found') {
+                return self::RESULT_FAILURE;
+            }
+
+            throw $error;
+        }
     }
 
     private function sobratZapros(SessiyaOpenCode $session, Workspace $workspace): ZapustitWorkspaceZapros
