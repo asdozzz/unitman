@@ -87,6 +87,44 @@ final class OcenkaGotovnostiUnitaTest extends TestCase
         $this->assertSame(SostoyanieUnita::GROUP_ARCHIVED, $ocenka->ocenit(false, 'USPESHNO_ZAPUSHEN', true));
     }
 
+    /**
+     * Основной контейнер юнита отсутствует или остановлен — ход в такой юнит
+     * отправлять нельзя, даже если код процесса говорит «успешно запущен».
+     */
+    #[Test]
+    public function mismatch_konteinera_peredvodit_v_bloked(): void
+    {
+        $ocenka = new OcenkaGotovnostiUnita();
+
+        $this->assertSame(
+            SostoyanieUnita::GROUP_BLOCKED,
+            $ocenka->ocenit(true, 'USPESHNO_ZAPUSHEN', false, true),
+        );
+        $this->assertSame(
+            SostoyanieUnita::GROUP_BLOCKED,
+            $ocenka->ocenit(true, 'OSHIBKA_SBORKI', false, true),
+        );
+        $this->assertSame(
+            SostoyanieUnita::GROUP_BLOCKED,
+            $ocenka->ocenit(true, 'SOZDAN', false, true),
+        );
+    }
+
+    #[Test]
+    public function arhiv_silnee_mismatch_konteinera(): void
+    {
+        $ocenka = new OcenkaGotovnostiUnita();
+
+        $this->assertSame(
+            SostoyanieUnita::GROUP_ARCHIVED,
+            $ocenka->ocenit(true, 'UDALEN', false, true),
+        );
+        $this->assertSame(
+            SostoyanieUnita::GROUP_ARCHIVED,
+            $ocenka->ocenit(false, 'USPESHNO_ZAPUSHEN', false, true),
+        );
+    }
+
     #[Test]
     public function zanyatost_ne_povyishaet_gotovnost_sozdannogo_unita(): void
     {

@@ -14,6 +14,8 @@ final class SostoyanieUnitaReadModel
      * @param string|null $prichinaZanyatosti `prozes` | `opencode_hod`, если юнит занят
      * @param string[] $redaktory прикреплённые редакторы (идентификаторы пользователей)
      * @param bool $vetkaZashishena ветка юнита входит в защищённые ветки проекта
+     * @param bool $containerStateMismatch фактическое состояние основного контейнера
+     *        юнита расходится с ожидаемым — внешним модулям такой юнит не готов
      */
     public function __construct(
         public readonly bool $exists,
@@ -27,6 +29,7 @@ final class SostoyanieUnitaReadModel
         public readonly bool $redaktirovanieVklucheno = false,
         public readonly bool $vetkaZashishena = false,
         public readonly array $redaktory = [],
+        public readonly bool $containerStateMismatch = false,
     )
     {
     }
@@ -53,6 +56,7 @@ final class SostoyanieUnitaReadModel
         bool $redaktirovanieVklucheno = false,
         bool $vetkaZashishena = false,
         array $redaktory = [],
+        bool $containerStateMismatch = false,
     ): self
     {
         return new self(
@@ -67,6 +71,7 @@ final class SostoyanieUnitaReadModel
             $redaktirovanieVklucheno,
             $vetkaZashishena,
             $redaktory,
+            $containerStateMismatch,
         );
     }
 }

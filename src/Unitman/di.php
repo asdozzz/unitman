@@ -12,7 +12,9 @@ use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\LichniyToken\LichniyTokenListRepository;
 use App\Unitman\Business\Port\LichniyToken\LichniyTokenRepository;
 use App\Unitman\Business\Port\MediatekaService;
+use App\Unitman\Business\Port\Project\UmeetPoluchatTokenDlyaProekta;
 use App\Unitman\Business\Port\Project\UmeetProveryatPushTokenom;
+use App\Unitman\Business\Port\Project\UmeetSozdavatVetkuProekta;
 use App\Unitman\Business\Port\Redaktor\UmeetPodpisivatSsylkuRedaktora;
 use App\Unitman\Business\Port\Repo\UmeetProveryatTokenHranilisha;
 use App\Unitman\Business\Port\UmeetShifrovatSekrety;
@@ -31,6 +33,7 @@ use App\Unitman\Infra\Adapter\HmacRedaktorLinkSigner;
 use App\Unitman\Infra\Adapter\PersonalTokenOpenSslShifr;
 use App\Unitman\Infra\Adapter\PersonalTokenResolver;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
+use App\Unitman\Infra\Adapter\StorageApiAdapterFactory;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\WorkspaceProjectStorageAdapter;
 use App\Unitman\Infra\Adapter\ZadachaVOcheredAdapter;
 use App\Unitman\Infra\Repository\LichniyToken\SqlLichniyTokenListRepository;
@@ -211,6 +214,8 @@ return function (ContainerConfigurator $configuration) {
     $services->alias(UmeetProveryatPushTokenom::class, WorkspaceProjectStorageAdapter::class);
     $services->alias(UmeetProveryatTokenHranilisha::class, WorkspaceProjectStorageAdapter::class);
     $services->alias(UmeetPoluchatTokenRedaktirovaniya::class, PersonalTokenResolver::class);
+    $services->alias(UmeetPoluchatTokenDlyaProekta::class, PersonalTokenResolver::class);
+    $services->alias(UmeetSozdavatVetkuProekta::class, StorageApiAdapterFactory::class);
     $services->alias(UmeetPodpisivatSsylkuRedaktora::class, HmacRedaktorLinkSigner::class);
 
     $services->set('unitman.lichniy_token.event_serializer', ConstructingMessageSerializer::class)

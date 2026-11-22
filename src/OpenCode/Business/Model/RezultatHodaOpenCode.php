@@ -24,6 +24,8 @@ final class RezultatHodaOpenCode
      *     AllowFreeText: bool,
      *     Options: list<array{Id: string, Label: string, Description: string|null}>
      * }> $questions
+     * @param string|null $errorMessage фактический текст ошибки раннера/OpenCode;
+     *        не переводится и нужен, чтобы показать реальную причину сбоя
      */
     public function __construct(
         public readonly bool $success,
@@ -32,6 +34,7 @@ final class RezultatHodaOpenCode
         public readonly ?string $answer,
         public readonly ?string $errorKey,
         public readonly ?string $externalSessionId,
+        public readonly ?string $errorMessage = null,
     ) {
     }
 
@@ -47,6 +50,7 @@ final class RezultatHodaOpenCode
             self::strokaIliNull($data['Answer'] ?? null),
             self::strokaIliNull($data['ErrorKey'] ?? null),
             self::strokaIliNull($data['ExternalSessionId'] ?? null),
+            self::strokaIliNull($data['ErrorMessage'] ?? null),
         );
     }
 
@@ -62,7 +66,8 @@ final class RezultatHodaOpenCode
      *     }>,
      *     Answer: string|null,
      *     ErrorKey: string|null,
-     *     ExternalSessionId: string|null
+     *     ExternalSessionId: string|null,
+     *     ErrorMessage: string|null
      * }
      */
     public function toArray(): array
@@ -74,6 +79,7 @@ final class RezultatHodaOpenCode
             'Answer' => $this->answer,
             'ErrorKey' => $this->errorKey,
             'ExternalSessionId' => $this->externalSessionId,
+            'ErrorMessage' => $this->errorMessage,
         ];
     }
 

@@ -7,6 +7,7 @@ namespace App\Unitman\Infra\Adapter;
 use App\Unitman\Business\Model\LichniyToken;
 use App\Unitman\Business\Port\LichniyToken\LichniyTokenListRepository;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Project\UmeetPoluchatTokenDlyaProekta;
 use App\Unitman\Business\Port\UmeetShifrovatSekrety;
 use App\Unitman\Business\Port\Unit\UmeetPoluchatTokenRedaktirovaniya;
 use App\Unitman\Business\Port\Unit\UnitRepository;
@@ -17,7 +18,7 @@ use App\Unitman\Business\ReadModel\LichniyToken\LichniyTokenList;
  *
  * Из нескольких подходящих токенов выбирается самый свежий по `proverenoV`.
  */
-final class PersonalTokenResolver implements UmeetPoluchatTokenRedaktirovaniya
+final class PersonalTokenResolver implements UmeetPoluchatTokenRedaktirovaniya, UmeetPoluchatTokenDlyaProekta
 {
     public function __construct(
         private UnitRepository $unitRepository,
@@ -38,7 +39,28 @@ final class PersonalTokenResolver implements UmeetPoluchatTokenRedaktirovaniya
 
         try {
             $unit = $this->unitRepository->getById($unitId);
-            $project = $this->projectRepository->getById($unit->getProjectId());
+            $projectId = $unit->getProjectId();
+        } catch (\DomainException) {
+            throw new \DomainException('unit.redaktor.token_bez_prav_na_proekt');
+        }
+
+        return $this->poluchitTokenDlyProekta($projectId, $accountId);
+    }
+
+    /**
+     * Разрешение расшифрованного личного токена пользователя по проекту.
+     */
+    public function poluchitTokenDlyProekta(string $projectId, string $accountId): string
+    {
+        $projectId = trim($projectId);
+        $accountId = trim($accountId);
+
+        if ($projectId === '' || $accountId === '') {
+            throw new \DomainException('unit.redaktor.net_lichnogo_tokena');
+        }
+
+        try {
+            $project = $this->projectRepository->getById($projectId);
         } catch (\DomainException) {
             throw new \DomainException('unit.redaktor.token_bez_prav_na_proekt');
         }

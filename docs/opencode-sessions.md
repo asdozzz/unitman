@@ -428,6 +428,7 @@ stateDiagram-v2
     ],
     "Answer": null,
     "ErrorKey": null,
+    "ErrorMessage": null,
     "ExternalSessionId": "ext-1"
   },
   "errorKey": null,
@@ -605,7 +606,8 @@ Success            bool
 Kind               ANSWER | QUESTION | ERROR
 Answer             ?string      — при Kind = ANSWER
 Questions          []{ Id, Text, AllowFreeText, Options[]{ Id, Label, Description? } }
-ErrorKey           ?string      — при Kind = ERROR
+ErrorKey           ?string      — ключ перевода при Kind = ERROR
+ErrorMessage       ?string      — фактический текст ошибки раннера/OpenCode при Kind = ERROR
 ExternalSessionId  ?string      — id сессии на стороне OpenCode
 ```
 

@@ -32,6 +32,8 @@ final class ResultatHodaOpenCode
      * }> $Questions заполнен при Kind = QUESTION
      * @param string|null $ErrorKey ключ ошибки для переводов, заполнен при Kind = ERROR
      * @param string|null $ExternalSessionId идентификатор сессии на стороне OpenCode
+     * @param string|null $ErrorMessage фактический текст ошибки раннера/OpenCode
+     *        (не переводится; нужен, чтобы показать реальную причину)
      */
     public function __construct(
         public readonly bool $Success,
@@ -40,6 +42,7 @@ final class ResultatHodaOpenCode
         public readonly ?string $Answer = null,
         public readonly ?string $ErrorKey = null,
         public readonly ?string $ExternalSessionId = null,
+        public readonly ?string $ErrorMessage = null,
     ) {
     }
 

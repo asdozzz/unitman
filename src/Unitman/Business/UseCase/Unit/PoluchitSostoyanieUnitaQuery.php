@@ -6,6 +6,7 @@ use App\Unitman\Business\Command\Unit\PoluchitSostoyanieUnita;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
@@ -16,6 +17,7 @@ final class PoluchitSostoyanieUnitaQuery
         private UnitRepository $unitRepository,
         private ProjectRepository $projectRepository,
         private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
+        private CanGetUnitReadModelById $unitReadModelRepository,
     )
     {
     }
@@ -64,7 +66,22 @@ final class PoluchitSostoyanieUnitaQuery
             $unit->getRedaktirovanieVklucheno(),
             $vetkaZashishena,
             $unit->getRedaktory(),
+            $this->containerStateMismatch($unit->getId()),
         );
+    }
+
+    /**
+     * Признак расхождения состояния контейнера хранится только в проекции
+     * `spisok_unitov`. Если проекции нет, считаем расхождения нет: отсутствие
+     * строки не должно превращать опрос состояния в ошибку.
+     */
+    private function containerStateMismatch(string $unitId): bool
+    {
+        try {
+            return $this->unitReadModelRepository->getById($unitId)->containerStateMismatch;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**

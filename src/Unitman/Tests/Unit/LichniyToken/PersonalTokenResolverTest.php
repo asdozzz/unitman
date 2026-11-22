@@ -84,6 +84,46 @@ final class PersonalTokenResolverTest extends TestCase
         $resolver->poluchitToken('unit-1', self::ACCOUNT_ID);
     }
 
+    #[Test]
+    public function poluchit_token_dlya_proekta_vozvrashchaet_token(): void
+    {
+        $shifr = $this->shifr();
+        $token = 'glpat-project-secret';
+        $resolver = $this->resolver(
+            [$this->tokenList('token-1', $token, ObyomPrav::Vse, [], 100, $shifr)],
+            $shifr,
+        );
+
+        self::assertSame($token, $resolver->poluchitTokenDlyProekta(self::PROJECT_ID, self::ACCOUNT_ID));
+    }
+
+    #[Test]
+    public function poluchit_token_dlya_proekta_bez_tokena_oshibka(): void
+    {
+        $shifr = $this->shifr();
+        $resolver = $this->resolver([], $shifr);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.redaktor.net_lichnogo_tokena');
+
+        $resolver->poluchitTokenDlyProekta(self::PROJECT_ID, self::ACCOUNT_ID);
+    }
+
+    #[Test]
+    public function poluchit_token_dlya_proekta_bez_prav_otklonyaetsya(): void
+    {
+        $shifr = $this->shifr();
+        $resolver = $this->resolver(
+            [$this->tokenList('token-1', 'secret', ObyomPrav::Spisok, ['other-project'], 100, $shifr)],
+            $shifr,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.redaktor.token_bez_prav_na_proekt');
+
+        $resolver->poluchitTokenDlyProekta(self::PROJECT_ID, self::ACCOUNT_ID);
+    }
+
     private function resolver(array $tokens, PersonalTokenOpenSslShifr $shifr): PersonalTokenResolver
     {
         $projectId = self::PROJECT_ID;

@@ -25,8 +25,12 @@ final class OcenkaGotovnostiUnita
     private const KOD_UDALEN_VRUCHNUYU = 'UDALEN_VRUCHNUYU';
     private const PREFIX_OSHIBKA = 'OSHIBKA_';
 
-    public function ocenit(bool $exists, ?string $code, bool $zanyat = false): string
-    {
+    public function ocenit(
+        bool $exists,
+        ?string $code,
+        bool $zanyat = false,
+        bool $containerStateMismatch = false,
+    ): string {
         if (!$exists) {
             return SostoyanieUnita::GROUP_ARCHIVED;
         }
@@ -40,6 +44,13 @@ final class OcenkaGotovnostiUnita
         }
 
         if ($zanyat) {
+            return SostoyanieUnita::GROUP_BLOCKED;
+        }
+
+        // Контейнер юнита фактически отсутствует или остановлен, хотя по
+        // состоянию процесса должен работать. Ход в такой юнит не отправляем:
+        // раннер всё равно не сможет подготовить рабочее окружение.
+        if ($containerStateMismatch) {
             return SostoyanieUnita::GROUP_BLOCKED;
         }
 

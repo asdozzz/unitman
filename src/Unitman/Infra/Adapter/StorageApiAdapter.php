@@ -20,6 +20,11 @@ interface StorageApiAdapter
 
     public function poluchitVetkiProekta(Repo $repo, string $projectCode, ?string $query): array;
 
+    /**
+     * Создать ветку в проекте хранения от указанной ветки.
+     */
+    public function sozdatVetkuVHranilishe(Repo $repo, string $projectCode, string $nazvanieVetki, string $otVetki, string $token): void;
+
     public function getUrlForInitProject(Repo $repo, Project $project): string;
 
     /**

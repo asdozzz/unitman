@@ -9,13 +9,14 @@ use App\Unitman\Business\Model\Repo\RepoType;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
 use App\Unitman\Business\Port\Project\UmeetPoluchatKonfigProekta;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokVetokProekta;
+use App\Unitman\Business\Port\Project\UmeetSozdavatVetkuProekta;
 use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\Repo\CanGetRepoTypeList;
 use App\Unitman\Business\Port\Repo\UmeetPoluchatSpisokProektovHranilisha;
 use App\Unitman\Business\Port\Repo\UmeetPoluchatUrlHranilisha;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
-final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluchatUrlHranilisha, CanGetRepoTypeList, UmeetPoluchatSpisokVetokProekta, UmeetPoluchatKonfigProekta, UmeetPoluchatSpisokProektovHranilisha
+final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluchatUrlHranilisha, CanGetRepoTypeList, UmeetPoluchatSpisokVetokProekta, UmeetSozdavatVetkuProekta, UmeetPoluchatKonfigProekta, UmeetPoluchatSpisokProektovHranilisha
 {
     /**
      * @var iterable<StorageApiAdapter>
@@ -69,6 +70,12 @@ final class StorageApiAdapterFactory implements CanCheckAccessToRepo, UmeetPoluc
     {
         $adapter = $this->getAdapterByRepo($repo->getType());
         return $adapter->poluchitVetkiProekta($repo, $projectCode, $query);
+    }
+
+    function sozdatVetkuVHranilishe(Repo $repo, string $projectCode, string $nazvanieVetki, string $otVetki, string $token): void
+    {
+        $adapter = $this->getAdapterByRepo($repo->getType());
+        $adapter->sozdatVetkuVHranilishe($repo, $projectCode, $nazvanieVetki, $otVetki, $token);
     }
 
     function getUrlForInitProject(Repo $repo, Project $project): string

@@ -58,6 +58,22 @@ final class WorkspaceProjectStorageAdapter implements UmeetProveryatPushVProekt,
         ));
     }
 
+    public function sozdatVetkuVHranilishe(Repo $repo, string $projectCode, string $nazvanieVetki, string $otVetki, string $token): void
+    {
+        foreach ($this->adapters as $adapter) {
+            if ($adapter->isSupport($repo->getType())) {
+                $adapter->sozdatVetkuVHranilishe($repo, $projectCode, $nazvanieVetki, $otVetki, $token);
+
+                return;
+            }
+        }
+
+        throw new \Exception(sprintf(
+            'StorageApiAdapter for repoType=%s not found',
+            $repo->getType()->value,
+        ));
+    }
+
     public function proveritToken(string $token, Repo $repo): bool
     {
         foreach ($this->adapters as $adapter) {

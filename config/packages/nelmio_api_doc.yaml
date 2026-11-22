@@ -902,6 +902,10 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             description: 'Ключ перевода ошибки при Kind=ERROR'
+                        ErrorMessage:
+                            type: string
+                            nullable: true
+                            description: 'Фактический текст ошибки раннера/OpenCode; не переводится'
                         ExternalSessionId:
                             type: string
                             nullable: true

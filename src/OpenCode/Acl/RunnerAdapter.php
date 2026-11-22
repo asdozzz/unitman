@@ -309,6 +309,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
             $result->Answer,
             $result->ErrorKey,
             $result->ExternalSessionId,
+            $result->ErrorMessage,
         );
     }
 

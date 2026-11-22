@@ -11,9 +11,11 @@ use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\UnitId;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
+use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\UseCase\Unit\PoluchitSostoyanieUnitaQuery;
 use App\Unitman\Business\UseCase\Unit\PoluchitZanyatostUnitaQuery;
 use PHPUnit\Framework\Attributes\Test;
@@ -99,6 +101,40 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
     }
 
     #[Test]
+    public function container_state_mismatch_probrasyvaetsya_v_read_model(): void
+    {
+        $unit = Unit::sozdatUnit(
+            self::UNIT_ID,
+            'author-1',
+            'prozes-1',
+            new SozdatUnit('project-1', 'unit-name', 'feature/1', [], 3000),
+        );
+
+        $repository = $this->createMock(UnitRepository::class);
+        $repository->method('getById')->willReturn($unit);
+
+        $unitReadModelRepository = $this->createMock(CanGetUnitReadModelById::class);
+        $unitReadModelRepository->expects($this->once())
+            ->method('getById')
+            ->with(self::UNIT_ID)
+            ->willReturn(new SpisokUnitovReadModel(
+                self::UNIT_ID,
+                'author-1',
+                'Author',
+                'unit-name',
+                'project-1',
+                'Project',
+                'feature/1',
+                containerStateMismatch: true,
+            ));
+
+        $query = $this->query($repository, null, $unitReadModelRepository);
+        $readModel = $query->handle(new PoluchitSostoyanieUnita(self::UNIT_ID));
+
+        self::assertTrue($readModel->containerStateMismatch);
+    }
+
+    #[Test]
     public function sostoyanie_soderzhit_redaktorov_i_zashishennost_vetki(): void
     {
         $project = Project::addProject(
@@ -164,6 +200,7 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
     private function query(
         UnitRepository $repository,
         ?ProjectRepository $projectRepository = null,
+        ?CanGetUnitReadModelById $unitReadModelRepository = null,
     ): PoluchitSostoyanieUnitaQuery
     {
         $zanyatostRepository = $this->createMock(ZanyatostUnitaRepository::class);
@@ -176,10 +213,18 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
                 ->willThrowException(new \DomainException('project.not_found'));
         }
 
+        if ($unitReadModelRepository === null) {
+            $unitReadModelRepository = $this->createMock(CanGetUnitReadModelById::class);
+            $unitReadModelRepository
+                ->method('getById')
+                ->willThrowException(new \Exception('unit.spisok_unitov.unit_not_found'));
+        }
+
         return new PoluchitSostoyanieUnitaQuery(
             $repository,
             $projectRepository,
             new PoluchitZanyatostUnitaQuery($repository, $zanyatostRepository),
+            $unitReadModelRepository,
         );
     }
 

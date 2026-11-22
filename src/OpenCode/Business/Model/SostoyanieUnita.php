@@ -27,6 +27,8 @@ final class SostoyanieUnita
      * @param bool $redaktirovanieVklucheno режим редактирования включён автором
      * @param bool $vetkaZashishena ветка юнита входит в защищённые ветки проекта
      * @param list<string> $redaktory прикреплённые редакторы (идентификаторы пользователей)
+     * @param bool $containerStateMismatch основной контейнер юнита отсутствует
+     *        или остановлен, хотя ожидается запущенным
      */
     public function __construct(
         public readonly bool $exists,
@@ -41,6 +43,7 @@ final class SostoyanieUnita
         public readonly bool $redaktirovanieVklucheno = false,
         public readonly bool $vetkaZashishena = false,
         public readonly array $redaktory = [],
+        public readonly bool $containerStateMismatch = false,
     )
     {
     }

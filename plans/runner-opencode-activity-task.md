@@ -207,6 +207,7 @@ Payload — JSON-объект. Имена полей **PascalCase, регист�
   "Questions": [],
   "Answer": "Юнит создан, ветка feature/login собрана.",
   "ErrorKey": null,
+  "ErrorMessage": null,
   "ExternalSessionId": "sess_01J8Z9"
 }
 ```
@@ -217,7 +218,8 @@ Payload — JSON-объект. Имена полей **PascalCase, регист�
 | `Kind` | `string` | строго одно из `ANSWER`, `QUESTION`, `ERROR` |
 | `Questions` | массив объектов | заполнен при `QUESTION`, иначе `[]` (**не `null`**) |
 | `Answer` | `string` или `null` | заполнен при `ANSWER`, иначе `null` |
-| `ErrorKey` | `string` или `null` | заполнен при `ERROR`, иначе `null` |
+| `ErrorKey` | `string` или `null` | ключ перевода при `ERROR`, иначе `null` |
+| `ErrorMessage` | `string` или `null` | фактический текст ошибки раннера/OpenCode при `ERROR`; не переводится и нужен для диагностики |
 | `ExternalSessionId` | `string` или `null` | id сессии на стороне OpenCode, если известен |
 
 ### 4.1 Три допустимых состояния

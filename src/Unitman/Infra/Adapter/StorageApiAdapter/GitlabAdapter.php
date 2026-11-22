@@ -69,6 +69,12 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return array_map(fn(array $branch) => new VetkaProekta($branch['name']), $branches);
     }
 
+    public function sozdatVetkuVHranilishe(Repo $repo, string $projectCode, string $nazvanieVetki, string $otVetki, string $token): void
+    {
+        $client = $this->clientFactory->makeClientWithToken($repo, $token);
+        $client->repositories()->createBranch($projectCode, $nazvanieVetki, $otVetki);
+    }
+
     public function getUrlForInitProject(Repo $repo, Project $project): string
     {
         $url = $repo->getCredentials()->url;

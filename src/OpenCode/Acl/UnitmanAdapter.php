@@ -187,13 +187,19 @@ final class UnitmanAdapter implements
             $readModel->projectId,
             $readModel->name,
             $readModel->branch,
-            $this->ocenkaGotovnostiUnita->ocenit($readModel->exists, $readModel->code, $readModel->zanyat),
+            $this->ocenkaGotovnostiUnita->ocenit(
+                $readModel->exists,
+                $readModel->code,
+                $readModel->zanyat,
+                $readModel->containerStateMismatch,
+            ),
             $readModel->zanyat,
             $readModel->prichinaZanyatosti,
             $readModel->authorId,
             $readModel->redaktirovanieVklucheno,
             $readModel->vetkaZashishena,
             array_values($readModel->redaktory),
+            $readModel->containerStateMismatch,
         );
     }
 

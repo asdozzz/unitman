@@ -24,6 +24,7 @@ use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Command\Project\ProveritProxyHost;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
+use App\Unitman\Business\Command\Project\SozdatVetkuProekta;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
 use App\Unitman\Business\Command\Project\UpdateProjectData;
 use App\Unitman\Business\Command\Project\UstanovitZashishennieVetkiProekta;
@@ -49,6 +50,7 @@ use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
 use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiProekta;
 use App\Unitman\Business\UseCase\Project\ProzessUdaleniyaPeremenoiIzProekta;
 use App\Unitman\Business\UseCase\Project\RemoveUserFromProjectUseCase;
+use App\Unitman\Business\UseCase\Project\SozdatVetkuProektaUseCase;
 use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use App\Unitman\Business\UseCase\Project\UstanovitZashishennieVetkiProektaUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
@@ -826,6 +828,42 @@ final class ProjectController extends AbstractController
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[OA\Post(
+        path: '/api/project/sozdatVetku',
+        summary: 'Создать ветку проекта',
+        tags: ['Project'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SozdatVetkuProekta')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Созданная ветка проекта',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Созданная ветка проекта',
+                            ref: '#/components/schemas/ProjectBranch'
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/sozdatVetku', methods: ['POST'])]
+    public function sozdatVetku(#[MapRequestPayload] SozdatVetkuProekta $command, SozdatVetkuProektaUseCase $useCase): Response
+    {
+        $name = $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success(['name' => $name]));
     }
 
     #[OA\Post(

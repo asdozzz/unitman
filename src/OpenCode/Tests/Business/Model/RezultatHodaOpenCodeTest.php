@@ -92,6 +92,7 @@ final class RezultatHodaOpenCodeTest extends TestCase
         $this->assertNull($rezultat->answer);
         $this->assertNull($rezultat->errorKey);
         $this->assertNull($rezultat->externalSessionId);
+        $this->assertNull($rezultat->errorMessage);
     }
 
     /**
@@ -139,11 +140,31 @@ final class RezultatHodaOpenCodeTest extends TestCase
             'Answer' => '',
             'ErrorKey' => '',
             'ExternalSessionId' => '',
+            'ErrorMessage' => '',
         ]);
 
         $this->assertNull($rezultat->answer);
         $this->assertNull($rezultat->errorKey);
         $this->assertNull($rezultat->externalSessionId);
+        $this->assertNull($rezultat->errorMessage);
+    }
+
+    /**
+     * Реальный текст ошибки раннера не переводится: он должен дойти до UI
+     * без искажений, иначе пользователь увидит только общий ErrorKey.
+     */
+    #[Test]
+    public function soobshchenie_ob_oshibke_ranнера_sokhranyaetsya(): void
+    {
+        $rezultat = RezultatHodaOpenCode::fromArray([
+            'Success' => false,
+            'Kind' => 'ERROR',
+            'ErrorKey' => 'opencode.turn.failed',
+            'ErrorMessage' => 'opencode: exit status 1: connection refused',
+        ]);
+
+        $this->assertTrue($rezultat->estOshibkoi());
+        $this->assertSame('opencode: exit status 1: connection refused', $rezultat->errorMessage);
     }
 
     #[Test]
@@ -196,13 +217,14 @@ final class RezultatHodaOpenCodeTest extends TestCase
         $array = $rezultat->toArray();
 
         $this->assertSame(
-            ['Success', 'Kind', 'Questions', 'Answer', 'ErrorKey', 'ExternalSessionId'],
+            ['Success', 'Kind', 'Questions', 'Answer', 'ErrorKey', 'ExternalSessionId', 'ErrorMessage'],
             array_keys($array),
         );
         $this->assertTrue($array['Success']);
         $this->assertSame('QUESTION', $array['Kind']);
         $this->assertNull($array['Answer']);
         $this->assertSame('ext-1', $array['ExternalSessionId']);
+        $this->assertNull($array['ErrorMessage']);
     }
 
     #[Test]

@@ -62,6 +62,28 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return array_map(fn(array $branch) => new VetkaProekta($branch['name']), $branches);
     }
 
+    public function sozdatVetkuVHranilishe(Repo $repo, string $projectCode, string $nazvanieVetki, string $otVetki, string $token): void
+    {
+        $client = $this->githubClientFactory->makeClientWithToken($repo, $token);
+        list($login, $code) = explode('/', $projectCode);
+
+        $baseBranch = $client->repositories()->branches($login, $code, $otVetki);
+        $sha = $baseBranch['commit']['sha'] ?? null;
+
+        if (empty($sha)) {
+            throw new \RuntimeException(sprintf(
+                'Cannot resolve sha of base branch %s for project %s',
+                $otVetki,
+                $projectCode,
+            ));
+        }
+
+        $client->gitData()->references()->create($login, $code, [
+            'ref' => 'refs/heads/' . $nazvanieVetki,
+            'sha' => $sha,
+        ]);
+    }
+
     public function getUrlForInitProject(Repo $repo, Project $project): string
     {
         $url = $repo->getCredentials()->url;
