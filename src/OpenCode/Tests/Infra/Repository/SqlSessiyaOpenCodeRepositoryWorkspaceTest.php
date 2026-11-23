@@ -97,11 +97,15 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
         $fetched = [];
 
         $connection = $this->createMock(Connection::class);
-        $connection->expects($this->exactly(3))
+        $connection->expects($this->exactly(4))
             ->method('fetchAllAssociative')
             ->willReturnCallback(
                 static function (string $sql, array $params, array $types) use (&$fetched): array {
                     $fetched[] = ['sql' => $sql, 'params' => $params, 'types' => $types];
+
+                    if (str_contains($sql, 'opencode_workspace_unit')) {
+                        return [];
+                    }
 
                     if (str_contains($sql, 'opencode_workspace_project')) {
                         return [
@@ -259,7 +263,7 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
 
                 return $callback();
             });
-        $connection->expects($this->exactly(5))
+        $connection->expects($this->exactly(6))
             ->method('executeStatement')
             ->willReturnCallback(
                 static function (string $sql, array $params, array $types) use (&$statements): int {
@@ -273,9 +277,10 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
         $repository->deleteWorkspace('s-1');
 
         $this->assertSame(1, $transakcii);
-        $this->assertCount(5, $statements);
+        $this->assertCount(6, $statements);
 
         $expectedTables = [
+            'opencode_workspace_unit',
             'opencode_workspace_project',
             'opencode_workspace',
             'opencode_turn',
@@ -287,8 +292,8 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
             $this->assertSame('s-1', $statements[$index]['params']['id']);
         }
 
-        $this->assertStringContainsString('delete from opencode_session where id = :id', $statements[4]['sql']);
-        $this->assertSame('s-1', $statements[4]['params']['id']);
+        $this->assertStringContainsString('delete from opencode_session where id = :id', $statements[5]['sql']);
+        $this->assertSame('s-1', $statements[5]['params']['id']);
     }
 
     #[Test]

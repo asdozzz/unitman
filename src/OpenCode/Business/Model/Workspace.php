@@ -24,6 +24,7 @@ final class Workspace
 
     /**
      * @param list<ProektWorkspace> $projects
+     * @param list<WorkspaceUnit> $units
      */
     private function __construct(
         private string $branch,
@@ -39,6 +40,7 @@ final class Workspace
         private ?int $initialPromptStartedAt,
         private int $createdAt,
         private int $updatedAt,
+        private array $units = [],
     ) {
     }
 
@@ -74,6 +76,7 @@ final class Workspace
 
     /**
      * @param list<ProektWorkspace> $projects
+     * @param list<WorkspaceUnit> $units
      */
     public static function restore(
         string $branch,
@@ -89,6 +92,7 @@ final class Workspace
         ?int $initialPromptStartedAt,
         int $createdAt,
         int $updatedAt,
+        array $units = [],
     ): self {
         $branch = self::normalizeBranch($branch);
 
@@ -106,6 +110,7 @@ final class Workspace
             $initialPromptStartedAt,
             $createdAt,
             $updatedAt,
+            self::normalizeUnits($units),
         );
     }
 
@@ -125,6 +130,25 @@ final class Workspace
     public function getProjects(): array
     {
         return $this->projects;
+    }
+
+    /**
+     * @return list<WorkspaceUnit>
+     */
+    public function getUnits(): array
+    {
+        return $this->units;
+    }
+
+    /**
+     * Фиксирует юниты, созданные из workspace.
+     *
+     * @param list<WorkspaceUnit> $units
+     */
+    public function zapomnitUniti(array $units, int $now): void
+    {
+        $this->units = self::normalizeUnits($units);
+        $this->updatedAt = $now;
     }
 
     public function getStatus(): StatusWorkspace
@@ -278,6 +302,36 @@ final class Workspace
         }
 
         return $unique;
+    }
+
+    /**
+     * @param list<WorkspaceUnit> $units
+     *
+     * @return list<WorkspaceUnit>
+     */
+    private static function normalizeUnits(array $units): array
+    {
+        $result = [];
+        $seen = [];
+
+        foreach ($units as $unit) {
+            if (!$unit instanceof WorkspaceUnit) {
+                throw new \DomainException('opencode.workspace.unit_invalid');
+            }
+
+            if ($unit->unitId === '' || $unit->projectId === '') {
+                throw new \DomainException('opencode.workspace.unit_invalid');
+            }
+
+            if (isset($seen[$unit->unitId])) {
+                throw new \DomainException('opencode.workspace.unit_conflict');
+            }
+
+            $seen[$unit->unitId] = true;
+            $result[] = $unit;
+        }
+
+        return $result;
     }
 
     /**

@@ -6,8 +6,10 @@ use App\Unitman\Business\Command\Unit\ObnovitSostoyanieKonteyneraUnita;
 use App\Unitman\Business\Command\Unit\ObnovitStatistikuPoKontaineruUnita;
 use App\Unitman\Business\Command\Unit\PoluchitSostoyanieUnita;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Command\Unit\SozdatUnitiDlyaProektov;
 use App\Unitman\Business\Model\Unit\TipZanyatosti;
 use App\Unitman\Business\ReadModel\Project\ProektDlyaWorkspaceReadModel;
+use App\Unitman\Business\ReadModel\Unit\SozdannieUnitiReadModel;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
 use App\Unitman\Business\UseCase\Project\PoluchitProektiDlyaWorkspaceQuery;
@@ -21,6 +23,7 @@ use App\Unitman\Business\Port\Unit\UmeetPoluchatTokenRedaktirovaniya;
 use App\Unitman\Business\UseCase\Unit\ProdvinutCiklUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ProveritDostupKUnituUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
+use App\Unitman\Business\UseCase\Unit\SozdatUnitiDlyaProektovUseCase;
 use App\Unitman\Business\UseCase\Unit\ZahvatitZanyatostUnitovUseCase;
 use App\Unitman\Infra\Service\ServiceProverkiProxyHost;
 
@@ -39,6 +42,7 @@ final class UnitmanApi
         private PoluchitSostoyanieUnitaQuery $poluchitSostoyanieUnitaQuery,
         private ProveritDostupKUnituUseCase $proveritDostupKUnituUseCase,
         private SozdatUnitUseCase $sozdatUnitUseCase,
+        private SozdatUnitiDlyaProektovUseCase $sozdatUnitiDlyaProektovUseCase,
         private ProdvinutCiklUnitaUseCase $prodvinutCiklUnitaUseCase,
         private ZahvatitZanyatostUnitovUseCase $zahvatitZanyatostUnitovUseCase,
         private OsvoboditZanyatostUnitovUseCase $osvoboditZanyatostUnitovUseCase,
@@ -87,7 +91,17 @@ final class UnitmanApi
      */
     function sozdatUnitDlyaPolzovatelya(SozdatUnit $command, string $accountId): string
     {
-        return $this->sozdatUnitUseCase->handleDlyaPolzovatelya($command, $accountId);
+        return $this->sozdatUnitUseCase->sozdatDlyaPolzovatelya($command, $accountId);
+    }
+
+    /**
+     * Групповое создание юнитов с автоматическими связями через хелперы.
+     */
+    function sozdatUnitiDlyaProektov(
+        SozdatUnitiDlyaProektov $command,
+        string $accountId,
+    ): SozdannieUnitiReadModel {
+        return $this->sozdatUnitiDlyaProektovUseCase->handleDlyaPolzovatelya($command, $accountId);
     }
 
     /**

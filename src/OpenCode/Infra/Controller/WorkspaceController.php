@@ -8,14 +8,17 @@ use App\OpenCode\Business\Command\ArhivirovatWorkspace;
 use App\OpenCode\Business\Command\PoluchitSostoyanieWorkspace;
 use App\OpenCode\Business\Command\PoluchitSpisokWorkspace;
 use App\OpenCode\Business\Command\PoluchitSsylkuWorkspace;
+use App\OpenCode\Business\Command\SozdatUnitiWorkspace;
 use App\OpenCode\Business\Command\SozdatWorkspace;
 use App\OpenCode\Business\Command\UdalitWorkspace;
 use App\OpenCode\Business\Command\VosstanovitWorkspace;
 use App\OpenCode\Business\ReadModel\WorkspaceReadModel;
+use App\OpenCode\Business\ReadModel\WorkspaceUnitReadModel;
 use App\OpenCode\Business\UseCase\ArhivirovatWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\PoluchitSostoyanieWorkspaceQuery;
 use App\OpenCode\Business\UseCase\PoluchitSpisokWorkspaceQuery;
 use App\OpenCode\Business\UseCase\PoluchitSsylkuWorkspaceQuery;
+use App\OpenCode\Business\UseCase\SozdatUnitiWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\SozdatWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\UdalitWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\VosstanovitWorkspaceUseCase;
@@ -83,6 +86,57 @@ final class WorkspaceController extends AbstractController
         $state = $stateQuery->handle(new PoluchitSostoyanieWorkspace($id));
 
         return $this->json(Response::success(['id' => $id, 'status' => $state->status]));
+    }
+
+    #[OA\Post(
+        path: '/api/opencode/workspace/sozdatUniti',
+        summary: 'Создать юниты для проектов workspace',
+        description: 'Создаёт по одному юниту на каждый проект workspace и автоматически связывает хелперы, указывающие на проекты этого workspace. Юниты запускаются штатным конвейером.',
+        tags: ['OpenCode'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SozdatUnitiWorkspace')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Созданные юниты',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(
+                                    property: 'units',
+                                    type: 'array',
+                                    items: new OA\Items(ref: '#/components/schemas/WorkspaceUnit')
+                                ),
+                            ]
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/sozdatUniti', methods: ['POST'])]
+    function sozdatUniti(
+        SozdatUnitiWorkspace $command,
+        SozdatUnitiWorkspaceUseCase $useCase,
+    ): HttpResponse {
+        $units = $useCase->handle($command);
+
+        return $this->json(Response::success([
+            'units' => array_map(
+                static fn(WorkspaceUnitReadModel $unit): array => $unit->toArray(),
+                $units,
+            ),
+        ]));
     }
 
     #[OA\Get(

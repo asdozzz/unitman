@@ -72,6 +72,16 @@ create table if not exists opencode_workspace_project (
     primary key (session_id, project_id)
 );
 
+create table if not exists opencode_workspace_unit (
+    workspace_id    varchar(64)  not null,
+    unit_id         varchar(64)  not null,
+    project_id      varchar(64)  not null,
+    unit_name       varchar(128) not null,
+    branch          varchar(256) not null default '',
+    created_at      integer      not null,
+    primary key (workspace_id, unit_id)
+);
+
 alter table opencode_notification
     add column if not exists session_type varchar(16) not null default 'unit';
 ```
@@ -87,6 +97,7 @@ alter table opencode_notification
 | Метод | Путь | Тело | Ответ |
 |---|---|---|---|
 | `POST` | `/api/opencode/workspace/sozdat` | `name, branch, projectIds[], prompt, credentialId` | `{id, status}` |
+| `POST` | `/api/opencode/workspace/sozdatUniti` | `workspaceId` | `{units: WorkspaceUnit[]}` |
 | `GET` | `/api/opencode/workspace/spisok` | query `onlyActive`, `search` | массив workspace |
 | `POST` | `/api/opencode/workspace/sostoyanie` | `workspaceId` | состояние workspace |
 | `POST` | `/api/opencode/workspace/arhivirovat` | `workspaceId, force?` | `{requiresConfirmation, dirtyProjects, status}` |
@@ -101,7 +112,22 @@ alter table opencode_notification
 Список сессий `/api/opencode/spisokSessiy` принимает `type=unit|workspace` и
 отдаёт у элемента `type`, `workspace` и `ideLink`.
 
-### 3.1 Состояние workspace
+### 3.1 Создание юнитов
+
+`POST /api/opencode/workspace/sozdatUniti` создаёт по одному юниту на каждый
+проект workspace. Перед записью Unitman читает `unitman.yaml` всех проектов и
+сопоставляет `helper.projectId` с проектами workspace по `projectId` или коду
+проекта. Если хелпер указывает на другой проект workspace, переменной
+подставляется ссылка на его юнит, а в `svyazi` пишется `targetUnitId`.
+
+Юниты запускаются штатным конвейером: сборка, подготовка, запуск. Результат
+сохраняется в `opencode_workspace_unit`; карточка workspace показывает чипсы
+созданных юнитов и ведёт на страницу юнитов с фильтром `unitIds`.
+
+Повторный вызов запрещён: при непустом списке units возвращается
+`opencode.workspace.units_already_created`, а действие в интерфейсе скрыто.
+
+### 3.2 Состояние workspace
 
 ```json
 {

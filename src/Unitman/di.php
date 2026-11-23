@@ -22,6 +22,7 @@ use App\Unitman\Business\Port\Unit\UmeetPoluchatTokenRedaktirovaniya;
 use App\Unitman\Business\Port\Project\CanGetProjectRunnerJobs;
 use App\Unitman\Business\Port\Queue\ZadachaVOchered;
 use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
+use App\Unitman\Business\Port\Unit\UmeetSozdavatUnit;
 use App\Unitman\Business\Port\Unit\UmeetObnovlyatSostoyanieKonteyneraUnita;
 use App\Unitman\Business\Port\Unit\UmeetObnovlyatStatistikuKonteinera;
 use App\Unitman\Business\Port\Unit\UmeetOpoveshatObIzmeneniiUnita;
@@ -103,6 +104,7 @@ return function (ContainerConfigurator $configuration) {
     $services->set(ZanyatostUnitaRepository::class, SqlZanyatostUnitaRepository::class);
     $services->set(OtlozhennieDeistviyaRepository::class, SqlOtlozhennieDeistviyaRepository::class);
     $services->set(CanGetProjectRunnerJobs::class, ProjectRunnerJobRepository::class);
+    $services->set(UmeetSozdavatUnit::class, \App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase::class);
 
     $services->set(VolumeTypeFileLinkChecker::class)
         ->tag(FileLinkChecker::TAG);

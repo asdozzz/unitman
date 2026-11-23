@@ -6,6 +6,7 @@ namespace App\OpenCode\Acl;
 
 use App\OpenCode\Business\Model\ParametriSozdaniyaUnita;
 use App\OpenCode\Business\Model\ProektWorkspace;
+use App\OpenCode\Business\Model\SozdanniyUnit;
 use App\OpenCode\Business\Model\SostoyanieUnita;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
@@ -19,6 +20,9 @@ use App\Unitman\Business\ReadModel\Project\ProektDlyaWorkspaceReadModel;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnit\VolumeZapros;
 use App\Unitman\Business\Command\Unit\SozdatUnit\ZnacheniePeremenoi;
+use App\Unitman\Business\Command\Unit\SozdatUnitiDlyaProektov;
+use App\Unitman\Business\Command\Unit\SozdatUnitiDlyaProektov\ProektDlyaSozdaniyaUnita;
+use App\Unitman\Business\ReadModel\Unit\SozdanniyUnitReadModel;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 
 /**
@@ -69,6 +73,41 @@ final class UnitmanAdapter implements
         return $this->unitmanApi->sozdatUnitDlyaPolzovatelya(
             $this->sobratKomandu($parametri),
             $accountId,
+        );
+    }
+
+    /**
+     * @param list<array{projectId: string, branch: string}> $projects
+     *
+     * @return list<SozdanniyUnit>
+     */
+    public function sozdatUnitiDlyaProektov(
+        array $projects,
+        string $unitName,
+        string $accountId,
+    ): array {
+        $dtoProjects = [];
+
+        foreach ($projects as $project) {
+            $dtoProjects[] = new ProektDlyaSozdaniyaUnita(
+                $project['projectId'],
+                $project['branch'],
+            );
+        }
+
+        $result = $this->unitmanApi->sozdatUnitiDlyaProektov(
+            new SozdatUnitiDlyaProektov($unitName, $dtoProjects),
+            $accountId,
+        );
+
+        return array_map(
+            static fn(SozdanniyUnitReadModel $unit): SozdanniyUnit => new SozdanniyUnit(
+                $unit->unitId,
+                $unit->projectId,
+                $unit->unitName,
+                $unit->branch,
+            ),
+            $result->units,
         );
     }
 

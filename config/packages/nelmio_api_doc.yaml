@@ -623,6 +623,31 @@ nelmio_api_doc:
                         credentialId:
                             type: string
                             format: uuid
+                SozdatUnitiWorkspace:
+                    type: object
+                    description: 'Создание юнитов для всех проектов workspace'
+                    required: [workspaceId]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                WorkspaceUnit:
+                    type: object
+                    description: 'Юнит, созданный из workspace (WorkspaceUnitReadModel)'
+                    required: [unitId, projectId, unitName, branch]
+                    properties:
+                        unitId:
+                            type: string
+                            format: uuid
+                        projectId:
+                            type: string
+                            format: uuid
+                        unitName:
+                            type: string
+                            example: payments-refactor
+                        branch:
+                            type: string
+                            example: feature/payments
                 WorkspaceProject:
                     type: object
                     description: 'Проект workspace (ProektWorkspaceReadModel). Токен клонирования наружу не отдаётся'
@@ -646,7 +671,7 @@ nelmio_api_doc:
                 Workspace:
                     type: object
                     description: 'Workspace-сессия (WorkspaceReadModel)'
-                    required: [id, name, branch, status, readOnly, archived, projects, createdAt, updatedAt]
+                    required: [id, name, branch, status, readOnly, archived, projects, createdAt, updatedAt, units]
                     properties:
                         id:
                             type: string
@@ -674,6 +699,11 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/WorkspaceProject'
+                        units:
+                            type: array
+                            description: 'Юниты, созданные из workspace; после создания повторный запуск запрещён'
+                            items:
+                                $ref: '#/components/schemas/WorkspaceUnit'
                         ideLink:
                             type: string
                             nullable: true
@@ -686,7 +716,7 @@ nelmio_api_doc:
                 SostoyanieWorkspace:
                     type: object
                     description: 'Состояние workspace (SostoyanieWorkspaceReadModel)'
-                    required: [id, name, branch, status, readOnly, archived, projects, canAcceptMessages]
+                    required: [id, name, branch, status, readOnly, archived, projects, canAcceptMessages, units]
                     properties:
                         id:
                             type: string
@@ -712,6 +742,10 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/WorkspaceProject'
+                        units:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/WorkspaceUnit'
                         ideLink:
                             type: string
                             nullable: true

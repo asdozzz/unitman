@@ -14,6 +14,7 @@ final class SostoyanieWorkspaceReadModel
 {
     /**
      * @param list<ProektWorkspaceReadModel> $projects
+     * @param list<WorkspaceUnitReadModel> $units
      */
     public function __construct(
         public readonly string $id,
@@ -29,6 +30,7 @@ final class SostoyanieWorkspaceReadModel
         public readonly bool $canAcceptMessages,
         public readonly ?string $lastTurnId,
         public readonly ?string $lastTurnStatus,
+        public readonly array $units = [],
     ) {
     }
 
@@ -54,6 +56,10 @@ final class SostoyanieWorkspaceReadModel
             'canAcceptMessages' => $this->canAcceptMessages,
             'lastTurnId' => $this->lastTurnId,
             'lastTurnStatus' => $this->lastTurnStatus,
+            'units' => array_map(
+                static fn (WorkspaceUnitReadModel $unit): array => $unit->toArray(),
+                $this->units,
+            ),
         ];
     }
 }

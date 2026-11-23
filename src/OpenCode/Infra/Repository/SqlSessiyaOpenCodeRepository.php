@@ -11,6 +11,7 @@ use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\TipSessiiOpenCode;
 use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Model\WorkspaceUnit;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -25,6 +26,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
     private const WORKSPACE_TABLE = 'opencode_workspace';
 
     private const WORKSPACE_PROJECT_TABLE = 'opencode_workspace_project';
+
+    private const WORKSPACE_UNIT_TABLE = 'opencode_workspace_unit';
 
     private const TURN_TABLE = 'opencode_turn';
 
@@ -260,6 +263,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
     {
         $this->connection->transactional(function () use ($sessionId): void {
             foreach ([
+                self::WORKSPACE_UNIT_TABLE,
                 self::WORKSPACE_PROJECT_TABLE,
                 self::WORKSPACE_TABLE,
                 self::TURN_TABLE,
@@ -425,6 +429,34 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             ['session_id' => ParameterType::STRING]
         );
 
+        $this->connection->delete(
+            self::WORKSPACE_UNIT_TABLE,
+            ['workspace_id' => $session->getId()],
+            ['workspace_id' => ParameterType::STRING]
+        );
+
+        foreach ($workspace->getUnits() as $unit) {
+            $this->connection->insert(
+                self::WORKSPACE_UNIT_TABLE,
+                [
+                    'workspace_id' => $session->getId(),
+                    'unit_id' => $unit->unitId,
+                    'project_id' => $unit->projectId,
+                    'unit_name' => $unit->unitName,
+                    'branch' => $unit->branch,
+                    'created_at' => $session->getUpdatedAt(),
+                ],
+                [
+                    'workspace_id' => ParameterType::STRING,
+                    'unit_id' => ParameterType::STRING,
+                    'project_id' => ParameterType::STRING,
+                    'unit_name' => ParameterType::STRING,
+                    'branch' => ParameterType::STRING,
+                    'created_at' => ParameterType::INTEGER,
+                ]
+            );
+        }
+
         foreach ($workspace->getProjects() as $project) {
             $this->connection->insert(
                 self::WORKSPACE_PROJECT_TABLE,
@@ -522,8 +554,32 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             ['sessionIds' => ArrayParameterType::STRING]
         );
 
+        $unitTable = self::WORKSPACE_UNIT_TABLE;
+
+        $unitRows = $this->connection->fetchAllAssociative(
+            "SELECT workspace_id, unit_id, project_id, unit_name, branch FROM $unitTable
+             WHERE workspace_id IN (:sessionIds)
+             ORDER BY workspace_id ASC, created_at ASC, unit_id ASC",
+            ['sessionIds' => $sessionIds],
+            ['sessionIds' => ArrayParameterType::STRING]
+        );
+
         /** @var array<string, list<ProektWorkspace>> $projects */
         $projects = [];
+
+        /** @var array<string, list<WorkspaceUnit>> $units */
+        $units = [];
+
+        foreach ($unitRows as $unitRow) {
+            $sessionId = (string) $unitRow['workspace_id'];
+            $units[$sessionId] ??= [];
+            $units[$sessionId][] = new WorkspaceUnit(
+                (string) $unitRow['unit_id'],
+                (string) $unitRow['project_id'],
+                (string) $unitRow['unit_name'],
+                is_string($unitRow['branch'] ?? null) ? $unitRow['branch'] : '',
+            );
+        }
 
         foreach ($projectRows as $projectRow) {
             $sessionId = (string) $projectRow['session_id'];
@@ -558,6 +614,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                 self::nullableInt($row['initial_prompt_started_at'] ?? null),
                 (int) $row['created_at'],
                 (int) $row['updated_at'],
+                $units[$sessionId] ?? [],
             );
         }
 

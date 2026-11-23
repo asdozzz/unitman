@@ -11,10 +11,11 @@ use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\Unit\UmeetSozdavatUnit;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Utils\Exception\TranslatorKeyword;
 
-final class SozdatUnitUseCase
+final class SozdatUnitUseCase implements UmeetSozdavatUnit
 {
     public function __construct(
         private CanFindUnitDouble      $canFindUnitDouble,
@@ -32,7 +33,7 @@ final class SozdatUnitUseCase
 
     function handle(SozdatUnit $command): string
     {
-        return $this->handleDlyaPolzovatelya($command, $this->securityService->getCurrentUserId());
+        return $this->sozdatDlyaPolzovatelya($command, $this->securityService->getCurrentUserId());
     }
 
     /**
@@ -57,8 +58,21 @@ final class SozdatUnitUseCase
      * Создание юнита от имени явно переданного пользователя: этим путём
      * пользуются интеграции (сессии OpenCode), у которых нет текущего запроса.
      * Права проверяются по тому же пользователю, что и в обычном сценарии.
+     *
+     * `$unitId`/`$prozesId` позволяют заранее зарезервировать идентификаторы
+     * для группового создания: связи на целевые юниты проставляются ещё до
+     * появления их read-моделей.
+     *
+     * `$proveritSvyazi = false` используется только групповым сценарием, где
+     * все цели уже проверены по плану и ещё не существуют в read-модели.
      */
-    function handleDlyaPolzovatelya(SozdatUnit $command, string $userId): string
+    public function sozdatDlyaPolzovatelya(
+        SozdatUnit $command,
+        string $userId,
+        ?string $unitId = null,
+        ?string $prozesId = null,
+        bool $proveritSvyazi = true,
+    ): string
     {
         if ($this->canFindUnitDouble->isExistsDoubleByName($command->projectId, $command->unitName)) {
             throw new \DomainException(TranslatorKeyword::UNIT_NAME_ALREADY_EXISTS->value);
@@ -72,21 +86,23 @@ final class SozdatUnitUseCase
 
         // Связи переменных с юнитами, выбранными через хелпер, проверяются
         // до записи событий: цель должна существовать и быть доступной.
-        $this->proverkaSvyazeyPeremenih->proverit(
-            $this->makeSvyazi($command),
-            null,
-            array_map(
-                fn(array $project): string => $project['id'],
-                $this->umeetPoluchatSpisokProektovDlyPolzovatelya->poluchitSpisokProektovDlyPolzovatelya($userId)
-            )
-        );
+        if ($proveritSvyazi) {
+            $this->proverkaSvyazeyPeremenih->proverit(
+                $this->makeSvyazi($command),
+                null,
+                array_map(
+                    fn(array $project): string => $project['id'],
+                    $this->umeetPoluchatSpisokProektovDlyPolzovatelya->poluchitSpisokProektovDlyPolzovatelya($userId)
+                )
+            );
+        }
 
         // Проверяем файлы томов до сохранения юнита: черновики будут привязаны
         // к новому юниту, архивы каталога проекта остаются общими.
         $chernoviki = $this->proverkaFaylovVolumov->proverit($command->projectId, $command->volumes);
 
-        $unitId = $this->uuidGenerator->makeGuid();
-        $prozesId = $this->uuidGenerator->makeGuid();
+        $unitId ??= $this->uuidGenerator->makeGuid();
+        $prozesId ??= $this->uuidGenerator->makeGuid();
         $unit = Unit::sozdatUnit($unitId, $userId, $prozesId, $command);
         $this->unitRepository->save($unit);
 

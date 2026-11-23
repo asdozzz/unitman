@@ -9,12 +9,14 @@ use App\OpenCode\Business\Model\HodOpenCode;
 use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\StatusWorkspace;
+use App\OpenCode\Business\Model\WorkspaceUnit;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\ReadModel\ProektWorkspaceReadModel;
 use App\OpenCode\Business\ReadModel\SostoyanieWorkspaceReadModel;
+use App\OpenCode\Business\ReadModel\WorkspaceUnitReadModel;
 use App\OpenCode\Business\Utils\SlugWorkspace;
 
 /**
@@ -76,6 +78,10 @@ final class PoluchitSostoyanieWorkspaceQuery
             $canAcceptMessages,
             $lastTurn?->getId(),
             $lastTurn?->getStatus()->value,
+            array_map(
+                static fn (WorkspaceUnit $unit): WorkspaceUnitReadModel => WorkspaceUnitReadModel::izModela($unit),
+                $workspace->getUnits(),
+            ),
         );
     }
 

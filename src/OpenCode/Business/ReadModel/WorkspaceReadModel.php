@@ -6,6 +6,7 @@ namespace App\OpenCode\Business\ReadModel;
 
 use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\WorkspaceUnit;
 
 /**
  * Workspace в списке и деталях.
@@ -19,6 +20,7 @@ final class WorkspaceReadModel
 {
     /**
      * @param list<ProektWorkspaceReadModel> $projects
+     * @param list<WorkspaceUnitReadModel> $units
      */
     public function __construct(
         public readonly string $id,
@@ -33,6 +35,7 @@ final class WorkspaceReadModel
         public readonly ?string $ideLink,
         public readonly int $createdAt,
         public readonly int $updatedAt,
+        public readonly array $units = [],
     ) {
     }
 
@@ -56,6 +59,10 @@ final class WorkspaceReadModel
             $ideLink,
             $session->getCreatedAt(),
             $session->getUpdatedAt(),
+            array_map(
+                static fn (WorkspaceUnit $unit): WorkspaceUnitReadModel => WorkspaceUnitReadModel::izModela($unit),
+                $workspace?->getUnits() ?? [],
+            ),
         );
     }
 
@@ -72,7 +79,8 @@ final class WorkspaceReadModel
      *     projects: list<array<string, mixed>>,
      *     ideLink: string|null,
      *     createdAt: int,
-     *     updatedAt: int
+     *     updatedAt: int,
+     *     units: list<array<string, mixed>>
      * }
      */
     public function toArray(): array
@@ -93,6 +101,10 @@ final class WorkspaceReadModel
             'ideLink' => $this->ideLink,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
+            'units' => array_map(
+                static fn (WorkspaceUnitReadModel $unit): array => $unit->toArray(),
+                $this->units,
+            ),
         ];
     }
 }
