@@ -75,6 +75,20 @@ final class RedaktorCommandsTest extends TestCase
 
         self::assertFalse($command->ReadOnly);
         self::assertNull($command->Token);
+        self::assertNull($command->Model);
+    }
+
+    public function test_hod_opencode_peredayot_model(): void
+    {
+        $command = new NachatHodOpenCode(
+            'account-1',
+            'credential-1',
+            null,
+            'prompt',
+            Model: 'gpt-4o-mini',
+        );
+
+        self::assertSame('gpt-4o-mini', $command->Model);
     }
 
     public function test_hod_opencode_peredayot_readonly_i_token(): void

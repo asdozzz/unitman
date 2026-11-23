@@ -57,6 +57,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         ?WorkspaceKontekst $workspace = null,
         bool $readOnly = false,
         ?string $token = null,
+        ?string $model = null,
     ): string {
         $unitsPayload = [];
         $workspaceProjects = [];
@@ -98,6 +99,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
                 $workspaceProjects,
                 $readOnly,
                 $token,
+                Model: $model,
             ),
         );
     }

@@ -5,22 +5,35 @@ declare(strict_types=1);
 namespace App\Account\Business\Model\OpenCode;
 
 /**
- * Реквизиты подключения к OpenCode (URL, модель, API-ключ).
+ * Реквизиты подключения к OpenCode: провайдер, базовый URL, набор моделей,
+ * дефолтная модель и API-ключ.
  *
  * Секрет хранится ТОЛЬКО в зашифрованном виде. Доменная модель не умеет
  * шифровать/расшифровывать — этим занимаются UseCase через порт
  * `UmeetShifrovatSekrety`, чтобы Business не зависел от ext-openssl.
+ *
+ * Инварианты набора моделей: от 1 до 50 штук, каждая непустая и не длиннее
+ * 128 символов, без дубликатов; дефолтная модель обязана входить в набор.
+ * `getModel()` возвращает дефолтную модель для легаси-потребителей.
  */
 final class OpenCodeCredential
 {
     public const CIPHER_VERSION = 1;
 
+    public const MAX_MODELS = 50;
+    public const MAX_MODEL_LENGTH = 128;
+
+    /**
+     * @param list<string> $models
+     */
     private function __construct(
         private readonly string $id,
         private readonly string $accountId,
         private string $name,
+        private string $provider,
         private string $url,
-        private string $model,
+        private array $models,
+        private string $defaultModel,
         private string $apiKeyCipher,
         private string $apiKeyHint,
         private readonly int $cipherVersion,
@@ -29,12 +42,17 @@ final class OpenCodeCredential
     ) {
     }
 
+    /**
+     * @param list<string> $models
+     */
     public static function create(
         string $id,
         string $accountId,
         string $name,
+        string $provider,
         string $url,
-        string $model,
+        array $models,
+        string $defaultModel,
         string $apiKeyCipher,
         string $apiKeyHint,
         int $now,
@@ -51,28 +69,36 @@ final class OpenCodeCredential
             throw new \DomainException('account.opencode_credential.empty_api_key');
         }
 
-        $credential = new self(
+        $normalizedModels = self::normalizeModels($models);
+        $normalizedDefault = self::resolveDefaultModel($normalizedModels, $defaultModel);
+
+        return new self(
             $id,
             $accountId,
             self::normalizeName($name),
+            self::normalizeProvider($provider),
             self::normalizeUrl($url),
-            self::normalizeModel($model),
+            $normalizedModels,
+            $normalizedDefault,
             $apiKeyCipher,
             $apiKeyHint,
             self::CIPHER_VERSION,
             $now,
             $now,
         );
-
-        return $credential;
     }
 
+    /**
+     * @param list<string> $models
+     */
     public static function restore(
         string $id,
         string $accountId,
         string $name,
+        string $provider,
         string $url,
-        string $model,
+        array $models,
+        string $defaultModel,
         string $apiKeyCipher,
         string $apiKeyHint,
         int $cipherVersion,
@@ -83,8 +109,10 @@ final class OpenCodeCredential
             $id,
             $accountId,
             $name,
+            $provider,
             $url,
-            $model,
+            $models,
+            $defaultModel,
             $apiKeyCipher,
             $apiKeyHint,
             $cipherVersion,
@@ -93,10 +121,18 @@ final class OpenCodeCredential
         );
     }
 
+    /**
+     * Изменение реквизитов. `null` в любом поле (кроме `$now`) означает
+     * «оставить как есть».
+     *
+     * @param list<string>|null $models
+     */
     public function izmenit(
         ?string $name,
+        ?string $provider,
         ?string $url,
-        ?string $model,
+        ?array $models,
+        ?string $defaultModel,
         ?string $apiKeyCipher,
         ?string $apiKeyHint,
         int $now,
@@ -105,12 +141,36 @@ final class OpenCodeCredential
             $this->name = self::normalizeName($name);
         }
 
+        if ($provider !== null) {
+            $this->provider = self::normalizeProvider($provider);
+        }
+
         if ($url !== null) {
             $this->url = self::normalizeUrl($url);
         }
 
-        if ($model !== null) {
-            $this->model = self::normalizeModel($model);
+        $newModels = $models !== null ? self::normalizeModels($models) : $this->models;
+
+        if ($defaultModel !== null) {
+            $candidate = trim($defaultModel);
+
+            if ($candidate === '') {
+                $candidate = $newModels[0];
+            }
+
+            if (!\in_array($candidate, $newModels, true)) {
+                throw new \DomainException('account.opencode_credential.model_not_available');
+            }
+
+            $this->models = $newModels;
+            $this->defaultModel = $candidate;
+        } elseif (\in_array($this->defaultModel, $newModels, true)) {
+            $this->models = $newModels;
+        } else {
+            // Набор моделей заменён, а прежний дефолт в него не входит —
+            // аккуратно переключаемся на первую модель нового набора.
+            $this->models = $newModels;
+            $this->defaultModel = $newModels[0];
         }
 
         if ($apiKeyCipher !== null) {
@@ -153,14 +213,35 @@ final class OpenCodeCredential
         return $this->name;
     }
 
+    public function getProvider(): string
+    {
+        return $this->provider;
+    }
+
     public function getUrl(): string
     {
         return $this->url;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function getModels(): array
+    {
+        return $this->models;
+    }
+
+    public function getDefaultModel(): string
+    {
+        return $this->defaultModel;
+    }
+
+    /**
+     * Синоним дефолтной модели для легаси-потребителей.
+     */
     public function getModel(): string
     {
-        return $this->model;
+        return $this->defaultModel;
     }
 
     public function getApiKeyCipher(): string
@@ -233,6 +314,11 @@ final class OpenCodeCredential
         return $name;
     }
 
+    private static function normalizeProvider(string $provider): string
+    {
+        return ProvayderOpenCode::izKoda($provider)->value;
+    }
+
     private static function normalizeUrl(string $url): string
     {
         $url = trim($url);
@@ -248,18 +334,61 @@ final class OpenCodeCredential
         return $url;
     }
 
-    private static function normalizeModel(string $model): string
+    /**
+     * @param list<string> $models
+     *
+     * @return list<string>
+     */
+    private static function normalizeModels(array $models): array
     {
-        $model = trim($model);
-
-        if ($model === '') {
-            throw new \DomainException('account.opencode_credential.empty_model');
+        if ($models === []) {
+            throw new \DomainException('account.opencode_credential.empty_models');
         }
 
-        if (\strlen($model) > 128) {
-            throw new \DomainException('account.opencode_credential.model_too_long');
+        if (\count($models) > self::MAX_MODELS) {
+            throw new \DomainException('account.opencode_credential.too_many_models');
         }
 
-        return $model;
+        $normalized = [];
+        $seen = [];
+
+        foreach ($models as $model) {
+            $model = trim($model);
+
+            if ($model === '') {
+                throw new \DomainException('account.opencode_credential.empty_model');
+            }
+
+            if (\strlen($model) > self::MAX_MODEL_LENGTH) {
+                throw new \DomainException('account.opencode_credential.model_too_long');
+            }
+
+            if (isset($seen[$model])) {
+                throw new \DomainException('account.opencode_credential.duplicate_model');
+            }
+
+            $seen[$model] = true;
+            $normalized[] = $model;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param list<string> $models
+     */
+    private static function resolveDefaultModel(array $models, string $defaultModel): string
+    {
+        $defaultModel = trim($defaultModel);
+
+        if ($defaultModel === '') {
+            return $models[0];
+        }
+
+        if (!\in_array($defaultModel, $models, true)) {
+            throw new \DomainException('account.opencode_credential.model_not_available');
+        }
+
+        return $defaultModel;
     }
 }

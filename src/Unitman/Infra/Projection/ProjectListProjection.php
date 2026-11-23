@@ -79,7 +79,13 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             $fact->mainBranch,
             false,
             ProjectList\ProjectListStateType::NEW,
-            new ProjectList\NastroikiHukaProekta($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie),
+            new ProjectList\NastroikiHukaProekta(
+                $fact->avtosozdanie,
+                $fact->avtoobnovlenie,
+                $fact->avtoudalenie,
+                $fact->obnovlenieBezSbrosaPodgotovki,
+                $fact->vebhukNastroen,
+            ),
             $fact->proxyHost,
             memoryLimit: $fact->memoryLimit,
             zashishennieVetki: $fact->zashishennieVetki
@@ -94,11 +100,12 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
 
     function handleNastroikiHukaProektaUstanovleni(NastroikiHukaProektaUstanovleni $fact): void
     {
-        $this->projectListRepository->updateNastroikiHuka($fact->id,new ProjectList\NastroikiHukaProekta(
+        $this->projectListRepository->updateNastroikiHuka($fact->id, new ProjectList\NastroikiHukaProekta(
             $fact->avtosozdanie,
             $fact->avtoobnovlenie,
             $fact->avtoudalenie,
-            $fact->obnovlenieBezSbrosaPodgotovki
+            $fact->obnovlenieBezSbrosaPodgotovki,
+            $fact->vebhukNastroen,
         ));
     }
 

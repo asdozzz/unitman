@@ -9,7 +9,8 @@ final class ObnovitNastroikiHuka
         public bool $avtosozdanie,
         public bool $avtoobnovlenie,
         public bool $avtoudalenie,
-        public bool $obnovlenieBezSbrosaPodgotovki
+        public bool $obnovlenieBezSbrosaPodgotovki,
+        public bool $vebhukNastroen = false,
     )
     {
     }

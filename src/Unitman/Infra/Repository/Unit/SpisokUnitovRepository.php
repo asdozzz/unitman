@@ -494,11 +494,26 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
     private function sqlSNanyatostyu(string $from, string $where): string
     {
         $zanyatostTable = SqlZanyatostUnitaRepository::TABLE;
+        $namereniyaTable = SqlOtlozhennieDeistviyaRepository::TABLE;
 
-        return "SELECT t.payload, z.tip as zanyat_tip
+        return "SELECT t.payload, z.tip as zanyat_tip, i.namereniya
             FROM $from
             LEFT JOIN $zanyatostTable z
                 ON z.unit_id = t.payload->>'id' AND z.istekaet_v > now()
+            LEFT JOIN LATERAL (
+                SELECT jsonb_agg(
+                    jsonb_build_object(
+                        'tipSobitiya', d.tip_sobitiya,
+                        'vetka', d.payload->>'vetka',
+                        'unixtime', (nullif(d.payload->>'unixtime', ''))::bigint,
+                        'createdAt', extract(epoch from d.created_at)::bigint,
+                        'status', d.status
+                    )
+                    ORDER BY d.id
+                ) AS namereniya
+                FROM $namereniyaTable d
+                WHERE d.unit_id = t.payload->>'id'
+            ) i ON true
             $where";
     }
 
@@ -518,8 +533,16 @@ final class SpisokUnitovRepository implements CanFindUnitDouble, CanGetUnitList,
         }
 
         $tip = $row['zanyat_tip'] ?? null;
+        $unit = $this->obogatitZanyatostyu($unit, is_string($tip) ? $tip : null);
 
-        return $this->obogatitZanyatostyu($unit, is_string($tip) ? $tip : null);
+        $namereniya = $row['namereniya'] ?? null;
+        if (is_string($namereniya)) {
+            $namereniya = json_decode($namereniya, true);
+        }
+
+        $unit['namereniya'] = is_array($namereniya) ? $namereniya : [];
+
+        return $unit;
     }
 
     /**

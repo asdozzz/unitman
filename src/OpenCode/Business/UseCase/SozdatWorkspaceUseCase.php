@@ -42,6 +42,8 @@ final class SozdatWorkspaceUseCase
 
         $this->credentials->trebovatVladelca($accountId, $credentialId);
 
+        $model = $this->credentials->razreshitModel($accountId, $credentialId, $command->model);
+
         $name = trim($command->name);
         $branch = trim($command->branch);
         $projectIds = $this->normalizeProjectIds($command->projectIds);
@@ -68,6 +70,7 @@ final class SozdatWorkspaceUseCase
             $projects,
             $command->prompt,
             time(),
+            $model === '' ? null : $model,
         );
 
         $this->sessionRepository->save($session);
@@ -121,8 +124,8 @@ final class SozdatWorkspaceUseCase
      * Переопределения веток: проект обязан входить в `projectIds`, ветка —
      * быть непустой и не длиннее лимита, дубликат проекта запрещён.
      *
-     * @param list<array{projectId?: mixed, branch?: mixed}> $projectBranches
-     * @param list<string>                                   $projectIds
+     * @param list<mixed>  $projectBranches сырые данные из тела запроса
+     * @param list<string> $projectIds
      *
      * @return array<string, string> projectId => branch
      */

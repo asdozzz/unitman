@@ -7,6 +7,7 @@ namespace App\Unitman\Infra\Repository\Unit;
 use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Model\Unit\OtlozhennoeDeistvie;
 use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
+use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use Doctrine\DBAL\Connection;
 
 final class SqlOtlozhennieDeistviyaRepository implements OtlozhennieDeistviyaRepository
@@ -32,18 +33,20 @@ final class SqlOtlozhennieDeistviyaRepository implements OtlozhennieDeistviyaRep
         TipSobitiya $tipSobitiya,
         array $payload,
         \DateTimeImmutable $now,
+        string $status = OtlozhennoeDeistvie::STATUS_READY,
     ): void {
         $table = self::TABLE;
 
         $this->connection->executeStatement(
-            "insert into $table (unit_id, project_id, tip_sobitiya, payload, created_at, attempts, next_attempt_at)
-             values (:unitId, :projectId, :tip, cast(:payload as jsonb), :now, 0, :now)
+            "insert into $table (unit_id, project_id, tip_sobitiya, payload, created_at, attempts, next_attempt_at, status)
+             values (:unitId, :projectId, :tip, cast(:payload as jsonb), :now, 0, :now, :status)
              on conflict (unit_id, tip_sobitiya) do update
                  set project_id = excluded.project_id,
                      payload = excluded.payload,
                      created_at = excluded.created_at,
                      attempts = 0,
                      next_attempt_at = excluded.next_attempt_at,
+                     status = excluded.status,
                      last_error = null",
             [
                 'unitId' => $unitId,
@@ -51,6 +54,7 @@ final class SqlOtlozhennieDeistviyaRepository implements OtlozhennieDeistviyaRep
                 'tip' => $tipSobitiya->value,
                 'payload' => json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
                 'now' => $now->format(self::DATETIME_FORMAT),
+                'status' => $status,
             ]
         );
     }
@@ -61,9 +65,15 @@ final class SqlOtlozhennieDeistviyaRepository implements OtlozhennieDeistviyaRep
 
         $rows = $this->connection->fetchAllAssociative(
             "select * from $table
-             where unit_id = :unitId and next_attempt_at <= :now
+             where unit_id = :unitId
+               and status = :status
+               and next_attempt_at <= :now
              order by id asc",
-            ['unitId' => $unitId, 'now' => $now->format(self::DATETIME_FORMAT)]
+            [
+                'unitId' => $unitId,
+                'status' => OtlozhennoeDeistvie::STATUS_READY,
+                'now' => $now->format(self::DATETIME_FORMAT),
+            ]
         );
 
         return $this->makeModels($rows);
@@ -81,11 +91,15 @@ final class SqlOtlozhennieDeistviyaRepository implements OtlozhennieDeistviyaRep
 
         $rows = $this->connection->fetchAllAssociative(
             "select * from $table
-             where next_attempt_at <= :now
+             where status = :status
+               and next_attempt_at <= :now
              order by next_attempt_at asc
              limit $limit
              for update skip locked",
-            ['now' => $now->format(self::DATETIME_FORMAT)]
+            [
+                'status' => OtlozhennoeDeistvie::STATUS_READY,
+                'now' => $now->format(self::DATETIME_FORMAT),
+            ]
         );
 
         return $this->makeModels($rows);
@@ -127,6 +141,106 @@ final class SqlOtlozhennieDeistviyaRepository implements OtlozhennieDeistviyaRep
         $this->udovletvorit($unitId, $tipSobitiya);
     }
 
+    public function estNamerenieUdaleniya(string $unitId): bool
+    {
+        $table = self::TABLE;
+
+        $result = $this->connection->fetchOne(
+            "select 1 from $table
+             where unit_id = :unitId
+               and tip_sobitiya in (:udalenie, :slianie)
+             limit 1",
+            [
+                'unitId' => $unitId,
+                'udalenie' => TipSobitiya::VETKA_UDALENA->value,
+                'slianie' => TipSobitiya::VETKA_SMERZHENA->value,
+            ]
+        );
+
+        return $result !== false;
+    }
+
+    public function uderzhat(string $unitId, TipSobitiya $tipSobitiya): void
+    {
+        $this->connection->update(
+            self::TABLE,
+            ['status' => OtlozhennoeDeistvie::STATUS_HELD_AUTO_OBNOVLENIE],
+            ['unit_id' => $unitId, 'tip_sobitiya' => $tipSobitiya->value]
+        );
+    }
+
+    public function osvoboditUderzhannie(string $projectId, \DateTimeImmutable $now): int
+    {
+        $table = self::TABLE;
+
+        return (int)$this->connection->executeStatement(
+            "update $table
+             set status = :ready,
+                 next_attempt_at = :now
+             where project_id = :projectId
+               and status = :held
+               and tip_sobitiya = :tip",
+            [
+                'ready' => OtlozhennoeDeistvie::STATUS_READY,
+                'now' => $now->format(self::DATETIME_FORMAT),
+                'projectId' => $projectId,
+                'held' => OtlozhennoeDeistvie::STATUS_HELD_AUTO_OBNOVLENIE,
+                'tip' => TipSobitiya::KOD_OBNOVLEN->value,
+            ]
+        );
+    }
+
+    /**
+     * @return string[]
+     */
+    public function poluchitUnitIdsSPoGotovimi(string $projectId, \DateTimeImmutable $now): array
+    {
+        $table = self::TABLE;
+
+        $rows = $this->connection->fetchAllAssociative(
+            "select distinct unit_id from $table
+             where project_id = :projectId
+               and status = :ready
+               and next_attempt_at <= :now",
+            [
+                'projectId' => $projectId,
+                'ready' => OtlozhennoeDeistvie::STATUS_READY,
+                'now' => $now->format(self::DATETIME_FORMAT),
+            ]
+        );
+
+        return array_map(
+            static fn(array $row): string => (string)$row['unit_id'],
+            $rows
+        );
+    }
+
+    public function osvoboditUderzhannieDlyaVsehProektov(\DateTimeImmutable $now): int
+    {
+        $table = self::TABLE;
+        $projectTable = SqlProjectListRepository::TABLE;
+
+        return (int)$this->connection->executeStatement(
+            "update $table d
+             set status = :ready,
+                 next_attempt_at = :now
+             from $projectTable p
+             where d.project_id = p.id
+               and d.status = :held
+               and d.tip_sobitiya = :tip
+               and coalesce(
+                   (p.payload->'nastroikiHukaProekta'->>'avtoobnovlenie')::boolean,
+                   true
+               ) = true",
+            [
+                'ready' => OtlozhennoeDeistvie::STATUS_READY,
+                'now' => $now->format(self::DATETIME_FORMAT),
+                'held' => OtlozhennoeDeistvie::STATUS_HELD_AUTO_OBNOVLENIE,
+                'tip' => TipSobitiya::KOD_OBNOVLEN->value,
+            ]
+        );
+    }
+
     public function udalitUstarevshie(\DateTimeImmutable $before): int
     {
         $table = self::TABLE;
@@ -162,6 +276,7 @@ final class SqlOtlozhennieDeistviyaRepository implements OtlozhennieDeistviyaRep
             new \DateTimeImmutable((string)$row['next_attempt_at']),
             (int)$row['id'],
             $row['last_error'] === null ? null : (string)$row['last_error'],
+            (string)($row['status'] ?? OtlozhennoeDeistvie::STATUS_READY),
         );
     }
 

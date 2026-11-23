@@ -9,11 +9,8 @@ use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
-use App\Unitman\Business\UseCase\Unit\DobavitProzesObnovleniyaUseCase;
-use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
-use App\Unitman\Business\UseCase\Unit\OtlozhitDeistvieNadUnitomUseCase;
+use App\Unitman\Business\UseCase\Unit\ObrabotatSostoyanieVetkiUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitSystemoiUseCase;
-use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\SobitiePayloadDecoder;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\SobitiePayloadException;
 use App\Unitman\Infra\Jobs\SobitiyaIzHranilisha\StorageTypeAdapter\StorageTypeAdapterFactory;
@@ -42,12 +39,9 @@ final class SobitiyaIzHranilishaActivity
         private ProjectRepository $projectRepository,
         private RepoRepository $repoRepository,
         private SpisokUnitovRepository $spisokUnitovRepository,
-        private DobavitProzesObnovleniyaUseCase $dobavitProzesObnovleniyaUseCase,
-        private DobavitProzesUdaleniyaUseCase $dobavitProzesUdaleniyaUseCase,
         private UnitRepository $unitRepository,
         private SozdatUnitSystemoiUseCase $sozdatUnitSystemoiUseCase,
-        private ProverkaSvobodyUnita $proverkaSvobody,
-        private OtlozhitDeistvieNadUnitomUseCase $otlozhitDeistvieNadUnitomUseCase,
+        private ObrabotatSostoyanieVetkiUseCase $obrabotatSostoyanieVetki,
         private SobitiePayloadDecoder $payloadDecoder,
         private LoggerInterface $logger,
     )
@@ -84,6 +78,16 @@ final class SobitiyaIzHranilishaActivity
         }
 
         $dannieSobitiya = $adapter->poluchitDannieSobitiya($payload, $project->getMainBranchName());
+
+        /*
+         * Валидное событие доказывает, что Git-вебхук настроен. С этого
+         * момента polling для проекта выключается, а флаг остаётся видимым
+         * в настройках.
+         */
+        if (!$project->poluchitNastroikiHuka()->vebhukNastroen) {
+            $project->otmetitVebhukNastroennim();
+            $this->projectRepository->save($project);
+        }
 
         $result = match ($dannieSobitiya->tipSobitiya) {
             TipSobitiya::KOD_OBNOVLEN => $this->obnovitUnixtimePoslednegoIzmeneniya($project, $dannieSobitiya),
@@ -134,53 +138,27 @@ final class SobitiyaIzHranilishaActivity
         $otlozheno = 0;
         foreach ($ids as $id) {
             try {
-                $unit = $this->unitRepository->getById($id);
-                /*
-                 * Метка времени обновляется немедленно всегда: это событие
-                 * event store, раннер в нём не участвует, и занятость юнита
-                 * ему не мешает.
-                 */
-                $unit->izmenitVremyaPoslednegoIzmeneniyaKodaVHranilishe($dannieSobitiya->unixtime);
-                $this->unitRepository->save($unit);
+                $result = $this->obrabotatSostoyanieVetki->handle(
+                    $this->unitRepository->getById($id),
+                    TipSobitiya::KOD_OBNOVLEN,
+                    $dannieSobitiya,
+                );
 
-                if (!$project->poluchitNastroikiHuka()->avtoobnovlenie) {
-                    continue;
-                }
-
-                if (!$unit->esliNugnoObnovitKodUnita()) {
-                    $errs[] = 'ne nugno obnovlyat';
-
-                    continue;
-                }
-
-                /*
-                 * Несобранный юнит не откладываем: такое состояние не
-                 * транзиентное (сам он не соберётся), и намерение висело бы
-                 * вечно, пока юнит не удалят. Сохраняем прежнюю ошибку.
-                 */
-                if (!$unit->esliSobran()) {
-                    $errs[] = 'invalid status';
-
-                    continue;
-                }
-
-                /*
-                 * Проверка свободы выполняется явно: `handleSystem` передаёт
-                 * `neproveryatProzesi: true`, и агрегат не остановит запуск
-                 * обновления. Событие не теряем — откладываем до освобождения.
-                 */
-                if (!$this->proverkaSvobody->svoboden($unit)) {
-                    $this->otlozhitDeistvieNadUnitomUseCase->handle(
-                        $unit,
-                        TipSobitiya::KOD_OBNOVLEN,
-                        $dannieSobitiya
-                    );
+                if ($result === ObrabotatSostoyanieVetkiUseCase::DEFERRED
+                    || $result === ObrabotatSostoyanieVetkiUseCase::HELD
+                ) {
                     $otlozheno++;
 
                     continue;
                 }
 
-                $this->dobavitProzesObnovleniyaUseCase->handleSystem($id);
+                if (!in_array($result, [
+                    ObrabotatSostoyanieVetkiUseCase::OK,
+                    ObrabotatSostoyanieVetkiUseCase::NOT_NEEDED,
+                    ObrabotatSostoyanieVetkiUseCase::PENDING_DELETE,
+                ], true)) {
+                    $errs[] = $result;
+                }
             } catch (\Exception $e) {
                 $errs[] = $e->getMessage();
             }
@@ -212,9 +190,6 @@ final class SobitiyaIzHranilishaActivity
 
     private function udalitUniti(Project $project, DannieSobitiya $dannieSobitiya): string
     {
-        if (!$project->poluchitNastroikiHuka()->avtoudalenie) {
-            return self::OK;
-        }
         $ids = $this->spisokUnitovRepository->findIdsByBranch($project->getId(), $dannieSobitiya->vetka);
 
         if (empty($ids)) {
@@ -225,26 +200,21 @@ final class SobitiyaIzHranilishaActivity
         $otlozheno = 0;
         foreach ($ids as $id) {
             try {
-                $unit = $this->unitRepository->getById($id);
+                $result = $this->obrabotatSostoyanieVetki->handle(
+                    $this->unitRepository->getById($id),
+                    $dannieSobitiya->tipSobitiya,
+                    $dannieSobitiya,
+                );
 
-                /*
-                 * Удаление занятого юнита откладываем: идущий поток OpenCode
-                 * продолжает писать в юнит, и удаление оборвало бы его на
-                 * середине. Проверка явная по той же причине, что и для
-                 * обновления: `handleSystem` отключает проверки агрегата.
-                 */
-                if (!$this->proverkaSvobody->svoboden($unit)) {
-                    $this->otlozhitDeistvieNadUnitomUseCase->handle(
-                        $unit,
-                        $dannieSobitiya->tipSobitiya,
-                        $dannieSobitiya
-                    );
+                if ($result === ObrabotatSostoyanieVetkiUseCase::DEFERRED) {
                     $otlozheno++;
 
                     continue;
                 }
 
-                $this->dobavitProzesUdaleniyaUseCase->handleSystem($id);
+                if ($result !== ObrabotatSostoyanieVetkiUseCase::OK) {
+                    $errs[] = $result;
+                }
             } catch (\Exception $e) {
                 $errs[] = $e->getMessage();
             }

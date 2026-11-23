@@ -548,7 +548,11 @@ final class RunnerApi implements RunnerApiInterface
     {
         // Реквизиты забираются до старта workflow: если ключ не расшифровывается
         // или реквизиты чужие, ошибка возвращается сразу, без «висящего» workflow.
-        $rekvizity = $this->rekvizityOpenCode->poluchitRekvizity($command->AccountId, $command->CredentialId);
+        $rekvizity = $this->rekvizityOpenCode->poluchitRekvizity(
+            $command->AccountId,
+            $command->CredentialId,
+            $command->Model,
+        );
 
         $this->zaregistrirovatProgressToken($workflowId);
 

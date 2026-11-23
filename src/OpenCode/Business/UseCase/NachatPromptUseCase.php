@@ -46,7 +46,7 @@ final class NachatPromptUseCase
             throw new \DomainException('opencode.turn.awaiting_answer');
         }
 
-        $turn = $this->launcher->zapustit($session, $command->text, [], $units);
+        $turn = $this->launcher->zapustit($session, $command->text, [], $units, $command->model);
 
         return new RezultatZapuskaHoda(
             $turn->getId(),

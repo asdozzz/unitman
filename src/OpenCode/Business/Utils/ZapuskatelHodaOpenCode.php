@@ -42,6 +42,7 @@ final class ZapuskatelHodaOpenCode
         private UmeetUpravlyatUnitami $unitami,
         private UmeetPoluchatTokenRedaktirovaniyaUnita $tokeny,
         private OpredelitelRezhimaHodaOpenCode $rezhimHoda,
+        private OpredelitelModeliHodaOpenCode $modeli,
     ) {
     }
 
@@ -49,9 +50,21 @@ final class ZapuskatelHodaOpenCode
      * @param list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers
      * @param list<PrivyazkaKUnitu> $units живые юниты, прошедшие гейт готовности; первый — cwd хода
      */
-    public function zapustit(SessiyaOpenCode $session, string $prompt, array $answers, array $units): HodOpenCode
-    {
+    public function zapustit(
+        SessiyaOpenCode $session,
+        string $prompt,
+        array $answers,
+        array $units,
+        ?string $model = null,
+    ): HodOpenCode {
         $now = time();
+
+        $razreshennayaModel = $this->modeli->opredelit(
+            $session->getAccountId(),
+            $session->getCredentialId(),
+            $model,
+            $session->getModel(),
+        );
 
         $turn = HodOpenCode::create(
             $this->uuidGenerator->makeGuid(),
@@ -61,6 +74,7 @@ final class ZapuskatelHodaOpenCode
             $prompt,
             $answers,
             $now,
+            $razreshennayaModel,
         );
 
         $history = IstoriyaDialogaOpenCode::sobrat(
@@ -111,6 +125,7 @@ final class ZapuskatelHodaOpenCode
                 $workspaceKontekst,
                 $readOnly,
                 $token,
+                model: $razreshennayaModel,
             );
         } catch (\Throwable $e) {
             if ($zahvacheno) {

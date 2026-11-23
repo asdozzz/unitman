@@ -268,6 +268,73 @@ final class RunnerApiWorkspaceTest extends TestCase
         self::assertSame($projects, $captured->WorkspaceProjects);
     }
 
+    public function test_nachat_hod_peredayot_model_v_rekvizity_i_razreshennuyu_model_v_aktivnost(): void
+    {
+        $captured = null;
+
+        $client = $this->createMock(WorkflowClient::class);
+        $client->method('newWorkflowStub')->willReturn($this->createMock(WorkflowStubInterface::class));
+        $client->expects(self::once())
+            ->method('start')
+            ->willReturnCallback(static function (object $workflow, VipolnitHodOpenCode $command) use (&$captured) {
+                $captured = $command;
+                throw new \RuntimeException('stop');
+            });
+
+        // AccountApi разрешает переданную модель и возвращает её в реквизитах.
+        $rekvizity = $this->createMock(UmeetPoluchatRekvizityOpenCode::class);
+        $rekvizity->expects(self::once())
+            ->method('poluchitRekvizity')
+            ->with('account-1', 'credential-1', 'gpt-4o')
+            ->willReturn(new RekvizityOpenCode('credential-1', 'https://opencode', 'gpt-4o', 'secret'));
+
+        $storage = $this->createMock(UmeetHranitProgressZadachi::class);
+
+        try {
+            $this->api($client, $storage, $rekvizity)->nachatHodOpenCode(
+                'turn-wf',
+                new NachatHodOpenCode('account-1', 'credential-1', null, 'prompt', Model: 'gpt-4o'),
+            );
+        } catch (\RuntimeException) {
+        }
+
+        self::assertInstanceOf(VipolnitHodOpenCode::class, $captured);
+        self::assertSame('gpt-4o', $captured->Model);
+    }
+
+    public function test_nachat_hod_bez_modeli_peredayot_null_i_beret_razreshennuyu_default(): void
+    {
+        $captured = null;
+
+        $client = $this->createMock(WorkflowClient::class);
+        $client->method('newWorkflowStub')->willReturn($this->createMock(WorkflowStubInterface::class));
+        $client->expects(self::once())
+            ->method('start')
+            ->willReturnCallback(static function (object $workflow, VipolnitHodOpenCode $command) use (&$captured) {
+                $captured = $command;
+                throw new \RuntimeException('stop');
+            });
+
+        $rekvizity = $this->createMock(UmeetPoluchatRekvizityOpenCode::class);
+        $rekvizity->expects(self::once())
+            ->method('poluchitRekvizity')
+            ->with('account-1', 'credential-1', null)
+            ->willReturn(new RekvizityOpenCode('credential-1', 'https://opencode', 'default-model', 'secret'));
+
+        $storage = $this->createMock(UmeetHranitProgressZadachi::class);
+
+        try {
+            $this->api($client, $storage, $rekvizity)->nachatHodOpenCode(
+                'turn-wf',
+                new NachatHodOpenCode('account-1', 'credential-1', null, 'prompt'),
+            );
+        } catch (\RuntimeException) {
+        }
+
+        self::assertInstanceOf(VipolnitHodOpenCode::class, $captured);
+        self::assertSame('default-model', $captured->Model);
+    }
+
     private function api(
         WorkflowClient $client,
         ?UmeetHranitProgressZadachi $storage = null,

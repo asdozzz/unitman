@@ -28,6 +28,7 @@ final class HodOpenCode
         private ?string $errorKey,
         private int $createdAt,
         private ?int $finishedAt,
+        private ?string $model = null,
     ) {
     }
 
@@ -42,6 +43,7 @@ final class HodOpenCode
         string $requestText,
         array $answers,
         int $now,
+        ?string $model = null,
     ): self {
         if (trim($requestText) === '') {
             throw new \DomainException('opencode.turn.request_required');
@@ -59,6 +61,7 @@ final class HodOpenCode
             null,
             $now,
             null,
+            $model,
         );
     }
 
@@ -77,6 +80,7 @@ final class HodOpenCode
         ?string $errorKey,
         int $createdAt,
         ?int $finishedAt,
+        ?string $model = null,
     ): self {
         return new self(
             $id,
@@ -90,6 +94,7 @@ final class HodOpenCode
             $errorKey,
             $createdAt,
             $finishedAt,
+            $model,
         );
     }
 
@@ -149,6 +154,14 @@ final class HodOpenCode
     public function getFinishedAt(): ?int
     {
         return $this->finishedAt;
+    }
+
+    /**
+     * Модель, на которой выполнялся ход.
+     */
+    public function getModel(): ?string
+    {
+        return $this->model;
     }
 
     /**
@@ -232,7 +245,8 @@ final class HodOpenCode
      *     result: array<string, mixed>|null,
      *     errorKey: string|null,
      *     createdAt: int,
-     *     finishedAt: int|null
+     *     finishedAt: int|null,
+     *     model: string|null
      * }
      */
     public function toArray(): array
@@ -249,6 +263,7 @@ final class HodOpenCode
             'errorKey' => $this->errorKey,
             'createdAt' => $this->createdAt,
             'finishedAt' => $this->finishedAt,
+            'model' => $this->model,
         ];
     }
 }

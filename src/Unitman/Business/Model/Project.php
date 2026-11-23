@@ -128,7 +128,13 @@ final class Project implements AggregateRoot
 
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
-        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie, $fact->obnovlenieBezSbrosaPodgotovki);
+        $this->nastroikiHuka = new NastroikiHuka(
+            $fact->avtosozdanie,
+            $fact->avtoobnovlenie,
+            $fact->avtoudalenie,
+            $fact->obnovlenieBezSbrosaPodgotovki,
+            $fact->vebhukNastroen,
+        );
         $this->zashishennieVetki = $fact->zashishennieVetki;
     }
 
@@ -210,13 +216,42 @@ final class Project implements AggregateRoot
             $command->avtosozdanie,
             $command->avtoobnovlenie,
             $command->avtoudalenie,
-            $command->obnovlenieBezSbrosaPodgotovki
+            $command->obnovlenieBezSbrosaPodgotovki,
+            $command->vebhukNastroen,
+        ));
+    }
+
+    /**
+     * Фиксирует, что Git-вебхук проекта уже присылал валидное событие.
+     *
+     * Флаг управляет polling: пока он false, Unitman сам опрашивает ветки.
+     * Повторный вызов идемпотентен и не пишет лишнее событие.
+     */
+    public function otmetitVebhukNastroennim(): void
+    {
+        if ($this->nastroikiHuka->vebhukNastroen) {
+            return;
+        }
+
+        $this->recordThat(new NastroikiHukaProektaUstanovleni(
+            $this->getId(),
+            $this->nastroikiHuka->avtosozdanie,
+            $this->nastroikiHuka->avtoobnovlenie,
+            $this->nastroikiHuka->avtoudalenie,
+            $this->nastroikiHuka->obnovlenieBezSbrosaPodgotovki,
+            true,
         ));
     }
 
     private function applyNastroikiHukaProektaUstanovleni(NastroikiHukaProektaUstanovleni $fact): void
     {
-        $this->nastroikiHuka = new NastroikiHuka($fact->avtosozdanie, $fact->avtoobnovlenie, $fact->avtoudalenie, $fact->obnovlenieBezSbrosaPodgotovki);
+        $this->nastroikiHuka = new NastroikiHuka(
+            $fact->avtosozdanie,
+            $fact->avtoobnovlenie,
+            $fact->avtoudalenie,
+            $fact->obnovlenieBezSbrosaPodgotovki,
+            $fact->vebhukNastroen,
+        );
     }
 
     private function findIndexUserById(string $userId): ?int

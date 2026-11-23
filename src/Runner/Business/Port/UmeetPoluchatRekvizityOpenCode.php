@@ -17,7 +17,14 @@ interface UmeetPoluchatRekvizityOpenCode
     /**
      * Реквизиты с расшифрованным ключом, принадлежащие указанному аккаунту.
      *
+     * `$model` — предпочтительная модель хода; `null` означает «дефолтная
+     * модель реквизитов». Возвращаемая модель уже разрешена AccountApi.
+     *
      * @throws \DomainException если реквизиты не найдены или принадлежат другому аккаунту
      */
-    public function poluchitRekvizity(string $accountId, string $credentialId): RekvizityOpenCode;
+    public function poluchitRekvizity(
+        string $accountId,
+        string $credentialId,
+        ?string $model = null,
+    ): RekvizityOpenCode;
 }

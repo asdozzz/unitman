@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Unitman\Business\UseCase\Unit;
 
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Model\Unit\OtlozhennoeDeistvie;
+use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
@@ -40,6 +42,7 @@ final class PrimenitOtlozhennieDeistviyaDlyaUnitaUseCase
         private OtlozhennieDeistviyaRepository $otlozhennieRepository,
         private ProverkaSvobodyUnita $proverkaSvobody,
         private UnitRepository $unitRepository,
+        private ProjectRepository $projectRepository,
         private DobavitProzesObnovleniyaUseCase $dobavitProzesObnovleniyaUseCase,
         private DobavitProzesUdaleniyaUseCase $dobavitProzesUdaleniyaUseCase,
         private LoggerInterface $logger,
@@ -86,13 +89,51 @@ final class PrimenitOtlozhennieDeistviyaDlyaUnitaUseCase
             return;
         }
 
+        $project = $this->projectRepository->getById($unit->getProjectId());
+
         foreach ($deistviya as $deistvie) {
-            $this->primenit($unitId, $deistvie, $now);
+            $this->primenit($unitId, $deistvie, $now, $project);
         }
     }
 
-    private function primenit(string $unitId, OtlozhennoeDeistvie $deistvie, \DateTimeImmutable $now): void
-    {
+    private function primenit(
+        string $unitId,
+        OtlozhennoeDeistvie $deistvie,
+        \DateTimeImmutable $now,
+        Project $project,
+    ): void {
+        if ($deistvie->tipSobitiya === TipSobitiya::KOD_OBNOVLEN) {
+            /*
+             * Удаление уже отменило смысл обновления. Оставлять обновление
+             * нельзя: оно либо обновит юнит перед удалением, либо создаст
+             * вторую конкурирующую строку.
+             */
+            if ($this->otlozhennieRepository->estNamerenieUdaleniya($unitId)) {
+                $this->otlozhennieRepository->udalitPoUnituITipu($unitId, TipSobitiya::KOD_OBNOVLEN);
+                $this->logger->info('unit.otlozhennoe_deistvie.obnovlenie_otmeneno', [
+                    'unitId' => $unitId,
+                    'reason' => 'est_namerenie_udaleniya',
+                ]);
+
+                return;
+            }
+
+            /*
+             * Автообновление выключили после создания намерения. Удерживаем
+             * строку без ретраев: она снова станет готовой, когда проект
+             * включит флаг.
+             */
+            if (!$project->poluchitNastroikiHuka()->avtoobnovlenie) {
+                $this->otlozhennieRepository->uderzhat($unitId, TipSobitiya::KOD_OBNOVLEN);
+                $this->logger->info('unit.otlozhennoe_deistvie.uderzhano', [
+                    'unitId' => $unitId,
+                    'reason' => 'avtoobnovlenie_viklucheno',
+                ]);
+
+                return;
+            }
+        }
+
         try {
             $this->zapustitProzes($unitId, $deistvie->tipSobitiya);
         } catch (\DomainException $e) {

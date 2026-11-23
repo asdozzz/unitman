@@ -41,7 +41,8 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     history: list<array{Role: string, Text: string}>,
      *     workspace: WorkspaceKontekst|null,
      *     readOnly: bool,
-     *     token: string|null
+     *     token: string|null,
+     *     model: string|null
      * }>
      */
     private array $vyzovy = [];
@@ -68,6 +69,7 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
         ?WorkspaceKontekst $workspace = null,
         bool $readOnly = false,
         ?string $token = null,
+        ?string $model = null,
     ): string {
         /** @var list<PrivyazkaKUnitu> $units */
         /** @var list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers */
@@ -96,6 +98,7 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
             'workspace' => $workspace,
             'readOnly' => $readOnly,
             'token' => $token,
+            'model' => $model,
         ];
 
         return $workflowId;
@@ -130,7 +133,8 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     history: list<array{Role: string, Text: string}>,
      *     workspace: WorkspaceKontekst|null,
      *     readOnly: bool,
-     *     token: string|null
+     *     token: string|null,
+     *     model: string|null
      * }>
      */
     public function vyzovy(): array
@@ -157,7 +161,8 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     history: list<array{Role: string, Text: string}>,
      *     workspace: WorkspaceKontekst|null,
      *     readOnly: bool,
-     *     token: string|null
+     *     token: string|null,
+     *     model: string|null
      * }|null
      */
     public function posledniiVyzov(): ?array

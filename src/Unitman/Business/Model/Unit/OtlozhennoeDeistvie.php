@@ -15,6 +15,9 @@ use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
  */
 final class OtlozhennoeDeistvie
 {
+    const STATUS_READY = 'ready';
+    const STATUS_HELD_AUTO_OBNOVLENIE = 'held_autoobnovlenie';
+
     /**
      * @param array $payload данные события: ветка, unixtime и т.п.
      */
@@ -27,6 +30,7 @@ final class OtlozhennoeDeistvie
         public readonly \DateTimeImmutable $nextAttemptAt,
         public readonly ?int $id = null,
         public readonly ?string $lastError = null,
+        public readonly string $status = self::STATUS_READY,
     )
     {
     }

@@ -9,6 +9,7 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\TipZanyatosti;
 use App\Unitman\Business\Model\Unit\ZanyatostUnita;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\Unit\ZanyatostUnitaRepository;
 use App\Unitman\Business\UseCase\Unit\DobavitProzesObnovleniyaUseCase;
@@ -78,6 +79,7 @@ final class DobavitProzesObnovleniyaUseCaseTest extends TestCase
             new SequenceGuidGenerator('prozes-'),
             $projectRepository,
             new ProverkaSvobodyUnita($zanyatostRepository),
+            $this->createMock(OtlozhennieDeistviyaRepository::class),
         );
     }
 

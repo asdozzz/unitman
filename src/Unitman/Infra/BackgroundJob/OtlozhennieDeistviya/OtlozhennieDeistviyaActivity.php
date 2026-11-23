@@ -50,6 +50,13 @@ final class OtlozhennieDeistviyaActivity
      */
     public function obrabotatOchered(\DateTimeImmutable $now, int $limit = self::BATCH_LIMIT): int
     {
+        /*
+         * Страховка на случай, если автообновление включили в обход
+         * ObnovitNastroikiHukaUseCase. Делаем до транзакции пачки, чтобы
+         * освобождённые строки попали в текущую выборку.
+         */
+        $this->otlozhennieRepository->osvoboditUderzhannieDlyaVsehProektov($now);
+
         $this->connection->beginTransaction();
 
         try {

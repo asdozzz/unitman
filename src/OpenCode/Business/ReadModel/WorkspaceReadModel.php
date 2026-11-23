@@ -36,6 +36,7 @@ final class WorkspaceReadModel
         public readonly int $createdAt,
         public readonly int $updatedAt,
         public readonly array $units = [],
+        public readonly ?string $model = null,
     ) {
     }
 
@@ -63,6 +64,7 @@ final class WorkspaceReadModel
                 static fn (WorkspaceUnit $unit): WorkspaceUnitReadModel => WorkspaceUnitReadModel::izModela($unit),
                 $workspace?->getUnits() ?? [],
             ),
+            $session->getModel(),
         );
     }
 
@@ -80,7 +82,8 @@ final class WorkspaceReadModel
      *     ideLink: string|null,
      *     createdAt: int,
      *     updatedAt: int,
-     *     units: list<array<string, mixed>>
+     *     units: list<array<string, mixed>>,
+     *     model: string|null
      * }
      */
     public function toArray(): array
@@ -105,6 +108,7 @@ final class WorkspaceReadModel
                 static fn (WorkspaceUnitReadModel $unit): array => $unit->toArray(),
                 $this->units,
             ),
+            'model' => $this->model,
         ];
     }
 }

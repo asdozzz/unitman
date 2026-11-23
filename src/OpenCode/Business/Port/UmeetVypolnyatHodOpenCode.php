@@ -45,6 +45,7 @@ interface UmeetVypolnyatHodOpenCode
         ?WorkspaceKontekst $workspace = null,
         bool $readOnly = false,
         ?string $token = null,
+        ?string $model = null,
     ): string;
 
     /**

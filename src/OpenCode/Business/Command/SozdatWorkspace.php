@@ -30,6 +30,7 @@ readonly class SozdatWorkspace implements JsonBodySerializableInterface
         public string $prompt = '',
         public string $credentialId = '',
         public array $projectBranches = [],
+        public ?string $model = null,
     ) {
     }
 }

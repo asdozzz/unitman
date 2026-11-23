@@ -36,6 +36,7 @@ final class SqlHodOpenCodeRepository implements HodOpenCodeRepository
                     ? json_encode($result->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
                     : null,
                 'error_key' => $turn->getErrorKey(),
+                'model' => $turn->getModel(),
                 'created_at' => $turn->getCreatedAt(),
                 'finished_at' => $turn->getFinishedAt(),
             ],
@@ -49,6 +50,7 @@ final class SqlHodOpenCodeRepository implements HodOpenCodeRepository
                 'answers_json' => ParameterType::STRING,
                 'result_json' => ParameterType::STRING,
                 'error_key' => ParameterType::STRING,
+                'model' => ParameterType::STRING,
                 'created_at' => ParameterType::INTEGER,
                 'finished_at' => ParameterType::INTEGER,
             ]
@@ -182,6 +184,7 @@ final class SqlHodOpenCodeRepository implements HodOpenCodeRepository
             is_string($row['error_key'] ?? null) && $row['error_key'] !== '' ? (string) $row['error_key'] : null,
             (int) $row['created_at'],
             isset($row['finished_at']) ? (int) $row['finished_at'] : null,
+            is_string($row['model'] ?? null) && $row['model'] !== '' ? (string) $row['model'] : null,
         );
     }
 

@@ -60,7 +60,7 @@ final class OtvetitNaVoprosUseCase
             throw new \DomainException('opencode.turn.answers_required');
         }
 
-        $novyiHod = $this->launcher->zapustit($session, $prompt, $answers, $units);
+        $novyiHod = $this->launcher->zapustit($session, $prompt, $answers, $units, $command->model);
 
         return new RezultatZapuskaHoda(
             $novyiHod->getId(),

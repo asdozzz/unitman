@@ -12,6 +12,7 @@ use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\LichniyToken\LichniyTokenListRepository;
 use App\Unitman\Business\Port\LichniyToken\LichniyTokenRepository;
 use App\Unitman\Business\Port\MediatekaService;
+use App\Unitman\Business\Port\Project\UmeetPoluchatSostoyanieVetki;
 use App\Unitman\Business\Port\Project\UmeetPoluchatTokenDlyaProekta;
 use App\Unitman\Business\Port\Project\UmeetProveryatPushTokenom;
 use App\Unitman\Business\Port\Project\UmeetSozdavatVetkuProekta;
@@ -19,6 +20,7 @@ use App\Unitman\Business\Port\Redaktor\UmeetPodpisivatSsylkuRedaktora;
 use App\Unitman\Business\Port\Repo\UmeetProveryatTokenHranilisha;
 use App\Unitman\Business\Port\UmeetShifrovatSekrety;
 use App\Unitman\Business\Port\Unit\UmeetPoluchatTokenRedaktirovaniya;
+use App\Unitman\Business\Port\Unit\UmeetPoluchatUnitiDlyaOprosaVetok;
 use App\Unitman\Business\Port\Project\CanGetProjectRunnerJobs;
 use App\Unitman\Business\Port\Queue\ZadachaVOchered;
 use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
@@ -42,6 +44,7 @@ use App\Unitman\Infra\Repository\LichniyToken\SqlLichniyTokenRepository;
 use App\Unitman\Infra\Repository\Project\ProjectRunnerJobRepository;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SqlOtlozhennieDeistviyaRepository;
+use App\Unitman\Infra\Repository\Unit\SqlUnitiDlyaOprosaVetokRepository;
 use App\Unitman\Infra\Repository\Unit\SqlZanyatostUnitaRepository;
 use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeFileRepository;
 use App\Unitman\Infra\Repository\VolumeType\SqlVolumeTypeRepository;
@@ -218,6 +221,8 @@ return function (ContainerConfigurator $configuration) {
     $services->alias(UmeetPoluchatTokenRedaktirovaniya::class, PersonalTokenResolver::class);
     $services->alias(UmeetPoluchatTokenDlyaProekta::class, PersonalTokenResolver::class);
     $services->alias(UmeetSozdavatVetkuProekta::class, StorageApiAdapterFactory::class);
+    $services->alias(UmeetPoluchatSostoyanieVetki::class, StorageApiAdapterFactory::class);
+    $services->set(UmeetPoluchatUnitiDlyaOprosaVetok::class, SqlUnitiDlyaOprosaVetokRepository::class);
     $services->alias(UmeetPodpisivatSsylkuRedaktora::class, HmacRedaktorLinkSigner::class);
 
     $services->set('unitman.lichniy_token.event_serializer', ConstructingMessageSerializer::class)

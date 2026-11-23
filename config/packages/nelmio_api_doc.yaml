@@ -193,23 +193,46 @@ nelmio_api_doc:
                             example: ru
                 SozdatRekvizityOpenCode:
                     type: object
-                    description: 'Реквизиты подключения к OpenCode (API-ключ шифруется на бэкенде)'
-                    required: [name, url, model, apiKey]
+                    description: 'Реквизиты подключения к OpenCode (API-ключ шифруется на бэкенде). Для известного провайдера `url` можно не передавать — подставляется `baseUrl` каталога; для `custom` он обязателен'
+                    required: [name, apiKey]
                     properties:
                         name:
                             type: string
                             maxLength: 128
                             description: 'Произвольное имя реквизитов, уникальное в рамках аккаунта'
                             example: 'Рабочий ключ'
+                        provider:
+                            type: string
+                            maxLength: 64
+                            default: custom
+                            description: 'Код провайдера из `GET /api/account/opencode/providers`; `custom` — произвольный OpenAI-совместимый эндпоинт'
+                            example: openai
                         url:
                             type: string
                             maxLength: 512
-                            description: Базовый URL API OpenCode
-                            example: 'https://api.opencode.ai'
+                            nullable: true
+                            description: 'Базовый URL API. Для известного провайдера игнорируется и подставляется из каталога, для `custom` обязателен (`account.opencode_credential.empty_url`)'
+                            example: 'https://api.openai.com/v1'
+                        models:
+                            type: array
+                            maxItems: 50
+                            uniqueItems: true
+                            description: 'Набор моделей реквизитов (1–50, без дубликатов). Пустой массив при заполненном legacy `model` трактуется как `[model]`'
+                            items:
+                                type: string
+                                maxLength: 128
+                            example: ['gpt-4o', 'gpt-4o-mini']
+                        defaultModel:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Дефолтная модель набора; пустое значение — первая модель из `models`'
+                            example: gpt-4o
                         model:
                             type: string
                             maxLength: 128
-                            description: Идентификатор модели OpenCode
+                            nullable: true
+                            description: 'Устаревший синоним единственной модели. При заполненном `model` и пустых `models` набором становится `[model]`'
                             example: 'claude-sonnet-4'
                         apiKey:
                             type: string
@@ -227,10 +250,29 @@ nelmio_api_doc:
                             type: string
                             maxLength: 128
                             nullable: true
+                        provider:
+                            type: string
+                            maxLength: 64
+                            nullable: true
+                            description: 'Новый провайдер; null — оставить прежний'
                         url:
                             type: string
                             maxLength: 512
                             nullable: true
+                        models:
+                            type: array
+                            maxItems: 50
+                            uniqueItems: true
+                            nullable: true
+                            description: 'Новый набор моделей (заменяет прежний целиком); null — оставить прежний'
+                            items:
+                                type: string
+                                maxLength: 128
+                        defaultModel:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Новая дефолтная модель; null — оставить прежнюю'
                         model:
                             type: string
                             maxLength: 128
@@ -250,7 +292,7 @@ nelmio_api_doc:
                 OpenCodeCredential:
                     type: object
                     description: 'Реквизиты OpenCode для показа пользователю (OpenCodeCredentialReadModel). Полный API-ключ отсутствует — только маска'
-                    required: [id, name, url, model, apiKeyHint, createdAt, updatedAt]
+                    required: [id, name, provider, url, models, defaultModel, model, apiKeyHint, createdAt, updatedAt]
                     properties:
                         id:
                             type: string
@@ -258,12 +300,27 @@ nelmio_api_doc:
                         name:
                             type: string
                             example: 'Рабочий ключ'
+                        provider:
+                            type: string
+                            description: 'Код провайдера из каталога'
+                            example: openai
                         url:
                             type: string
-                            example: 'https://api.opencode.ai'
+                            example: 'https://api.openai.com/v1'
+                        models:
+                            type: array
+                            description: 'Все модели реквизитов'
+                            items:
+                                type: string
+                            example: ['gpt-4o', 'gpt-4o-mini']
+                        defaultModel:
+                            type: string
+                            description: 'Дефолтная модель реквизитов'
+                            example: gpt-4o
                         model:
                             type: string
-                            example: 'claude-sonnet-4'
+                            description: 'Синоним `defaultModel` для обратной совместимости'
+                            example: gpt-4o
                         apiKeyHint:
                             type: string
                             description: 'Маска ключа: последние 4 символа'
@@ -276,6 +333,62 @@ nelmio_api_doc:
                             type: integer
                             description: Момент последнего изменения, unix timestamp (секунды)
                             example: 1762000000
+                ProviderOpenCode:
+                    type: object
+                    description: 'Элемент каталога провайдеров OpenCode (ProvayderOpenCodeReadModel); список моделей запрашивается отдельно'
+                    required: [code, name, baseUrl, modelsPath, authStyle, supportsModelList]
+                    properties:
+                        code:
+                            type: string
+                            description: 'Код провайдера; он же значение `provider` в реквизитах'
+                            example: openai
+                        name:
+                            type: string
+                            example: OpenAI
+                        baseUrl:
+                            type: string
+                            description: 'Базовый URL для подстановки в реквизиты; пустой для `custom`'
+                            example: 'https://api.openai.com/v1'
+                        modelsPath:
+                            type: string
+                            description: 'Путь эндпоинта списка моделей относительно `baseUrl`'
+                            example: /models
+                        authStyle:
+                            type: string
+                            description: 'Схема авторизации: bearer, api_key_header или none'
+                            example: bearer
+                        supportsModelList:
+                            type: boolean
+                            description: 'Поддерживает ли провайдер live-запрос списка моделей'
+                            example: true
+                SpisokModelei:
+                    type: object
+                    description: 'Результат загрузки списка моделей (SpisokModeleiReadModel). При отсутствии live-списка или ошибке провайдера отдаётся пустой список, `source: manual` и `errorKey`, HTTP 200'
+                    required: [provider, models, source, errorKey]
+                    properties:
+                        provider:
+                            type: string
+                            example: openai
+                        models:
+                            type: array
+                            items:
+                                type: string
+                            example: ['gpt-4o', 'gpt-4o-mini']
+                        source:
+                            type: string
+                            enum: [live, manual]
+                            description: '`live` — список получен от провайдера, `manual` — провайдер не отдаёт список или запрос завершился ошибкой'
+                            example: live
+                        errorKey:
+                            type: string
+                            nullable: true
+                            description: 'Ключ перевода ошибки провайдера; null при успехе'
+                            example: account.opencode_credential.provider_unavailable
+                        providerStatus:
+                            type: integer
+                            nullable: true
+                            description: 'HTTP-статус ответа провайдера; null, если ответа не было (сеть, таймаут) или список не запрашивался'
+                            example: 403
                 # --- OpenCode: сессии и ходы ---
                 SozdatSessiyu:
                     type: object
@@ -300,6 +413,12 @@ nelmio_api_doc:
                             items:
                                 type: string
                                 format: uuid
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Модель из набора реквизитов; пустое значение — дефолтная модель реквизитов. Недопустимая модель даёт `account.opencode_credential.model_not_available`'
+                            example: gpt-4o
                         unit:
                             description: 'Параметры нового юнита: он создаётся от имени владельца сессии по логике процессов Unitman. Нельзя указывать одновременно с `unitIds`'
                             allOf:
@@ -344,6 +463,12 @@ nelmio_api_doc:
                             minLength: 1
                             description: 'Текст промпта в открытом виде'
                             example: 'Добавь ретраи в клиент оплаты'
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Переопределение модели перед ходом; приоритет: запрос → модель сессии → дефолт реквизитов'
+                            example: gpt-4o-mini
                 OtvetitNaVopros:
                     type: object
                     description: 'Ответ на вопросы предыдущего хода; запускает новый ход'
@@ -359,6 +484,12 @@ nelmio_api_doc:
                             description: 'Ответы по каждому вопросу хода'
                             items:
                                 $ref: '#/components/schemas/OpenCodeAnswer'
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Переопределение модели для нового хода; приоритет: запрос → модель сессии → дефолт реквизитов'
+                            example: gpt-4o-mini
                 OpenCodeAnswer:
                     type: object
                     description: 'Ответ на один вопрос: выбранный вариант и/или свободный текст'
@@ -551,6 +682,12 @@ nelmio_api_doc:
                             format: uuid
                             nullable: true
                             description: 'Проект первого юнита (cwd), дубль `units[0].unitProjectId`'
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Модель, выбранная при создании сессии; null — будет использована дефолтная модель реквизитов'
+                            example: gpt-4o
                         archived:
                             type: boolean
                             description: 'Сессия в архиве: отображается в списке, но новые ходы запрещены'
@@ -623,6 +760,12 @@ nelmio_api_doc:
                         credentialId:
                             type: string
                             format: uuid
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Модель из набора реквизитов; пустое значение — дефолтная модель реквизитов'
+                            example: gpt-4o
                 SozdatUnitiWorkspace:
                     type: object
                     description: 'Создание юнитов для всех проектов workspace'
@@ -685,6 +828,12 @@ nelmio_api_doc:
                             enum: [CREATING, STARTING, RUNNING, ARCHIVING, ARCHIVED, DELETING, ERROR]
                         readOnly:
                             type: boolean
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Модель workspace-сессии; null — дефолтная модель реквизитов'
+                            example: gpt-4o
                         archived:
                             type: boolean
                             description: 'Логический архив: выставляется после успешной остановки контейнера'
@@ -884,6 +1033,12 @@ nelmio_api_doc:
                             type: string
                             enum: [RUNNING, AWAITING_INPUT, ANSWERED, FAILED]
                             example: AWAITING_INPUT
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                            description: 'Фактическая модель хода после разрешения приоритета; null — использовалась дефолтная модель реквизитов'
+                            example: gpt-4o-mini
                         requestText:
                             type: string
                             description: 'Текст, отправленный раннеру: промпт пользователя либо сводка ответов'
@@ -1507,6 +1662,31 @@ nelmio_api_doc:
                             type: string
                             format: uuid
                 # --- Unitman: ответы со списком/карточкой юнита ---
+                UnitIntention:
+                    type: object
+                    description: Отложенное намерение по юниту (вебхук или polling)
+                    required: [tipSobitiya, vetka, unixtime, createdAt, status]
+                    properties:
+                        tipSobitiya:
+                            type: string
+                            enum: [KOD_OBNOVLEN, VETKA_UDALENA, VETKA_SMERZHENA]
+                        vetka:
+                            type: string
+                            example: feature/123
+                        unixtime:
+                            type: integer
+                            description: Unix timestamp события ветки
+                            example: 1730000000
+                        createdAt:
+                            type: integer
+                            description: Unix timestamp создания намерения
+                            example: 1730000000
+                        status:
+                            type: string
+                            enum: [ready, held_autoobnovlenie]
+                            description: >-
+                                ready — можно применять; held_autoobnovlenie —
+                                ждёт включения автообновления проекта
                 # Единая схема элемента, которую возвращают /api/unit/list, /api/unit/moi
                 # (массив) и /api/unit/obnovit (один объект). Источник полей —
                 # SpisokUnitovReadModel и проекция SpisokUnitovProjection.
@@ -1579,6 +1759,11 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/UnitAction'
+                        namereniya:
+                            type: array
+                            description: Отложенные намерения по юниту (вебхук или polling)
+                            items:
+                                $ref: '#/components/schemas/UnitIntention'
                         svyazi:
                             type: array
                             description: Связи переменных юнита с юнитами, выбранными через хелпер. Заполняется из проекции `svyazi_unitov` и реконсилируется при изменении конфига
@@ -2296,7 +2481,7 @@ nelmio_api_doc:
                 ProjectHookSettings:
                     type: object
                     description: Настройки webhook проекта (NastroikiHukaProekta)
-                    required: [avtosozdanie, avtoobnovlenie, avtoudalenie, obnovlenieBezSbrosaPodgotovki]
+                    required: [avtosozdanie, avtoobnovlenie, avtoudalenie, obnovlenieBezSbrosaPodgotovki, vebhukNastroen]
                     properties:
                         avtosozdanie:
                             type: boolean
@@ -2306,6 +2491,12 @@ nelmio_api_doc:
                             type: boolean
                         obnovlenieBezSbrosaPodgotovki:
                             type: boolean
+                        vebhukNastroen:
+                            type: boolean
+                            description: >-
+                                Git-вебхук проекта уже присылал валидное событие.
+                                Пока false, Unitman сам опрашивает ветки репозитория.
+                            example: false
                 ProjectUser:
                     type: object
                     description: Пользователь проекта (ProjectUsersList)

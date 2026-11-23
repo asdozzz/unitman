@@ -13,6 +13,7 @@ use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Business\ReadModel\RezultatZapuskaHoda;
 use App\OpenCode\Business\Utils\IstoriyaDialogaOpenCode;
+use App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode;
 use App\OpenCode\Business\Utils\OtvetyNaVoprosyOpenCode;
 use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
 use App\OpenCode\Business\Workspace\Port\WorkspaceTurnRepository;
@@ -27,13 +28,14 @@ final class OtvetitNaVoprosWorkspaceUseCase
         private UmeetVypolnyatHodOpenCode $runner,
         private ProverkaDostupaWorkspaceSessii $dostup,
         private UuidGenerator $uuidGenerator,
+        private OpredelitelModeliHodaOpenCode $modeli,
     ) {
     }
 
     /**
-     * @param list<array{QuestionId?: mixed, OptionId?: mixed, Text?: mixed}> $answers
+     * @param list<mixed> $answers сырые ответы из тела запроса, валидируются ниже
      */
-    public function handle(string $turnId, array $answers): RezultatZapuskaHoda
+    public function handle(string $turnId, array $answers, ?string $model = null): RezultatZapuskaHoda
     {
         $accountId = $this->credentials->tekuschiiAccountId();
         $turn = $this->turns->getById($turnId);
@@ -74,6 +76,13 @@ final class OtvetitNaVoprosWorkspaceUseCase
             throw new \DomainException('opencode.turn.answers_required');
         }
 
+        $razreshennayaModel = $this->modeli->opredelit(
+            $accountId,
+            $workspace->getCredentialId(),
+            $model,
+            $workspace->getModel(),
+        );
+
         $readOnly = $workspace->getWorkspace()->isReadOnly();
         $now = time();
         $novyiHod = HodOpenCode::create(
@@ -84,6 +93,7 @@ final class OtvetitNaVoprosWorkspaceUseCase
             $prompt,
             $normalizovannie,
             $now,
+            $razreshennayaModel,
         );
 
         $history = IstoriyaDialogaOpenCode::sobrat(
@@ -108,6 +118,7 @@ final class OtvetitNaVoprosWorkspaceUseCase
             $kontekst,
             $readOnly,
             null,
+            model: $razreshennayaModel,
         );
 
         $this->turns->save($novyiHod);

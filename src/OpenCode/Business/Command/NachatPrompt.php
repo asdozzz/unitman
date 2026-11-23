@@ -17,6 +17,7 @@ readonly class NachatPrompt implements JsonBodySerializableInterface
     public function __construct(
         public string $sessionId = '',
         public string $text = '',
+        public ?string $model = null,
     ) {
     }
 }

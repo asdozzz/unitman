@@ -31,7 +31,18 @@ final class WorkspaceSessionController extends AbstractController
         path: '/api/opencode/workspace-session/prompt',
         summary: 'Запустить ход workspace',
         tags: ['Workspace'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['workspaceId', 'text'],
+                properties: [
+                    new OA\Property(property: 'workspaceId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'text', type: 'string'),
+                    new OA\Property(property: 'model', type: 'string', nullable: true, description: 'Переопределение модели перед ходом'),
+                ]
+            )
+        ),
         responses: [new OA\Response(response: 200, description: 'Запуск хода')]
     )]
     #[Route('/prompt', methods: ['POST'])]
@@ -41,6 +52,7 @@ final class WorkspaceSessionController extends AbstractController
         $result = $useCase->handle(
             (string) ($data['workspaceId'] ?? ''),
             (string) ($data['text'] ?? ''),
+            is_string($data['model'] ?? null) ? $data['model'] : null,
         );
 
         return $this->json(Response::success([
@@ -54,7 +66,18 @@ final class WorkspaceSessionController extends AbstractController
         path: '/api/opencode/workspace-session/otvetit',
         summary: 'Ответить на вопросы хода workspace',
         tags: ['Workspace'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['turnId', 'answers'],
+                properties: [
+                    new OA\Property(property: 'turnId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'answers', type: 'array', items: new OA\Items(type: 'object')),
+                    new OA\Property(property: 'model', type: 'string', nullable: true, description: 'Переопределение модели перед ходом'),
+                ]
+            )
+        ),
         responses: [new OA\Response(response: 200, description: 'Запуск хода')]
     )]
     #[Route('/otvetit', methods: ['POST'])]
@@ -63,7 +86,11 @@ final class WorkspaceSessionController extends AbstractController
         $data = $request->toArray();
         $answers = is_array($data['answers'] ?? null) ? $data['answers'] : [];
 
-        $result = $useCase->handle((string) ($data['turnId'] ?? ''), $answers);
+        $result = $useCase->handle(
+            (string) ($data['turnId'] ?? ''),
+            $answers,
+            is_string($data['model'] ?? null) ? $data['model'] : null,
+        );
 
         return $this->json(Response::success([
             'id' => $result->turnId,

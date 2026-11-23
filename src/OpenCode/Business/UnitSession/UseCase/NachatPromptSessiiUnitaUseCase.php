@@ -17,6 +17,7 @@ use App\OpenCode\Business\UnitSession\Port\UnitSessionRepository;
 use App\OpenCode\Business\UnitSession\Port\UnitSessionTurnRepository;
 use App\OpenCode\Business\UnitSession\Utils\ProverkaDostupaKSessiiUnita;
 use App\OpenCode\Business\Utils\IstoriyaDialogaOpenCode;
+use App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode;
 use App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode;
 
 final class NachatPromptSessiiUnitaUseCase
@@ -31,10 +32,11 @@ final class NachatPromptSessiiUnitaUseCase
         private OpredelitelRezhimaHodaOpenCode $rezhim,
         private ProverkaDostupaKSessiiUnita $dostup,
         private UuidGenerator $uuidGenerator,
+        private OpredelitelModeliHodaOpenCode $modeli,
     ) {
     }
 
-    public function handle(string $sessionId, string $prompt): RezultatZapuskaHoda
+    public function handle(string $sessionId, string $prompt, ?string $model = null): RezultatZapuskaHoda
     {
         $accountId = $this->credentials->tekuschiiAccountId();
         $session = $this->sessions->getById($sessionId);
@@ -70,6 +72,13 @@ final class NachatPromptSessiiUnitaUseCase
             }
         }
 
+        $razreshennayaModel = $this->modeli->opredelit(
+            $accountId,
+            $session->getCredentialId(),
+            $model,
+            $session->getModel(),
+        );
+
         $now = time();
         $turn = HodOpenCode::create(
             $this->uuidGenerator->makeGuid(),
@@ -79,6 +88,7 @@ final class NachatPromptSessiiUnitaUseCase
             $prompt,
             [],
             $now,
+            $razreshennayaModel,
         );
 
         $history = IstoriyaDialogaOpenCode::sobrat(
@@ -97,6 +107,7 @@ final class NachatPromptSessiiUnitaUseCase
             null,
             $readOnly,
             $token,
+            model: $razreshennayaModel,
         );
 
         $this->turns->save($turn);

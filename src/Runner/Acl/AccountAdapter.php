@@ -21,9 +21,12 @@ final class AccountAdapter implements UmeetPoluchatRekvizityOpenCode
     {
     }
 
-    public function poluchitRekvizity(string $accountId, string $credentialId): RekvizityOpenCode
-    {
-        $secret = $this->accountApi->poluchitRekvizityOpenCodeDlyVladelca($accountId, $credentialId);
+    public function poluchitRekvizity(
+        string $accountId,
+        string $credentialId,
+        ?string $model = null,
+    ): RekvizityOpenCode {
+        $secret = $this->accountApi->poluchitRekvizityOpenCodeDlyVladelca($accountId, $credentialId, $model);
 
         return new RekvizityOpenCode(
             $secret->id,

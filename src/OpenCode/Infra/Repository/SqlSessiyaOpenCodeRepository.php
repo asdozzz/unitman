@@ -67,6 +67,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                     'unit_project_id' => $session->getUnitProjectId(),
                     'archived_at' => $session->getArchivedAt(),
                     'archive_reason' => $session->getArchiveReason(),
+                    'model' => $session->getModel(),
                     'updated_at' => $session->getUpdatedAt(),
                 ],
                 ['id' => $session->getId()],
@@ -79,6 +80,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                     'unit_project_id' => ParameterType::STRING,
                     'archived_at' => ParameterType::INTEGER,
                     'archive_reason' => ParameterType::STRING,
+                    'model' => ParameterType::STRING,
                     'updated_at' => ParameterType::INTEGER,
                     'id' => ParameterType::STRING,
                 ]
@@ -300,6 +302,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             'unit_project_id' => $session->getUnitProjectId(),
             'archived_at' => $session->getArchivedAt(),
             'archive_reason' => $session->getArchiveReason(),
+            'model' => $session->getModel(),
             'created_at' => $session->getCreatedAt(),
             'updated_at' => $session->getUpdatedAt(),
         ];
@@ -321,6 +324,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             'unit_project_id' => ParameterType::STRING,
             'archived_at' => ParameterType::INTEGER,
             'archive_reason' => ParameterType::STRING,
+            'model' => ParameterType::STRING,
             'created_at' => ParameterType::INTEGER,
             'updated_at' => ParameterType::INTEGER,
         ];
@@ -717,6 +721,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             self::nullableString($row['archive_reason'] ?? null),
             (int) $row['created_at'],
             (int) $row['updated_at'],
+            self::nullableString($row['model'] ?? null),
         );
     }
 
@@ -736,6 +741,7 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             $workspace,
             (int) $row['created_at'],
             (int) $row['updated_at'],
+            self::nullableString($row['model'] ?? null),
         );
     }
 

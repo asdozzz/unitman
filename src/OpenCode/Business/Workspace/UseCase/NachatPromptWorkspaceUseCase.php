@@ -12,6 +12,7 @@ use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Business\ReadModel\RezultatZapuskaHoda;
 use App\OpenCode\Business\Utils\IstoriyaDialogaOpenCode;
+use App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode;
 use App\OpenCode\Business\Workspace\Model\WorkspaceSession;
 use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
 use App\OpenCode\Business\Workspace\Port\WorkspaceTurnRepository;
@@ -26,10 +27,11 @@ final class NachatPromptWorkspaceUseCase
         private UmeetVypolnyatHodOpenCode $runner,
         private ProverkaDostupaWorkspaceSessii $dostup,
         private UuidGenerator $uuidGenerator,
+        private OpredelitelModeliHodaOpenCode $modeli,
     ) {
     }
 
-    public function handle(string $workspaceId, string $prompt): RezultatZapuskaHoda
+    public function handle(string $workspaceId, string $prompt, ?string $model = null): RezultatZapuskaHoda
     {
         $accountId = $this->credentials->tekuschiiAccountId();
         $workspace = $this->workspaces->getById($workspaceId);
@@ -49,6 +51,13 @@ final class NachatPromptWorkspaceUseCase
             throw new \DomainException('opencode.turn.awaiting_answer');
         }
 
+        $razreshennayaModel = $this->modeli->opredelit(
+            $accountId,
+            $workspace->getCredentialId(),
+            $model,
+            $workspace->getModel(),
+        );
+
         $readOnly = $workspace->getWorkspace()->isReadOnly();
         $now = time();
         $turn = HodOpenCode::create(
@@ -59,6 +68,7 @@ final class NachatPromptWorkspaceUseCase
             $prompt,
             [],
             $now,
+            $razreshennayaModel,
         );
 
         $history = IstoriyaDialogaOpenCode::sobrat(
@@ -83,6 +93,7 @@ final class NachatPromptWorkspaceUseCase
             $kontekst,
             $readOnly,
             null,
+            model: $razreshennayaModel,
         );
 
         $this->turns->save($turn);

@@ -158,12 +158,12 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
             . 'id, account_id, credential_id, name, branch, status, read_only, initial_prompt, '
             . 'initial_prompt_started_at, error_key, operation, operation_workflow_id, '
             . 'operation_attempts, next_attempt_at, external_session_id, archived_at, '
-            . 'archive_reason, created_at, updated_at'
+            . 'archive_reason, model, created_at, updated_at'
             . ') values ('
             . ':id, :account_id, :credential_id, :name, :branch, :status, :read_only, :initial_prompt, '
             . ':initial_prompt_started_at, :error_key, :operation, :operation_workflow_id, '
             . ':operation_attempts, :next_attempt_at, :external_session_id, :archived_at, '
-            . ':archive_reason, :created_at, :updated_at'
+            . ':archive_reason, :model, :created_at, :updated_at'
             . ') on conflict (id) do update set '
             . 'credential_id = excluded.credential_id, '
             . 'name = excluded.name, '
@@ -180,6 +180,7 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
             . 'external_session_id = excluded.external_session_id, '
             . 'archived_at = excluded.archived_at, '
             . 'archive_reason = excluded.archive_reason, '
+            . 'model = excluded.model, '
             . 'updated_at = excluded.updated_at',
             [
                 'id' => $workspace->getId(),
@@ -199,6 +200,7 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
                 'external_session_id' => $workspace->getExternalSessionId(),
                 'archived_at' => $workspace->getArchivedAt(),
                 'archive_reason' => $workspace->getArchiveReason(),
+                'model' => $workspace->getModel(),
                 'created_at' => $workspace->getCreatedAt(),
                 'updated_at' => $workspace->getUpdatedAt(),
             ],
@@ -220,6 +222,7 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
                 'external_session_id' => ParameterType::STRING,
                 'archived_at' => ParameterType::INTEGER,
                 'archive_reason' => ParameterType::STRING,
+                'model' => ParameterType::STRING,
                 'created_at' => ParameterType::INTEGER,
                 'updated_at' => ParameterType::INTEGER,
             ]
@@ -358,6 +361,7 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
             ),
             (int) $row['created_at'],
             (int) $row['updated_at'],
+            self::nullableString($row['model'] ?? null),
         );
     }
 

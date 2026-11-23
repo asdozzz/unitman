@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\OpenCode\Tests\Support;
 
 use App\OpenCode\Business\Model\ParametriSozdaniyaUnita;
+use App\OpenCode\Business\Model\SozdanniyUnit;
 use App\OpenCode\Business\Model\SostoyanieUnita;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 
@@ -61,6 +62,32 @@ final class ImitaciyaUpravleniyaUnitami implements UmeetUpravlyatUnitami
         $this->posledniiAccountIdSozdaniya = $accountId;
 
         return 'unit-' . $parametri->unitName;
+    }
+
+    /**
+     * @param list<array{projectId: string, branch: string}> $projects
+     *
+     * @return list<SozdanniyUnit>
+     */
+    public function sozdatUnitiDlyaProektov(
+        array $projects,
+        string $unitName,
+        string $accountId,
+    ): array {
+        $this->posledniiAccountIdSozdaniya = $accountId;
+
+        $result = [];
+
+        foreach ($projects as $project) {
+            $result[] = new SozdanniyUnit(
+                'unit-' . $unitName . '-' . $project['projectId'],
+                $project['projectId'],
+                $unitName,
+                $project['branch'],
+            );
+        }
+
+        return $result;
     }
 
     public function prodvinutCiklUnita(string $unitId, string $accountId): void

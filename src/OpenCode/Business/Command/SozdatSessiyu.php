@@ -28,6 +28,7 @@ readonly class SozdatSessiyu implements JsonBodySerializableInterface
         public ?string $title = null,
         public array $unitIds = [],
         public ?ParametriSozdaniyaUnita $unit = null,
+        public ?string $model = null,
     ) {
     }
 }

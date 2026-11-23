@@ -2,8 +2,10 @@
 
 namespace App\Unitman\Business\UseCase\Unit;
 
+use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
 use App\Unitman\Business\Port\Unit\UnitRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
@@ -16,6 +18,7 @@ final class DobavitProzesObnovleniyaUseCase
         private CanGenerateGuid         $uuidGenerator,
         private ProjectRepository $projectRepository,
         private ProverkaSvobodyUnita $proverkaSvobody,
+        private OtlozhennieDeistviyaRepository $otlozhennieRepository,
     )
     {
     }
@@ -29,6 +32,7 @@ final class DobavitProzesObnovleniyaUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
         $unit->dobavitProzesObnovleniya($userId, $prozesId, false, $project->poluchitNastroikiHuka()->obnovlenieBezSbrosaPodgotovki);
         $this->unitRepository->save($unit);
+        $this->otlozhennieRepository->udalitPoUnituITipu($unitId, TipSobitiya::KOD_OBNOVLEN);
     }
 
     /**
@@ -48,5 +52,6 @@ final class DobavitProzesObnovleniyaUseCase
         $project = $this->projectRepository->getById($unit->getProjectId());
         $unit->dobavitProzesObnovleniya($systemUser->id, $prozesId, true, $project->poluchitNastroikiHuka()->obnovlenieBezSbrosaPodgotovki);
         $this->unitRepository->save($unit);
+        $this->otlozhennieRepository->udalitPoUnituITipu($unitId, TipSobitiya::KOD_OBNOVLEN);
     }
 }

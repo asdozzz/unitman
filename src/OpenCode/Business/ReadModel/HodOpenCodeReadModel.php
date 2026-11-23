@@ -33,6 +33,7 @@ final class HodOpenCodeReadModel
         public readonly int $createdAt,
         public readonly ?int $finishedAt,
         public readonly string $progressChannel,
+        public readonly ?string $model = null,
     ) {
     }
 
@@ -50,6 +51,7 @@ final class HodOpenCodeReadModel
             $turn->getCreatedAt(),
             $turn->getFinishedAt(),
             $progressChannel,
+            $turn->getModel(),
         );
     }
 
@@ -70,6 +72,7 @@ final class HodOpenCodeReadModel
             'createdAt' => $this->createdAt,
             'finishedAt' => $this->finishedAt,
             'progressChannel' => $this->progressChannel,
+            'model' => $this->model,
         ];
     }
 }

@@ -4,7 +4,13 @@ namespace App\Unitman\Business\Model\Project;
 
 readonly class NastroikiHuka
 {
-    public function __construct(public bool $avtosozdanie, public bool $avtoobnovlenie, public bool $avtoudalenie,public bool $obnovlenieBezSbrosaPodgotovki)
+    public function __construct(
+        public bool $avtosozdanie,
+        public bool $avtoobnovlenie,
+        public bool $avtoudalenie,
+        public bool $obnovlenieBezSbrosaPodgotovki,
+        public bool $vebhukNastroen = false,
+    )
     {
     }
 }

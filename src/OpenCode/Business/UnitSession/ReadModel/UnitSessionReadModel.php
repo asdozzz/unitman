@@ -19,6 +19,7 @@ final class UnitSessionReadModel
         public readonly ?string $archiveReason,
         public readonly int $createdAt,
         public readonly int $updatedAt,
+        public readonly ?string $model = null,
     ) {
     }
 
@@ -35,6 +36,7 @@ final class UnitSessionReadModel
             $session->getArchiveReason(),
             $session->getCreatedAt(),
             $session->getUpdatedAt(),
+            $session->getModel(),
         );
     }
 
@@ -54,6 +56,7 @@ final class UnitSessionReadModel
             'archiveReason' => $this->archiveReason,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
+            'model' => $this->model,
         ];
     }
 }

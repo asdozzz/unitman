@@ -13,9 +13,11 @@ use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
+use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
+use App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode;
 use App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode;
 use App\OpenCode\Business\Utils\VladelecZanyatostiOpenCode;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
@@ -167,6 +169,7 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
                 null,
                 false,
                 null,
+                $this->anything(),
             );
 
         $zapuskatel = $this->zapuskatel($turnRepository, $sessionRepository, $runner, $bronirovanie, $unitami, $tokeny);
@@ -470,6 +473,9 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         ?UmeetUpravlyatUnitami $unitami = null,
         ?UmeetPoluchatTokenRedaktirovaniyaUnita $tokeny = null,
     ): ZapuskatelHodaOpenCode {
+        $credentials = $this->createMock(UmeetProveryatRekvizityOpenCode::class);
+        $credentials->method('razreshitModel')->willReturn('default-model');
+
         return new ZapuskatelHodaOpenCode(
             $turnRepository,
             $sessionRepository,
@@ -479,6 +485,7 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
             $unitami ?? $this->unitami($this->sostoyanie(authorId: 'author-x', editing: true)),
             $tokeny ?? $this->tokeny(),
             new OpredelitelRezhimaHodaOpenCode(),
+            new OpredelitelModeliHodaOpenCode($credentials),
         );
     }
 

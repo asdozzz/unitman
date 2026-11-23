@@ -19,6 +19,8 @@ interface OtlozhennieDeistviyaRepository
 {
     /**
      * Создаёт или обновляет намерение (upsert по `unit_id` + `tip_sobitiya`).
+     *
+     * @param string $status ready | held_autoobnovlenie
      */
     public function otlozhit(
         string $unitId,
@@ -26,6 +28,7 @@ interface OtlozhennieDeistviyaRepository
         TipSobitiya $tipSobitiya,
         array $payload,
         \DateTimeImmutable $now,
+        string $status = 'ready',
     ): void;
 
     /**
@@ -47,6 +50,36 @@ interface OtlozhennieDeistviyaRepository
      * Удаляет намерение, признав его применённым.
      */
     public function udovletvorit(string $unitId, TipSobitiya $tipSobitiya): void;
+
+    /**
+     * Есть ли по юниту намерение удаления или слияния.
+     */
+    public function estNamerenieUdaleniya(string $unitId): bool;
+
+    /**
+     * Переводит намерение в удержание до включения автообновления.
+     */
+    public function uderzhat(string $unitId, TipSobitiya $tipSobitiya): void;
+
+    /**
+     * Возвращает удержанные намерения проекта в ready.
+     *
+     * @return int число освобождённых строк
+     */
+    public function osvoboditUderzhannie(string $projectId, \DateTimeImmutable $now): int;
+
+    /**
+     * Идентификаторы юнитов проекта с готовыми к применению намерениями.
+     *
+     * @return string[]
+     */
+    public function poluchitUnitIdsSPoGotovimi(string $projectId, \DateTimeImmutable $now): array;
+
+    /**
+     * Страховка: освобождает удержанные намерения всех проектов, у которых
+     * автообновление уже включено.
+     */
+    public function osvoboditUderzhannieDlyaVsehProektov(\DateTimeImmutable $now): int;
 
     /**
      * Фиксирует неудачную попытку: увеличивает `attempts`, сдвигает

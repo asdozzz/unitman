@@ -25,6 +25,7 @@ final class SozdatSessiyuUnitaUseCase
         string $credentialId,
         ?string $title,
         string $unitId,
+        ?string $model = null,
     ): string {
         $accountId = $this->credentials->tekuschiiAccountId();
         $this->credentials->trebovatVladelca($accountId, $credentialId);
@@ -47,6 +48,8 @@ final class SozdatSessiyuUnitaUseCase
             throw new \DomainException('opencode.session.unit_busy');
         }
 
+        $razreshennayaModel = $this->credentials->razreshitModel($accountId, trim($credentialId), $model);
+
         $session = UnitSession::create(
             $this->uuidGenerator->makeGuid(),
             $accountId,
@@ -55,6 +58,7 @@ final class SozdatSessiyuUnitaUseCase
             $unitId,
             $sostoyanie->projectId,
             time(),
+            $razreshennayaModel === '' ? null : $razreshennayaModel,
         );
 
         $this->sessions->save($session);

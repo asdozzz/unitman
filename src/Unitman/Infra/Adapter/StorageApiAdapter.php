@@ -6,6 +6,7 @@ use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
 use App\Unitman\Business\ReadModel\RepoTypeList;
+use App\Unitman\Business\ReadModel\SostoyanieVetki;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag('unitman.storage_api_adapter')]
@@ -19,6 +20,16 @@ interface StorageApiAdapter
     public function getRepoTypeModel(): RepoTypeList;
 
     public function poluchitVetkiProekta(Repo $repo, string $projectCode, ?string $query): array;
+
+    /**
+     * Состояние ветки и время её HEAD-коммита.
+     */
+    public function poluchitSostoyanieVetki(
+        Repo $repo,
+        string $projectCode,
+        string $branch,
+        string $mainBranch,
+    ): SostoyanieVetki;
 
     /**
      * Создать ветку в проекте хранения от указанной ветки.

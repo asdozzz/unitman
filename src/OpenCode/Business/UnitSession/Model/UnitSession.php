@@ -30,6 +30,7 @@ final class UnitSession
         private ?string $archiveReason,
         private int $createdAt,
         private int $updatedAt,
+        private ?string $model = null,
     ) {
     }
 
@@ -41,6 +42,7 @@ final class UnitSession
         string $unitId,
         string $unitProjectId,
         int $now,
+        ?string $model = null,
     ): self {
         self::trebovatNepustoe($accountId, 'opencode.session.account_required');
         self::trebovatNepustoe($credentialId, 'opencode.session.credential_required');
@@ -59,6 +61,7 @@ final class UnitSession
             null,
             $now,
             $now,
+            $model,
         );
     }
 
@@ -74,6 +77,7 @@ final class UnitSession
         ?string $archiveReason,
         int $createdAt,
         int $updatedAt,
+        ?string $model = null,
     ): self {
         if ($archivedAt !== null && ($archiveReason === null || trim($archiveReason) === '')) {
             throw new \DomainException('opencode.session.archive_reason_required');
@@ -91,6 +95,7 @@ final class UnitSession
             $archiveReason,
             $createdAt,
             $updatedAt,
+            $model,
         );
     }
 
@@ -147,6 +152,15 @@ final class UnitSession
     public function getUpdatedAt(): int
     {
         return $this->updatedAt;
+    }
+
+    /**
+     * Модель, выбранная при создании сессии. `null` — взять дефолт реквизитов
+     * при следующем ходе.
+     */
+    public function getModel(): ?string
+    {
+        return $this->model;
     }
 
     public function estArhiv(): bool

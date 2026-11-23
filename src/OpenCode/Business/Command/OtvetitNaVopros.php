@@ -20,6 +20,7 @@ readonly class OtvetitNaVopros implements JsonBodySerializableInterface
     public function __construct(
         public string $turnId = '',
         public array $answers = [],
+        public ?string $model = null,
     ) {
     }
 }

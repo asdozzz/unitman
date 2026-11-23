@@ -9,9 +9,11 @@ use App\Account\Business\Port\CanGenerateRefreshToken;
 use App\Account\Business\Port\CanIssueAccessToken;
 use App\Account\Business\Port\OpenCodeCredentialRepository;
 use App\Account\Business\Port\RefreshTokenRepository;
+use App\Account\Business\Port\ZaprositModeliProvaydera;
 use App\Account\Business\Port\UmeetShifrovatSekrety;
 use App\Account\Business\Port\UuidGenerator;
 use App\Account\Business\Utils\EventTypeMapFactory;
+use App\Account\Infra\Adapter\HttpZaprositModeliProvaydera;
 use App\Account\Infra\Adapter\LexikAccessTokenIssuer;
 use App\Account\Infra\Adapter\OpenSslShifr;
 use App\Account\Infra\Adapter\RamseyUuidGenerator;
@@ -56,6 +58,7 @@ return function (ContainerConfigurator $configuration) {
     $services->set(CanIssueAccessToken::class, LexikAccessTokenIssuer::class);
     $services->set(UmeetShifrovatSekrety::class, OpenSslShifr::class);
     $services->set(OpenCodeCredentialRepository::class, SqlOpenCodeCredentialRepository::class);
+    $services->set(ZaprositModeliProvaydera::class, HttpZaprositModeliProvaydera::class);
 
     $services->set('account.event_type_mapper', ExplicitlyMappedClassNameInflector::class)
         ->factory([service(EventTypeMapFactory::class), 'getMap']);

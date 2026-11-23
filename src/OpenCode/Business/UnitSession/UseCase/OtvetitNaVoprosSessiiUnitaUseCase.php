@@ -18,6 +18,7 @@ use App\OpenCode\Business\UnitSession\Port\UnitSessionRepository;
 use App\OpenCode\Business\UnitSession\Port\UnitSessionTurnRepository;
 use App\OpenCode\Business\UnitSession\Utils\ProverkaDostupaKSessiiUnita;
 use App\OpenCode\Business\Utils\IstoriyaDialogaOpenCode;
+use App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode;
 use App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode;
 use App\OpenCode\Business\Utils\OtvetyNaVoprosyOpenCode;
 
@@ -33,13 +34,14 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
         private OpredelitelRezhimaHodaOpenCode $rezhim,
         private ProverkaDostupaKSessiiUnita $dostup,
         private UuidGenerator $uuidGenerator,
+        private OpredelitelModeliHodaOpenCode $modeli,
     ) {
     }
 
     /**
-     * @param list<array{QuestionId?: mixed, OptionId?: mixed, Text?: mixed}> $answers
+     * @param list<mixed> $answers сырые ответы из тела запроса, валидируются ниже
      */
-    public function handle(string $turnId, array $answers): RezultatZapuskaHoda
+    public function handle(string $turnId, array $answers, ?string $model = null): RezultatZapuskaHoda
     {
         $accountId = $this->credentials->tekuschiiAccountId();
         $turn = $this->turns->getById($turnId);
@@ -94,6 +96,13 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
             }
         }
 
+        $razreshennayaModel = $this->modeli->opredelit(
+            $accountId,
+            $session->getCredentialId(),
+            $model,
+            $session->getModel(),
+        );
+
         $now = time();
         $novyiHod = HodOpenCode::create(
             $this->uuidGenerator->makeGuid(),
@@ -103,6 +112,7 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
             $prompt,
             $normalizovannie,
             $now,
+            $razreshennayaModel,
         );
 
         $history = IstoriyaDialogaOpenCode::sobrat(
@@ -121,6 +131,7 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
             null,
             $readOnly,
             $token,
+            model: $razreshennayaModel,
         );
 
         $this->turns->save($novyiHod);

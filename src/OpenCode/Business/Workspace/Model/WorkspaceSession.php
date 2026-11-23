@@ -31,6 +31,7 @@ final class WorkspaceSession
         private Workspace $workspace,
         private int $createdAt,
         private int $updatedAt,
+        private ?string $model = null,
     ) {
     }
 
@@ -46,6 +47,7 @@ final class WorkspaceSession
         array $projects,
         string $initialPrompt,
         int $now,
+        ?string $model = null,
     ): self {
         if (trim($accountId) === '') {
             throw new \DomainException('opencode.session.account_required');
@@ -76,6 +78,7 @@ final class WorkspaceSession
             Workspace::create($branch, $initialPrompt, $projects, $now),
             $now,
             $now,
+            $model,
         );
     }
 
@@ -90,6 +93,7 @@ final class WorkspaceSession
         Workspace $workspace,
         int $createdAt,
         int $updatedAt,
+        ?string $model = null,
     ): self {
         if ($archivedAt !== null && ($archiveReason === null || trim($archiveReason) === '')) {
             throw new \DomainException('opencode.session.archive_reason_required');
@@ -106,6 +110,7 @@ final class WorkspaceSession
             $workspace,
             $createdAt,
             $updatedAt,
+            $model,
         );
     }
 
@@ -157,6 +162,15 @@ final class WorkspaceSession
     public function getUpdatedAt(): int
     {
         return $this->updatedAt;
+    }
+
+    /**
+     * Модель, выбранная при создании workspace. `null` — взять дефолт
+     * реквизитов при следующем ходе.
+     */
+    public function getModel(): ?string
+    {
+        return $this->model;
     }
 
     public function estArhiv(): bool

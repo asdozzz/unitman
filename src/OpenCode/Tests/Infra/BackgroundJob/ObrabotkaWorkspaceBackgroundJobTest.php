@@ -219,6 +219,9 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
         $uuid = $this->createMock(UuidGenerator::class);
         $uuid->method('makeGuid')->willReturnOnConsecutiveCalls('turn-1', 'workflow-1');
 
+        $credentials = $this->createMock(\App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode::class);
+        $credentials->method('razreshitModel')->willReturn('default-model');
+
         return new ZapuskatelHodaOpenCode(
             $turnRepository,
             $sessionRepository,
@@ -228,6 +231,7 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
             $this->createMock(\App\OpenCode\Business\Port\UmeetUpravlyatUnitami::class),
             $this->createMock(\App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita::class),
             new \App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode(),
+            new \App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode($credentials),
         );
     }
 }

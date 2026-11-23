@@ -45,6 +45,8 @@ final class SozdatSessiyuUseCase
 
         $units = $this->opredelitUnity($command, $accountId);
 
+        $model = $this->credentials->razreshitModel($accountId, $command->credentialId, $command->model);
+
         $session = SessiyaOpenCode::create(
             $this->uuidGenerator->makeGuid(),
             $accountId,
@@ -52,6 +54,7 @@ final class SozdatSessiyuUseCase
             $command->title,
             $units,
             time(),
+            $model === '' ? null : $model,
         );
 
         $this->sessionRepository->save($session);

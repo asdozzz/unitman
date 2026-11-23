@@ -19,7 +19,8 @@ final class ProjectWasAdded
         public readonly bool $avtoudalenie = true,
         public readonly bool $obnovlenieBezSbrosaPodgotovki = false,
         public readonly int $memoryLimit = 3072,
-        public readonly array $zashishennieVetki = []
+        public readonly array $zashishennieVetki = [],
+        public readonly bool $vebhukNastroen = false,
     )
     {
     }

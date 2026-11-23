@@ -33,6 +33,7 @@ final class SessiyaOpenCodeReadModel
         public readonly string $type = 'unit',
         public readonly ?WorkspaceReadModel $workspace = null,
         public readonly ?string $ideLink = null,
+        public readonly ?string $model = null,
     ) {
     }
 
@@ -60,6 +61,7 @@ final class SessiyaOpenCodeReadModel
             $session->getTip()->value,
             $workspace,
             $workspace === null ? null : $ideLink,
+            $session->getModel(),
         );
     }
 }

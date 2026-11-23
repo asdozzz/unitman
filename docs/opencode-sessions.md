@@ -35,18 +35,23 @@ flowchart LR
 
 ## 2. Реквизиты подключения (модуль Account)
 
-У одного пользователя реквизитов может быть много: разные ключи, разные модели.
-Реквизиты выбираются **до** первого промпта и фиксируются в сессии.
+У одного пользователя реквизитов может быть много: разные провайдеры, разные
+ключи и наборы моделей. Реквизиты выбираются **до** первого промпта и
+фиксируются в сессии.
 
 | Метод | Путь | Тело | Ответ |
 |---|---|---|---|
+| `GET` | `/api/account/opencode/providers` | — | каталог провайдеров |
+| `POST` | `/api/account/opencode/spisokModelei` | `provider, apiKey?, credentialId?` | `{provider, models, source, errorKey}` |
 | `GET` | `/api/account/opencode/spisokRekvizitov` | — | массив реквизитов |
-| `POST` | `/api/account/opencode/sozdatRekvizity` | `name, url, model, apiKey` | `{ "id": "..." }` |
-| `POST` | `/api/account/opencode/izmenitRekvizity` | `id, name?, url?, model?, apiKey?` | `data: null` |
+| `POST` | `/api/account/opencode/sozdatRekvizity` | `name, provider, url?, models[], defaultModel?, apiKey` | `{ "id": "..." }` |
+| `POST` | `/api/account/opencode/izmenitRekvizity` | `id, provider?, url?, models?, defaultModel?, apiKey?` | `data: null` |
 | `POST` | `/api/account/opencode/udalitRekvizity` | `id` | `data: null` |
 
 В `izmenitRekvizity` не переданное поле означает «оставить как есть»; пустой
-`apiKey` **не** перезаписывает сохранённый шифротекст.
+`apiKey` **не** перезаписывает сохранённый шифротекст. Legacy-поля `model`
+поддерживаются: если `models` не передан, а `model` заполнен, набор моделей
+заменяется на `[model]` с дефолтом `model`.
 
 Элемент списка:
 
@@ -54,7 +59,10 @@ flowchart LR
 {
   "id": "b1c2...",
   "name": "work-key",
-  "url": "https://opencode.example.com",
+  "provider": "openai",
+  "url": "https://api.openai.com/v1",
+  "models": ["gpt-4o", "gpt-4o-mini"],
+  "defaultModel": "gpt-4o",
   "model": "gpt-4o",
   "apiKeyHint": "****abcd",
   "createdAt": 1730000000,
@@ -63,7 +71,8 @@ flowchart LR
 ```
 
 `apiKey` не отдаётся **ни в одном** ответе: только маска последних 4 символов.
-Список строится без единой расшифровки.
+Список строится без единой расшифровки. Поле `model` — синоним `defaultModel`
+для обратной совместимости.
 
 ### 2.1 Шифрование ключа
 
@@ -87,16 +96,36 @@ flowchart LR
 php -r "echo base64_encode(random_bytes(32));"
 ```
 
+### 2.2 Провайдеры и несколько моделей
+
+Реквизиты хранят `provider`, набор `models` (1–50 без дубликатов) и
+`defaultModel`; legacy-колонка `model` всегда равна дефолтной модели. Для
+известного провайдера `url` подставляется из статического каталога, для
+`custom` его нужно передать явно. Каталог, live-загрузка списка моделей и
+правила безопасности ключа описаны отдельно в
+[`docs/opencode-providers.md`](docs/opencode-providers.md:1).
+
+Модель хода разрешается по приоритету:
+
+1. `model` из запроса (`prompt` / `otvetit`);
+2. модель, сохранённая в сессии при создании;
+3. `defaultModel` реквизитов.
+
+Недопустимая модель (не входит в `models` реквизитов) отклоняется ключом
+`account.opencode_credential.model_not_available`. Фактическая модель хода
+сохраняется в `opencode_*_turn.model` и отдаётся в API рядом с `requestText`,
+чтобы фронтенд мог предвыбрать её в следующем промпте.
+
 ## 3. Сессии и ходы (модуль OpenCode)
 
 | Метод | Путь | Тело | Ответ |
 |---|---|---|---|
-| `POST` | `/api/opencode/sozdatSessiyu` | `credentialId, title?, unitIds?, unit?` | `{ "id": "<sessionId>" }` |
+| `POST` | `/api/opencode/sozdatSessiyu` | `credentialId, title?, model?, unitIds?, unit?` | `{ "id": "<sessionId>" }` |
 | `POST` | `/api/opencode/privezatKUnitu` | `sessionId, unitIds[]` | `data: null` — сессия привязана к юнитам |
 | `GET` | `/api/opencode/spisokSessiy` | `onlyActive?`, `search?` (query) | массив сессий |
 | `POST` | `/api/opencode/sostoyanieSessii` | `sessionId` | состояние сессии: причина блокировки |
-| `POST` | `/api/opencode/prompt` | `sessionId, text` | запуск хода |
-| `POST` | `/api/opencode/otvetit` | `turnId, answers[]` | запуск хода |
+| `POST` | `/api/opencode/prompt` | `sessionId, text, model?` | запуск хода |
+| `POST` | `/api/opencode/otvetit` | `turnId, answers[], model?` | запуск хода |
 | `POST` | `/api/opencode/poluchitResultatHoda` | `turnId` | состояние хода |
 | `POST` | `/api/opencode/poluchitProgressHoda` | `turnId` | снапшот шагов или `null` |
 | `POST` | `/api/opencode/istoriyaSessii` | `sessionId` | массив ходов по возрастанию `seq` |
@@ -120,6 +149,7 @@ UseCase**, поэтому чужой `sessionId`/`turnId` даёт тот же �
   "id": "8f1e...",
   "credentialId": "b1c2...",
   "title": "Разбор падения сборки",
+  "model": "gpt-4o",
   "externalSessionId": "ext-1",
   "units": [
     { "unitId": "3d7a...", "unitProjectId": "9b04..." },
@@ -411,6 +441,7 @@ stateDiagram-v2
   "sessionId": "8f1e...",
   "seq": 1,
   "status": "AWAITING_INPUT",
+  "model": "gpt-4o-mini",
   "requestText": "Почему упал билд?",
   "answers": [],
   "result": {
@@ -683,10 +714,15 @@ Payload прогресса:
 [`translations/messages.ru.php`](translations/messages.ru.php:126) и
 `messages.en.php`.
 
-Реквизиты (`account.opencode_credential.*`): `empty_id`, `empty_account_id`,
-`empty_api_key`, `empty_name`, `empty_url`, `empty_model`, `name_too_long`,
-`url_too_long`, `model_too_long`, `name_double`, `not_found`,
-`decrypt_failed`, `encrypt_failed`, `invalid_key`, `key_not_configured`.
+Реквизиты и провайдеры (`account.opencode_credential.*`): `empty_id`,
+`empty_account_id`, `empty_api_key`, `empty_name`, `empty_url`, `empty_model`,
+`empty_models`, `empty_provider`, `name_too_long`, `url_too_long`,
+`model_too_long`, `model_not_available`, `duplicate_model`, `too_many_models`,
+`unknown_provider`, `name_double`, `not_found`, `decrypt_failed`,
+`encrypt_failed`, `invalid_key`, `key_not_configured`,
+`provider_list_not_supported`, `provider_unavailable`, `provider_error`,
+`provider_response_too_large`, `provider_invalid_response`,
+`provider_empty_response`.
 
 Сессия (`opencode.session.*`): `account_required`, `archive_reason_required`,
 `archived`, `credential_required`, `id_required`, `not_found`,
@@ -706,8 +742,9 @@ create table opencode_credential (
     id             varchar(64)  not null primary key,
     account_id     varchar(128) not null,
     name           varchar(128) not null,
+    provider       varchar(64)  not null default 'custom',
     url            varchar(512) not null,
-    model          varchar(128) not null,
+    model          varchar(128) not null,   -- legacy: всегда равна defaultModel
     api_key_cipher text         not null,   -- только шифротекст
     api_key_hint   varchar(32)  not null,   -- ****abcd
     cipher_version smallint     not null default 1,
@@ -716,12 +753,26 @@ create table opencode_credential (
 );
 create unique index opencode_credential_account_name_uq on opencode_credential (account_id, name);
 
+-- набор моделей реквизитов; ровно одна строка с is_default = true
+create table opencode_credential_model (
+    credential_id varchar(64)  not null,
+    model         varchar(128) not null,
+    is_default    boolean      not null default false,
+    created_at    integer      not null,
+    primary key (credential_id, model)
+);
+create unique index opencode_credential_model_default_uq
+    on opencode_credential_model (credential_id) where is_default;
+create index opencode_credential_model_credential_idx
+    on opencode_credential_model (credential_id);
+
 create table opencode_session (
     id                  varchar(64)  not null primary key,
     account_id          varchar(128) not null,
     credential_id       varchar(64)  not null,
     title               varchar(256) not null default '',
     external_session_id varchar(256),
+    model               varchar(128) default null,  -- выбранная модель; null — дефолт реквизитов
     unit_id             varchar(64)  default null,  -- устаревшее: первый юнит сессии
     unit_project_id     varchar(64)  default null,  -- устаревшее: снимок проекта первого юнита
     archived_at         integer      default null,  -- null — сессия активна
@@ -749,6 +800,7 @@ create table opencode_turn (
     seq          integer     not null,
     workflow_id  varchar(64) not null,
     status       varchar(32) not null,
+    model        varchar(128) default null,  -- фактическая модель хода
     request_text text        not null,
     answers_json text        not null default '[]',
     result_json  text,
@@ -768,6 +820,10 @@ create unique index opencode_turn_workflow_uq on opencode_turn (workflow_id);
 [`Version20261120120000`](src/OpenCode/Migrations/Version20261120120000.php:1),
 а таблицу нескольких юнитов с бэкфиллом —
 [`Version20261120130000`](src/OpenCode/Migrations/Version20261120130000.php:1).
+Провайдера и таблицу моделей добавляет
+[`Version20261124100000`](src/Account/Migrations/Version20261124100000.php:1),
+а nullable-колонку `model` во все таблицы сессий и ходов —
+[`Version20261124110000`](src/OpenCode/Migrations/Version20261124110000.php:1).
 
 Список юнитов хранится в `opencode_session_unit` отдельной таблицей, потому что
 у сессии их до `SessiyaOpenCode::MAX_UNITS = 10`. Первичный ключ

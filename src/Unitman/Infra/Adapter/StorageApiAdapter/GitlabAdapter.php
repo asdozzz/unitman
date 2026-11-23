@@ -3,10 +3,12 @@
 namespace App\Unitman\Infra\Adapter\StorageApiAdapter;
 
 use App\Unitman\Business\Model\Project;
+use App\Unitman\Business\Model\Project\StatusVetki;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
 use App\Unitman\Business\ReadModel\ProektHranilisha;
 use App\Unitman\Business\ReadModel\RepoTypeList;
+use App\Unitman\Business\ReadModel\SostoyanieVetki;
 use App\Unitman\Business\ReadModel\VetkaProekta;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\GitlabAdapter\GitlabClientFactory;
 use Gitlab\ResultPager;
@@ -69,6 +71,59 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         return array_map(fn(array $branch) => new VetkaProekta($branch['name']), $branches);
     }
 
+    public function poluchitSostoyanieVetki(
+        Repo $repo,
+        string $projectCode,
+        string $branch,
+        string $mainBranch,
+    ): SostoyanieVetki {
+        $client = $this->clientFactory->makeClient($repo);
+
+        try {
+            $branchData = $client->repositories()->branch($projectCode, $branch);
+        } catch (\Throwable $e) {
+            return new SostoyanieVetki(
+                $branch,
+                $this->eto404($e) ? StatusVetki::DELETED : StatusVetki::UNKNOWN,
+            );
+        }
+
+        if (($branchData['name'] ?? null) !== $branch) {
+            return new SostoyanieVetki($branch, StatusVetki::DELETED);
+        }
+
+        $unixtime = $this->izvlechUnixtime(
+            $branchData['commit']['committed_date'] ?? null,
+            $branchData['commit']['created_at'] ?? null,
+        );
+
+        if ($branch === $mainBranch) {
+            return new SostoyanieVetki($branch, StatusVetki::ACTIVE, $unixtime);
+        }
+
+        /*
+         * Слияние подтверждаем только merged merge request. Это надёжнее
+         * сравнения коммитов: ветка без уникальных коммитов ещё не значит,
+         * что её MR был слит.
+         */
+        try {
+            $mergeRequests = $client->mergeRequests()->all($projectCode, [
+                'state' => 'merged',
+                'source_branch' => $branch,
+                'target_branch' => $mainBranch,
+                'per_page' => 100,
+            ]);
+
+            if (!empty($mergeRequests)) {
+                return new SostoyanieVetki($branch, StatusVetki::MERGED, $unixtime);
+            }
+        } catch (\Throwable) {
+            // Не считаем ветку слитой, если MR API недоступен.
+        }
+
+        return new SostoyanieVetki($branch, StatusVetki::ACTIVE, $unixtime);
+    }
+
     public function sozdatVetkuVHranilishe(Repo $repo, string $projectCode, string $nazvanieVetki, string $otVetki, string $token): void
     {
         $client = $this->clientFactory->makeClientWithToken($repo, $token);
@@ -102,6 +157,27 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         $data = $client->projects()->show($project->getCode());
 
         return PushPermission::izGitlab($data);
+    }
+
+    private function eto404(\Throwable $e): bool
+    {
+        return $e->getCode() === 404 || str_contains($e->getMessage(), '404');
+    }
+
+    private function izvlechUnixtime(?string ...$dates): ?int
+    {
+        foreach ($dates as $date) {
+            if ($date === null || $date === '') {
+                continue;
+            }
+
+            $unixtime = strtotime($date);
+            if ($unixtime !== false) {
+                return $unixtime;
+            }
+        }
+
+        return null;
     }
 
     public function proveritToken(string $token, Repo $repo): bool

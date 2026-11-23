@@ -6,16 +6,19 @@ namespace App\Account\Business\UseCase\OpenCode;
 
 use App\Account\Business\Command\SozdatRekvizityOpenCode;
 use App\Account\Business\Model\OpenCode\OpenCodeCredential;
+use App\Account\Business\Model\OpenCode\ProvayderOpenCode;
 use App\Account\Business\Port\OpenCodeCredentialRepository;
 use App\Account\Business\Port\SecurityService;
 use App\Account\Business\Port\UmeetShifrovatSekrety;
 use App\Account\Business\Port\UuidGenerator;
+use App\Account\Business\Utils\PodgotovitelRekvizitovOpenCode;
 
 /**
  * Добавление реквизитов OpenCode текущего пользователя.
  *
  * Открытый API-ключ существует только внутри этого метода: в БД уходит
- * шифротекст, в ответ — идентификатор новой записи.
+ * шифротекст, в ответ — идентификатор новой записи. URL неизвестного
+ * провайдера подставляется из каталога, `custom` требует URL вручную.
  */
 final class SozdatRekvizityOpenCodeUseCase
 {
@@ -42,12 +45,22 @@ final class SozdatRekvizityOpenCodeUseCase
             throw new \DomainException('account.opencode_credential.name_double');
         }
 
+        $provider = ProvayderOpenCode::izKoda($command->provider);
+        [$models, $defaultModel] = PodgotovitelRekvizitovOpenCode::razreshitModeli(
+            $command->models,
+            $command->model,
+            $command->defaultModel,
+        );
+        $url = PodgotovitelRekvizitovOpenCode::urlDlyaProvaydera($provider, $command->url);
+
         $credential = OpenCodeCredential::create(
             $credentialId,
             $accountId,
             $command->name,
-            $command->url,
-            $command->model,
+            $provider->value,
+            $url,
+            $models,
+            $defaultModel,
             $this->umeetShifrovatSekrety->zashifrovat(
                 $command->apiKey,
                 OpenCodeCredential::makeAad($accountId, $credentialId),

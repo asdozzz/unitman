@@ -9,7 +9,8 @@ readonly class NastroikiHukaProektaUstanovleni
         public bool $avtosozdanie,
         public bool $avtoobnovlenie,
         public bool $avtoudalenie,
-        public bool $obnovlenieBezSbrosaPodgotovki = false
+        public bool $obnovlenieBezSbrosaPodgotovki = false,
+        public bool $vebhukNastroen = false,
     )
     {
     }

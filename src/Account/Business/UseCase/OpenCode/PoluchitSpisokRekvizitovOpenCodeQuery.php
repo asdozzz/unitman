@@ -13,6 +13,7 @@ use App\Account\Business\ReadModel\OpenCodeCredentialReadModel;
  * Список реквизитов OpenCode текущего пользователя.
  *
  * Расшифровка не выполняется вовсе: для показа достаточно маски ключа.
+ * Поле `model` в ответе — синоним `defaultModel`.
  */
 final class PoluchitSpisokRekvizitovOpenCodeQuery
 {
@@ -33,7 +34,10 @@ final class PoluchitSpisokRekvizitovOpenCodeQuery
             static fn (OpenCodeCredential $credential): OpenCodeCredentialReadModel => new OpenCodeCredentialReadModel(
                 $credential->getId(),
                 $credential->getName(),
+                $credential->getProvider(),
                 $credential->getUrl(),
+                $credential->getModels(),
+                $credential->getDefaultModel(),
                 $credential->getModel(),
                 $credential->getApiKeyHint(),
                 $credential->getCreatedAt(),

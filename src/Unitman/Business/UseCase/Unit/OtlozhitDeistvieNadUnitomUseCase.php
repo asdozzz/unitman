@@ -7,6 +7,7 @@ namespace App\Unitman\Business\UseCase\Unit;
 use App\Unitman\Business\Model\SobitieIzHranilisha\DannieSobitiya;
 use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Model\Unit;
+use App\Unitman\Business\Model\Unit\OtlozhennoeDeistvie;
 use App\Unitman\Business\Port\Unit\OtlozhennieDeistviyaRepository;
 use Psr\Log\LoggerInterface;
 
@@ -30,9 +31,30 @@ final class OtlozhitDeistvieNadUnitomUseCase
     ) {
     }
 
-    public function handle(Unit $unit, TipSobitiya $tipSobitiya, DannieSobitiya $dannieSobitiya): void
-    {
+    public function handle(
+        Unit $unit,
+        TipSobitiya $tipSobitiya,
+        DannieSobitiya $dannieSobitiya,
+        string $status = OtlozhennoeDeistvie::STATUS_READY,
+    ): void {
         $unitId = $unit->getId();
+
+        /*
+         * Удаление и слияние уже отменяют смысл обновления. Если намерение
+         * удаления появилось раньше, новое обновление не создаём — иначе
+         * карточка показывала бы взаимоисключающие намерения.
+         */
+        if ($tipSobitiya === TipSobitiya::KOD_OBNOVLEN
+            && $this->otlozhennieRepository->estNamerenieUdaleniya($unitId)
+        ) {
+            $this->logger->info('unit.otlozhennoe_deistvie.obnovlenie_otkloneno', [
+                'unitId' => $unitId,
+                'vetka' => $dannieSobitiya->vetka,
+                'reason' => 'est_namerenie_udaleniya',
+            ]);
+
+            return;
+        }
 
         if ($this->esliUdalenie($tipSobitiya)) {
             $this->otlozhennieRepository->udalitPoUnituITipu($unitId, TipSobitiya::KOD_OBNOVLEN);
@@ -49,6 +71,7 @@ final class OtlozhitDeistvieNadUnitomUseCase
                 'tip_sobitiya' => $tipSobitiya->value,
             ],
             new \DateTimeImmutable(),
+            $status,
         );
 
         /*
@@ -61,6 +84,7 @@ final class OtlozhitDeistvieNadUnitomUseCase
             'vetka' => $dannieSobitiya->vetka,
             'tipSobitiya' => $tipSobitiya->value,
             'unixtime' => $dannieSobitiya->unixtime,
+            'status' => $status,
         ]);
     }
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
+use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
+use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\SobitieIzHranilisha\TipSobitiya;
 use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\OtlozhennoeDeistvie;
@@ -19,6 +21,7 @@ use App\Unitman\Business\UseCase\Unit\DobavitProzesUdaleniyaUseCase;
 use App\Unitman\Business\UseCase\Unit\PrimenitOtlozhennieDeistviyaDlyaUnitaUseCase;
 use App\Unitman\Business\Utils\ProverkaSvobodyUnita;
 use App\Unitman\Tests\Support\FakeUnitmanSecurityService;
+use App\Unitman\Tests\Support\InMemoryProjectRepository;
 use App\Unitman\Tests\Support\SequenceGuidGenerator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -280,16 +283,26 @@ final class PrimenitOtlozhennieDeistviyaDlyaUnitaUseCaseTest extends TestCase
 
         $proverkaSvobody = new ProverkaSvobodyUnita($zanyatostRepository);
 
+        $projectRepository = new InMemoryProjectRepository();
+        $project = Project::addProject(
+            self::PROJECT_ID,
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300),
+            'author-1',
+        );
+        $projectRepository->save($project);
+
         return new PrimenitOtlozhennieDeistviyaDlyaUnitaUseCase(
             $otlozhennie,
             $proverkaSvobody,
             $unitRepository,
+            $projectRepository,
             new DobavitProzesObnovleniyaUseCase(
                 $unitRepository,
                 new FakeUnitmanSecurityService(),
                 new SequenceGuidGenerator('prozes-'),
-                $this->createMock(ProjectRepository::class),
+                $projectRepository,
                 $proverkaSvobody,
+                $otlozhennie,
             ),
             new DobavitProzesUdaleniyaUseCase(
                 $unitRepository,

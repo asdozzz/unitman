@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Account\Api;
 
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Model\OpenCode\OpenCodeCredential;
 use App\Account\Business\Port\OpenCodeCredentialRepository;
 use App\Account\Business\Port\UmeetShifrovatSekrety;
+use App\Account\Business\ReadModel\OpenCodeCredentialModelsReadModel;
 use App\Account\Business\ReadModel\OpenCodeCredentialSecretReadModel;
 use App\Account\Infra\Adapter\SymfonySecurityService;
 use App\Account\Infra\Repository\JWTUserRepository;
@@ -63,24 +66,52 @@ final class AccountApi
      * не отдаётся в HTTP-ответы. Чужие реквизиты недоступны: владение
      * проверяется до расшифровки.
      *
-     * @throws \DomainException если реквизиты не найдены или принадлежат другому аккаунту
+     * Если `$model` не передан (или пуст) — возвращается дефолтная модель.
+     * Если передан — он обязан входить в набор моделей реквизитов.
+     *
+     * @throws \DomainException если реквизиты не найдены, принадлежат другому
+     *                          аккаунту или модель недоступна
      */
     public function poluchitRekvizityOpenCodeDlyVladelca(
         string $accountId,
         string $credentialId,
+        ?string $model = null,
     ): OpenCodeCredentialSecretReadModel {
         $credential = $this->openCodeCredentialRepository->getById($credentialId);
         $credential->trebovatVladelca($accountId);
 
+        $resolvedModel = $this->razreshitModel($credential, $model);
+
         return new OpenCodeCredentialSecretReadModel(
             $credential->getId(),
             $credential->getAccountId(),
+            $credential->getProvider(),
             $credential->getUrl(),
-            $credential->getModel(),
+            $credential->getModels(),
+            $credential->getDefaultModel(),
+            $resolvedModel,
             $this->umeetShifrovatSekrety->rasshifrovat(
                 $credential->getApiKeyCipher(),
                 OpenCodeCredential::makeAad($credential->getAccountId(), $credential->getId()),
             ),
+        );
+    }
+
+    /**
+     * Дефолтная модель и список моделей реквизитов для конкретного владельца.
+     *
+     * @throws \DomainException если реквизиты не найдены или принадлежат другому аккаунту
+     */
+    public function poluchitModeliRekvizitovOpenCodeDlyVladelca(
+        string $accountId,
+        string $credentialId,
+    ): OpenCodeCredentialModelsReadModel {
+        $credential = $this->openCodeCredentialRepository->getById($credentialId);
+        $credential->trebovatVladelca($accountId);
+
+        return new OpenCodeCredentialModelsReadModel(
+            $credential->getDefaultModel(),
+            $credential->getModels(),
         );
     }
 
@@ -97,5 +128,23 @@ final class AccountApi
     {
         $credential = $this->openCodeCredentialRepository->getById($credentialId);
         $credential->trebovatVladelca($accountId);
+    }
+
+    /**
+     * @throws \DomainException `account.opencode_credential.model_not_available`
+     */
+    private function razreshitModel(OpenCodeCredential $credential, ?string $model): string
+    {
+        $model = $model !== null ? trim($model) : '';
+
+        if ($model === '') {
+            return $credential->getDefaultModel();
+        }
+
+        if (!\in_array($model, $credential->getModels(), true)) {
+            throw new \DomainException('account.opencode_credential.model_not_available');
+        }
+
+        return $model;
     }
 }

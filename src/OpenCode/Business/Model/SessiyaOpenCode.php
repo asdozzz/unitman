@@ -50,6 +50,7 @@ final class SessiyaOpenCode
         private int $updatedAt,
         private TipSessiiOpenCode $tip,
         private ?Workspace $workspace,
+        private ?string $model = null,
     ) {
     }
 
@@ -63,6 +64,7 @@ final class SessiyaOpenCode
         ?string $title,
         array $units,
         int $now,
+        ?string $model = null,
     ): self {
         if (trim($accountId) === '') {
             throw new \DomainException('opencode.session.account_required');
@@ -85,6 +87,7 @@ final class SessiyaOpenCode
             $now,
             TipSessiiOpenCode::UNIT,
             null,
+            $model,
         );
     }
 
@@ -102,6 +105,7 @@ final class SessiyaOpenCode
         ?string $archiveReason,
         int $createdAt,
         int $updatedAt,
+        ?string $model = null,
     ): self {
         if ($archivedAt !== null && ($archiveReason === null || trim($archiveReason) === '')) {
             throw new \DomainException('opencode.session.archive_reason_required');
@@ -120,6 +124,7 @@ final class SessiyaOpenCode
             $updatedAt,
             TipSessiiOpenCode::UNIT,
             null,
+            $model,
         );
     }
 
@@ -137,6 +142,7 @@ final class SessiyaOpenCode
         array $projects,
         string $initialPrompt,
         int $now,
+        ?string $model = null,
     ): self {
         if (trim($accountId) === '') {
             throw new \DomainException('opencode.session.account_required');
@@ -171,6 +177,7 @@ final class SessiyaOpenCode
             $now,
             TipSessiiOpenCode::WORKSPACE,
             Workspace::create($branch, $initialPrompt, $projects, $now),
+            $model,
         );
     }
 
@@ -189,6 +196,7 @@ final class SessiyaOpenCode
         Workspace $workspace,
         int $createdAt,
         int $updatedAt,
+        ?string $model = null,
     ): self {
         if ($archivedAt !== null && ($archiveReason === null || trim($archiveReason) === '')) {
             throw new \DomainException('opencode.session.archive_reason_required');
@@ -207,6 +215,7 @@ final class SessiyaOpenCode
             $updatedAt,
             TipSessiiOpenCode::WORKSPACE,
             $workspace,
+            $model,
         );
     }
 
@@ -308,6 +317,15 @@ final class SessiyaOpenCode
     public function getUpdatedAt(): int
     {
         return $this->updatedAt;
+    }
+
+    /**
+     * Модель, выбранная при создании сессии. `null` — взять дефолт реквизитов
+     * при следующем ходе.
+     */
+    public function getModel(): ?string
+    {
+        return $this->model;
     }
 
     public function prinadlezhit(string $accountId): bool

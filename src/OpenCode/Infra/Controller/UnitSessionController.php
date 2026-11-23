@@ -57,7 +57,19 @@ final class UnitSessionController extends AbstractController
         path: '/api/opencode/unit-session/sozdat',
         summary: 'Создать unit-сессию для одного юнита',
         tags: ['UnitSession'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['credentialId', 'unitId'],
+                properties: [
+                    new OA\Property(property: 'credentialId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'unitId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'title', type: 'string', nullable: true),
+                    new OA\Property(property: 'model', type: 'string', nullable: true, description: 'Модель из набора реквизитов; по умолчанию — дефолтная'),
+                ]
+            )
+        ),
         responses: [new OA\Response(response: 200, description: 'Идентификатор созданной сессии')]
     )]
     #[Route('/sozdat', methods: ['POST'])]
@@ -69,6 +81,7 @@ final class UnitSessionController extends AbstractController
             (string) ($data['credentialId'] ?? ''),
             is_string($data['title'] ?? null) ? $data['title'] : null,
             (string) ($data['unitId'] ?? ''),
+            is_string($data['model'] ?? null) ? $data['model'] : null,
         );
 
         return $this->json(Response::success(['id' => $id]));
@@ -94,7 +107,18 @@ final class UnitSessionController extends AbstractController
         path: '/api/opencode/unit-session/prompt',
         summary: 'Запустить ход unit-сессии',
         tags: ['UnitSession'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['sessionId', 'text'],
+                properties: [
+                    new OA\Property(property: 'sessionId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'text', type: 'string'),
+                    new OA\Property(property: 'model', type: 'string', nullable: true, description: 'Переопределение модели перед ходом'),
+                ]
+            )
+        ),
         responses: [new OA\Response(response: 200, description: 'Запуск хода')]
     )]
     #[Route('/prompt', methods: ['POST'])]
@@ -104,6 +128,7 @@ final class UnitSessionController extends AbstractController
         $result = $useCase->handle(
             (string) ($data['sessionId'] ?? ''),
             (string) ($data['text'] ?? ''),
+            is_string($data['model'] ?? null) ? $data['model'] : null,
         );
 
         return $this->json(Response::success([
@@ -117,7 +142,18 @@ final class UnitSessionController extends AbstractController
         path: '/api/opencode/unit-session/otvetit',
         summary: 'Ответить на вопросы предыдущего хода',
         tags: ['UnitSession'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(type: 'object')),
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['turnId', 'answers'],
+                properties: [
+                    new OA\Property(property: 'turnId', type: 'string', format: 'uuid'),
+                    new OA\Property(property: 'answers', type: 'array', items: new OA\Items(type: 'object')),
+                    new OA\Property(property: 'model', type: 'string', nullable: true, description: 'Переопределение модели перед ходом'),
+                ]
+            )
+        ),
         responses: [new OA\Response(response: 200, description: 'Запуск хода')]
     )]
     #[Route('/otvetit', methods: ['POST'])]
@@ -126,7 +162,11 @@ final class UnitSessionController extends AbstractController
         $data = $request->toArray();
         $answers = is_array($data['answers'] ?? null) ? $data['answers'] : [];
 
-        $result = $useCase->handle((string) ($data['turnId'] ?? ''), $answers);
+        $result = $useCase->handle(
+            (string) ($data['turnId'] ?? ''),
+            $answers,
+            is_string($data['model'] ?? null) ? $data['model'] : null,
+        );
 
         return $this->json(Response::success([
             'id' => $result->turnId,
