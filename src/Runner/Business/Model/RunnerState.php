@@ -6,6 +6,7 @@ namespace App\Runner\Business\Model;
 
 use App\Runner\Business\Model\RunnerState\DockerContainerStats;
 use App\Runner\Business\Model\RunnerState\MemoryInfo;
+use App\Runner\Business\Model\RunnerState\RunnerResources;
 
 final class RunnerState implements \JsonSerializable
 {
@@ -19,6 +20,7 @@ final class RunnerState implements \JsonSerializable
         private array $dockerStats = [],
         private MemoryInfo $memoryInfo = new MemoryInfo(0, 0),
         private int $unixtimeLastHealth = 0,
+        private ?RunnerResources $resources = null,
     ) {
     }
 
@@ -61,14 +63,37 @@ final class RunnerState implements \JsonSerializable
         array $dockerStats,
         MemoryInfo $memoryInfo,
         ?int $unixtimeLastHealth = null,
+        ?RunnerResources $resources = null,
     ): void {
         $this->active = $active;
         $this->dockerStats = $dockerStats;
         $this->memoryInfo = $memoryInfo;
 
+        if ($resources !== null) {
+            $this->resources = $resources;
+        }
+
         if ($unixtimeLastHealth !== null) {
             $this->unixtimeLastHealth = $unixtimeLastHealth;
         }
+    }
+
+    /**
+     * Достигнут ли уровень блокировки ресурсов: ресурсоёмкие операции
+     * (сборка, подготовка, запуск, IDE, запуск workspace) запрещены.
+     */
+    public function isResourcesBlocked(): bool
+    {
+        return $this->resources?->isBlocker() ?? false;
+    }
+
+    /**
+     * Последний снимок ресурсов сервера. `null` — раннер ещё не присылал
+     * структурированные ресурсы (старая версия) или health не приходил.
+     */
+    public function getResources(): ?RunnerResources
+    {
+        return $this->resources;
     }
 
     public function getId(): string

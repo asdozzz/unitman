@@ -350,6 +350,9 @@ return [
         'unknown_progress_token' => 'The runner progress token is not registered',
         'workflow_unit_not_found' => 'The unit workflow was not found',
         'zapusk_eshe_ne_zakonchen' => 'The start operation has not finished yet',
+        'resources' => [
+            'blocker' => 'Server resources are exhausted: building, starting and updating units and workspaces is temporarily blocked. Free up disk or memory and try again.',
+        ],
         'state' => [
             'is_non_active' => 'The unit is not active',
             'not_found' => 'The runner state was not found',

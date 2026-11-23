@@ -14,4 +14,9 @@ interface RunnerRepository
     function findById(string $id): ?RunnerState;
 
     function getDefaultRunnerState(): RunnerState;
+
+    /**
+     * @return RunnerState[]
+     */
+    function getAll(): array;
 }

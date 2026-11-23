@@ -9,6 +9,9 @@ use App\Runner\Business\Command\ZaregistrirovatHealthRunnera;
 use App\Runner\Business\Command\ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera;
 use App\Runner\Business\Model\RunnerProgress;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
+use App\Runner\Business\UseCase\PoluchitResursiDefoltnogoRunneraQuery;
+use App\Runner\Business\UseCase\PoluchitSpisokRannerovQuery;
+use App\Runner\Business\UseCase\PoluchitUgrozyRannerovQuery;
 use App\Runner\Business\UseCase\ZaregistrirovatHealthRunneraUseCase;
 use App\Runner\Business\UseCase\ZaregistrirovatUvedomleniyaOSostoyaniiKonteyneraUseCase;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
@@ -86,6 +89,78 @@ final class RunnerController extends AbstractController
         return new JsonResponse([
             'active' => $runnerState->isActive() && $runnerState->isHealthFresh(),
         ]);
+    }
+
+    #[OA\Get(
+        path: '/api/runner/resources',
+        summary: 'Ресурсы сервера раннера по умолчанию (администратор)',
+        description: 'Снимок памяти, дисков, CPU и занятого места Docker, '
+            . 'который раннер присылает в health-push. `blocked=true` — '
+            . 'уровень «чёрный»: ресурсоёмкие операции заблокированы.',
+        tags: ['Runner'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Состояние ресурсов раннера',
+                content: new OA\JsonContent(ref: '#/components/schemas/ResursiRunneraReadModel')
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 403, description: 'Недостаточно прав (не администратор)'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/resources', methods: ['GET'])]
+    function resources(PoluchitResursiDefoltnogoRunneraQuery $query): JsonResponse
+    {
+        return $this->json(\App\Utils\Model\Reponse\Response::success($query->handle()));
+    }
+
+    #[OA\Get(
+        path: '/api/runner/list',
+        summary: 'Список раннеров с состоянием ресурсов (администратор)',
+        description: 'Карточки всех раннеров, отсортированные от худшего уровня угрозы. '
+            . 'Доступно только администратору.',
+        tags: ['Runner'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Карточки раннеров',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/RannerKartaReadModel')
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 403, description: 'Недостаточно прав (не администратор)'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/list', methods: ['GET'])]
+    function list(PoluchitSpisokRannerovQuery $query): JsonResponse
+    {
+        return $this->json(\App\Utils\Model\Reponse\Response::success($query->handle()));
+    }
+
+    #[OA\Get(
+        path: '/api/runner/threats',
+        summary: 'Сводка угроз по раннерам для шапки сайта',
+        description: 'Доступно всем авторизованным пользователям. Содержит только уровни '
+            . 'и идентификаторы проблемных раннеров, без деталей ресурсов.',
+        tags: ['Runner'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Сводка угроз',
+                content: new OA\JsonContent(ref: '#/components/schemas/UgrozyRannerovReadModel')
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/threats', methods: ['GET'])]
+    function threats(PoluchitUgrozyRannerovQuery $query): JsonResponse
+    {
+        return $this->json(\App\Utils\Model\Reponse\Response::success($query->handle()));
     }
 
     #[OA\Get(

@@ -122,6 +122,9 @@ final class RunnerApi implements RunnerApiInterface
 
     public function initProject(InitProjectCommand $command): string
     {
+        // Клонирование проекта — ресурсоёмкая операция.
+        $this->proveritResursy();
+
         $workflow = $this->workflowClient->newWorkflowStub(
             InitProjectWorkflow::class,
             WorkflowOptions::new()
@@ -165,6 +168,7 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatSborkuUnita(string $workflowId,NachatSborkuUnita $command): string
     {
+        $this->proveritResursy();
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -209,6 +213,7 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatPodgotovkuUnita(string $workflowId,NachatPodgotovkuUnita $command): string
     {
+        $this->proveritResursy();
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -228,6 +233,7 @@ final class RunnerApi implements RunnerApiInterface
      */
     public function izmenitRezhimRedaktoraUnita(string $workflowId, IzmenitRezhimRedaktoraUnita $command): string
     {
+        $this->proveritResursy();
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -247,6 +253,7 @@ final class RunnerApi implements RunnerApiInterface
      */
     public function podgotovitSessiyuRedaktora(string $workflowId, PodgotovitSessiyuRedaktora $command): string
     {
+        $this->proveritResursy();
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -263,6 +270,7 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatObnovlenieUnita(string $workflowId,NachatObnovlenieUnita $command): string
     {
+        $this->proveritResursy();
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -295,6 +303,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatZapuskUnita(string $workflowId,NachatZapuskUnita $command): string
     {
+        $this->proveritResursy();
+
         $runnerState = $this->runnerRepository->getDefaultRunnerState();
 
         if (!$runnerState->isActive() || !$runnerState->isHealthFresh()) {
@@ -450,6 +460,27 @@ final class RunnerApi implements RunnerApiInterface
      * @return \Temporal\Client\WorkflowStubInterface
      * @throws \Exception
      */
+    /**
+     * Предпроверка ресурсов сервера перед ресурсоёмкой операцией.
+     *
+     * Авторитетный гейт находится на раннере (там реальный снимок ресурсов),
+     * проверка здесь нужна, чтобы пользователь получил локализованную ошибку
+     * сразу, не дожидаясь выполнения Temporal-активности. Если состояние
+     * раннера недоступно, проверка пропускается.
+     */
+    private function proveritResursy(): void
+    {
+        try {
+            $runnerState = $this->runnerRepository->getDefaultRunnerState();
+        } catch (\Throwable) {
+            return;
+        }
+
+        if ($runnerState->isResourcesBlocked()) {
+            throw new \DomainException('runner.resources.blocker');
+        }
+    }
+
     private function getWorkflowById(string $workflowId): \Temporal\Client\WorkflowStubInterface
     {
         $workflow = $this->workflowClient->newUntypedRunningWorkflowStub($workflowId);
@@ -629,6 +660,8 @@ final class RunnerApi implements RunnerApiInterface
 
     public function zapustitWorkspace(string $workflowId, ZapustitWorkspaceZapros $command): string
     {
+        $this->proveritResursy();
+
         // Токен не приходит от вызывающей стороны: URL клона дозапрашивается
         // у Unitman здесь, и только обогащённая команда уходит в workflow.
         $projects = [];

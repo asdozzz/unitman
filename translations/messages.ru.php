@@ -346,6 +346,9 @@ return [
         'unknown_progress_token' => 'Токен прогресса runner\'а не зарегистрирован',
         'workflow_unit_not_found' => 'Workflow юнита не найден',
         'zapusk_eshe_ne_zakonchen' => 'Запуск еще не завершен',
+        'resources' => [
+            'blocker' => 'Ресурсы сервера на пределе: сборка, запуск и обновление юнитов и workspace временно заблокированы. Освободите диск или память и повторите попытку.',
+        ],
         'state' => [
             'is_non_active' => 'Юнит не активен',
             'not_found' => 'Состояние runner не найдено',

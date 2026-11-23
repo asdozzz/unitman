@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Runner;
 
 use App\Runner\Acl\AccountAdapter;
+use App\Runner\Acl\SecurityAdapter;
 use App\Runner\Acl\UnitmanAdapter;
 use App\Runner\Business\Port\CanGenerateGuid;
 use App\Runner\Business\Port\UmeetChitatProgressZadachi;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
 use App\Runner\Business\Port\UmeetObnovlyatSostoyanieKonteyneraUnita;
 use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
+use App\Runner\Business\Port\UmeetProveryatPravaAdmina;
 use App\Runner\Business\Port\UmeetPoluchatRekvizityOpenCode;
 use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
 use App\Runner\Infra\Adapter\RamseyGuidGenerator;
@@ -36,6 +38,7 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UmeetObnovlyatSostoyanieKonteyneraUnita::class, UnitmanAdapter::class);
     $services->set(UmeetPoluchatUrlKlonaProekta::class, UnitmanAdapter::class);
     $services->set(UmeetPoluchatRekvizityOpenCode::class, AccountAdapter::class);
+    $services->set(UmeetProveryatPravaAdmina::class, SecurityAdapter::class);
 
     // Оба порта прогресса указывают на один экземпляр: писатель и читатель
     // обязаны работать с одним и тем же KV-хранилищем.

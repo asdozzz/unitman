@@ -26,12 +26,14 @@ final class ZaregistrirovatHealthRunneraUseCase
 
         $dockerStats = $this->payloadParser->dockerStats($command->dockerStats);
         $memInfo = $this->payloadParser->memoryInfo($command->memInfo);
+        $resources = $this->payloadParser->resources($command->resources);
 
         $runner->ustanovitResultatRabotosposobnosti(
             $command->active,
             $dockerStats,
             $memInfo,
             $command->unixtime ?? time(),
+            $resources,
         );
 
         $this->runnerRepository->save($runner);
