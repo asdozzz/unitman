@@ -116,9 +116,10 @@ final class RunnerPublicAddressController extends AbstractController
     #[OA\Post(
         path: '/api/runner/{runnerId}/public-address/check',
         summary: 'Проверить доступность публичного адреса раннера (администратор)',
-        description: 'Best-effort `GET <publicAddress>` с коротким таймаутом. '
-            . 'Проверка консультативная: недоступность не является ошибкой запроса и '
-            . 'ничего не сохраняет.',
+        description: 'Best-effort `GET <publicAddress>/__unitman/health` с коротким таймаутом. '
+            . 'Локальный дев-адрес (localhost/127.0.0.1:8087) проверяется по внутреннему '
+            . 'имени uproxy:80. Проверка консультативная: недоступность не является '
+            . 'ошибкой запроса и ничего не сохраняет.',
         tags: ['Runner'],
         security: [['bearerAuth' => []]],
         parameters: [

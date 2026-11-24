@@ -8,8 +8,8 @@ namespace App\Runner\Business\Utils;
  * Строгая проверка публичного адреса раннера (контракт v2, A2).
  *
  * Адрес обязан быть абсолютным URL со схемой `http`/`https`, непустым
- * host и без userinfo (`user:pass@`). Query/fragment допустимы: проверка
- * доступности запрашивает адрес как есть (`GET <publicAddress>`).
+ * host и без userinfo (`user:pass@`). Query/fragment допустимы: при проверке
+ * доступности они отбрасываются, а к пути добавляется `/__unitman/health`.
  */
 final class RunnerPublicAddressValidator
 {

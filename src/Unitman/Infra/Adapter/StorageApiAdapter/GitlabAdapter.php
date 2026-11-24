@@ -201,7 +201,21 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
     public function poluchitProektiHranilisha(Repo $repo, ?string $query): array
     {
         $client = $this->clientFactory->makeClient($repo);
-        $all = $client->projects()->all(['per_page' => 100, 'search' => $query, 'simple' => true, 'membership' => true]);
+
+        $parameters = [
+            'per_page' => 100,
+            'simple' => true,
+            'membership' => true,
+        ];
+
+        // Поиск на фронте локальный, поэтому search передаём только когда он
+        // реально задан: пустая строка в search ломает часть версий GitLab API.
+        if ($query !== null && $query !== '') {
+            $parameters['search'] = $query;
+        }
+
+        $all = (new ResultPager($client))->fetchAll($client->projects(), 'all', $parameters);
+
         return array_map(fn(array $item) => new ProektHranilisha($item['path_with_namespace'] ?? "", $item['name_with_namespace'] ?? ""), $all);
     }
 }

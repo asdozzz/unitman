@@ -145,13 +145,73 @@ final class RunnerPublicAddressControllerTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['reachable' => true], $this->json($response->getContent()));
-        // Symfony HttpClient нормализует пустой путь в `/`: запрос уходит на
-        // корень введённого адреса, без служебных путей вроде __unitman/health.
-        self::assertSame(self::PUBLIC_ADDRESS . '/', $capturedUrl);
+        // Проверка идёт на служебный health-эндпоинт nginx-прокси, а не на
+        // корень публичного адреса.
+        self::assertSame(self::PUBLIC_ADDRESS . '/__unitman/health', $capturedUrl);
         self::assertNull(
             $repository->getById(self::RUNNER_ID)->getPublicAddress(),
             'проверка не должна сохранять адрес',
         );
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function localProxyAddresses(): iterable
+    {
+        // Symfony HttpClient нормализует порт 80 для http: в транспорте он
+        // опускается, но запрос всё равно уходит на контейнерный порт nginx.
+        yield 'localhost' => ['http://localhost:8087', 'http://uproxy/__unitman/health'];
+        yield 'ipv4 loopback' => ['http://127.0.0.1:8087', 'http://uproxy/__unitman/health'];
+        yield 'localhost with path and query' => [
+            'http://localhost:8087/foo?bar=1',
+            'http://uproxy/foo/__unitman/health',
+        ];
+    }
+
+    #[DataProvider('localProxyAddresses')]
+    public function test_check_rewrites_local_proxy_address_to_internal_name(
+        string $localAddress,
+        string $expectedUrl,
+    ): void {
+        $capturedUrl = null;
+
+        $httpClient = new MockHttpClient(static function (string $method, string $url) use (&$capturedUrl): MockResponse {
+            $capturedUrl = $url;
+
+            return new MockResponse("Unitman Proxy Host\n", ['http_code' => 200]);
+        });
+
+        $response = $this->controller()->checkPublicAddress(
+            self::RUNNER_ID,
+            $this->request(['publicAddress' => $localAddress]),
+            $this->proveritUseCase($this->repository(), $httpClient),
+        );
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame(['reachable' => true], $this->json($response->getContent()));
+        // localhost внутри контейнера бэкенда — это сам контейнер, поэтому
+        // проверка идёт по внутреннему имени прокси и контейнерному порту 80.
+        self::assertSame($expectedUrl, $capturedUrl);
+    }
+
+    public function test_check_normalizes_trailing_slash_before_health_path(): void
+    {
+        $capturedUrl = null;
+
+        $httpClient = new MockHttpClient(static function (string $method, string $url) use (&$capturedUrl): MockResponse {
+            $capturedUrl = $url;
+
+            return new MockResponse('', ['http_code' => 200]);
+        });
+
+        $this->controller()->checkPublicAddress(
+            self::RUNNER_ID,
+            $this->request(['publicAddress' => self::PUBLIC_ADDRESS . '/']),
+            $this->proveritUseCase($this->repository(), $httpClient),
+        );
+
+        self::assertSame(self::PUBLIC_ADDRESS . '/__unitman/health', $capturedUrl);
     }
 
     public function test_check_returns_unreachable_for_http_error_without_throwing(): void

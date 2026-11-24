@@ -14,7 +14,11 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * `POST /api/runner/{runnerId}/public-address/check` — консультативная
  * проверка доступности адреса.
  *
- * Выполняется best-effort `GET <publicAddress>` с коротким таймаутом.
+ * Выполняется best-effort `GET <publicAddress>/__unitman/health` с коротким
+ * таймаутом. Локальный дев-адрес (`localhost`/`127.0.0.1` на порту 8087)
+ * перенаправляется на внутреннее имя прокси `uproxy:80`: `localhost` внутри
+ * контейнера бэкенда указывает на сам контейнер, а не на хост с опубликованным
+ * портом nginx-proxy.
  * Недоступность цели никогда не превращается в ошибку запроса и
  * ничего не сохраняет: сохранение адреса от проверки не зависит.
  */
@@ -23,6 +27,17 @@ final class ProveritPublicAddressUseCase
     private const REQUEST_TIMEOUT_SECONDS = 3;
     private const MAX_DURATION_SECONDS = 5;
     private const MAX_ERROR_LENGTH = 512;
+
+    // Служебный health-эндпоинт nginx-прокси (см. .docker/proxy/nginx.conf).
+    private const HEALTH_PATH = '/__unitman/health';
+
+    // Дев-адрес прокси: внутри контейнера бэкенда `localhost` указывает на сам
+    // контейнер, поэтому проверяем по внутреннему имени в сети unitman_default
+    // и контейнерному порту nginx (80), а не по опубликованному 8087.
+    private const LOCAL_PROXY_HOSTS = ['localhost', '127.0.0.1', '::1', '[::1]'];
+    private const LOCAL_PROXY_PORT = 8087;
+    private const INTERNAL_PROXY_HOST = 'uproxy';
+    private const INTERNAL_PROXY_PORT = 80;
 
     public function __construct(
         private readonly RunnerRepository $runnerRepository,
@@ -50,7 +65,7 @@ final class ProveritPublicAddressUseCase
             throw new \DomainException('runner.not_found');
         }
 
-        $url = rtrim($publicAddress, '/');
+        $url = $this->buildProbeUrl($publicAddress);
 
         try {
             // `connect_timeout` не поддерживается HttpClientInterface:
@@ -73,6 +88,43 @@ final class ProveritPublicAddressUseCase
         } catch (\Throwable $exception) {
             return ['reachable' => false, 'error' => $this->describeError($exception)];
         }
+    }
+
+    /**
+     * Собирает URL проверки: `<publicAddress>/__unitman/health`.
+     *
+     * Если адрес указывает на локальный дев-прокси, host/port заменяются на
+     * внутреннее имя `uproxy:80` — иначе запрос уйдёт на loopback контейнера
+     * бэкенда. Query/fragment отбрасываются: health-путь должен быть последним
+     * сегментом.
+     */
+    private function buildProbeUrl(string $publicAddress): string
+    {
+        $parts = parse_url($publicAddress);
+
+        if (!is_array($parts)) {
+            return rtrim($publicAddress, '/') . self::HEALTH_PATH;
+        }
+
+        $scheme = strtolower($parts['scheme'] ?? 'http');
+        $host = $parts['host'] ?? '';
+        $port = $parts['port'] ?? null;
+
+        if (in_array(strtolower($host), self::LOCAL_PROXY_HOSTS, true)
+            && $port === self::LOCAL_PROXY_PORT
+        ) {
+            $scheme = 'http';
+            $host = self::INTERNAL_PROXY_HOST;
+            $port = self::INTERNAL_PROXY_PORT;
+        }
+
+        $url = $scheme . '://' . $host;
+
+        if ($port !== null) {
+            $url .= ':' . $port;
+        }
+
+        return $url . rtrim($parts['path'] ?? '', '/') . self::HEALTH_PATH;
     }
 
     private function describeError(\Throwable $exception): string

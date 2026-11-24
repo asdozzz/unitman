@@ -19,6 +19,7 @@ use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
 use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPeremenihProekta;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
+use App\Unitman\Business\Command\Project\PoluchitSpisokVetokHranilisha;
 use App\Unitman\Business\Command\Project\PoluchitSpisokVetokProekta;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
@@ -41,6 +42,7 @@ use App\Unitman\Business\UseCase\Project\PoluchitMoiProektiQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokProektovPolzovatelyaUseCase;
+use App\Unitman\Business\UseCase\Project\PoluchitSpisokVetokHranilishaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokVetokProektaQuery;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
 use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
@@ -791,6 +793,44 @@ final class ProjectController extends AbstractController
     )]
     #[Route('/branchesList', methods: ['POST'])]
     public function branchesList(#[MapRequestPayload] PoluchitSpisokVetokProekta $command, PoluchitSpisokVetokProektaQuery $query): Response
+    {
+        $data = $query->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success($data));
+    }
+
+    #[OA\Post(
+        path: '/api/project/branchesListByCode',
+        summary: 'Список веток проекта в хранилище до создания проекта',
+        description: 'Ветки запрашиваются напрямую в хранилище по паре «репозиторий + код проекта». Нужно форме добавления проекта: проект в Unitman ещё не создан.',
+        tags: ['Project'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PoluchitSpisokVetokHranilisha')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Ветки проекта в хранилище',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            description: 'Ветки проекта в хранилище',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/ProjectBranch')
+                        ),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/branchesListByCode', methods: ['POST'])]
+    public function branchesListByCode(#[MapRequestPayload] PoluchitSpisokVetokHranilisha $command, PoluchitSpisokVetokHranilishaQuery $query): Response
     {
         $data = $query->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::success($data));
