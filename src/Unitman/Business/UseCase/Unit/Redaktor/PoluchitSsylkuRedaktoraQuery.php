@@ -73,15 +73,31 @@ final class PoluchitSsylkuRedaktoraQuery
 
         $signed = $this->signer->podpisat($unit->getId(), $userId, $mode, self::TTL_SECONDS);
 
+        // IDE живёт в compose-профиле и стартует по требованию. Поэтому запрос
+        // ссылки редактора запускает подготовку сессии и для view: иначе первое
+        // открытие read-only редактора упиралось бы в ещё не запущенный сайдкар.
+        $userName = null;
+        $userEmail = null;
+
         if ($mode === 'edit' && $plainToken !== null) {
             $account = $this->securityService->getUserById($userId);
+            $userName = $this->securityService->getEmailOrNicknameByUserId($userId);
+            $userEmail = $account->email;
+        }
+
+        // Для view IDE поднимаем только у уже подготовленного юнита: у
+        // неподготовленного нет контейнера и ссылки редактирования.
+        $nuzhnoPodgotovit = ($mode === 'edit' && $plainToken !== null)
+            || ($mode === 'view' && $unit->esliPodgotovlen());
+
+        if ($nuzhnoPodgotovit) {
             $this->runnerService->podgotovitSessiyuRedaktora(
                 $unit->getId(),
                 $userId,
-                'edit',
-                $plainToken,
-                $this->securityService->getEmailOrNicknameByUserId($userId),
-                $account->email,
+                $mode,
+                $plainToken ?? '',
+                $userName,
+                $userEmail,
             );
         }
 
