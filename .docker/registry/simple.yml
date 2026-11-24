@@ -1,0 +1,30 @@
+# Конфигурация Docker Registry v2 (образ registry:2.8.3).
+# Монтируется в контейнер как /etc/docker/registry/config.yml.
+#
+# proxy.remoteurl включает pull-through-прокси Docker Hub: отсутствующие в
+# локальном хранилище образы registry подтягивает из registry-1.docker.io,
+# раскладывает по локальным слоям и отдаёт клиенту. Это позволяет раннерам
+# собирать образы без прямого доступа к Docker Hub.
+version: 0.1
+log:
+  level: info
+  fields:
+    service: unitman-registry
+storage:
+  # Удаление манифестов/слоёв через API (нужно для очистки кеша).
+  delete:
+    enabled: true
+  # Дескрипторы blob'ов кешируются в памяти: не требуется диск на каждый pull.
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+proxy:
+  # Pull-through-прокси Docker Hub.
+  remoteurl: https://registry-1.docker.io
+  # Время жизни кешированных манифестов/тегов (7 суток).
+  ttl: 168h

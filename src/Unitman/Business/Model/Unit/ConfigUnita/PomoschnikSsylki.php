@@ -4,7 +4,7 @@ namespace App\Unitman\Business\Model\Unit\ConfigUnita;
 
 final class PomoschnikSsylki
 {
-    /** Протокол по умолчанию: ссылка строится через proxy host проекта. */
+    /** Протокол по умолчанию: ссылка строится через публичный адрес раннера. */
     const DEFAULT_TYPE = 'http';
 
     public readonly string $projectId;

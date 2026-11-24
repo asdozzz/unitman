@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\Model\RunnerState\MemoryInfo;
+use App\Runner\Business\UseCase\RunnerSelectionService;
+use App\Runner\Infra\Adapter\DefaultRunnerSelector;
+use App\Runner\Tests\Support\InMemoryRunnerRepository;
+use App\Runner\Tests\Support\InMemoryUnitRunnerRepository;
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Repo\AddRepo;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
@@ -20,6 +26,7 @@ use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
 use App\Unitman\Business\Port\Unit\UmeetSozdavatUnit;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitiDlyaProektovUseCase;
+use App\Unitman\Infra\Adapter\RunnerRepositoryPublicAddressProvider;
 use App\Unitman\Tests\Support\SequenceGuidGenerator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +34,9 @@ use Symfony\Component\Yaml\Yaml;
 
 final class SozdatUnitiDlyaProektovUseCaseTest extends TestCase
 {
+    /** @var list<string|null> */
+    private array $runnerIds = [];
+
     private const CONFIG_API = <<<'YAML'
 variables:
   - id: ORDER_SERVICE
@@ -98,17 +108,18 @@ YAML;
         self::assertCount(2, $commands);
         self::assertSame('unit-1', $result->units[0]->unitId);
         self::assertSame('unit-3', $result->units[1]->unitId);
+        self::assertSame(['runner-1', 'runner-1'], $this->runnerIds);
 
         $apiValues = $commands[0]->znacheniePeremenoi;
         self::assertCount(1, $apiValues);
         self::assertSame('ORDER_SERVICE', $apiValues[0]->id);
         self::assertSame('unit-3', $apiValues[0]->targetUnitId);
-        self::assertSame('https://8080.payments-refactor.web.proxy.example/api', $apiValues[0]->value);
+        self::assertSame('https://8080.payments-refactor.web.runner-1.example.com/api', $apiValues[0]->value);
 
         $webValues = $commands[1]->znacheniePeremenoi;
         self::assertCount(1, $webValues);
         self::assertSame('unit-1', $webValues[0]->targetUnitId);
-        self::assertSame('https://80.payments-refactor.api.proxy.example', $webValues[0]->value);
+        self::assertSame('https://80.payments-refactor.api.runner-1.example.com', $webValues[0]->value);
     }
 
     #[Test]
@@ -133,11 +144,39 @@ YAML;
         }
     }
 
+    #[Test]
+    public function bez_zhivyh_runnerov_gruppovoe_sozdanie_zapreshcheno(): void
+    {
+        $commands = [];
+        $useCase = $this->makeUseCase($commands, withLiveRunner: false);
+
+        try {
+            $useCase->handleDlyaPolzovatelya(
+                new SozdatUnitiDlyaProektov('payments-refactor', [
+                    new ProektDlyaSozdaniyaUnita('project-1', 'feature/payments'),
+                    new ProektDlyaSozdaniyaUnita('project-2', 'feature/payments'),
+                ]),
+                'account-1',
+            );
+            self::fail('Ожидалась ошибка runner.not_found');
+        } catch (\DomainException $error) {
+            self::assertSame('runner.not_found', $error->getMessage());
+        }
+
+        self::assertSame([], $commands);
+        self::assertSame([], $this->runnerIds);
+    }
+
     /**
      * @param SozdatUnit[] $commands
      */
-    private function makeUseCase(array &$commands, ?string $duplicateProjectId = null): SozdatUnitiDlyaProektovUseCase
+    private function makeUseCase(
+        array &$commands,
+        ?string $duplicateProjectId = null,
+        bool $withLiveRunner = true,
+    ): SozdatUnitiDlyaProektovUseCase
     {
+        $this->runnerIds = [];
         $projects = [
             'project-1' => $this->project('project-1', 'services/api', 'api'),
             'project-2' => $this->project('project-2', 'services/web', 'web'),
@@ -176,8 +215,9 @@ YAML;
 
         $sozdatUnit = $this->createMock(UmeetSozdavatUnit::class);
         $sozdatUnit->method('sozdatDlyaPolzovatelya')->willReturnCallback(
-            static function (SozdatUnit $command) use (&$commands): string {
+            function (SozdatUnit $command, string $userId, ?string $unitId = null, ?string $prozesId = null, bool $proveritSvyazi = true, ?string $runnerId = null) use (&$commands): string {
                 $commands[] = $command;
+                $this->runnerIds[] = $runnerId;
 
                 return $command->unitName;
             },
@@ -185,6 +225,14 @@ YAML;
 
         /** @var CanGenerateGuid $generator */
         $generator = new SequenceGuidGenerator('unit-');
+
+        $runners = new InMemoryRunnerRepository();
+
+        if ($withLiveRunner) {
+            $runners->save($this->liveRunner('runner-1'));
+        }
+
+        $bindings = new InMemoryUnitRunnerRepository();
 
         return new SozdatUnitiDlyaProektovUseCase(
             $projectRepository,
@@ -195,23 +243,33 @@ YAML;
             $double,
             $generator,
             $sozdatUnit,
+            new RunnerSelectionService($runners, new DefaultRunnerSelector(), $bindings),
+            new RunnerRepositoryPublicAddressProvider($runners),
         );
     }
 
     private function project(string $id, string $code, string $name): Project
     {
-        $project = Project::addProject(
+        // Проект активен сразу после создания.
+        return Project::addProject(
             $id,
-            new AddProject('repo-1', $code, $name, 'master', 'https://proxy.example', 1024),
+            new AddProject('repo-1', $code, $name, 'master', 1024),
             'account-1',
         );
+    }
 
-        // В реальном сценарии проект уже собран и включён; для юнит-теста
-        // достаточно выставить флаг напрямую.
-        $property = new \ReflectionProperty(Project::class, 'isActive');
-        $property->setAccessible(true);
-        $property->setValue($project, true);
+    private function liveRunner(string $id): RunnerState
+    {
+        // Контракт v2: устаревшее поле адреса остаётся null, ссылки строятся только
+        // по publicAddress.
+        $runner = new RunnerState(
+            $id,
+            $id,
+            true,
+            publicAddress: 'https://' . $id . '.example.com',
+        );
+        $runner->ustanovitResultatRabotosposobnosti(true, [], new MemoryInfo(1000, 900), time());
 
-        return $project;
+        return $runner;
     }
 }

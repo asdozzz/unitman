@@ -2,7 +2,6 @@
 
 namespace App\Runner\Api;
 
-use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatHodOpenCode;
@@ -25,7 +24,6 @@ use App\Runner\Business\Command\Workspace\ResultatZapuskaWorkspace;
 use App\Runner\Business\Command\Workspace\UdalitWorkspace;
 use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
-use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
@@ -65,8 +63,6 @@ interface RunnerApiInterface
      */
     public function poluchitKanalProgressa(string $workflowId): string;
 
-    public function initProject(InitProjectCommand $command): string;
-    public function poluchitResultatSborkiProekta(string $workflowId): ?InitProjectResult;
     public function removeProject(RemoveProjectCommand $command): string;
     public function poluchitResultatUdaleniyaProekta(string $workflowId): ?RemoveProjectResult;
     public function poluchitResultatOchistkiProekta(string $workflowId): ?ResultatOchistkiProekta;

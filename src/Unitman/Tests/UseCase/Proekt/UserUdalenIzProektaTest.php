@@ -35,7 +35,7 @@ final class UserUdalenIzProektaTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'thttp://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', $adminId);
 
         $addUserUseCase = self::$container->get(AddUserToProjectUseCase::class);
         $command = new AddUserToProject($projectId, $userId);

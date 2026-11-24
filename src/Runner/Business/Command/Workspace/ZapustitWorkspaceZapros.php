@@ -24,6 +24,9 @@ final class ZapustitWorkspaceZapros
         public readonly bool $ReadOnly,
         public readonly int $MemoryLimit,
         public readonly array $Projects,
+        // Явный раннер операции (multi-runner). `null` — выбрать автоматически.
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     ) {
     }
 }

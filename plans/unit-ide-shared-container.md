@@ -14,7 +14,7 @@
 | Что | Где | Как устроено |
 |---|---|---|
 | Редактор юнита | IDE-сайдкар в **network namespace юнита**, порт [`IdePort`](../src/Unitman/Business/Utils/IdePort.php:18) 47000 | read-only для всех; `redaktorLink` появляется после подготовки, очищается при сбросе/пересборке |
-| Ссылка на редактор | [`SsylkaServisaUtil`](../src/Unitman/Business/Utils/SsylkaServisaUtil.php:48) | `{scheme}://47000.{unit}.{project}.{proxyHost}` — proxy находит контейнер по поддомену |
+| Ссылка на редактор | [`SsylkaServisaUtil`](../src/Unitman/Business/Utils/SsylkaServisaUtil.php:48) | `{scheme}://47000.{unit}.{project}.{publicAddress}` — proxy находит контейнер по поддомену |
 | Редактор workspace | отдельный `ide`-контейнер `asdozzz/unitman-workspace-ide:latest`, `network_mode: service:workspace` | multi-root `workspace.code-workspace`, RW-том `workspace_app`, `mem_limit: 512m`, `read_only: true` |
 | Права на редактирование | [`plans/unit-redaktor-prava-redaktirovaniya.md`](unit-redaktor-prava-redaktirovaniya.md:1) | `view` для всех / `edit` только автор / `locked` на защищённых ветках; режим вычисляется, enforcement планируется на уровне монтирования `:ro`/`:rw` и git-хуков |
 

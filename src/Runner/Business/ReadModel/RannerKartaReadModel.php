@@ -28,6 +28,12 @@ final class RannerKartaReadModel implements \JsonSerializable
         // Легаси-снимок `/proc/meminfo` из старого health-push: позволяет
         // показать память, пока раннер не обновлён до структурированных ресурсов.
         public MemoryInfo $memoryInfo = new MemoryInfo(0, 0),
+        // Публичный адрес, заданный администратором (A2).
+        public ?string $publicAddress = null,
+        // Unix-время регистрации (контракт v2, fallback на lastRegisteredAt).
+        public ?int $registeredAt = null,
+        // Можно ли выбирать раннер для сборок/ссылок.
+        public bool $hasPublicAddress = false,
     ) {
     }
 

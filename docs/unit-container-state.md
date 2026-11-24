@@ -135,8 +135,11 @@ Mismatch фиксируется, когда `actualState` не соответс�
 
 ### `POST /api/runner/health`
 
-Публичный эндпоинт. Тело ≤ **2 МиБ**, ответ — `true`. Подпись:
-`X-Runner-Signature = hex(HMAC-SHA256(rawBody, RUNNER_CALLBACK_SECRET))`.
+Публичный эндпоинт. Тело ≤ **2 МиБ**, ответ — `true`. Аутентификация —
+per-runner заголовки `X-Runner-Id: <runnerId>` и
+`X-Runner-Signature = hex(HMAC-SHA256(rawBody, perRunnerSecret))`, где секрет
+детерминированно вычисляется из `runnerId` и `RUNNER_SECRET_MASTER_KEY`
+(fallback — `APP_SECRET`) и не хранится в БД.
 
 ```json
 {

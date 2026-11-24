@@ -11,8 +11,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Единое правило построения ссылки на сервис юнита:
- * `http`, `ws`, `wss` идут через proxy host (для ws/wss схема выбирается по
- * схеме proxy: `https` → `wss`, иначе `ws`), любой другой протокол — напрямую
+ * `http`, `ws`, `wss` идут через публичный адрес раннера (для ws/wss схема выбирается по
+ * схеме адреса: `https` → `wss`, иначе `ws`), любой другой протокол — напрямую
  * на юнит.
  */
 final class SsylkaServisaUtilTest extends TestCase
@@ -38,7 +38,7 @@ final class SsylkaServisaUtilTest extends TestCase
     }
 
     #[Test]
-    public function pryamie_protokoli_ne_zavisyat_ot_proxy_hosta(): void
+    public function pryamie_protokoli_ne_zavisyat_ot_proksi(): void
     {
         $this->assertSame(
             'tcp://myunit.myproject:8000',
@@ -83,7 +83,7 @@ final class SsylkaServisaUtilTest extends TestCase
     }
 
     #[Test]
-    public function ws_uchitivaet_port_proxy_hosta(): void
+    public function ws_uchitivaet_port_proksi(): void
     {
         $this->assertSame(
             'wss://8080.myunit.myproject.unitman.example.ru:8443',
@@ -92,7 +92,7 @@ final class SsylkaServisaUtilTest extends TestCase
     }
 
     #[Test]
-    public function http_stroitsya_cherez_proxy_host(): void
+    public function http_stroitsya_cherez_proksi(): void
     {
         $this->assertSame(
             'https://8080.myunit.myproject.unitman.example.ru',
@@ -101,7 +101,7 @@ final class SsylkaServisaUtilTest extends TestCase
     }
 
     #[Test]
-    public function http_uchitivaet_port_proxy_hosta(): void
+    public function http_uchitivaet_port_proksi(): void
     {
         $this->assertSame(
             'https://8080.myunit.myproject.unitman.example.ru:8443',
@@ -128,19 +128,19 @@ final class SsylkaServisaUtilTest extends TestCase
     }
 
     #[Test]
-    public function http_bez_validnogo_proxy_hosta_daet_oshibku(): void
+    public function http_bez_validnogo_proksi_daet_oshibku(): void
     {
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage('unit.invalid_proxy_host');
+        $this->expectExceptionMessage('unit.runner_public_address_missing');
 
         SsylkaServisaUtil::sformirovat('http', 8080, 'myunit', 'myproject', 'not-a-url');
     }
 
     #[Test]
-    public function ws_bez_validnogo_proxy_hosta_daet_oshibku(): void
+    public function ws_bez_validnogo_proksi_daet_oshibku(): void
     {
         $this->expectException(\DomainException::class);
-        $this->expectExceptionMessage('unit.invalid_proxy_host');
+        $this->expectExceptionMessage('unit.runner_public_address_missing');
 
         SsylkaServisaUtil::sformirovat('ws', 8080, 'myunit', 'myproject', null);
     }

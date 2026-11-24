@@ -6,7 +6,6 @@ doctrine_migrations:
         'App\Account\Migrations': '%kernel.project_dir%/src/Account/Migrations'
         'App\Runner\Migrations': '%kernel.project_dir%/src/Runner/Migrations'
         'App\Unitman\Migrations': '%kernel.project_dir%/src/Unitman/Migrations'
-        'App\Initialization\Migrations': '%kernel.project_dir%/src/Initialization/Migrations'
         'App\Mediateka\Migrations': '%kernel.project_dir%/src/Mediateka/Migrations'
         'App\BackgroundJob\Migrations': '%kernel.project_dir%/src/BackgroundJob/Migrations'
         'App\OpenCode\Migrations': '%kernel.project_dir%/src/OpenCode/Migrations'

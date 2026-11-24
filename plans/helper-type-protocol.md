@@ -12,18 +12,18 @@
 
 | Место | `http` | `ws` | Прочее (`tcp`, ...) |
 |---|---|---|---|
-| Юниты | `https://<port>.<unit>.<project>.<proxyhost>` (схема из proxy host) | попадает в ветку `else`: `ws://<unit>.<project>:<port>` | `tcp://<unit>.<project>:<port>` |
-| Хелпер | `httрs`-ссылка через proxy host | **не находится**: жёсткое условие `protocol === 'http'` в цикле поиска | **не находится** |
+| Юниты | `https://<port>.<unit>.<project>.<publicAddress-host>` (схема из публичный адрес раннера) | попадает в ветку `else`: `ws://<unit>.<project>:<port>` | `tcp://<unit>.<project>:<port>` |
+| Хелпер | `httрs`-ссылка через публичный адрес раннера | **не находится**: жёсткое условие `protocol === 'http'` в цикле поиска | **не находится** |
 | `PomoschnikSsylki` | — | **протокола нет**, клиент не может его передать | — |
 
-Вывод: юниты `ws` обрабатывают (но без proxy host и без `wss`), хелпер `ws` — не обрабатывает.
+Вывод: юниты `ws` обрабатывают (но без публичный адрес раннера и без `wss`), хелпер `ws` — не обрабатывает.
 Принятое решение: юниты не меняем; хелпер повторяет формат юнитов — `ws://<unit>.<project>:<port>`,
-без proxy host и без `wss`. `suffix`/`startUri` дописывается так же, как в проекции юнитов.
+без публичный адрес раннера и без `wss`. `suffix`/`startUri` дописывается так же, как в проекции юнитов.
 
 > **Обновление (подзадача C плана `unit-ws-links-and-compact-link-labels`).** Решение по `ws`
-> пересмотрено: `ws`/`wss` теперь строятся через proxy host по тому же правилу, что и `http`
+> пересмотрено: `ws`/`wss` теперь строятся через публичный адрес раннера по тому же правилу, что и `http`
 > (см. [`SsylkaServisaUtil`](src/Unitman/Business/Utils/SsylkaServisaUtil.php:21)): часть
-> `{port}.{unit}.{project}.{proxyHost}[:{proxyPort}]`, схема маппится `https` → `wss`,
+> `{port}.{unit}.{project}.{publicAddress}[:{publicAddressPort}]`, схема маппится `https` → `wss`,
 > `http` → `ws`. Прямые ссылки `{type}://{unit}.{project}:{port}` остаются только для `tcp`
 > и прочих протоколов. История ниже не переписана.
 
@@ -79,11 +79,11 @@ public readonly ?string $type = null   // null/пусто → http, иначе �
 1. Вычислить нормализованный протокол: пусто → `http`.
 2. В цикле по `$targetUnit->links` сравнивать `$unitLink['protocol'] === $type` вместо `=== 'http'`.
 3. `sformirovatSsylku(SpisokUnitovReadModel $targetUnit, string $type, int $port, ?string $suffix)`:
-   - `http` — существующая логика: `parse_url(proxyHost)`, `<scheme>://<port>.<unit>.<project>.<host>[:<port>]`;
+   - `http` — существующая логика: `parse_url(publicAddress)`, `<scheme>://<port>.<unit>.<project>.<host>[:<port>]`;
    - иначе — как в проекции юнитов: `<type>://<unit>.<project>:<port>`;
    - `suffix` дописывается в обоих случаях (с нормализацией ведущего `/`).
 
-Ссылка для `ws` намеренно **не** учитывает схему proxy host и не превращается в `wss`.
+Ссылка для `ws` намеренно **не** учитывает схему публичный адрес раннера и не превращается в `wss`.
 
 ### 3.6 OpenAPI
 
@@ -107,7 +107,7 @@ flowchart LR
   G --> H[PoluchitSsylkuPoPomoschnikuQuery]
   H --> I[поиск links по service + port + protocol]
   I --> J{type == http}
-  J --> K[proxy host: scheme port unit project host]
+  J --> K[публичный адрес раннера: scheme port unit project host]
   J --> L[type unit project port]
 ```
 

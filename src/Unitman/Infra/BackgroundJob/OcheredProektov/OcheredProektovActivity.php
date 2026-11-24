@@ -3,14 +3,12 @@
 namespace App\Unitman\Infra\BackgroundJob\OcheredProektov;
 
 use App\Unitman\Business\ReadModel\Project\OcheredProektovReadModel;
-use App\Unitman\Business\UseCase\Project\UstanovitResultatSborkiProektaUseCase;
 use App\Unitman\Business\UseCase\Project\UstanovitResultatUdaleniyaProektaUseCase;
 use App\Unitman\Infra\Repository\Project\OcheredProektovRepository;
 
 final class OcheredProektovActivity
 {
     public function __construct(
-        private UstanovitResultatSborkiProektaUseCase $ustanovitResultatSborkiProektaUseCase,
         private UstanovitResultatUdaleniyaProektaUseCase $ustanovitResultatUdaleniyaProektaUseCase,
         private OcheredProektovRepository $ocheredProektovRepository
     )
@@ -29,17 +27,10 @@ final class OcheredProektovActivity
     public function obrabotatZadachu(OcheredProektovReadModel $model): bool
     {
         $result = match ($model->queueName) {
-            OcheredProektovReadModel::SBORKA_PROEKTA => $this->sborka($model),
             OcheredProektovReadModel::UDALENIE_PROEKTA => $this->udalenie($model),
         };
 
         return $result;
-    }
-
-    private function sborka(OcheredProektovReadModel $model): bool
-    {
-        $this->ustanovitResultatSborkiProektaUseCase->handle($model->projectId);
-        return true;
     }
 
     private function udalenie(OcheredProektovReadModel $model): bool

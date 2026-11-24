@@ -5,36 +5,30 @@ declare(strict_types=1);
 namespace App\Runner\Tests\Infra\Controller;
 
 use App\Runner\Business\Command\ZaregistrirovatHealthRunnera;
-use App\Runner\Business\Port\CanGenerateGuid;
+use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
-use App\Runner\Business\UseCase\SozdatDefoltniiRunnerUseCase;
 use App\Runner\Business\UseCase\ZaregistrirovatHealthRunneraUseCase;
 use App\Runner\Business\Utils\RunnerHealthPayloadParser;
-use App\Runner\Infra\Adapter\MemoryGuidGenerator;
+use App\Runner\Business\Utils\RunnerSecretGenerator;
 use App\Runner\Infra\Controller\RunnerController;
 use App\Runner\Infra\Repository\SqlRunnerStateRepository;
 use App\Runner\Infra\Service\RunnerCallbackSignatureChecker;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 /**
  * `POST /api/runner/health` — публичный эндпоинт без JWT.
  *
- * Порядок проверок в контроллере: размер тела → HMAC-подпись тела → пустой
- * runnerId → use case. Секрет передаётся в тестовый чекер напрямую (тот же
- * `RunnerCallbackSignatureChecker`, что и в проде), поэтому тест не зависит
- * от значения `RUNNER_CALLBACK_SECRET` в окружении.
- *
- * Кейс обновления `runner_state` требует БД: раннер создаётся штатным
- * `SozdatDefoltniiRunnerUseCase`, после health-push состояние читается через
- * `SqlRunnerStateRepository`.
+ * Порядок проверок в контроллере: размер тела → пустой runnerId → per-runner
+ * HMAC-подпись (X-Runner-Id + X-Runner-Signature) → use case. Неизвестный
+ * X-Runner-Id — 404, неверная подпись — 401.
  */
 final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWrapper
 {
-    private const SECRET = 'runner-secret';
+    private const MASTER_KEY = 'runner-master-key';
 
     /** Должно совпадать с RunnerController::MAX_HEALTH_CONTENT_BYTES. */
     private const MAX_HEALTH_CONTENT_BYTES = 2 * 1024 * 1024;
@@ -45,14 +39,12 @@ final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWr
     {
         $runnerId = 'runner-health-1';
 
-        self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$runnerId]));
-
-        /** @var SozdatDefoltniiRunnerUseCase $sozdat */
-        $sozdat = self::$container->get(SozdatDefoltniiRunnerUseCase::class);
-        $sozdat->handle();
-
         /** @var SqlRunnerStateRepository $repository */
         $repository = self::$container->get(SqlRunnerStateRepository::class);
+
+        // Регистрация раннера в этом кейсе не проверяется: health-push
+        // обновляет уже существующее состояние, поэтому создаём его напрямую.
+        $repository->save(new RunnerState($runnerId, self::TASK_QUEUE, false));
         $this->assertSame(0, $repository->getById($runnerId)->getUnixtimeLastHealth());
 
         $unixtime = time();
@@ -64,7 +56,7 @@ final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWr
         );
         $body = $this->body($runnerId, true, $unixtime);
 
-        $response = $this->health($command, $body, hash_hmac('sha256', $body, self::SECRET));
+        $response = $this->health($command, $body, $this->sign($runnerId, $body), $runnerId);
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('true', $response->getContent());
@@ -78,24 +70,30 @@ final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWr
 
     public function test_nevalidnaya_podpis_otklonyaetsya(): void
     {
-        $command = new ZaregistrirovatHealthRunnera('runner-1', self::TASK_QUEUE);
-        $body = $this->body('runner-1', true, 1730000000);
+        $runnerId = 'runner-health-invalid';
+        $this->saveRunner($runnerId);
 
-        $this->expectException(AccessDeniedHttpException::class);
+        $command = new ZaregistrirovatHealthRunnera($runnerId, self::TASK_QUEUE);
+        $body = $this->body($runnerId, true, 1730000000);
+
+        $this->expectException(UnauthorizedHttpException::class);
         $this->expectExceptionMessage('runner.invalid_signature');
 
-        $this->health($command, $body, 'deadbeef');
+        $this->health($command, $body, 'deadbeef', $runnerId);
     }
 
-    public function test_otsutstvie_podpisi_otklonyaetsya_pri_zadannom_sekrete(): void
+    public function test_otsutstvie_podpisi_otklonyaetsya(): void
     {
-        $command = new ZaregistrirovatHealthRunnera('runner-1', self::TASK_QUEUE);
-        $body = $this->body('runner-1', true, 1730000000);
+        $runnerId = 'runner-health-missing-signature';
+        $this->saveRunner($runnerId);
 
-        $this->expectException(AccessDeniedHttpException::class);
+        $command = new ZaregistrirovatHealthRunnera($runnerId, self::TASK_QUEUE);
+        $body = $this->body($runnerId, true, 1730000000);
+
+        $this->expectException(UnauthorizedHttpException::class);
         $this->expectExceptionMessage('runner.invalid_signature');
 
-        $this->health($command, $body, null);
+        $this->health($command, $body, null, $runnerId);
     }
 
     public function test_prevyshenie_razmera_tela_otklonyaetsya(): void
@@ -108,8 +106,8 @@ final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWr
         $this->expectException(BadRequestHttpException::class);
         $this->expectExceptionMessage('runner.health_payload_too_large');
 
-        // Размер проверяется до подписи, поэтому заголовок не нужен.
-        $this->health($command, $body, null);
+        // Размер проверяется до подписи, поэтому заголовки не нужны.
+        $this->health($command, $body, null, 'runner-1');
     }
 
     public function test_pustoi_runner_id_otklonyaetsya(): void
@@ -120,24 +118,37 @@ final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWr
         $this->expectException(BadRequestHttpException::class);
         $this->expectExceptionMessage('runner.health_runner_id_empty');
 
-        $this->health($command, $body, hash_hmac('sha256', $body, self::SECRET));
+        // Пустой runnerId проверяется до подписи.
+        $this->health($command, $body, 'whatever', '   ');
+    }
+
+    private function saveRunner(string $runnerId): void
+    {
+        /** @var SqlRunnerStateRepository $repository */
+        $repository = self::$container->get(SqlRunnerStateRepository::class);
+        $repository->save(new RunnerState($runnerId, $runnerId, true));
     }
 
     private function health(
         ZaregistrirovatHealthRunnera $command,
         string $body,
         ?string $signature,
+        string $runnerId,
     ): JsonResponse {
         $request = Request::create('/api/runner/health', 'POST', [], [], [], [], $body);
+        $request->headers->set(RunnerCallbackSignatureChecker::RUNNER_ID_HEADER, $runnerId);
 
         if ($signature !== null) {
             $request->headers->set(RunnerCallbackSignatureChecker::HEADER_NAME, $signature);
         }
 
+        /** @var SqlRunnerStateRepository $repository */
+        $repository = self::$container->get(SqlRunnerStateRepository::class);
+
         return (new RunnerController())->health(
             $command,
             $request,
-            new RunnerCallbackSignatureChecker(self::SECRET),
+            new RunnerCallbackSignatureChecker($repository, new RunnerSecretGenerator(self::MASTER_KEY)),
             $this->useCase(),
         );
     }
@@ -171,5 +182,10 @@ final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWr
             'active' => $active,
             'unixtime' => $unixtime,
         ], JSON_THROW_ON_ERROR);
+    }
+
+    private function sign(string $runnerId, string $body): string
+    {
+        return hash_hmac('sha256', $body, hash_hmac('sha256', $runnerId, self::MASTER_KEY));
     }
 }

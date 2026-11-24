@@ -36,13 +36,12 @@ class AbstractUnitmanUseCase extends AbstractTestCaseWithTransactionWrapper
      * @param string $projectCode
      * @param string $projectName
      * @param string $mainBranch
-     * @param string $proxyHost
      * @return string
      * @throws \Exception
      */
-    protected function addProjectRaw(string $repoId, string $projectCode, string $projectName, string $mainBranch, string $proxyHost): void
+    protected function addProjectRaw(string $repoId, string $projectCode, string $projectName, string $mainBranch): void
     {
-        $command = new AddProject($repoId, $projectCode, $projectName, $mainBranch, $proxyHost, memoryLimit: 300);
+        $command = new AddProject($repoId, $projectCode, $projectName, $mainBranch, memoryLimit: 300);
         $useCase = self::$container->get(AddProjectUseCase::class);
         $useCase->handle($command);
     }

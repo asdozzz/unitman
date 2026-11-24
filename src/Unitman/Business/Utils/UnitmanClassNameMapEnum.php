@@ -21,15 +21,12 @@ enum UnitmanClassNameMapEnum: string
     case ProjectId = 'ProjectId';
     case ProjectWasAdded = 'ProjectWasAdded';
     case ProjectDataWasChanged = 'ProjectDataWasChanged';
-    case ProektPostavlenVOcheredNaSborku = 'ProektPostavlenVOcheredNaSborku';
     case ProektPostavlenVOcheredNaUdalenie = 'ProektPostavlenVOcheredNaUdalenie';
 
-    case ProjectWasBuilt = 'ProjectWasBuilt';
     case ProjectWasDeleted = 'ProjectWasDeleted';
     case ProjectWasDeletedManually = 'ProjectWasDeletedManually';
     case ProjectWasDisabled = 'ProjectWasDisabled';
     case ProjectWasEnabled = 'ProjectWasEnabled';
-    case ProjectWasNotBuilt = 'ProjectWasNotBuilt';
     case ProjectWasNotDeleted = 'ProjectWasNotDeleted';
     case UserAddedToProject = 'UserAddedToProject';
     case UserRemovedFromProject = 'UserRemovedFromProject';

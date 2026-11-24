@@ -23,7 +23,7 @@ use App\OpenCode\Business\Utils\SlugWorkspace;
  * а не удаление, и пользователь должен видеть свои прошлые диалоги.
  *
  * Для workspace-сессий вычисляется `ideLink`. Если Unitman недоступен или у
- * первого проекта нет proxy host, ссылка остаётся null — список при этом
+ * первого проекта нет публичного адреса раннера, ссылка остаётся null — список при этом
  * продолжает работать.
  */
 final class PoluchitSpisokSessiyQuery

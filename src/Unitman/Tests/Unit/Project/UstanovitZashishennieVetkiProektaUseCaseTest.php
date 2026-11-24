@@ -78,7 +78,7 @@ final class UstanovitZashishennieVetkiProektaUseCaseTest extends TestCase
         $repository = new InMemoryProjectRepository();
         $repository->save(Project::addProject(
             self::PROJECT_ID,
-            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300),
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 300),
             'admin-1',
         ));
 

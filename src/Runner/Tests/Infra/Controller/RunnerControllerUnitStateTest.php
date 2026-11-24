@@ -6,10 +6,13 @@ namespace App\Runner\Tests\Infra\Controller;
 
 use App\Runner\Business\Command\UvedomlenieOSostoyaniiKonteynera;
 use App\Runner\Business\Command\ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera;
+use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\Port\UmeetObnovlyatSostoyanieKonteyneraUnita;
 use App\Runner\Business\UseCase\ZaregistrirovatUvedomleniyaOSostoyaniiKonteyneraUseCase;
+use App\Runner\Business\Utils\RunnerSecretGenerator;
 use App\Runner\Infra\Controller\RunnerController;
 use App\Runner\Infra\Service\RunnerCallbackSignatureChecker;
+use App\Runner\Tests\Support\InMemoryRunnerRepository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,7 +32,8 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class RunnerControllerUnitStateTest extends TestCase
 {
-    private const SECRET = 'runner-secret';
+    private const RUNNER_ID = 'runner-1';
+    private const SECRET = 'runner-master-key';
 
     public function test_mismatch_peredayot_polya_v_port(): void
     {
@@ -142,22 +146,23 @@ final class RunnerControllerUnitStateTest extends TestCase
             [],
             $this->body($command),
         );
+        $request->headers->set(RunnerCallbackSignatureChecker::RUNNER_ID_HEADER, self::RUNNER_ID);
         $request->headers->set(RunnerCallbackSignatureChecker::HEADER_NAME, 'deadbeef');
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException::class);
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException::class);
         $this->expectExceptionMessage('runner.invalid_signature');
 
         (new RunnerController())->unitStateNotifications(
             $command,
             $request,
-            new RunnerCallbackSignatureChecker(self::SECRET),
+            $this->checker(),
             new ZaregistrirovatUvedomleniyaOSostoyaniiKonteyneraUseCase($port),
         );
     }
 
     private function command(UvedomlenieOSostoyaniiKonteynera $notification): ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera
     {
-        return new ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera('runner-1', [$notification]);
+        return new ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera(self::RUNNER_ID, [$notification]);
     }
 
     private function send(
@@ -166,17 +171,26 @@ final class RunnerControllerUnitStateTest extends TestCase
         UmeetObnovlyatSostoyanieKonteyneraUnita $port,
     ): JsonResponse {
         $request = Request::create('/api/runner/unitStateNotifications', 'POST', [], [], [], [], $body);
+        $request->headers->set(RunnerCallbackSignatureChecker::RUNNER_ID_HEADER, self::RUNNER_ID);
         $request->headers->set(
             RunnerCallbackSignatureChecker::HEADER_NAME,
-            hash_hmac('sha256', $body, self::SECRET),
+            hash_hmac('sha256', $body, hash_hmac('sha256', self::RUNNER_ID, self::SECRET)),
         );
 
         return (new RunnerController())->unitStateNotifications(
             $command,
             $request,
-            new RunnerCallbackSignatureChecker(self::SECRET),
+            $this->checker(),
             new ZaregistrirovatUvedomleniyaOSostoyaniiKonteyneraUseCase($port),
         );
+    }
+
+    private function checker(): RunnerCallbackSignatureChecker
+    {
+        $repository = new InMemoryRunnerRepository();
+        $repository->save(RunnerState::sozdatRunner(self::RUNNER_ID, self::RUNNER_ID));
+
+        return new RunnerCallbackSignatureChecker($repository, new RunnerSecretGenerator(self::SECRET));
     }
 
     private function body(ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera $command): string

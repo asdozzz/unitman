@@ -16,6 +16,8 @@ final class IzmenitRezhimRedaktoraUnita
     public function __construct(
         public readonly string $UnitId,
         public readonly string $Mode = 'view',
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     ) {
     }
 }

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -22,12 +23,13 @@ const (
 )
 
 const (
-	CodeInvalidSignature   = "runner.invalid_signature"
-	CodeUnknownToken       = "runner.unknown_progress_token"
-	CodeStorageError       = "runner.storage_error"
-	CodeProgressCorrupted  = "runner.progress_corrupted"
-	CodeRequestTooLarge    = "runner.steps_too_large"
-	defaultErrorStatusCode = http.StatusInternalServerError
+	CodeUnknownToken           = "runner.unknown_progress_token"
+	CodeStorageError           = "runner.storage_error"
+	CodeProgressCorrupted      = "runner.progress_corrupted"
+	CodeRequestTooLarge        = "runner.steps_too_large"
+	CodeInvalidSignature       = "runner.invalid_signature"
+	CodeSignatureNotConfigured = "runner.signature_not_configured"
+	defaultErrorStatusCode     = http.StatusInternalServerError
 )
 
 // KV is the minimal Redis contract needed by the progress handler.
@@ -44,25 +46,27 @@ type Publisher interface {
 
 // Options configures the progress gateway.
 type Options struct {
-	Secret           string
 	Limits           Limits
 	ProgressTTL      time.Duration
 	PublishMarkerTTL time.Duration
 	Now              func() time.Time
 	Logger           *slog.Logger
+	// RunnerSecretMasterKey resolves RUNNER_SECRET_MASTER_KEY with APP_SECRET
+	// as fallback (same rule as the PHP backend). Empty means fail closed.
+	RunnerSecretMasterKey string
 }
 
 // Handler implements POST /api/runner/saveSteps, GET /api/runner/progress/{id}
 // and GET /healthz.
 type Handler struct {
-	kv               KV
-	publisher        Publisher
-	secret           string
-	limits           Limits
-	progressTTL      time.Duration
-	publishMarkerTTL time.Duration
-	now              func() time.Time
-	logger           *slog.Logger
+	kv                    KV
+	publisher             Publisher
+	limits                Limits
+	progressTTL           time.Duration
+	publishMarkerTTL      time.Duration
+	now                   func() time.Time
+	logger                *slog.Logger
+	runnerSecretMasterKey string
 }
 
 // NewHandler wires the gateway with safe defaults.
@@ -99,14 +103,14 @@ func NewHandler(kv KV, publisher Publisher, options Options) *Handler {
 	}
 
 	return &Handler{
-		kv:               kv,
-		publisher:        publisher,
-		secret:           options.Secret,
-		limits:           limits,
-		progressTTL:      progressTTL,
-		publishMarkerTTL: markerTTL,
-		now:              now,
-		logger:           logger,
+		kv:                    kv,
+		publisher:             publisher,
+		limits:                limits,
+		progressTTL:           progressTTL,
+		publishMarkerTTL:      markerTTL,
+		now:                   now,
+		logger:                logger,
+		runnerSecretMasterKey: strings.TrimSpace(options.RunnerSecretMasterKey),
 	}
 }
 
@@ -119,9 +123,13 @@ type saveStepsRequest struct {
 
 // SaveSteps handles POST /api/runner/saveSteps.
 //
-// Check order mirrors RunnerController::saveSteps: signature, token
-// registration, snapshot size, decoding/normalization, then KV writes and
-// throttled Centrifugo publishing.
+// Per-runner callback authentication (X-Runner-Id + X-Runner-Signature) is
+// enforced here with the same v2 contract as the PHP path:
+// hex(HMAC-SHA256(responseId . stepsContent, hex(HMAC-SHA256(runnerId,
+// masterKey)))). A missing master key fails closed with 503; missing or
+// invalid headers return 401 before any Redis write. Only then the progress
+// token registered in Redis is checked, followed by size/decode limits, KV
+// writes and throttled Centrifugo publishing.
 func (h *Handler) SaveSteps(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -145,8 +153,10 @@ func (h *Handler) SaveSteps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !VerifySignature(h.secret, request.ResponseID, request.StepsContent, r.Header.Get(SignatureHeader)) {
-		h.writeError(w, http.StatusForbidden, CodeInvalidSignature)
+	// Signature is verified before any Redis write (and before the token
+	// lookup, so unauthenticated requests never touch storage).
+	if status, code := h.verifySaveStepsSignature(r, request.ResponseID, request.StepsContent); status != 0 {
+		h.writeError(w, status, code)
 		return
 	}
 

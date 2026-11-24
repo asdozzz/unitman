@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"unitman/edge/internal/progress"
@@ -13,12 +14,14 @@ import (
 type Config struct {
 	ListenAddr string
 
+	// RunnerSecretMasterKey is RUNNER_SECRET_MASTER_KEY with APP_SECRET as
+	// fallback, resolved exactly like the PHP RunnerSecretGenerator.
+	RunnerSecretMasterKey string
+
 	RedisAddr     string
 	RedisUser     string
 	RedisPassword string
 	RedisDB       int
-
-	RunnerCallbackSecret string
 
 	CentrifugoAPIEndpoint string
 	CentrifugoAPIKey      string
@@ -33,10 +36,10 @@ type Config struct {
 func Load() (Config, error) {
 	cfg := Config{
 		ListenAddr:            getenv("EDGE_LISTEN_ADDR", "0.0.0.0:8081"),
+		RunnerSecretMasterKey: resolveRunnerSecretMasterKey(),
 		RedisAddr:             getenv("REDIS_ADDR", "redis:6379"),
 		RedisUser:             os.Getenv("REDIS_USER"),
 		RedisPassword:         os.Getenv("REDIS_PASSWORD"),
-		RunnerCallbackSecret:  os.Getenv("RUNNER_CALLBACK_SECRET"),
 		CentrifugoAPIEndpoint: os.Getenv("CENTRIFUGO_API_ENDPOINT"),
 		CentrifugoAPIKey:      os.Getenv("CENTRIFUGO_API_KEY"),
 		MaxStepsContentBytes:  progress.DefaultMaxStepsContentBytes,
@@ -74,6 +77,17 @@ func Load() (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// resolveRunnerSecretMasterKey mirrors PHP RunnerSecretGenerator: a blank
+// RUNNER_SECRET_MASTER_KEY falls back to APP_SECRET. The result may be blank;
+// the progress handler then fails closed with 503.
+func resolveRunnerSecretMasterKey() string {
+	if masterKey := strings.TrimSpace(os.Getenv("RUNNER_SECRET_MASTER_KEY")); masterKey != "" {
+		return masterKey
+	}
+
+	return strings.TrimSpace(os.Getenv("APP_SECRET"))
 }
 
 func getenv(name, fallback string) string {

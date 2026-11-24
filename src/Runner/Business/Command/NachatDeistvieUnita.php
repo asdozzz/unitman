@@ -10,7 +10,9 @@ final class NachatDeistvieUnita
         public readonly string $Id,
         public readonly string $Name,
         public readonly array $Commands,
-        public readonly array $Variables
+        public readonly array $Variables,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

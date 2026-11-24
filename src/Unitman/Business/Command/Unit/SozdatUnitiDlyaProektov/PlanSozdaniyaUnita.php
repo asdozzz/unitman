@@ -20,8 +20,8 @@ final class PlanSozdaniyaUnita
         public readonly string $unitId,
         public readonly string $prozesId,
         public readonly int $memoryLimit,
-        public readonly string $proxyHost,
         public readonly ConfigUnita $config,
+        public readonly ?string $runnerId = null,
     ) {
     }
 }

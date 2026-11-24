@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Runner\Infra\Workflow;
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatProverkiKonteineraUnita;
 use Temporal\Activity\ActivityOptions;
@@ -17,14 +16,18 @@ final class ProveritKonteinerUnitaWorkflow
      * */
     #[WorkflowMethod(name: "ProveritKonteinerUnita")]
     #[Workflow\ReturnType(ResultatProverkiKonteineraUnita::class)]
-    public function proverit(ProveritKonteinerUnita $command)
+    public function proverit(ProveritKonteinerUnita $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             'ProveritKonteinerUnitaActivity',
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(30)
-                ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

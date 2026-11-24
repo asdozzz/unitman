@@ -26,15 +26,25 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/api/doc, roles: PUBLIC_ACCESS }
+        # Регистрация v2 публична: bootstrap-подписи больше нет.
+        - { path: ^/api/runner/register$, roles: PUBLIC_ACCESS }
+        # Управление публичным адресом раннера — только администратор.
+        # Проверка роли дублируется в use case (defense in depth).
+        - { path: '^/api/runner/[^/]+/public-address', roles: ROLE_ADMIN }
+        # Callback-и раннера аутентифицируются per-runner подписью
+        # (X-Runner-Id + X-Runner-Signature) в контроллере, а не JWT и не
+        # глобальным секретом. Неизвестный runnerId — 404, неверная подпись — 401.
+        - { path: '^/api/runner/[^/]+/projects/[^/]+/build-state$', roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/saveSteps$, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/health$, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/unitStateNotifications$, roles: PUBLIC_ACCESS }
         - { path: ^/api/account/refreshToken$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/initialization/list, roles: PUBLIC_ACCESS }
         - { path: ^/api/project/(.*)/hook$, roles: PUBLIC_ACCESS }
         # Логин по определению выполняется до аутентификации: требование
         # ROLE_USER/ROLE_ADMIN здесь делает вход невозможным (ролей ещё нет).
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        # Административные маршруты (/api/runner/list и т.п.) остаются за
+        # JWT; проверка роли администратора — в use case.
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

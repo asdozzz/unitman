@@ -9,12 +9,16 @@ use App\Unitman\Business\Model\Unit\ConfigUnita\PomoschnikSsylki;
 /**
  * Единое правило построения ссылки на сервис юнита.
  *
- * Для протокола `http` ссылка идёт через proxy host проекта:
- *   `{scheme}://{port}.{unit}.{project}.{host}[:{proxyPort}]`
+ * Пятый аргумент — публичный адрес (`publicAddress`) раннера, к которому
+ * привязан юнит/workspace (multi-runner). Вызывающая сторона обязана получить
+ * его через `RunnerPublicAddressProvider`; default/fallback host запрещён.
  *
- * Для протоколов `ws` и `wss` ссылка также идёт через proxy host проекта,
- * но схема зависит от схемы proxy: `https` → `wss`, иначе `ws`:
- *   `{wsScheme}://{port}.{unit}.{project}.{host}[:{proxyPort}]`
+ * Для протокола `http` ссылка идёт через публичный адрес раннера:
+ *   `{scheme}://{port}.{unit}.{project}.{host}[:{publicPort}]`
+ *
+ * Для протоколов `ws` и `wss` ссылка также идёт через публичный адрес,
+ * но схема зависит от схемы адреса: `https` → `wss`, иначе `ws`:
+ *   `{wsScheme}://{port}.{unit}.{project}.{host}[:{publicPort}]`
  *
  * Для любого другого протокола (`tcp`, ...) — напрямую на юнит:
  *   `{type}://{unit}.{project}:{port}`
@@ -37,20 +41,22 @@ final class SsylkaServisaUtil
     /**
      * Базовая ссылка на сервис без пути.
      *
-     * `http`, `ws` и `wss` строятся через proxy host проекта; для `ws`/`wss`
-     * схема ссылки выбирается по схеме proxy (`https` → `wss`, иначе `ws`).
+     * `http`, `ws` и `wss` строятся по `publicAddress` привязанного раннера;
+     * для `ws`/`wss` схема ссылки выбирается по схеме адреса
+     * (`https` → `wss`, иначе `ws`).
      * Остальные протоколы строятся напрямую на юнит.
      *
      * @param int|string $port порт сервиса; из YAML может прийти строкой
      *
-     * @throws \DomainException если proxy host проекта не содержит схему или хост
+     * @throws \DomainException `unit.runner_public_address_missing`, если
+     *                          publicAddress раннера не содержит схему или хост
      */
     public static function sformirovat(
         ?string $type,
         int|string $port,
         string $unitName,
         string $projectName,
-        ?string $proxyHost
+        ?string $publicAddress
     ): string {
         $type = self::normalizovatTip($type);
         $port = (int)$port;
@@ -59,10 +65,10 @@ final class SsylkaServisaUtil
             return $type.'://'.$unitName.'.'.$projectName.':'.$port;
         }
 
-        $pathinfo = parse_url((string)$proxyHost);
+        $pathinfo = parse_url((string)$publicAddress);
         /** @var array|false $pathinfo */
         if ($pathinfo === false || empty($pathinfo['scheme']) || empty($pathinfo['host'])) {
-            throw new \DomainException('unit.invalid_proxy_host');
+            throw new \DomainException('unit.runner_public_address_missing');
         }
 
         $scheme = strtolower((string)$pathinfo['scheme']);

@@ -2,7 +2,6 @@
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\NachatUdalenieUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use Temporal\Activity\ActivityOptions;
@@ -19,14 +18,18 @@ final class NachatUdalenieUnitaWorkflow
      * */
     #[WorkflowMethod]
     #[ReturnType(ResultatUdaleniyaUnita::class)]
-    public function execute(NachatUdalenieUnita $command)
+    public function execute(NachatUdalenieUnita $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             'NachatUdalenieUnitaActivity',
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(60*60)
-                ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

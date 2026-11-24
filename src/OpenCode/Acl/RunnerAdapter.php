@@ -14,10 +14,13 @@ use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
+use App\OpenCode\Business\Port\WorkspaceRunnerRepository;
 use App\OpenCode\Business\ReadModel\RezultatProverkiIzmeneniyWorkspace;
 use App\OpenCode\Business\Utils\SlugWorkspace;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\NachatHodOpenCode;
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\UseCase\RunnerSelectionService;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
 use App\Runner\Business\Command\Workspace\ProektWorkspaceZapros;
 use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
@@ -39,7 +42,56 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
     public function __construct(
         private RunnerApiInterface $runnerApi,
         private UuidGenerator $uuidGenerator,
+        // Необязательны для обратной совместимости ручных конструкторов в
+        // тестах; DI подставляет реальные сервисы multi-runner.
+        private readonly ?WorkspaceRunnerRepository $workspaceRunnerRepository = null,
+        private readonly ?RunnerSelectionService $runnerSelectionService = null,
     ) {
+    }
+
+    /**
+     * Раннер, на котором обязан выполняться workspace.
+     *
+     * Workspace жёстко закреплён за одним раннером. Привязанный раннер не
+     * переносится: неактивен/не найден — ошибка без fallback. Отсутствие
+     * привязки (legacy/manual workspace) не даёт права на свободный выбор:
+     * раннер выбирается один раз и привязка фиксируется в `workspace_runner`,
+     * после чего маршрутизация идёт ровно на сохранённый раннер.
+     *
+     * `null` — сервисы multi-runner не подключены (legacy/ручная сборка);
+     * в этом случае маршрут определяет сам Runner (DI всегда подставляет
+     * реальные сервисы, поэтому для workspace-операций это недостижимо).
+     *
+     * @throws \DomainException `runner.not_found` | `runner.inactive`
+     */
+    private function runnerDlyaWorkspace(string $workspaceId): ?RunnerState
+    {
+        if ($this->runnerSelectionService === null || $this->workspaceRunnerRepository === null) {
+            return null;
+        }
+
+        $runnerId = $this->workspaceRunnerRepository->findRunnerIdByWorkspaceId($workspaceId);
+        if ($runnerId !== null && $runnerId !== '') {
+            return $this->runnerSelectionService->getByRunnerId($runnerId);
+        }
+
+        // Нет привязки и нет живого раннера — `select()` бросит
+        // `runner.not_found`; привязка при этом не создаётся.
+        $runner = $this->runnerSelectionService->select();
+
+        $this->workspaceRunnerRepository->bind($workspaceId, $runner->getId());
+
+        // Привязка жёсткая и не перезаписывается. При конкурентном первом
+        // обращении выиграть мог другой запрос — перечитываем и маршрутизируем
+        // ровно на сохранённый раннер, иначе `workspace_runner` и workflow
+        // разойдутся.
+        $sohranenniyRunnerId = $this->workspaceRunnerRepository->findRunnerIdByWorkspaceId($workspaceId);
+
+        if ($sohranenniyRunnerId !== null && $sohranenniyRunnerId !== '' && $sohranenniyRunnerId !== $runner->getId()) {
+            return $this->runnerSelectionService->getByRunnerId($sohranenniyRunnerId);
+        }
+
+        return $runner;
     }
 
     /**
@@ -82,6 +134,15 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
 
         $pervyiUnit = $units[0] ?? null;
 
+        // Ход в контексте workspace обязан идти на раннере, где поднят стенд.
+        // Workspace без привязки (legacy/manual) привязывается здесь один раз;
+        // свободного выбора без фиксации привязки нет. Для обычных юнит-сессий
+        // (`workspace === null`) привязка не меняется: маршрут определяет
+        // `unit_runner` на стороне Runner.
+        $workspaceRunner = $workspace !== null
+            ? $this->runnerDlyaWorkspace($workspace->workspaceId)
+            : null;
+
         return $this->runnerApi->nachatHodOpenCode(
             $workflowId,
             new NachatHodOpenCode(
@@ -100,6 +161,8 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
                 $readOnly,
                 $token,
                 Model: $model,
+                RunnerId: $workspaceRunner?->getId(),
+                TaskQueue: $workspaceRunner?->getTaskQueue(),
             ),
         );
     }
@@ -137,9 +200,14 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         $workspace = $this->trebovatWorkspace($session);
         $workflowId = $this->uuidGenerator->makeGuid();
 
+        // Первый запуск фиксирует привязку workspace к раннеру. Именно этот
+        // раннер обязан попасть в запрос: иначе workflow выберет свободный
+        // раннер, а `workspace_runner` сохранит другой.
+        $runner = $this->runnerDlyaWorkspace($session->getId());
+
         $registered = $this->runnerApi->zapustitWorkspace(
             $workflowId,
-            $this->sobratZapros($session, $workspace),
+            $this->sobratZapros($session, $workspace, $runner),
         );
 
         $workspace->zapomnitOperaciyu(
@@ -153,10 +221,15 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
     {
         $workspace = $this->trebovatWorkspace($session);
         $workflowId = $this->uuidGenerator->makeGuid();
+        $runner = $this->runnerDlyaWorkspace($session->getId());
 
         $registered = $this->runnerApi->ostanovitWorkspace(
             $workflowId,
-            new OstanovitWorkspace($session->getId()),
+            new OstanovitWorkspace(
+                $session->getId(),
+                RunnerId: $runner?->getId(),
+                TaskQueue: $runner?->getTaskQueue(),
+            ),
         );
 
         $workspace->zapomnitOperaciyu(
@@ -171,9 +244,13 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         $workspace = $this->trebovatWorkspace($session);
         $workflowId = $this->uuidGenerator->makeGuid();
 
+        // Восстановление поднимает стенд заново на том же раннере, который
+        // хранится в `workspace_runner`; запрос получает ровно его.
+        $runner = $this->runnerDlyaWorkspace($session->getId());
+
         $registered = $this->runnerApi->zapustitWorkspace(
             $workflowId,
-            $this->sobratZapros($session, $workspace),
+            $this->sobratZapros($session, $workspace, $runner),
         );
 
         $workspace->zapomnitOperaciyu(
@@ -187,10 +264,15 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
     {
         $workspace = $this->trebovatWorkspace($session);
         $workflowId = $this->uuidGenerator->makeGuid();
+        $runner = $this->runnerDlyaWorkspace($session->getId());
 
         $registered = $this->runnerApi->udalitWorkspace(
             $workflowId,
-            new UdalitWorkspace($session->getId()),
+            new UdalitWorkspace(
+                $session->getId(),
+                RunnerId: $runner?->getId(),
+                TaskQueue: $runner?->getTaskQueue(),
+            ),
         );
 
         $workspace->zapomnitOperaciyu(
@@ -203,6 +285,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
     public function poluchitIzmeneniya(SessiyaOpenCode $session): RezultatProverkiIzmeneniyWorkspace
     {
         $workspace = $this->trebovatWorkspace($session);
+        $runner = $this->runnerDlyaWorkspace($session->getId());
 
         $projects = [];
 
@@ -214,7 +297,12 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         }
 
         $result = $this->runnerApi->proveritIzmeneniyaWorkspace(
-            new ProveritIzmeneniyaWorkspace($session->getId(), $projects),
+            new ProveritIzmeneniyaWorkspace(
+                $session->getId(),
+                $projects,
+                RunnerId: $runner?->getId(),
+                TaskQueue: $runner?->getTaskQueue(),
+            ),
         );
 
         $mapped = [];
@@ -266,7 +354,11 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         }
     }
 
-    private function sobratZapros(SessiyaOpenCode $session, Workspace $workspace): ZapustitWorkspaceZapros
+    private function sobratZapros(
+        SessiyaOpenCode $session,
+        Workspace $workspace,
+        ?RunnerState $runner = null,
+    ): ZapustitWorkspaceZapros
     {
         $projects = [];
 
@@ -288,6 +380,8 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
             $workspace->isReadOnly(),
             self::DEFAULT_MEMORY_LIMIT,
             $projects,
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
         );
     }
 

@@ -6,7 +6,11 @@ namespace App\Runner\Business\Command\Workspace;
 
 final class UdalitWorkspace
 {
-    public function __construct(public readonly string $WorkspaceId)
+    public function __construct(
+        public readonly string $WorkspaceId,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
+    )
     {
     }
 }

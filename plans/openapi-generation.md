@@ -60,16 +60,16 @@ Placement:
 
 1. **Full paths in operations.** `#[Route('/register')]` under `#[Route('/api/account')]` must be
    documented as `path: '/api/account/register'` — swagger-php does not merge route prefixes.
-2. **One tag per module**: `Account`, `Unitman`, `Project`, `Repo`, `Webhook`, `Runner`,
-   `Initialization`. UI groups by tag.
+2. **One tag per module**: `Account`, `Unitman`, `Project`, `Repo`, `Webhook`, `Runner`.
+   UI groups by tag.
 3. **Envelope responses** are always described through shared component refs, never inline twice.
-4. **Public operations** (`/api/runner/saveSteps`, `/api/initialization/list`,
+4. **Public operations** (`/api/runner/saveSteps`,
    `/api/project/{id}/hook`, `/api/login`) get `security: []`. All others get
    `security: [['bearerAuth' => []]]`, derived from [security.yaml](config/packages/security.yaml:27).
 5. **Path parameters** (`/api/project/read/{id}`, `/api/project/webhook/{id}/read`, …) need an
    explicit `OA\Parameter(in: 'path', required: true)`; type is `string` (UUID), not int.
-6. **Errors are 200 + `status: error`** today (see
-   [InitializationControllerTest](src/Initialization/Tests/Api/InitializationControllerTest.php:87)).
+6. **Errors are 200 + `status: error`** in controllers wrapped in `try/catch(\Error)`
+   (see corresponding controller tests).
    Document that honestly: response `200` with `ErrorEnvelope`, plus `401`; do not invent `400`.
 7. Descriptions/summaries in Russian, matching the transliterated naming of the codebase.
 

@@ -21,6 +21,10 @@ services:
       - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
       # RPC-сокет HTTP-роли (совпадает с rpc.listen в .rr.http.yaml).
       - "RR_RPC=tcp://127.0.0.1:6001"
+      # Один общий мастер-ключ подписи callback-ов раннера (контракт v2).
+      # Значение задаётся через `make runner-secret` в .env; пусто — fallback
+      # на APP_SECRET (см. RunnerSecretGenerator).
+      - "RUNNER_SECRET_MASTER_KEY=${RUNNER_SECRET_MASTER_KEY:-}"
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
 
@@ -39,6 +43,7 @@ services:
       - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
       # RPC-сокет роли jobs/сервисов (совпадает с rpc.listen в .rr.worker.yaml).
       - "RR_RPC=tcp://127.0.0.1:6002"
+      - "RUNNER_SECRET_MASTER_KEY=${RUNNER_SECRET_MASTER_KEY:-}"
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
 
@@ -56,6 +61,7 @@ services:
       - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
       # RPC-сокет Temporal-роли (совпадает с rpc.listen в .rr.temporal.yaml).
       - "RR_RPC=tcp://127.0.0.1:6003"
+      - "RUNNER_SECRET_MASTER_KEY=${RUNNER_SECRET_MASTER_KEY:-}"
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
 
@@ -83,6 +89,7 @@ services:
       - "TEMPORAL_WORKER_QUEUE=unitman-mono-queue"
       # .rr.yaml читает RR_RPC из окружения (fallback 6001).
       - "RR_RPC=tcp://127.0.0.1:6001"
+      - "RUNNER_SECRET_MASTER_KEY=${RUNNER_SECRET_MASTER_KEY:-}"
     volumes:
       - ./.docker/php/settings.ini:/usr/local/etc/php/php.ini
 
@@ -114,10 +121,14 @@ services:
       # go-redis ходит под ACL-пользователем REDIS_USER, поэтому пароль берём
       # из REDIS_USER_PASSWORD (REDIS_PASSWORD — legacy-переменная, см. .env.dist).
       - "REDIS_PASSWORD=${REDIS_USER_PASSWORD}"
-      - "RUNNER_CALLBACK_SECRET=${RUNNER_CALLBACK_SECRET:-}"
       - "CENTRIFUGO_API_ENDPOINT=http://centrifugo:8000/api"
       - "CENTRIFUGO_API_KEY=${CENTRIFUGO_API_KEY:-}"
       - "PROGRESS_TTL_SECONDS=7200"
+      # Per-runner HMAC-подпись saveSteps (контракт v2). Пустое значение —
+      # fallback на APP_SECRET, как в PHP RunnerSecretGenerator; если и он пуст,
+      # edge-progress отвечает 503 (fail closed).
+      - "RUNNER_SECRET_MASTER_KEY=${RUNNER_SECRET_MASTER_KEY:-}"
+      - "APP_SECRET=${APP_SECRET:-}"
     depends_on:
       redis:
         condition: service_healthy
@@ -376,3 +387,29 @@ services:
       - 9912:9912
       - 9913:9913
     restart: always
+
+  # Локальный Docker Registry v2 с pull-through-прокси Docker Hub.
+  # Реестр принадлежит инфраструктуре backend: раннер получает его адрес при
+  # регистрации (UNITMAN_REGISTRY_PUBLIC_ADDRESS), поэтому хардкод
+  # unitman-registry:5000 в коде раннера недопустим.
+  # Хранилище — именованный том, чтобы данные не зависели от рабочей копии.
+  unitman-registry:
+    image: registry:2.8.3
+    restart: always
+    ports:
+      - '5000:5000'
+    volumes:
+      - unitman-registry-data:/var/lib/registry
+      - ./.docker/registry/simple.yml:/etc/docker/registry/config.yml:ro
+    # busybox wget есть в образе registry:2.8.3 (Alpine).
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5000/v2/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - default
+
+volumes:
+  unitman-registry-data:

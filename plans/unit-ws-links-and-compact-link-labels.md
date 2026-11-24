@@ -5,11 +5,11 @@
 ### Бэкенд
 
 - Ссылки с протоколом `ws` и `wss` строятся как `http`, но со схемой под proxy:
-  - `https`-proxy host → `wss`;
-  - `http`-proxy host → `ws`;
+  - `https`-публичный адрес раннера → `wss`;
+  - `http`-публичный адрес раннера → `ws`;
   - часть `{port}.{unit}.{project}.{host}[:{proxyPort}]` идентична http-ссылке.
 - `tcp` и любые остальные протоколы остаются прямыми: `{type}://{unit}.{project}:{port}`.
-- Пустой или невалидный proxy host для `ws`/`wss` теперь даёт `unit.invalid_proxy_host`
+- Пустой или невалидный публичный адрес раннера для `ws`/`wss` теперь даёт `unit.runner_public_address_missing`
   (как для `http`), потому что без proxy такую ссылку построить нельзя.
 
 ### Фронтенд
@@ -28,12 +28,12 @@
 ```mermaid
 flowchart TD
   A[Тип порта из конфига] --> B{Тип normalizovan}
-  B -->|http| C[Proxy host]
-  B -->|ws или wss| D{Схема proxy host}
+  B -->|http| C[Публичный адрес раннера]
+  B -->|ws или wss| D{Схема публичный адрес раннера}
   B -->|tcp и прочее| E[Прямо на юнит]
-  D -->|https| F[wss через proxy]
-  D -->|http| G[ws через proxy]
-  C --> H[Схема proxy host port.unit.project.host]
+  D -->|https| F[wss через публичный адрес]
+  D -->|http| G[ws через публичный адрес]
+  C --> H[Схема публичный адрес раннера port.unit.project.host]
   E --> I[type unit.project port]
 ```
 
@@ -47,10 +47,10 @@ flowchart TD
    идёт ли протокол через proxy: `http`, `ws`, `wss`.
 2. Для остальных протоколов вернуть текущую прямую ссылку
    `{type}://{unit}.{project}:{port}`.
-3. Для proxy-протоколов распарсить `proxyHost` и требовать `scheme` + `host`,
-   иначе `\DomainException('unit.invalid_proxy_host')`.
+3. Для протоколов через публичный адрес распарсить `publicAddress` и требовать `scheme` + `host`,
+   иначе `\DomainException('unit.runner_public_address_missing')`.
 4. Выбрать итоговую схему:
-   - `http` → схема proxy host (`http` или `https`);
+   - `http` → схема публичный адрес раннера (`http` или `https`);
    - `ws`/`wss` → `https` даёт `wss`, иначе `ws`.
 5. Собрать `{scheme}://{port}.{unit}.{project}.{host}`, при наличии дописать `:{proxyPort}`.
 
@@ -66,7 +66,7 @@ flowchart TD
 
 Логика поиска и построения уже делегирована утилите. Обновить docblock
 [`sformirovatSsylku()`](src/Unitman/Business/UseCase/Unit/PoluchitSsylkuPoPomoschnikuQuery.php:46):
-ws использует proxy host, `suffix` по-прежнему заменяет `startUri`.
+ws использует публичный адрес раннера, `suffix` по-прежнему заменяет `startUri`.
 
 ### 3.4. Уже существующие юниты
 
@@ -116,9 +116,9 @@ ws использует proxy host, `suffix` по-прежнему заменя�
   - `ws` + `https` proxy → `wss://8080.myunit.myproject.unitman.example.ru`;
   - `ws` + `http` proxy → `ws://8080...`;
   - `WS` и ` ws ` нормализуются;
-  - `ws` + proxy host с портом → `wss://...:8443`;
+  - `ws` + публичный адрес раннера с портом → `wss://...:8443`;
   - `tcp` по-прежнему `tcp://myunit.myproject:8000`;
-  - `ws` без валидного proxy host → `unit.invalid_proxy_host`.
+  - `ws` без валидного публичный адрес раннера → `unit.runner_public_address_missing`.
 - [`PoluchitSsylkuPoPomoschnikuQueryTest`](src/Unitman/Tests/UseCase/Unit/PoluchitSsylkuPoPomoschnikuQueryTest.php:82):
   - ws-ссылка теперь `wss://8080.task-789.uwin.testcase.ru`;
   - с `suffix` → `wss://8080.task-789.uwin.testcase.ru/socket`.
@@ -136,7 +136,7 @@ ws использует proxy host, `suffix` по-прежнему заменя�
 ## 6. Документация
 
 - [`docs/unitman-config.md`](docs/unitman-config.md:223): обновить таблицу шаблонов —
-  `http`, `ws`/`wss` через proxy host, остальные напрямую.
+  `http`, `ws`/`wss` через публичный адрес раннера, остальные напрямую.
 - [`docs/unitman-config.md`](docs/unitman-config.md:303): обновить описание хелпера.
 - В [`plans/helper-type-protocol.md`](plans/helper-type-protocol.md:19) добавить короткую
   пометку, что решение по ws пересмотрено (историю не переписывать).
@@ -150,7 +150,7 @@ ws использует proxy host, `suffix` по-прежнему заменя�
    `composer run check-deptrac`.
 3. Перезапустить RoadRunner: `rr reset`.
 4. Проверить, что proxy поддерживает WebSocket upgrade для поддоменов
-   `{port}.{unit}.{project}.{proxyHost}`: заголовки `Upgrade`/`Connection`
+   `{port}.{unit}.{project}.{publicAddress}`: заголовки `Upgrade`/`Connection`
    в конфиге proxy (файл у пользователя вне репозитория).
 5. На стенде открыть карточку юнита с ws-портом:
    - ссылка имеет вид `wss://8080.<unit>.<project>.<host>`;
@@ -191,7 +191,7 @@ ws использует proxy host, `suffix` по-прежнему заменя�
 Что сделать:
 
 - обновить ожидания ws-ссылок на `wss://...` через proxy;
-- добавить проверки `ws` + http proxy и `ws` без proxy host;
+- добавить проверки `ws` + http proxy и `ws` без публичный адрес раннера;
 - добавить тест проекции на ws-порт с `startUri`.
 
 Зависимости: контракт зафиксирован в разделах 1 и 3; файлы не пересекаются с A,
@@ -243,7 +243,7 @@ ws использует proxy host, `suffix` по-прежнему заменя�
 Независима:
 
 - проверить поддержку WebSocket upgrade для поддоменов
-  `{port}.{unit}.{project}.{proxyHost}` в конфиге proxy.
+  `{port}.{unit}.{project}.{publicAddress}` в конфиге proxy.
 
 ### Подзадача G — обновление существующих юнитов
 

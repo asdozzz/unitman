@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\VipolnitHodOpenCode;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 use Temporal\Activity\ActivityOptions;
@@ -33,8 +32,12 @@ final class OpenCodeTurnWorkflow
      */
     #[WorkflowMethod]
     #[ReturnType(ResultatHodaOpenCode::class)]
-    public function execute(VipolnitHodOpenCode $command)
+    public function execute(VipolnitHodOpenCode $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             'VipolnitHodOpenCodeActivity',
             [$command],
@@ -42,7 +45,7 @@ final class OpenCodeTurnWorkflow
                 // Ход может включать длительные операции OpenCode (правки файлов,
                 // запуск команд), поэтому таймаут щедрый — как у действий над юнитом.
                 ->withStartToCloseTimeout(60 * 60)
-                ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

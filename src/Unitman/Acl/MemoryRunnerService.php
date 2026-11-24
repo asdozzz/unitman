@@ -3,7 +3,6 @@
 namespace App\Unitman\Acl;
 
 use App\Runner\Api\RunnerApiInterface;
-use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatHodOpenCode;
@@ -26,7 +25,6 @@ use App\Runner\Business\Command\Workspace\ResultatZapuskaWorkspace;
 use App\Runner\Business\Command\Workspace\UdalitWorkspace;
 use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
-use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
@@ -38,9 +36,6 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 #[When(env: 'test')]
 final class MemoryRunnerService implements RunnerApiInterface
 {
-    const BUILD_PROJECT = 'BUILD_PROJECT';
-
-    const RESULTAT_SBORKI_PROEKTA = 'RESULTAT_SBORKI_PROEKTA';
     const REMOVE_PROJECT = 'REMOVE_PROJECT';
 
     const RESULTAT_UDALENIYA_PROEKTA = 'RESULTAT_UDALENIYA_PROEKTA';
@@ -126,27 +121,9 @@ final class MemoryRunnerService implements RunnerApiInterface
     }
 
 
-    public function initProject(InitProjectCommand $command): string
-    {
-        $response = $this->getNextResponse(self::BUILD_PROJECT);
-        if (!empty($response['expectedParams'])) {
-            $response['expectedParams'](func_get_args());
-        }
-        return $response['response'];
-    }
-
     public function removeProject(RemoveProjectCommand $command): string
     {
         $response = $this->getNextResponse(self::REMOVE_PROJECT);
-        if (!empty($response['expectedParams'])) {
-            $response['expectedParams'](func_get_args());
-        }
-        return $response['response'];
-    }
-
-    public function poluchitResultatSborkiProekta(string $workflowId): ?InitProjectResult
-    {
-        $response = $this->getNextResponse(self::RESULTAT_SBORKI_PROEKTA);
         if (!empty($response['expectedParams'])) {
             $response['expectedParams'](func_get_args());
         }

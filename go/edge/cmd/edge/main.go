@@ -102,14 +102,14 @@ func runProgress() error {
 	})
 
 	handler := progress.NewHandler(store, publisher, progress.Options{
-		Secret: cfg.RunnerCallbackSecret,
 		Limits: progress.Limits{
 			MaxContentBytes:  cfg.MaxStepsContentBytes,
 			MaxSteps:         cfg.MaxSteps,
 			MaxResponseBytes: cfg.MaxStepResponseBytes,
 		},
-		ProgressTTL: cfg.ProgressTTL,
-		Logger:      logger,
+		ProgressTTL:           cfg.ProgressTTL,
+		Logger:                logger,
+		RunnerSecretMasterKey: cfg.RunnerSecretMasterKey,
 	})
 
 	mux := http.NewServeMux()
@@ -126,8 +126,8 @@ func runProgress() error {
 
 	logger.Info("edge progress gateway listening",
 		"addr", cfg.ListenAddr,
-		"runner_signature_enabled", cfg.RunnerCallbackSecret != "",
 		"centrifugo_configured", cfg.CentrifugoAPIEndpoint != "",
+		"runner_secret_configured", cfg.RunnerSecretMasterKey != "",
 	)
 
 	return serve(logger, server, "shutting down edge progress gateway")

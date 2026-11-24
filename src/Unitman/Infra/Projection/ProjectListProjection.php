@@ -8,15 +8,12 @@ use App\Unitman\Business\Model\Project\Event\OshibkaOchistkiProektaUstanovlena;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
-use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasAdded;
-use App\Unitman\Business\Model\Project\Event\ProjectWasBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeleted;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeletedManually;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDisabled;
 use App\Unitman\Business\Model\Project\Event\ProjectWasEnabled;
-use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
@@ -77,7 +74,7 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             $fact->projectCode,
             $fact->projectName,
             $fact->mainBranch,
-            false,
+            true,
             ProjectList\ProjectListStateType::NEW,
             new ProjectList\NastroikiHukaProekta(
                 $fact->avtosozdanie,
@@ -86,7 +83,6 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
                 $fact->obnovlenieBezSbrosaPodgotovki,
                 $fact->vebhukNastroen,
             ),
-            $fact->proxyHost,
             memoryLimit: $fact->memoryLimit,
             zashishennieVetki: $fact->zashishennieVetki
         );
@@ -107,30 +103,6 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
             $fact->obnovlenieBezSbrosaPodgotovki,
             $fact->vebhukNastroen,
         ));
-    }
-
-    function handleProektPostavlenVOcheredNaSborku(ProektPostavlenVOcheredNaSborku $fact): void
-    {
-        $project = $this->projectListRepository->getById($fact->id);
-        $project->waitResultRunner = true;
-        $project->state = ProjectList\ProjectListStateType::BUILD_PENDING;
-        $this->projectListRepository->update($project);
-    }
-
-    function handleProjectWasBuilt(ProjectWasBuilt $fact): void
-    {
-        $project = $this->projectListRepository->getById($fact->id);
-        $project->waitResultRunner = false;
-        $project->state = ProjectList\ProjectListStateType::BUILD_SUCCESS;
-        $this->projectListRepository->update($project);
-    }
-
-    function handleProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
-    {
-        $project = $this->projectListRepository->getById($fact->id);
-        $project->waitResultRunner = false;
-        $project->state = ProjectList\ProjectListStateType::BUILD_ERROR;
-        $this->projectListRepository->update($project);
     }
 
     function handleProjectWasEnabled(ProjectWasEnabled $fact): void

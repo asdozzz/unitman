@@ -25,13 +25,8 @@ final class PostavitVOcheredNaUdalenieUseCase
 
         $project = $this->projectRepository->getById($command->id);
 
-        if ($project->esliProektBilSobran()) {
-            $jobId = $this->runnerService->nachatUdalenieProekta($project);
-            $project->postavitVOcheredNaUdanlenie((string)$jobId);
-        } else {
-            $project->postavitVOcheredNaUdanlenie('STUB_FOR_NEW_PROJECT');
-            $project->successfullyRemoving([]);
-        }
+        $jobId = $this->runnerService->nachatUdalenieProekta($project);
+        $project->postavitVOcheredNaUdanlenie((string)$jobId);
 
         $this->projectRepository->save($project);
     }

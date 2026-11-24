@@ -7,16 +7,13 @@ use App\Unitman\Business\Model\Project\Event\OchistkaProektaNachalas;
 use App\Unitman\Business\Model\Project\Event\OshibkaOchistkiProektaUstanovlena;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
-use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasAdded;
-use App\Unitman\Business\Model\Project\Event\ProjectWasBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeleted;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeletedManually;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDisabled;
 use App\Unitman\Business\Model\Project\Event\ProjectWasEnabled;
-use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
@@ -85,21 +82,6 @@ final class OcheredProektovProjection extends AbstractProjection implements Unit
             ZashishennieVetkiProektaUstanovleni::class,
             ZnacheniePeremnoiProektaIzmeneno::class
         ];
-    }
-
-    public function handleProektPostavlenVOcheredNaSborku(ProektPostavlenVOcheredNaSborku $fact): void
-    {
-        $this->repository->insert($fact->id, OcheredProektovReadModel::SBORKA_PROEKTA);
-    }
-
-    public function handleProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
-    {
-        $this->repository->removeByProjectId($fact->id);
-    }
-
-    public function handleProjectWasBuilt(ProjectWasBuilt $fact): void
-    {
-        $this->repository->removeByProjectId($fact->id);
     }
 
     public function handleOchistkaProektaNachalas(OchistkaProektaNachalas $fact): void

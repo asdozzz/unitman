@@ -9,6 +9,8 @@ final class ProveritKonteinerUnita
         public readonly string $ProjectName,
         public readonly string $Id,
         public readonly string $Name,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

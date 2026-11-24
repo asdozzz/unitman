@@ -8,18 +8,19 @@ namespace App\OpenCode\Business\Utils;
  * Ссылка на редактор workspace (VS Code в браузере).
  *
  * Формула: `{scheme}://{idePort}.{slug}.workspaces.{host}[:port]`.
- * `proxyHost` берётся у первого проекта; пустой proxy host означает, что
- * ссылку построить нельзя — контейнер при этом продолжает работать.
+ * `publicAddress` — публичный адрес раннера, к которому привязан workspace
+ * (`workspace_runner`). Default/fallback host запрещён: если адрес пуст,
+ * ссылка не строится — контейнер при этом продолжает работать.
  */
 final class SsylkaRedaktoraWorkspace
 {
-    public static function postroit(string $workspaceSlug, ?string $proxyHost, int $idePort): ?string
+    public static function postroit(string $workspaceSlug, ?string $publicAddress, int $idePort): ?string
     {
-        if ($proxyHost === null || trim($proxyHost) === '') {
+        if ($publicAddress === null || trim($publicAddress) === '') {
             return null;
         }
 
-        $parts = parse_url(trim($proxyHost));
+        $parts = parse_url(trim($publicAddress));
 
         if ($parts === false || !isset($parts['host']) || $parts['host'] === '') {
             return null;

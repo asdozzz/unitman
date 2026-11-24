@@ -17,6 +17,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Throwable;
 
 /**
@@ -51,12 +54,44 @@ class BaseExceptionListener
             default => $this->makeError($exception)
         };
 
-        $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        $response->setStatusCode($this->resolveStatusCode($exception));
+
+        if ($exception instanceof HttpExceptionInterface) {
+            foreach ($exception->getHeaders() as $name => $value) {
+                $response->headers->set($name, $value);
+            }
+        }
+
         $event->setResponse($response);
 
         return true;
 
     }//end onKernelException()
+
+    /**
+     * Preserves the HTTP status intended by the thrown exception.
+     *
+     * Domain and DBAL exceptions keep the project's existing envelope and are
+     * still reported as 500. Symfony HTTP exceptions (401/403/404/400/409/…)
+     * keep their status; security exceptions that fall through get the status
+     * Symfony would have assigned them.
+     */
+    private function resolveStatusCode(Throwable $exception): int
+    {
+        if ($exception instanceof HttpExceptionInterface) {
+            return $exception->getStatusCode();
+        }
+
+        if ($exception instanceof AccessDeniedException) {
+            return Response::HTTP_FORBIDDEN;
+        }
+
+        if ($exception instanceof AuthenticationException) {
+            return Response::HTTP_UNAUTHORIZED;
+        }
+
+        return Response::HTTP_INTERNAL_SERVER_ERROR;
+    }//end resolveStatusCode()
 
     function dump(ExceptionEvent $event): Response
     {

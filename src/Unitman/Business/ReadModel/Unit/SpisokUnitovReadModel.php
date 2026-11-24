@@ -43,6 +43,8 @@ final class SpisokUnitovReadModel
      * @param string|null $redaktorMode вычисляемый режим: `view`|`edit`|`locked`
      * @param bool|null $moguRedaktirovat может ли текущий пользователь править файлы
      * @param string|null $prichinaZapreta причина запрета: `protected_branch`|`net_tokena`|`null`
+     * @param string|null $runnerId жёсткая привязка юнита к раннеру (`unit_runner`):
+     *        `null` для юнитов без привязки (legacy/ещё не собранные)
      */
     public function __construct(
         public readonly string $id,
@@ -76,6 +78,7 @@ final class SpisokUnitovReadModel
         public readonly ?string $redaktorMode = null,
         public readonly ?bool $moguRedaktirovat = null,
         public readonly ?string $prichinaZapreta = null,
+        public readonly ?string $runnerId = null,
     )
     {
     }
@@ -153,6 +156,10 @@ final class SpisokUnitovReadModel
         $prichinaZapreta = array_key_exists('prichinaZapreta', $props)
             ? ($props['prichinaZapreta'] === null ? null : (string) $props['prichinaZapreta'])
             : $this->prichinaZapreta;
+        // array_key_exists нужен, чтобы явно переданный null очищал привязку.
+        $runnerId = array_key_exists('runnerId', $props)
+            ? ($props['runnerId'] === null || $props['runnerId'] === '' ? null : (string) $props['runnerId'])
+            : $this->runnerId;
 
         $containerStateMismatch = array_key_exists('containerStateMismatch', $props)
             ? (bool) $props['containerStateMismatch']
@@ -218,6 +225,7 @@ final class SpisokUnitovReadModel
             $redaktorMode,
             $moguRedaktirovat,
             $prichinaZapreta,
+            $runnerId,
         );
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatOstanovkiWorkspace;
 use Temporal\Activity\ActivityOptions;
@@ -17,21 +16,24 @@ use Temporal\Workflow\WorkflowMethod;
 final class OstanovitWorkspaceWorkflow
 {
     public const ACTIVITY = 'OstanovitWorkspaceActivity';
-    public const TASK_QUEUE = WorkflowClientFactory::runnerQueueName;
 
     /**
      * @psalm-suppress MissingReturnType
      */
     #[WorkflowMethod(name: 'OstanovitWorkspace')]
     #[ReturnType(ResultatOstanovkiWorkspace::class)]
-    public function execute(OstanovitWorkspace $command)
+    public function execute(OstanovitWorkspace $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             self::ACTIVITY,
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(60 * 10)
-                ->withTaskQueue(self::TASK_QUEUE)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

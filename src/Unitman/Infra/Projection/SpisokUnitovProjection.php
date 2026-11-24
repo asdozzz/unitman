@@ -44,6 +44,8 @@ use App\Unitman\Business\Model\Unit\Event\ZadachaUnitaOtmenena;
 use App\Unitman\Business\Model\Unit\Event\ZadachiDobavleniVProzesUnita;
 use App\Unitman\Business\Model\Unit\Event\ZapuskUnitNachalsya;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\RunnerPublicAddressProvider;
+use App\Unitman\Business\Port\Unit\UnitRunnerRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\Utils\IdePort;
@@ -62,6 +64,13 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         private SpisokUnitovRepository $repository,
         private ProjectRepository $projectRepository,
         private UnitmanSecurityService $securityService,
+        // Необязателен для тестов проекции без БД: без него `runnerId` в
+        // read-модели остаётся `null`, что и означает «привязки нет».
+        private ?UnitRunnerRepository $unitRunnerRepository = null,
+        // Публичный адрес (publicAddress) привязанного раннера (multi-runner).
+        // Без него ссылки сервисов/редактора построить нельзя: fallback host
+        // запрещён.
+        private ?RunnerPublicAddressProvider $runnerPublicAddressProvider = null,
     )
     {
     }
@@ -84,6 +93,35 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     function reset(): void
     {
         $this->repository->truncate();
+    }
+
+    /**
+     * Текущая жёсткая привязка юнита к раннеру. `null` — юнит ещё не
+     * привязан (legacy) либо проекция работает без репозитория привязок.
+     */
+    private function runnerIdDlyaUnita(string $unitId): ?string
+    {
+        return $this->unitRunnerRepository?->findRunnerIdByUnitId($unitId);
+    }
+
+    /**
+     * Публичный адрес раннера, к которому привязан юнит.
+     *
+     * Проекция не должна падать при пересборке для ещё не привязанных
+     * (legacy) юнитов: в этом случае ссылки не строятся. Явную доменную
+     * ошибку при запросе ссылки даёт `PoluchitSsylkuPoPomoschnikuQuery`.
+     */
+    private function publicAddressDlyaUnita(string $unitId): ?string
+    {
+        $runnerId = $this->runnerIdDlyaUnita($unitId);
+
+        if ($runnerId === null || $runnerId === '') {
+            return null;
+        }
+
+        $publicAddress = $this->runnerPublicAddressProvider?->getPublicAddress($runnerId);
+
+        return $publicAddress === null || trim($publicAddress) === '' ? null : $publicAddress;
     }
 
     function resetById(string $id): void
@@ -145,7 +183,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             prozesi:[],
             peremenie: $peremenie,
             volumes: $fact->volumes,
-            svyazi: SvyaziPeremenihUtil::sobratSvyaziDlyaReadModel($fact->svyazi, null)
+            svyazi: SvyaziPeremenihUtil::sobratSvyaziDlyaReadModel($fact->svyazi, null),
+            runnerId: $this->runnerIdDlyaUnita($fact->id),
         );
         $this->repository->insert($readModel);
     }
@@ -164,7 +203,8 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
             $fact->branch,
             $fact->stateAsArray['commands'],
             prozesi:[],
-            unitSozdanSystemoi: true
+            unitSozdanSystemoi: true,
+            runnerId: $this->runnerIdDlyaUnita($fact->id),
         );
 
         $this->repository->insert($readModel);
@@ -222,25 +262,25 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
         if (!empty($fact->configUnita['services'])) {
             $project = $this->projectRepository->getById($readModel->projectId);
 
-            $projectProxyHost = (string)$project->getProxyHost();
+            $runnerPublicAddress = $this->publicAddressDlyaUnita($readModel->id);
             $projectName = $project->getName();
 
-            foreach ($fact->configUnita['services'] as $name => $service) {
+            foreach ($runnerPublicAddress === null ? [] : $fact->configUnita['services'] as $name => $service) {
                 if (!isset($service['ports'])) continue;
                 foreach ($service['ports'] as $portData) {
                     $protocol = SsylkaServisaUtil::normalizovatTip(
                         isset($portData['type']) ? (string)$portData['type'] : null
                     );
 
-                    // http, ws и wss — через proxy host проекта (для ws/wss схема
-                    // выбирается по схеме proxy); остальные протоколы — напрямую
-                    // на юнит: `{type}://{unit}.{project}:{port}`.
+                    // http, ws и wss — через публичный адрес раннера (для ws/wss
+                    // схема выбирается по схеме адреса); остальные протоколы —
+                    // напрямую на юнит: `{type}://{unit}.{project}:{port}`.
                     $link = SsylkaServisaUtil::sformirovat(
                         $protocol,
                         $portData['port'] ?? 0,
                         $readModel->name,
                         $projectName,
-                        $projectProxyHost
+                        $runnerPublicAddress
                     );
 
                     if (!empty($portData['startUri'])) {
@@ -318,19 +358,18 @@ final class SpisokUnitovProjection extends AbstractProjection implements Unitman
     {
         $readModel =$this->repository->getById($fact->unitId);
 
-        $project = $this->projectRepository->getById($readModel->projectId);
-        $projectProxyHost = (string)$project->getProxyHost();
+        $runnerPublicAddress = $this->publicAddressDlyaUnita($readModel->id);
 
         $readModel = $readModel->copyAndUpdateData([
             'commands' => $fact->stateAsArray['commands'],
             'error' => false,
             'prozes' => $fact->prozess,
-            'redaktorLink' => SsylkaServisaUtil::sformirovat(
+            'redaktorLink' => $runnerPublicAddress === null ? null : SsylkaServisaUtil::sformirovat(
                 'http',
                 IdePort::izOkruzheniya(),
                 $readModel->name,
                 $readModel->projectName,
-                $projectProxyHost
+                $runnerPublicAddress
             )
         ]);
         $this->repository->update($readModel);

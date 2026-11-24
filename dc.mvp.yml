@@ -131,6 +131,16 @@ services:
       file: common-services.yml
       service: minio-init
 
+  # Локальный реестр образов (Docker Registry v2 + прокси Docker Hub).
+  # Публикуется на 5000; публичный адрес backend отдаёт раннеру при регистрации.
+  unitman-registry:
+    extends:
+      file: common-services.yml
+      service: unitman-registry
+
+volumes:
+  unitman-registry-data:
+
 networks:
   default:
     external: true

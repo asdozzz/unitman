@@ -59,7 +59,7 @@ final class SozdatUnitVetkaZashishenaTest extends TestCase
     {
         $project = Project::addProject(
             self::PROJECT_ID,
-            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300, $zashishennieVetki),
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 300, $zashishennieVetki),
             'author-1',
         );
         (new \ReflectionProperty(Project::class, 'isActive'))->setValue($project, true);

@@ -12,9 +12,11 @@ use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
+use App\OpenCode\Business\Port\WorkspaceRunnerRepository;
 use App\OpenCode\Business\Utils\OcenkaGotovnostiUnita;
 use App\OpenCode\Business\Utils\SsylkaRedaktoraWorkspace;
 use App\Unitman\Api\UnitmanApi;
+use App\Unitman\Business\Port\RunnerPublicAddressProvider;
 use App\Unitman\Business\Utils\SsylkaServisaUtil;
 use App\Unitman\Business\ReadModel\Project\ProektDlyaWorkspaceReadModel;
 use App\Unitman\Business\Command\Unit\SozdatUnit;
@@ -37,12 +39,14 @@ final class UnitmanAdapter implements
     UmeetUpravlyatProektamiWorkspace,
     UmeetPoluchatTokenRedaktirovaniyaUnita
 {
-    /** Псевдо-проект workspace в proxy-хосте: `${slug}.workspaces`. */
+    /** Псевдо-проект workspace в публичном адресе workspace: `${slug}.workspaces`. */
     private const WORKSPACE_PSEUDO_PROJECT = 'workspaces';
 
     public function __construct(
         private UnitmanApi $unitmanApi,
         private OcenkaGotovnostiUnita $ocenkaGotovnostiUnita,
+        private WorkspaceRunnerRepository $workspaceRunnerRepository,
+        private RunnerPublicAddressProvider $runnerPublicAddressProvider,
     )
     {
     }
@@ -171,7 +175,11 @@ final class UnitmanAdapter implements
             return null;
         }
 
-        return SsylkaRedaktoraWorkspace::postroit($workspaceSlug, $project->proxyHost, $project->idePort);
+        return SsylkaRedaktoraWorkspace::postroit(
+            $workspaceSlug,
+            $this->publicAddressDlyaWorkspace($workspaceSlug),
+            $project->idePort,
+        );
     }
 
     /**
@@ -193,29 +201,45 @@ final class UnitmanAdapter implements
             return null;
         }
 
-        if ($project->proxyHost === null || trim($project->proxyHost) === '') {
-            return null;
-        }
-
-        try {
-            $link = SsylkaServisaUtil::sformirovat(
-                $type,
-                $port,
-                $workspaceSlug,
-                self::WORKSPACE_PSEUDO_PROJECT,
-                $project->proxyHost,
-            );
-        } catch (\DomainException) {
-            // Пустой или некорректный proxy host: ссылку построить нельзя,
-            // но workspace при этом продолжает работать.
-            return null;
-        }
+        $link = SsylkaServisaUtil::sformirovat(
+            $type,
+            $port,
+            $workspaceSlug,
+            self::WORKSPACE_PSEUDO_PROJECT,
+            $this->publicAddressDlyaWorkspace($workspaceSlug),
+        );
 
         if ($suffix !== null && $suffix !== '') {
             $link .= str_starts_with($suffix, '/') ? $suffix : '/'.$suffix;
         }
 
         return $link;
+    }
+
+    /**
+     * Публичный адрес (`publicAddress`) раннера, к которому жёстко привязан
+     * workspace.
+     *
+     * Default/fallback host запрещён: workspace без привязки или раннер без
+     * `publicAddress` — явная доменная ошибка (plans/runner-multi-runner.md §7).
+     *
+     * @throws \DomainException opencode.workspace.runner_not_bound|opencode.workspace.runner_public_address_missing
+     */
+    private function publicAddressDlyaWorkspace(string $workspaceId): string
+    {
+        $runnerId = $this->workspaceRunnerRepository->findRunnerIdByWorkspaceId($workspaceId);
+
+        if ($runnerId === null || $runnerId === '') {
+            throw new \DomainException('opencode.workspace.runner_not_bound');
+        }
+
+        $publicAddress = $this->runnerPublicAddressProvider->getPublicAddress($runnerId);
+
+        if ($publicAddress === null || trim($publicAddress) === '') {
+            throw new \DomainException('opencode.workspace.runner_public_address_missing');
+        }
+
+        return $publicAddress;
     }
 
     private function prevratit(SostoyanieUnitaReadModel $readModel): SostoyanieUnita

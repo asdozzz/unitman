@@ -7,10 +7,12 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Model\Unit\PeremennayaSvyaz;
 use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\MediatekaService;
+use App\Runner\Business\UseCase\RunnerSelectionService;
 use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
 use App\Unitman\Business\Port\Unit\UnitRepository;
+use App\Unitman\Business\Port\Unit\UnitRunnerRepository;
 use App\Unitman\Business\Port\Unit\UmeetSozdavatUnit;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Utils\Exception\TranslatorKeyword;
@@ -27,6 +29,10 @@ final class SozdatUnitUseCase implements UmeetSozdavatUnit
         private ProverkaFaylovVolumov  $proverkaFaylovVolumov,
         private ProverkaSvyazeyPeremenih $proverkaSvyazeyPeremenih,
         private UmeetPoluchatSpisokProektovDlyPolzovatelya $umeetPoluchatSpisokProektovDlyPolzovatelya,
+        // Необязательные зависимости multi-runner: старые ручные конструкторы
+        // в тестах остаются валидными, а DI подставляет реальные сервисы.
+        private ?RunnerSelectionService $runnerSelectionService = null,
+        private ?UnitRunnerRepository $unitRunnerRepository = null,
     )
     {
     }
@@ -72,6 +78,7 @@ final class SozdatUnitUseCase implements UmeetSozdavatUnit
         ?string $unitId = null,
         ?string $prozesId = null,
         bool $proveritSvyazi = true,
+        ?string $runnerId = null,
     ): string
     {
         if ($this->canFindUnitDouble->isExistsDoubleByName($command->projectId, $command->unitName)) {
@@ -103,6 +110,11 @@ final class SozdatUnitUseCase implements UmeetSozdavatUnit
 
         $unitId ??= $this->uuidGenerator->makeGuid();
         $prozesId ??= $this->uuidGenerator->makeGuid();
+
+        // Привязка выполняется до записи события: sync-проекция списка юнитов
+        // читает `unit_runner` в момент обработки `UnitSozdan`.
+        $this->prikrepiKRunneru($unitId, $runnerId);
+
         $unit = Unit::sozdatUnit($unitId, $userId, $prozesId, $command);
         $this->unitRepository->save($unit);
 
@@ -111,6 +123,31 @@ final class SozdatUnitUseCase implements UmeetSozdavatUnit
         }
 
         return $unit->getId();
+    }
+
+    /**
+     * Жёсткая привязка нового юнита к раннеру (`unit_runner`).
+     *
+     * Явно переданный `runnerId` адресуется напрямую и обязан быть активным:
+     * ошибка не откатывается на свободный раннер. Без явной привязки
+     * выбирается самый свободный живой раннер; если живых раннеров нет,
+     * создание невозможно (`runner.not_found`) и ничего не сохраняется.
+     *
+     * @throws \DomainException `runner.not_found` | `runner.inactive`
+     */
+    private function prikrepiKRunneru(string $unitId, ?string $explicitRunnerId): void
+    {
+        if ($this->runnerSelectionService === null || $this->unitRunnerRepository === null) {
+            return;
+        }
+
+        $explicit = $explicitRunnerId !== null && $explicitRunnerId !== '';
+
+        $runner = $explicit
+            ? $this->runnerSelectionService->getByRunnerId($explicitRunnerId)
+            : $this->runnerSelectionService->select();
+
+        $this->unitRunnerRepository->bind($unitId, $runner->getId());
     }
 
     /**

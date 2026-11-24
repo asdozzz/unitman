@@ -111,8 +111,8 @@ final class GetUnitListQueryTest extends AbstractUnitUseCase
         $spisokProektovRepo = $this->getMockBuilder(UmeetPoluchatSpisokProektovDlyPolzovatelya::class)->getMock();
         $nastroikiHukaProektov = ['avtosozdanie' => false, 'avtoobnovlenie' => true, 'avtoudalenie' => true];
         $spisokProektovRepo->expects($this->any())->method('poluchitSpisokProektovDlyPolzovatelya')->willReturn([
-            ['id' => 'pr1', 'repoId' => 'repoId', 'code' => 'pr1Code', 'name' => 'pr1Name', 'mainBranch' => 'asd', 'isActive' => true, 'state' => ProjectListStateType::BUILD_SUCCESS->value, 'nastroikiHukaProektov' => $nastroikiHukaProektov],
-            ['id' => 'pr2', 'repoId' => 'repoId', 'code' => 'pr2Code', 'name' => 'pr2Name', 'mainBranch' => 'asd', 'isActive' => true, 'state' => ProjectListStateType::BUILD_SUCCESS->value, 'nastroikiHukaProektov' => $nastroikiHukaProektov],
+            ['id' => 'pr1', 'repoId' => 'repoId', 'code' => 'pr1Code', 'name' => 'pr1Name', 'mainBranch' => 'asd', 'isActive' => true, 'state' => ProjectListStateType::NEW->value, 'nastroikiHukaProektov' => $nastroikiHukaProektov],
+            ['id' => 'pr2', 'repoId' => 'repoId', 'code' => 'pr2Code', 'name' => 'pr2Name', 'mainBranch' => 'asd', 'isActive' => true, 'state' => ProjectListStateType::NEW->value, 'nastroikiHukaProektov' => $nastroikiHukaProektov],
         ]);
         self::$container->set(UmeetPoluchatSpisokProektovDlyPolzovatelya::class, $spisokProektovRepo);
 

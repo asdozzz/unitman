@@ -11,7 +11,7 @@ Go-сервис `go/edge` собирается в образ `unitman-edge:dev` 
 
 | Сервис compose   | Команда               | Порт  | Назначение |
 |------------------|-----------------------|-------|------------|
-| `edge-progress`  | `progress`            | 8081  | `POST /api/runner/saveSteps` (подпись `X-Runner-Signature`, лимиты, запись в Redis `runner.progress.*`), `GET /api/runner/progress/{responseId}`, публикация в Centrifugo `unit_progress#<jobId>`. |
+| `edge-progress`  | `progress`            | 8081  | `POST /api/runner/saveSteps` (per-runner HMAC-подпись v2 `X-Runner-Id` + `X-Runner-Signature`, проверка зарегистрированного токена `responseId`, лимиты, запись в Redis `runner.progress.*`), `GET /api/runner/progress/{responseId}`, публикация в Centrifugo `unit_progress#<jobId>`. |
 | `edge-media`     | `media`               | 8082  | Потоковые `PUT/GET/DELETE /media/{key...}` в MinIO/S3 без буферизации в памяти. Проверяет ZIP-сигнатуру, ограничивает размер (по умолчанию 200 МиБ). |
 | `edge-telemetry` | `telemetry`           | 8083  | `GET /metrics` — Docker-метрики контейнеров для Prometheus. Читает `/var/run/docker.sock` (только чтение). |
 | `edge-webhook`   | `webhook`             | 8084  | `POST /api/project/{id}/hook`: определяет GitLab/GitHub по заголовкам, проверяет подпись и лимит, проксирует тело в существующий PHP-эндпоинт. |
@@ -50,6 +50,8 @@ Go-сервис `go/edge` собирается в образ `unitman-edge:dev` 
 | `WEBHOOK_RATE_LIMIT_PER_SECOND` | `100` | Лимит на проект/провайдер, `0` отключает. |
 | `PHP_WEBHOOK_BASE_URL` | `http://web:8080` | Куда `edge-webhook` проксирует события. |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | пусто | Если пусто, compose подставляет `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`. |
+| `RUNNER_SECRET_MASTER_KEY` | пусто | Master key для per-runner секрета `edge-progress` (контракт v2). Пусто — fallback на `APP_SECRET`. |
+| `APP_SECRET` | — | Fallback для `RUNNER_SECRET_MASTER_KEY`. Если оба пусты, `edge-progress` отвечает `503` (fail closed). |
 
 Секреты не коммитить: боевые значения — только в `.env.local` или секретах
 окружения.
@@ -102,18 +104,34 @@ printf 'DOCKER_GID=1001\n' >> .env  # или задайте в .env.local
    ```
 
 2. Прогресс раннера — уходит в Go. Токен (`responseId`) должен быть
-   зарегистрирован в Redis (как и для PHP-пути):
+   зарегистрирован в Redis (как и для PHP-пути), а запрос обязан быть
+   подписан теми же заголовками, что и на PHP-пути. Подпись считается как
+   `hex(HMAC-SHA256(responseId . stepsContent, runnerSecret))`, где
+   `runnerSecret = hex(HMAC-SHA256(runnerId, RUNNER_SECRET_MASTER_KEY))`
+   (при пустом master key — `APP_SECRET`):
 
    ```sh
    tests/load/register-progress-token.sh smoke-edge-progress
 
+   RUNNER_ID=runner-test
+   MASTER_KEY="${RUNNER_SECRET_MASTER_KEY:-$APP_SECRET}"
+   RESPONSE_ID=smoke-edge-progress
+   STEPS='[{"command":"echo ok","response":"ok","success":true,"unixtime":1730000000}]'
+   SECRET=$(printf '%s' "$RUNNER_ID" | openssl dgst -sha256 -hmac "$MASTER_KEY" -hex | awk '{print $2}')
+   SIGNATURE=$(printf '%s' "$RESPONSE_ID$STEPS" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $2}')
+
    curl -s -X POST "$GATEWAY/api/runner/saveSteps" \
      -H 'Content-Type: application/json' \
-     -d '{"responseId":"smoke-edge-progress",
-          "stepsContent":"[{\"command\":\"echo ok\",\"response\":\"ok\",\"success\":true,\"unixtime\":1730000000}]",
-          "finished":false,"success":true}'
+     -H "X-Runner-Id: $RUNNER_ID" \
+     -H "X-Runner-Signature: $SIGNATURE" \
+     -d "{\"responseId\":\"$RESPONSE_ID\",\"stepsContent\":$STEPS,\"finished\":false,\"success\":true}"
    # true
    ```
+
+   Без `X-Runner-Id`/`X-Runner-Signature` или с неверной подписью — `401`
+   `runner.invalid_signature`. Если master key не задан — `503`
+   `runner.signature_not_configured` (fail closed). Секрет и подпись в логи
+   не пишутся.
 
 3. Webhook GitLab — Go проверяет провайдера и проксирует в PHP; ответ приходит
    от PHP (не `502`):
@@ -188,10 +206,19 @@ docker rm -f edge-progress-direct
 POST http://<host>:8090/api/runner/saveSteps
 ```
 
-Если задан `RUNNER_CALLBACK_SECRET`, заголовок `X-Runner-Signature` обязателен
-и для Go-пути (алгоритм тот же: `hex(hmac_sha256(responseId . stepsContent, secret))`).
-При пустом секрете проверка отключена — так проще раскатывать: сначала
-бэкенд, потом раннер.
+`edge-progress` реализует тот же контракт v2, что и PHP:
+
+- обязательные заголовки `X-Runner-Id` и `X-Runner-Signature`;
+- `runnerSecret = hex(HMAC-SHA256(runnerId, masterKey))`,
+  `masterKey = RUNNER_SECRET_MASTER_KEY` (fallback `APP_SECRET`);
+- `signature = hex(HMAC-SHA256(responseId . stepsContent, runnerSecret))`,
+  сравнение constant-time (`hmac.Equal`);
+- отсутствующий/неверный заголовок — `401 runner.invalid_signature`;
+- пустой master key — `503 runner.signature_not_configured` (fail closed).
+
+Подпись проверяется до любой записи в Redis. После неё сохраняется прежняя
+проверка токена `responseId` (`runner.progress.token.*`); секрет и подпись не
+логируются.
 
 ### Webhook GitLab/GitHub
 

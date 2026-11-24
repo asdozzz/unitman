@@ -14,6 +14,8 @@ final class NachatZapuskUnita
         public readonly array $Variables,
         public readonly array $Caches,
         public readonly string $Branch,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

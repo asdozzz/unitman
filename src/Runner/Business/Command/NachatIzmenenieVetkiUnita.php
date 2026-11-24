@@ -10,6 +10,8 @@ final class NachatIzmenenieVetkiUnita
         public readonly string $Name,
         public readonly string $StorageUrl,
         public readonly string $NewBranch,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

@@ -21,6 +21,14 @@ final class RunnerState implements \JsonSerializable
         private MemoryInfo $memoryInfo = new MemoryInfo(0, 0),
         private int $unixtimeLastHealth = 0,
         private ?RunnerResources $resources = null,
+        private ?string $registryHost = null,
+        private ?string $hostname = null,
+        private ?int $lastRegisteredAt = null,
+        // Публичный адрес раннера (подставляется в A2).
+        private ?string $publicAddress = null,
+        // Момент регистрации (unix). Дублирует lastRegisteredAt для нового
+        // контракта v2; старые записи читаются через lastRegisteredAt.
+        private ?int $registeredAt = null,
     ) {
     }
 
@@ -29,9 +37,31 @@ final class RunnerState implements \JsonSerializable
         return new self($id, $taskQueue, true);
     }
 
-    public static function sozdatDefoltniiRunner(string $id): self
-    {
-        return new self($id, 'unitman-runner-queue', false);
+    /**
+     * Состояние только что зарегистрированного раннера (контракт v2).
+     *
+     * `taskQueue` намеренно совпадает с `runnerId` verbatim: контракт
+     * `plans/runner-multi-runner.md` §2/§4 требует, чтобы зарегистрированный
+     * раннер сразу был адресуемой Temporal-очередью без префиксов.
+     *
+     * Регистрация принимает только `{hostname, version}`: публичный адрес
+     * задаётся администратором отдельно через `publicAddress`.
+     */
+    public static function sozdatZaregistrirovanniiRunnerV2(
+        string $id,
+        ?string $registryHost,
+        ?string $hostname,
+        int $lastRegisteredAt,
+    ): self {
+        return new self(
+            $id,
+            $id,
+            true,
+            registryHost: $registryHost,
+            hostname: $hostname,
+            lastRegisteredAt: $lastRegisteredAt,
+            registeredAt: $lastRegisteredAt,
+        );
     }
 
     public function getTaskQueue(): string
@@ -109,6 +139,61 @@ final class RunnerState implements \JsonSerializable
     public function getMemoryInfo(): MemoryInfo
     {
         return $this->memoryInfo;
+    }
+
+    /**
+     * Публичный адрес реестра, выданный backend-ом при регистрации.
+     */
+    public function getRegistryHost(): ?string
+    {
+        return $this->registryHost;
+    }
+
+    public function getHostname(): ?string
+    {
+        return $this->hostname;
+    }
+
+    /**
+     * Unix-время последней регистрации раннера. `null` — раннер ещё не
+     * регистрировался (legacy payload).
+     */
+    public function getLastRegisteredAt(): ?int
+    {
+        return $this->lastRegisteredAt;
+    }
+
+    /**
+     * Unix-время регистрации (контракт v2). Для записей, созданных до v2,
+     * откатывается на `lastRegisteredAt`.
+     */
+    public function getRegisteredAt(): ?int
+    {
+        return $this->registeredAt ?? $this->lastRegisteredAt;
+    }
+
+    /**
+     * Публичный адрес раннера. `null` — ещё не задан (A2).
+     */
+    public function getPublicAddress(): ?string
+    {
+        return $this->publicAddress;
+    }
+
+    /**
+     * Задан ли публичный адрес. Раннер без адреса может присылать health,
+     * но не участвует в автоматическом выборе для сборок/ссылок.
+     */
+    public function hasPublicAddress(): bool
+    {
+        return $this->publicAddress !== null && trim($this->publicAddress) !== '';
+    }
+
+    public function ustanovitPublicAddress(?string $publicAddress): void
+    {
+        $normalized = $publicAddress !== null ? trim($publicAddress) : null;
+
+        $this->publicAddress = $normalized === '' ? null : $normalized;
     }
 
     public function jsonSerialize(): mixed

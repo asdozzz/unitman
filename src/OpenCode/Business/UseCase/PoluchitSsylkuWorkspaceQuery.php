@@ -34,7 +34,7 @@ final class PoluchitSsylkuWorkspaceQuery
      *   `opencode.workspace.not_found` — workspace не найден или чужой,
      *   `opencode.workspace.not_running` — статус не RUNNING,
      *   `opencode.workspace.invalid_port` — порт вне 1–65535,
-     *   `opencode.workspace.link_unavailable` — proxy host проекта не задан
+     *   `opencode.workspace.link_unavailable` — публичный адрес раннера не задан
      */
     public function handle(PoluchitSsylkuWorkspace $command): WorkspaceLinkHolder
     {

@@ -11,7 +11,7 @@ use App\Utils\Converter\JsonBodySerializableInterface;
  *
  * Аналог юнитного `PoluchitSsylkuPoPomoschniku`: `suffix` дописывается к
  * базовой ссылке (ведущий `/` нормализуется), `type` задаёт протокол
- * (`http` по умолчанию, для `ws`/`wss` схема выбирается по схеме proxy).
+ * (`http` по умолчанию, для `ws`/`wss` схема выбирается по схеме адреса).
  */
 final class PoluchitSsylkuWorkspace implements JsonBodySerializableInterface
 {

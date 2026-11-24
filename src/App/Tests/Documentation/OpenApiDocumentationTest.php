@@ -116,21 +116,34 @@ final class OpenApiDocumentationTest extends KernelTestCase
     {
         $verbs = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'];
 
+        // Контракты build-state (GET+PUT) и публичного адреса (PUT+DELETE)
+        // намеренно используют один путь для разных методов — это разрешённые
+        // исключения из правила «один глагол на путь».
+        $multiVerbAllowed = [
+            '/api/runner/{runnerId}/projects/{projectId}/build-state',
+            '/api/runner/{runnerId}/public-address',
+        ];
+
         $untagged = [];
         $multiVerb = [];
 
         foreach ($this->paths() as $path => $operations) {
             $pathVerbs = array_values(array_intersect(array_keys($operations), $verbs));
 
-            if (count($pathVerbs) !== 1) {
-                $multiVerb[] = $path.' ('.implode(',', $pathVerbs).')';
+            if (count($pathVerbs) === 0) {
                 continue;
             }
 
-            $operation = $operations[$pathVerbs[0]];
+            if (count($pathVerbs) > 1 && !in_array($path, $multiVerbAllowed, true)) {
+                $multiVerb[] = $path.' ('.implode(',', $pathVerbs).')';
+            }
 
-            if (!is_array($operation) || empty($operation['tags'])) {
-                $untagged[] = $path.' '.$pathVerbs[0];
+            foreach ($pathVerbs as $verb) {
+                $operation = $operations[$verb];
+
+                if (!is_array($operation) || empty($operation['tags'])) {
+                    $untagged[] = $path.' '.$verb;
+                }
             }
         }
 

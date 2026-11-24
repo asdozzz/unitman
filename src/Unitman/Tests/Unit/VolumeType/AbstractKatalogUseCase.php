@@ -71,7 +71,7 @@ abstract class AbstractKatalogUseCase extends TestCase
     {
         return Project::addProject(
             $projectId,
-            new AddProject('repo-1', 'code-' . $projectId, 'project-' . $projectId, 'master', 'https://test.ru', 1000),
+            new AddProject('repo-1', 'code-' . $projectId, 'project-' . $projectId, 'master', 1000),
             $adminId
         );
     }

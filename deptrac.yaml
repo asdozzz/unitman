@@ -18,10 +18,6 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/BackgroundJob/.*
-    - name: Initialization
-      collectors:
-        - type: directory
-          regex: ./src/Initialization/.*
     - name: Mediateka
       collectors:
         - type: directory
@@ -57,11 +53,6 @@ deptrac:
     # Mediateka — файлы: только Account (автор файла) и Utils.
     Mediateka:
       - Account
-      - Utils
-    # Initialization — первичная инициализация: читает настройки Unitman и текущего пользователя.
-    Initialization:
-      - Account
-      - Unitman
       - Utils
     # OpenCode — диалоги с OpenCode: реквизиты берёт из Account через AccountApi,
     # исполнение ходов — из Runner через RunnerApi, состояние юнита и его

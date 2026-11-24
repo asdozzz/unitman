@@ -44,7 +44,6 @@ final class PoluchitProektiDlyaWorkspaceQueryTest extends TestCase
         ));
         self::assertSame('two', $result[0]->projectName);
         self::assertSame('services/two', $result[0]->projectCode);
-        self::assertSame('https://api.example.test', $result[0]->proxyHost);
         self::assertFalse($result[0]->canPush);
         self::assertTrue($result[1]->canPush);
         self::assertSame('https://clone.example/p2.git', $result[0]->storageUrl);
@@ -165,12 +164,7 @@ final class PoluchitProektiDlyaWorkspaceQueryTest extends TestCase
     ): Project {
         return Project::addProject(
             $projectId,
-            new AddProject(
-                $repoId,
-                $code,
-                $name,
-                $mainBranch,
-                'https://api.example.test',
+            new AddProject($repoId, $code, $name, $mainBranch,
                 memoryLimit: 512,
                 zashishennieVetki: $zashishennieVetki,
             ),

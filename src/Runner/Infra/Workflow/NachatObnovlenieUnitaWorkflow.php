@@ -2,7 +2,6 @@
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatObnovleniyaUnita;
 use Temporal\Activity\ActivityOptions;
@@ -19,14 +18,18 @@ final class NachatObnovlenieUnitaWorkflow
      * */
     #[WorkflowMethod]
     #[ReturnType(ResultatObnovleniyaUnita::class)]
-    public function execute(NachatObnovlenieUnita $command)
+    public function execute(NachatObnovlenieUnita $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             'NachatObnovlenieUnitaActivity',
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(60*60)
-                ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

@@ -4,52 +4,94 @@ declare(strict_types=1);
 
 namespace App\Runner\Infra\Service;
 
+use App\Runner\Business\Port\RunnerRepository;
+use App\Runner\Business\Utils\RunnerSecretGenerator;
+
 /**
- * Проверка подписи callback-запросов Golang-раннера.
+ * Проверка подписи callback-запросов Golang-раннера (контракт v2).
  *
- * `saveSteps` — публичный эндпоинт без JWT (см. `config/packages/security.yaml`),
- * поэтому единственная защита от подделки шагов — HMAC-SHA256 на общем секрете.
- * Раннер присылает заголовок `X-Runner-Signature: <hex>`.
+ * Раннер присылает два заголовка:
+ * - `X-Runner-Id` — идентификатор зарегистрированного раннера;
+ * - `X-Runner-Signature` — hex(HMAC-SHA256(payload, secret)).
  *
- * Если секрет не сконфигурирован (пустая строка), проверка отключается и
- * выводится предупреждение — так сохраняется совместимость с уже
- * развёрнутыми раннерами на время поэтапного выката.
+ * Секрет НЕ хранится в БД: он детерминированно вычисляется по `runnerId`
+ * (см. {@see RunnerSecretGenerator}). Неизвестный `X-Runner-Id` — это ошибка
+ * `runner.not_found` (HTTP 404), неверная подпись — 401 (решает вызывающий
+ * код). Сравнение выполняется через `hash_equals` (constant time).
  */
 final class RunnerCallbackSignatureChecker
 {
     public const HEADER_NAME = 'X-Runner-Signature';
+    public const RUNNER_ID_HEADER = 'X-Runner-Id';
 
-    public function __construct(private readonly string $runnerCallbackSecret)
-    {
+    public function __construct(
+        private readonly RunnerRepository $runnerRepository,
+        private readonly RunnerSecretGenerator $secretGenerator,
+    ) {
     }
 
-    public function estPodpisTelaValidna(string $body, ?string $signature): bool
+    /**
+     * Подпись сырого тела запроса: health и unitStateNotifications.
+     *
+     * @throws \DomainException `runner.not_found`, если раннер неизвестен
+     */
+    public function estPodpisTelaValidna(?string $runnerId, string $body, ?string $signature): bool
     {
-        if ($this->runnerCallbackSecret === '') {
-            return true;
+        return $this->compare($this->resolveSecret($runnerId), $body, $signature);
+    }
+
+    /**
+     * Подпись saveSteps: `responseId . stepsContent`.
+     *
+     * @throws \DomainException `runner.not_found`, если раннер неизвестен
+     */
+    public function estPodpisValidna(
+        ?string $runnerId,
+        string $responseId,
+        string $stepsContent,
+        ?string $signature,
+    ): bool {
+        return $this->compare(
+            $this->resolveSecret($runnerId),
+            $responseId . $stepsContent,
+            $signature,
+        );
+    }
+
+    /**
+     * Подпись GET build-state: HMAC от пустого тела.
+     *
+     * @throws \DomainException `runner.not_found`, если раннер неизвестен
+     */
+    public function estPodpisPustogoTelaValidna(?string $runnerId, ?string $signature): bool
+    {
+        return $this->estPodpisTelaValidna($runnerId, '', $signature);
+    }
+
+    /**
+     * Разрешает секрет по `X-Runner-Id`.
+     *
+     * @throws \DomainException `runner.not_found`
+     */
+    public function resolveSecret(?string $runnerId): string
+    {
+        if ($runnerId === null || trim($runnerId) === '') {
+            throw new \DomainException('runner.not_found');
         }
 
+        if ($this->runnerRepository->findById($runnerId) === null) {
+            throw new \DomainException('runner.not_found');
+        }
+
+        return $this->secretGenerator->generate($runnerId);
+    }
+
+    private function compare(string $secret, string $payload, ?string $signature): bool
+    {
         if ($signature === null || $signature === '') {
             return false;
         }
 
-        $expected = hash_hmac('sha256', $body, $this->runnerCallbackSecret);
-
-        return hash_equals($expected, $signature);
-    }
-
-    public function estPodpisValidna(string $token, string $stepsContent, ?string $signature): bool
-    {
-        if ($this->runnerCallbackSecret === '') {
-            return true;
-        }
-
-        if ($signature === null || $signature === '') {
-            return false;
-        }
-
-        $expected = hash_hmac('sha256', $token . $stepsContent, $this->runnerCallbackSecret);
-
-        return hash_equals($expected, $signature);
+        return hash_equals(hash_hmac('sha256', $payload, $secret), $signature);
     }
 }

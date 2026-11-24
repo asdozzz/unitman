@@ -12,18 +12,21 @@ use Temporal\Workflow\WorkflowInterface;
 use Temporal\Workflow\WorkflowMethod;
 
 /**
- * Workflow редактора регистрируются на очереди Go-раннера и следуют
- * принятому формату: `#[WorkflowInterface]` + `#[WorkflowMethod]` + `#[ReturnType]`.
+ * Workflow редактора регистрируются на очереди выбранного раннера (taskQueue
+ * передаётся вызывающей стороной) и следуют принятому формату:
+ * `#[WorkflowInterface]` + `#[WorkflowMethod]` + `#[ReturnType]`.
  */
 final class RedaktorWorkflowTest extends TestCase
 {
-    public function test_imena_aktivnostey_i_ochered_sootvetstvuyut_kontraktu(): void
+    public function test_imena_aktivnostey_sootvetstvuyut_kontraktu(): void
     {
         self::assertSame('IzmenitRezhimRedaktoraUnitaActivity', IzmenitRezhimRedaktoraUnitaWorkflow::ACTIVITY);
         self::assertSame('PodgotovitSessiyuRedaktoraActivity', PodgotovitSessiyuRedaktoraWorkflow::ACTIVITY);
 
-        self::assertSame('unitman-runner-queue', IzmenitRezhimRedaktoraUnitaWorkflow::TASK_QUEUE);
-        self::assertSame('unitman-runner-queue', PodgotovitSessiyuRedaktoraWorkflow::TASK_QUEUE);
+        // Legacy-очередь как константа удалена: очередь приходит только
+        // параметром `taskQueue` от выбранного раннера.
+        self::assertFalse(defined(IzmenitRezhimRedaktoraUnitaWorkflow::class . '::TASK_QUEUE'));
+        self::assertFalse(defined(PodgotovitSessiyuRedaktoraWorkflow::class . '::TASK_QUEUE'));
     }
 
     public function test_workflow_zaregistrirovany(): void

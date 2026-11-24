@@ -2,7 +2,6 @@
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use Temporal\Activity\ActivityOptions;
@@ -19,14 +18,18 @@ final class NachatDeistvieUnitaWorkflow
      * */
     #[WorkflowMethod]
     #[ReturnType(ResultatDeistviyaUnita::class)]
-    public function execute(NachatDeistvieUnita $command)
+    public function execute(NachatDeistvieUnita $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             'NachatDeistvieUnitaActivity',
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(60*60)
-                ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

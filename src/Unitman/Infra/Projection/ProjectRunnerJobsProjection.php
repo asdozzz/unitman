@@ -7,16 +7,13 @@ use App\Unitman\Business\Model\Project\Event\OchistkaProektaNachalas;
 use App\Unitman\Business\Model\Project\Event\OshibkaOchistkiProektaUstanovlena;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
-use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasAdded;
-use App\Unitman\Business\Model\Project\Event\ProjectWasBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeleted;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeletedManually;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDisabled;
 use App\Unitman\Business\Model\Project\Event\ProjectWasEnabled;
-use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
@@ -86,23 +83,10 @@ final class ProjectRunnerJobsProjection extends AbstractProjection implements Un
             UserRemovedFromProject::class,
             ZashishennieVetkiProektaUstanovleni::class,
             ZnacheniePeremnoiProektaIzmeneno::class,
-            ProektPostavlenVOcheredNaSborku::class,
             OchistkaProektaNachalas::class,
             ProektPostavlenVOcheredNaUdalenie::class,
             ProjectWasDeletedManually::class
         ];
-    }
-
-    public function handleProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
-    {
-        $job = new ProjectRunnerJob('stub', $fact->id, ProjectRunnerJob::SBORKA_PROEKTA, false, $fact->steps);
-        $this->repository->insert($job);
-    }
-
-    public function handleProjectWasBuilt(ProjectWasBuilt $fact): void
-    {
-        $job = new ProjectRunnerJob('stub', $fact->id, ProjectRunnerJob::SBORKA_PROEKTA, true, $fact->steps);
-        $this->repository->insert($job);
     }
 
     public function handleOshibkaOchistkiProektaUstanovlena(OshibkaOchistkiProektaUstanovlena $fact): void

@@ -55,8 +55,8 @@
     SET "runner.progress.token.loadtest-1" "$(date +%s)" EX 7200
   ```
 
-- `RUNNER_CALLBACK_SECRET`: если он задан, нагрузочный скрипт должен считать
-  `X-Runner-Signature`; если пуст, подпись не требуется
+- Подпись callback-запросов v2: нагрузочный скрипт передаёт `X-Runner-Id` и
+  `X-Runner-Signature` по per-runner секрету
   ([`RunnerCallbackSignatureChecker`](src/Runner/Infra/Service/RunnerCallbackSignatureChecker.php)).
 - большой zip для теста загрузки: файл до `MEDIATEKA_MAX_FILE_SIZE`
   (по умолчанию 200 МБ). Сигнатура проверяется по первым 4 байтам, поэтому

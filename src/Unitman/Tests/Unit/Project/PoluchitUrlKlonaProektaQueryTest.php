@@ -20,7 +20,7 @@ final class PoluchitUrlKlonaProektaQueryTest extends TestCase
     {
         $project = Project::addProject(
             'p1',
-            new AddProject('r1', 'services/api', 'api', 'main', 'https://api.example.test', memoryLimit: 512),
+            new AddProject('r1', 'services/api', 'api', 'main', memoryLimit: 512),
             'account-1',
         );
         $repo = Repo::addRepo(

@@ -139,7 +139,7 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
     {
         $project = Project::addProject(
             'project-1',
-            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300, ['main']),
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 300, ['main']),
             'author-1',
         );
 
@@ -172,7 +172,7 @@ final class PoluchitSostoyanieUnitaQueryTest extends TestCase
     {
         $project = Project::addProject(
             'project-1',
-            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300, ['release/*']),
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 300, ['release/*']),
             'author-1',
         );
 

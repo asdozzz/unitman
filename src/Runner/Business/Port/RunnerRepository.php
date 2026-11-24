@@ -13,7 +13,12 @@ interface RunnerRepository
 
     function findById(string $id): ?RunnerState;
 
-    function getDefaultRunnerState(): RunnerState;
+    /**
+     * Устанавливает или очищает публичный адрес раннера.
+     *
+     * @throws \DomainException `runner.not_found`, если раннер неизвестен
+     */
+    function savePublicAddress(string $id, ?string $publicAddress): RunnerState;
 
     /**
      * @return RunnerState[]

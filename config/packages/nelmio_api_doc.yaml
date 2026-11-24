@@ -10,8 +10,6 @@ nelmio_api_doc:
         tags:
             - name: Account
               description: Аккаунты, роли, настройки
-            - name: Initialization
-              description: Первичная инициализация системы
             - name: Runner
               description: Исполнитель сборки и запуска контейнеров
             - name: Project
@@ -650,7 +648,7 @@ nelmio_api_doc:
                         ideLink:
                             type: string
                             nullable: true
-                            description: 'Ссылка на редактор workspace; null для unit-сессий и если proxy host первого проекта пуст'
+                            description: 'Ссылка на редактор workspace; null для unit-сессий и если публичный адрес workspace не задан'
                         workspace:
                             nullable: true
                             description: 'Данные workspace для type = workspace'
@@ -987,7 +985,7 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             default: http
-                            description: 'Протокол ссылки: `http` (по умолчанию), `ws`, `wss` — через proxy host; остальные — напрямую на контейнер'
+                            description: 'Протокол ссылки: `http` (по умолчанию), `ws`, `wss` — через публичный адрес раннера; остальные — напрямую на контейнер'
                             example: http
                 WorkspaceLinkHolder:
                     type: object
@@ -1210,14 +1208,6 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             example: Апелляция удовлетворена
-                ObnovitDefoltnyiProxyHost:
-                    type: object
-                    required: [value]
-                    properties:
-                        value:
-                            type: string
-                            nullable: true
-                            example: http://proxy.example
                 SaveStepsCommand:
                     type: object
                     required: [responseId, stepsContent]
@@ -1238,7 +1228,8 @@ nelmio_api_doc:
                             example: runner-1
                         taskQueue:
                             type: string
-                            example: unitman-runner-queue
+                            description: Всегда строго равен `runnerId` зарегистрированного раннера.
+                            example: 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
                         active:
                             type: boolean
                             default: true
@@ -1740,7 +1731,7 @@ nelmio_api_doc:
                             description: >-
                                 Ссылка на read-only редактор файлов юнита. Появляется после успешной
                                 подготовки, очищается при сбросе подготовки или пересборке.
-                            example: https://47000.feature-123.my-app.proxy.example
+                            example: https://47000.feature-123.my-app.workspaces.example.com
                         unixtimePoslednegoObnovleniyaUnita:
                             type: integer
                             nullable: true
@@ -1988,7 +1979,7 @@ nelmio_api_doc:
                             example: backend
                         path:
                             type: string
-                            example: http://8080.feature-123.my-app.proxy.example
+                            example: http://8080.feature-123.my-app.workspaces.example.com
                         port:
                             type: integer
                             example: 8080
@@ -2432,7 +2423,7 @@ nelmio_api_doc:
                 ProjectListItem:
                     type: object
                     description: Проект (read-модель ProjectList)
-                    required: [id, repoId, code, name, mainBranch, isActive, state, nastroikiHukaProekta, proxyHost, users, variables, waitResultRunner, memoryLimit, zashishennieVetki]
+                    required: [id, repoId, code, name, mainBranch, isActive, state, nastroikiHukaProekta, users, variables, waitResultRunner, memoryLimit, zashishennieVetki]
                     properties:
                         id:
                             type: string
@@ -2452,13 +2443,9 @@ nelmio_api_doc:
                             type: boolean
                         state:
                             type: string
-                            enum: [NEW, BUILD_PENDING, BUILD_SUCCESS, BUILD_ERROR, REMOVE_PENDING, REMOVE_ERROR]
+                            enum: [NEW, REMOVE_PENDING, REMOVE_ERROR]
                         nastroikiHukaProekta:
                             $ref: '#/components/schemas/ProjectHookSettings'
-                        proxyHost:
-                            type: string
-                            nullable: true
-                            example: proxy.example
                         users:
                             type: array
                             items:
@@ -2755,21 +2742,6 @@ nelmio_api_doc:
                         nickname:
                             type: string
                             nullable: true
-                InitializationRecord:
-                    type: object
-                    description: Параметр инициализации (InitializationRecord)
-                    required: [id, prop, value, init]
-                    properties:
-                        id:
-                            type: string
-                        prop:
-                            type: string
-                        value:
-                            type: string
-                            nullable: true
-                        init:
-                            type: integer
-                            nullable: true
                 # --- Mediateka: файлы юнитов ---
                 MediatekaFaylUnita:
                     type: object
@@ -2848,13 +2820,6 @@ nelmio_api_doc:
                         link:
                             type: string
                             format: uri
-                ProxyHostCheckResult:
-                    type: object
-                    description: Результат проверки доступности proxy host
-                    required: [result]
-                    properties:
-                        result:
-                            type: boolean
                 # --- Runner: диагностическое состояние ---
                 RunnerState:
                     type: object
@@ -2865,7 +2830,8 @@ nelmio_api_doc:
                             type: string
                         taskQueue:
                             type: string
-                            example: unitman-runner-queue
+                            description: Всегда строго равен `id` зарегистрированного раннера.
+                            example: 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
                         active:
                             type: boolean
                         dockerStats:
@@ -2874,6 +2840,128 @@ nelmio_api_doc:
                                 $ref: '#/components/schemas/RunnerContainerStats'
                         memoryInfo:
                             $ref: '#/components/schemas/RunnerMemoryInfo'
+                        publicAddress:
+                            type: string
+                            format: uri
+                            nullable: true
+                            description: Публичный адрес раннера, заданный администратором. `null` — не задан.
+                        registeredAt:
+                            type: integer
+                            nullable: true
+                            description: Unix-время регистрации (контракт v2; fallback на lastRegisteredAt).
+                # --- Runner: сводка угроз и карточка списка ---
+                UgrozyRannerovReadModel:
+                    type: object
+                    description: Сводка угроз по раннерам для `GET /api/runner/threats` (UgrozyRannerovReadModel).
+                    required: [hasThreats, worstLevel, count, runners, registeredCount]
+                    properties:
+                        hasThreats:
+                            type: boolean
+                        worstLevel:
+                            type: string
+                            description: Худший уровень угрозы среди раннеров.
+                        count:
+                            type: integer
+                            description: Количество проблемных раннеров.
+                        registeredCount:
+                            type: integer
+                            description: Общее число зарегистрированных раннеров (включая неактивные). Ноль означает, что не зарегистрирован ни один раннер.
+                        runners:
+                            type: array
+                            items:
+                                type: object
+                                required: [id, level, blocked, healthFresh]
+                                properties:
+                                    id:
+                                        type: string
+                                        format: uuid
+                                    level:
+                                        type: string
+                                    blocked:
+                                        type: boolean
+                                    healthFresh:
+                                        type: boolean
+                RannerKartaReadModel:
+                    type: object
+                    description: Карточка раннера для `GET /api/runner/list` (RannerKartaReadModel).
+                    required: [id, taskQueue, active, healthFresh, lastHealthAt, level, blocked, blockReason, resources, memoryInfo, publicAddress, registeredAt, hasPublicAddress]
+                    properties:
+                        id:
+                            type: string
+                            format: uuid
+                        taskQueue:
+                            type: string
+                            description: Всегда строго равен `id` зарегистрированного раннера.
+                        active:
+                            type: boolean
+                        healthFresh:
+                            type: boolean
+                            description: Был ли health-push за последние 180 секунд.
+                        lastHealthAt:
+                            type: integer
+                            description: Unix-время последнего health-push (0 — ещё не было).
+                        level:
+                            type: string
+                            description: Эффективный уровень ресурсной угрозы.
+                        blocked:
+                            type: boolean
+                            description: Ресурсоёмкие операции запрещены.
+                        blockReason:
+                            type: string
+                            nullable: true
+                        resources:
+                            type: object
+                            nullable: true
+                            description: Последний структурированный снимок ресурсов (RunnerResources).
+                        memoryInfo:
+                            $ref: '#/components/schemas/RunnerMemoryInfo'
+                        publicAddress:
+                            type: string
+                            format: uri
+                            nullable: true
+                            description: Публичный адрес раннера, заданный администратором.
+                        registeredAt:
+                            type: integer
+                            nullable: true
+                            description: Unix-время регистрации.
+                        hasPublicAddress:
+                            type: boolean
+                            description: >-
+                                true — раннер можно выбирать для сборок и построения ссылок.
+                                Секрет раннера в списке отсутствует.
+                RunnerPublicAddressRequest:
+                    type: object
+                    description: Тело PUT/DELETE-check публичного адреса раннера.
+                    required: [publicAddress]
+                    properties:
+                        publicAddress:
+                            type: string
+                            format: uri
+                            example: https://runner-1.example.com
+                RunnerPublicAddress:
+                    type: object
+                    description: Сохранённый публичный адрес раннера.
+                    required: [runnerId, publicAddress]
+                    properties:
+                        runnerId:
+                            type: string
+                            format: uuid
+                        publicAddress:
+                            type: string
+                            format: uri
+                            example: https://runner-1.example.com
+                RunnerPublicAddressCheck:
+                    type: object
+                    description: >-
+                        Результат best-effort проверки `GET <publicAddress>`.
+                        Проверка не сохраняет адрес и не блокирует сохранение.
+                    required: [reachable]
+                    properties:
+                        reachable:
+                            type: boolean
+                        error:
+                            type: string
+                            description: Причина недоступности (HTTP-статус или транспортная ошибка).
                 RunnerContainerStats:
                     type: object
                     description: Статистика контейнера раннера (DockerContainerStats)

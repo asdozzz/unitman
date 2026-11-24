@@ -72,7 +72,7 @@ flowchart TD
 11. Создать юниты через [`SozdatUnitUseCase`](src/Unitman/Business/UseCase/Unit/SozdatUnitUseCase.php:17) с заранее сгенерированными id и отключённой повторной проверкой связей.
 12. Вернуть список созданных юнитов.
 
-Ошибки пробрасывать существующими ключами: `unit.name_already_exists`, `unit.project_is_disabled`, `unit.config_is_empty`, `unit.invalid_proxy_host` и доменные ключи `ConfigUnita`.
+Ошибки пробрасывать существующими ключами: `unit.name_already_exists`, `unit.project_is_disabled`, `unit.config_is_empty`, `unit.runner_public_address_missing` и доменные ключи `ConfigUnita`.
 
 ### 3.3 Изменения в `SozdatUnitUseCase`
 
@@ -106,7 +106,7 @@ function sozdatUnitiDlyaProektov(
   - хелпер на проект вне workspace остаётся без связи;
   - коллизия имени в любом проекте отменяет всю операцию;
   - ошибка конфига в любом проекте отменяет всю операцию;
-  - невалидный proxy host отменяет операцию;
+  - невалидный публичный адрес раннера отменяет операцию;
   - `memoryLimit` берётся из проекта;
   - в событиях `UnitSozdan` есть `svyazi` с `targetUnitId`.
 - `src/Unitman/Tests/UseCase/Unit/PoluchitSsylkuPoPomoschnikuQueryTest.php`: ссылка строится при `zapushen = false`, если `links` уже заполнены.

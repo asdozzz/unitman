@@ -3,12 +3,8 @@
 namespace App\Unitman\Tests\UseCase\Proekt;
 
 use App\Runner\Api\RunnerApiInterface;
-use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
-use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
-use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Unitman\Business\Command\Project\ForceRemoveProject;
-use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Account;
 use App\Unitman\Business\Model\Repo\RepoType;
@@ -16,9 +12,7 @@ use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\ProjectList\ProjectListStateType;
 use App\Unitman\Business\UseCase\Project\ForceRemoveProjectUseCase;
-use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
-use App\Unitman\Business\UseCase\Project\UstanovitResultatSborkiProektaUseCase;
 use App\Unitman\Business\UseCase\Project\UstanovitResultatUdaleniyaProektaUseCase;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
 use App\Unitman\Acl\MemoryRunnerService;
@@ -47,17 +41,9 @@ final class ProektUdalenVruchnuyuTest extends AbstractProjectUseCase
 
         $this->addRepoRaw(RepoType::GITLAB, 'repoName', 'http://repoUrl');
 
-        $this->addProjectRaw($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su');
+        $this->addProjectRaw($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main');
 
         $memoryRunner = new MemoryRunnerService();
-        $steps = [[
-            'Command' => 'command',
-            'Response' => 'response',
-            'Success' => true,
-            'Unixtime' => 123123123
-        ]];
-        $memoryRunner->addResponse(MemoryRunnerService::BUILD_PROJECT, 'jobId');
-        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI_PROEKTA, new InitProjectResult(true, $steps));
         $steps = [[
             'Command' => 'command',
             'Response' => 'response',
@@ -68,16 +54,7 @@ final class ProektUdalenVruchnuyuTest extends AbstractProjectUseCase
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA_PROEKTA, new RemoveProjectResult(false, $steps));
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
 
-
-        //Кинули в очередь на сборку
-        $queueCommand = new PostavitVOcheredNaSborku($projectId);
-        $queueUseCase = self::$container->get(PostavitVOcheredNaSborkuUseCase::class);
-        $queueUseCase->handle($queueCommand);
-
-        $useCase = self::$container->get(UstanovitResultatSborkiProektaUseCase::class);
-        $useCase->handle($projectId);
-
-        //Кинули в очередь
+        //Кинули в очередь на удаление
         $queueCommand = new PostavitVOcheredNaUdalenie($projectId);
         $queueUseCase = self::$container->get(PostavitVOcheredNaUdalenieUseCase::class);
         $queueUseCase->handle($queueCommand);

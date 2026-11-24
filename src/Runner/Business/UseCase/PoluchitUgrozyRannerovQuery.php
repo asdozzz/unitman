@@ -24,8 +24,9 @@ final class PoluchitUgrozyRannerovQuery
     {
         $runners = [];
         $levels = [];
+        $allRunners = $this->runnerRepository->getAll();
 
-        foreach ($this->runnerRepository->getAll() as $state) {
+        foreach ($allRunners as $state) {
             $level = UgrozyRannerov::uroven($state);
             $levels[] = $level;
 
@@ -53,6 +54,7 @@ final class PoluchitUgrozyRannerovQuery
             UgrozyRannerov::hudshiy($levels),
             count($runners),
             $runners,
+            count($allRunners),
         );
     }
 }

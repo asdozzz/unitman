@@ -20,5 +20,6 @@ interface UmeetSozdavatUnit
         ?string $unitId = null,
         ?string $prozesId = null,
         bool $proveritSvyazi = true,
+        ?string $runnerId = null,
     ): string;
 }

@@ -27,7 +27,7 @@ final class ObnovitNastroikiHukaUseCaseTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', $adminId);
 
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
         /** @var $projectListRepo SqlProjectListRepository*/

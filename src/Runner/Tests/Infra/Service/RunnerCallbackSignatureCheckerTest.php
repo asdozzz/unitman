@@ -4,99 +4,149 @@ declare(strict_types=1);
 
 namespace App\Runner\Tests\Infra\Service;
 
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\Utils\RunnerSecretGenerator;
 use App\Runner\Infra\Service\RunnerCallbackSignatureChecker;
+use App\Runner\Tests\Support\InMemoryRunnerRepository;
 use PHPUnit\Framework\TestCase;
 
 /**
- * `saveSteps` — публичный эндпоинт, поэтому HMAC-подпись является единственной
- * защитой от подделки прогресса. Тесты фиксируют все ветки проверки, включая
- * режим «секрет не задан» (поэтапный выкат: сначала бэкенд, потом раннер).
+ * Callback-подпись v2: секрет детерминированно вычисляется по X-Runner-Id,
+ * поэтому валидность подписи зависит и от payload, и от самого раннера.
  */
 final class RunnerCallbackSignatureCheckerTest extends TestCase
 {
-    private const SECRET = 'super-secret-value';
+    private const MASTER_KEY = 'super-secret-value';
+    private const RUNNER_ID = 'runner-1';
     private const TOKEN = 'job-42';
     private const CONTENT = '[{"Command":"docker build","Success":true}]';
 
-    public function test_vernaya_podpis_prinimaetsya(): void
+    public function test_vernaya_podpis_tela_prinimaetsya(): void
     {
-        $checker = new RunnerCallbackSignatureChecker(self::SECRET);
+        $checker = $this->checker();
 
         $this->assertTrue(
-            $checker->estPodpisValidna(self::TOKEN, self::CONTENT, $this->sign(self::TOKEN, self::CONTENT)),
+            $checker->estPodpisTelaValidna(self::RUNNER_ID, self::CONTENT, $this->signBody(self::CONTENT)),
         );
     }
 
-    public function test_podpis_ot_drugogo_sekreta_otvergaetsya(): void
+    public function test_podpis_tela_ot_drugogo_sekreta_otvergaetsya(): void
     {
-        $checker = new RunnerCallbackSignatureChecker(self::SECRET);
+        $checker = $this->checker();
 
-        $this->assertFalse(
-            $checker->estPodpisValidna(self::TOKEN, self::CONTENT, $this->sign(self::TOKEN, self::CONTENT, 'other')),
+        $wrong = hash_hmac('sha256', self::CONTENT, 'other-master-key');
+
+        $this->assertFalse($checker->estPodpisTelaValidna(self::RUNNER_ID, self::CONTENT, $wrong));
+    }
+
+    public function test_vernaya_podpis_save_steps_prinimaetsya(): void
+    {
+        $checker = $this->checker();
+
+        $this->assertTrue(
+            $checker->estPodpisValidna(
+                self::RUNNER_ID,
+                self::TOKEN,
+                self::CONTENT,
+                $this->signSteps(self::TOKEN, self::CONTENT),
+            ),
         );
     }
 
-    public function test_podpis_ne_sootvetstvuet_izmenennomu_tele_otvergaetsya(): void
+    public function test_podpis_save_steps_ot_izmenennogo_tele_otvergaetsya(): void
     {
-        $checker = new RunnerCallbackSignatureChecker(self::SECRET);
-        $signature = $this->sign(self::TOKEN, self::CONTENT);
+        $checker = $this->checker();
+        $signature = $this->signSteps(self::TOKEN, self::CONTENT);
 
         $this->assertFalse(
-            $checker->estPodpisValidna(self::TOKEN, self::CONTENT . ' ', $signature),
+            $checker->estPodpisValidna(self::RUNNER_ID, self::TOKEN, self::CONTENT . ' ', $signature),
         );
     }
 
-    public function test_podpis_ne_sootvetstvuet_drugomu_tokenu_otvergaetsya(): void
+    public function test_podpis_save_steps_ot_drugogo_tokena_otvergaetsya(): void
     {
-        $checker = new RunnerCallbackSignatureChecker(self::SECRET);
-        $signature = $this->sign(self::TOKEN, self::CONTENT);
+        $checker = $this->checker();
+        $signature = $this->signSteps(self::TOKEN, self::CONTENT);
 
         $this->assertFalse(
-            $checker->estPodpisValidna('another-job', self::CONTENT, $signature),
+            $checker->estPodpisValidna(self::RUNNER_ID, 'another-job', self::CONTENT, $signature),
+        );
+    }
+
+    public function test_podpis_pustogo_tela_prinimaetsya_dlya_get_build_state(): void
+    {
+        $checker = $this->checker();
+
+        $this->assertTrue(
+            $checker->estPodpisPustogoTelaValidna(self::RUNNER_ID, $this->signBody('')),
         );
     }
 
     public function test_otsutstvie_podpisi_otvergaetsya(): void
     {
-        $checker = new RunnerCallbackSignatureChecker(self::SECRET);
+        $checker = $this->checker();
 
-        $this->assertFalse($checker->estPodpisValidna(self::TOKEN, self::CONTENT, null));
-        $this->assertFalse($checker->estPodpisValidna(self::TOKEN, self::CONTENT, ''));
-    }
-
-    public function test_pustoi_sekret_otklyuchaet_proverku(): void
-    {
-        $checker = new RunnerCallbackSignatureChecker('');
-
-        // Пустой секрет — режим совместимости: подпись не проверяется вообще,
-        // иначе старые раннеры перестали бы присылать шаги после деплоя бэкенда.
-        $this->assertTrue($checker->estPodpisValidna(self::TOKEN, self::CONTENT, null));
-        $this->assertTrue($checker->estPodpisValidna(self::TOKEN, self::CONTENT, 'any-garbage'));
+        $this->assertFalse($checker->estPodpisTelaValidna(self::RUNNER_ID, self::CONTENT, null));
+        $this->assertFalse($checker->estPodpisTelaValidna(self::RUNNER_ID, self::CONTENT, ''));
+        $this->assertFalse($checker->estPodpisValidna(self::RUNNER_ID, self::TOKEN, self::CONTENT, null));
     }
 
     public function test_podpis_v_verhnem_registre_otvergaetsya(): void
     {
-        $checker = new RunnerCallbackSignatureChecker(self::SECRET);
-        $signature = $this->sign(self::TOKEN, self::CONTENT);
+        $checker = $this->checker();
 
-        // hash_equals чувствителен к регистру: заголовок должен присылаться
-        // ровно так, как его отдаёт hex-кодирование hash_hmac.
         $this->assertFalse(
-            $checker->estPodpisValidna(self::TOKEN, self::CONTENT, strtoupper($signature)),
+            $checker->estPodpisTelaValidna(
+                self::RUNNER_ID,
+                self::CONTENT,
+                strtoupper($this->signBody(self::CONTENT)),
+            ),
         );
     }
 
-    public function test_podpis_dlya_pustogo_tele_validna(): void
+    public function test_neizvestnyi_runner_daet_not_found(): void
     {
-        $checker = new RunnerCallbackSignatureChecker(self::SECRET);
-        $signature = $this->sign(self::TOKEN, '');
+        $checker = $this->checker();
 
-        // Раннер может прислать пустой снапшот в самом начале задачи.
-        $this->assertTrue($checker->estPodpisValidna(self::TOKEN, '', $signature));
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('runner.not_found');
+
+        $checker->estPodpisTelaValidna('unknown-runner', self::CONTENT, 'deadbeef');
     }
 
-    private function sign(string $token, string $content, string $secret = self::SECRET): string
+    public function test_otsutstvie_runner_id_daet_not_found(): void
     {
-        return hash_hmac('sha256', $token . $content, $secret);
+        $checker = $this->checker();
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('runner.not_found');
+
+        $checker->estPodpisTelaValidna(null, self::CONTENT, 'deadbeef');
+    }
+
+    private function checker(): RunnerCallbackSignatureChecker
+    {
+        $repository = new InMemoryRunnerRepository();
+        $repository->save(RunnerState::sozdatRunner(self::RUNNER_ID, self::RUNNER_ID));
+
+        return new RunnerCallbackSignatureChecker(
+            $repository,
+            new RunnerSecretGenerator(self::MASTER_KEY),
+        );
+    }
+
+    private function signBody(string $body): string
+    {
+        return hash_hmac('sha256', $body, $this->runnerSecret());
+    }
+
+    private function signSteps(string $token, string $content): string
+    {
+        return hash_hmac('sha256', $token . $content, $this->runnerSecret());
+    }
+
+    private function runnerSecret(): string
+    {
+        return hash_hmac('sha256', self::RUNNER_ID, self::MASTER_KEY);
     }
 }

@@ -315,18 +315,22 @@ Cleanup хостового Docker выполняет только `docker image 
 
 ## 8. Ссылка на VS Code
 
-Workspace не привязан к одному проекту, поэтому `proxyHost` берётся у первого
-проекта, а псевдо-проект — `workspaces`:
+Workspace привязан к раннеру через `workspace_runner`; в контракте v2 ссылка
+строится по публичному адресу (`publicAddress`) этого раннера, который задаёт
+администратор. Псевдо-проект — `workspaces`:
 
 ```text
-{scheme}://{idePort}.{workspaceSlug}.workspaces.{proxyHostHost}[:{proxyHostPort}]
+{scheme}://{idePort}.{workspaceSlug}.workspaces.{publicAddressHost}[:{proxyPort}]
 ```
+
+`publicAddressHost` — host (и необязательный порт) из `publicAddress` раннера.
 
 `workspaceSlug = slug(name) + '-' + первые 8 символов id`, только `[a-z0-9-]`,
 максимум 48 символов. `container_name` в compose —
-`${UNITMAN_WORKSPACE_SLUG}.workspaces`, поэтому существующий proxy находит
-контейнер по поддомену. Если `proxyHost` первого проекта пуст, `ideLink =
-null`, но контейнер продолжает работать.
+`${UNITMAN_WORKSPACE_SLUG}.workspaces`, поэтому proxy раннера находит
+контейнер по поддомену. Default/fallback host запрещён: workspace без
+привязки к активному раннеру или раннер без `publicAddress` не может быть
+выбран — это явная доменная ошибка, а не подстановка чужого адреса.
 
 ## 9. Ходы и уведомления
 

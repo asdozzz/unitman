@@ -281,7 +281,7 @@ final class ProektDlyaWorkspaceReadModel
         public readonly string $projectId,
         public readonly string $projectName,
         public readonly string $projectCode,
-        public readonly ?string $proxyHost,
+        public readonly string $mainBranch,
         public readonly bool $canPush,
         public readonly string $storageUrl,
         public readonly int $idePort,
@@ -943,12 +943,12 @@ Payload:
 ## 13. Ссылка на VS Code
 
 Workspace не привязан к одному проекту, поэтому используем первого проекта
-как источник `proxyHost` и псевдо-проект `workspaces`.
+как источник публичного адреса раннера и псевдо-проект `workspaces`.
 
 Формула:
 
 ```text
-{scheme}://{idePort}.{workspaceSlug}.workspaces.{proxyHostHost}[:{proxyHostPort}]
+{scheme}://{idePort}.{workspaceSlug}.workspaces.{publicAddress}[:{publicAddressPort}]
 ```
 
 `workspaceSlug`:
@@ -960,7 +960,7 @@ Workspace не привязан к одному проекту, поэтому �
 `container_name` в compose — `${UNITMAN_WORKSPACE_SLUG}.workspaces`,
 поэтому существующий proxy находит контейнер по поддомену.
 
-Если `proxyHost` первого проекта пуст, `ideLink = null`; UI показывает
+Если `publicAddress` первого проекта пуст, `ideLink = null`; UI показывает
 причину, контейнер при этом работает.
 
 ## 14. Ошибки и переводы

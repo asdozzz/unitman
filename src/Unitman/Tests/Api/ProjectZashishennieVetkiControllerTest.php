@@ -79,9 +79,8 @@ final class ProjectZashishennieVetkiControllerTest extends WebTestCase
             'Project-' . $projectId,
             'main',
             true,
-            ProjectListStateType::BUILD_SUCCESS,
+            ProjectListStateType::NEW,
             new NastroikiHukaProekta(false, false, false),
-            null,
             [],
             [],
             false,
@@ -158,12 +157,7 @@ final class ProjectZashishennieVetkiControllerTest extends WebTestCase
 
         $project = Project::addProject(
             $projectId,
-            new AddProject(
-                Uuid::uuid7()->toString(),
-                'unitman-tests/' . $projectId,
-                'Project-' . $projectId,
-                'main',
-                'https://proxy.local',
+            new AddProject(Uuid::uuid7()->toString(), 'unitman-tests/' . $projectId, 'Project-' . $projectId, 'main',
                 300,
             ),
             $this->adminId,

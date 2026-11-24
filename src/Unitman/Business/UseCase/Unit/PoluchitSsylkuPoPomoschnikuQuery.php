@@ -3,18 +3,32 @@
 namespace App\Unitman\Business\UseCase\Unit;
 
 use App\Unitman\Business\Command\Unit\PoluchitSsylkuPoPomoschniku;
+use App\Unitman\Business\Model\Unit\ConfigUnita\PomoschnikSsylki;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\RunnerPublicAddressProvider;
 use App\Unitman\Business\Port\Unit\CanGetUnitReadModelById;
+use App\Unitman\Business\Port\Unit\UnitRunnerRepository;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Business\Utils\SsylkaServisaUtil;
 
+/**
+ * Ссылка на сервис юнита по хелперу.
+ *
+ * Для `http`/`ws`/`wss` адрес строится только по `publicAddress` раннера, к
+ * которому жёстко привязан юнит (`unit_runner`). Привязка обязательна: юнит
+ * без активного раннера или раннер без `publicAddress` дают явную доменную
+ * ошибку — fallback на устаревшие источники адреса запрещён
+ * (plans/runner-multi-runner.md §7).
+ */
 final class PoluchitSsylkuPoPomoschnikuQuery
 {
     public function __construct(
         private ProjectRepository $projectRepository,
         private CanGetUnitReadModelById $canGetUnitReadModelById,
-        private UnitmanSecurityService $securityService
+        private UnitmanSecurityService $securityService,
+        private UnitRunnerRepository $unitRunnerRepository,
+        private RunnerPublicAddressProvider $runnerPublicAddressProvider,
     )
     {
     }
@@ -44,8 +58,9 @@ final class PoluchitSsylkuPoPomoschnikuQuery
     }
 
     /**
-     * Для `http`, `ws` и `wss` ссылка строится через proxy host проекта; для `ws`/`wss`
-     * схема ссылки выбирается по схеме proxy (`https` → `wss`, иначе `ws`).
+     * Для `http`, `ws` и `wss` ссылка строится по `publicAddress` привязанного
+     * раннера; для `ws`/`wss` схема ссылки выбирается по схеме адреса
+     * (`https` → `wss`, иначе `ws`).
      * Остальные протоколы (например `tcp`) — напрямую на юнит:
      * `<type>://<unit>.<project>:<port>`.
      *
@@ -60,7 +75,7 @@ final class PoluchitSsylkuPoPomoschnikuQuery
             $port,
             $targetUnit->name,
             $targetProject->getName(),
-            (string)$targetProject->getProxyHost()
+            $this->poluchitPublicAddressDlyaUnita($targetUnit->id, $type),
         );
 
         if ($suffix !== null && $suffix !== '') {
@@ -68,5 +83,32 @@ final class PoluchitSsylkuPoPomoschnikuQuery
         }
 
         return $link;
+    }
+
+    /**
+     * Прямые протоколы (`tcp` и т.п.) не используют публичный адрес, поэтому привязка
+     * раннера для них не требуется.
+     *
+     * @throws \DomainException `unit.runner_not_bound` | `unit.runner_public_address_missing`
+     */
+    private function poluchitPublicAddressDlyaUnita(string $unitId, string $type): ?string
+    {
+        if (!in_array($type, ['http', 'ws', 'wss'], true)) {
+            return null;
+        }
+
+        $runnerId = $this->unitRunnerRepository->findRunnerIdByUnitId($unitId);
+
+        if ($runnerId === null || $runnerId === '') {
+            throw new \DomainException('unit.runner_not_bound');
+        }
+
+        $publicAddress = $this->runnerPublicAddressProvider->getPublicAddress($runnerId);
+
+        if ($publicAddress === null || trim($publicAddress) === '') {
+            throw new \DomainException('unit.runner_public_address_missing');
+        }
+
+        return $publicAddress;
     }
 }

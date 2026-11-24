@@ -23,7 +23,7 @@ Workspace — это контейнер `${UNITMAN_WORKSPACE_SLUG}.workspaces`, 
 - безопасность хоста и соседних workspace;
 - изоляция сетей и возможность публиковать порты;
 - совместимость с текущей сетью `unitman_default` и nginx-проксированием
-  `{port}.{unit}.{project}.{proxyHost}`;
+  `{port}.{unit}.{project}.{publicAddress}`;
 - стоимость эксплуатации: привилегии, образы, тома, лимиты, обновления.
 
 Проксирование портов самого workspace уже работает и **не является предметом
@@ -58,7 +58,7 @@ Workspace — это контейнер `${UNITMAN_WORKSPACE_SLUG}.workspaces`, 
    принимает `workspaceId`, `port`, `suffix`, `type`; проверяются владелец,
    статус `RUNNING` и диапазон порта `1–65535`.
 6. Ссылка строится по формуле
-   `{scheme}://{port}.{workspaceSlug}.workspaces.{proxyHost}[:{proxyPort}]`
+   `{scheme}://{port}.{workspaceSlug}.workspaces.{publicAddress}[:{publicAddressPort}]`
    ([`SsylkaRedaktoraWorkspace.php`](../src/OpenCode/Business/Utils/SsylkaRedaktoraWorkspace.php:16),
    [`UmeetUpravlyatProektamiWorkspace.php`](../src/OpenCode/Business/Port/UmeetUpravlyatProektamiWorkspace.php:48)).
 7. Для сравнения: контейнер `web` сам монтирует
@@ -316,13 +316,13 @@ user namespaces на хосте).
 ```
 
 Для workspace `unit = <workspaceSlug>`, `project = workspaces`, поэтому
-запрос `https://<port>.<workspaceSlug>.workspaces.<proxyHost>` уходит на
+запрос `https://<port>.<workspaceSlug>.workspaces.<publicAddress>` уходит на
 `http://<workspaceSlug>.workspaces:<port>` в сети `unitman_default`.
 
 Этот маршрут работает **уже сейчас** и не меняется при выборе host socket,
 dind или rootless. Эндпоинт
 `POST /api/opencode/workspace/ssylkaPoPortu` только строит ссылку по формуле
-`{scheme}://{port}.{workspaceSlug}.workspaces.{proxyHost}`; он не знает и не
+`{scheme}://{port}.{workspaceSlug}.workspaces.{publicAddress}`; он не знает и не
 должен знать, как внутри workspace запущен Docker. Формула совпадает с
 общим правилом проекта
 ([`docs/unitman-config.md`](unitman-config.md:223),
@@ -331,7 +331,7 @@ dind или rootless. Эндпоинт
 ### 6.2. Когда внутренние контейнеры становятся доступны через тот же хост
 
 Внутренний контейнер доступен через
-`{port}.{workspaceSlug}.workspaces.{proxyHost}`, если одновременно выполнены
+`{port}.{workspaceSlug}.workspaces.{publicAddress}`, если одновременно выполнены
 условия:
 
 1. контейнер запущен **в network namespace workspace** (dind внутри

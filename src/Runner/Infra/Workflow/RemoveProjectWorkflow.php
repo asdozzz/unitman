@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Runner\Infra\Workflow;
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use Temporal\Activity\ActivityOptions;
@@ -17,14 +16,18 @@ final class RemoveProjectWorkflow
      * */
     #[WorkflowMethod(name: "RemoveProject")]
     #[Workflow\ReturnType(RemoveProjectResult::class)]
-    public function removeProject(RemoveProjectCommand $command)
+    public function removeProject(RemoveProjectCommand $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             'RemoveProjectActivity',
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(3)
-                ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

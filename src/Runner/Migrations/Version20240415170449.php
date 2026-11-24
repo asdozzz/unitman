@@ -4,32 +4,34 @@ declare(strict_types=1);
 
 namespace App\Runner\Migrations;
 
-use App\Runner\Business\UseCase\SozdatDefoltniiRunnerUseCase;
-use App\Utils\Service\MigrationWithContainer;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Auto-generated Migration: Please modify to your needs!
+ * Историческая миграция создания «дефолтного» раннера.
+ *
+ * В multi-runner архитектуре дефолтного раннера больше нет: единственный
+ * источник записей `runner_state` — `POST /api/runner/register`. Поэтому
+ * миграция сознательно оставлена no-op: она должна применяться на чистой БД
+ * без обращения к удалённым классам (`SozdatDefoltniiRunnerUseCase`) и не
+ * создавать legacy-состояние, которое могло бы притвориться привязкой.
+ *
+ * Номер версии сохранён: переписывать уже применённую миграцию нельзя.
  */
 final class Version20240415170449 extends AbstractMigration
 {
-    use MigrationWithContainer;
     public function getDescription(): string
     {
-        return '';
+        return 'No-op: legacy default runner seeding removed (multi-runner)';
     }
 
     public function up(Schema $schema): void
     {
-        $sut = $this->container->get(SozdatDefoltniiRunnerUseCase::class);
-        /** @var SozdatDefoltniiRunnerUseCase $sut*/
-        $sut->handle();
-
+        // Намеренно пусто. Дефолтный раннер удалён из продукта.
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('TRUNCATE runner_state');
+        // Симметрично up(): откатывать нечего.
     }
 }

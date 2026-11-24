@@ -18,8 +18,10 @@ use App\Unitman\Business\Port\Project\ProjectRepository;
 use App\Unitman\Business\Port\Project\UmeetPoluchatKonfigProekta;
 use App\Unitman\Business\Port\Project\UmeetPoluchatSpisokProektovDlyPolzovatelya;
 use App\Unitman\Business\Port\Repo\RepoRepository;
+use App\Unitman\Business\Port\RunnerPublicAddressProvider;
 use App\Unitman\Business\Port\Unit\CanFindUnitDouble;
 use App\Unitman\Business\Port\Unit\UmeetSozdavatUnit;
+use App\Runner\Business\UseCase\RunnerSelectionService;
 use App\Unitman\Business\ReadModel\Unit\SozdannieUnitiReadModel;
 use App\Unitman\Business\ReadModel\Unit\SozdanniyUnitReadModel;
 use App\Unitman\Business\Utils\SsylkaServisaUtil;
@@ -30,7 +32,7 @@ use App\Utils\Exception\TranslatorKeyword;
  * через хелперы переменных.
  *
  * Все проверки выполняются до первой записи: если конфиг хотя бы одного
- * проекта не читается, имя занято или proxy host невалиден, не создаётся
+ * проекта не читается, имя занято или публичный адрес раннера невалиден, не создаётся
  * ни один юнит.
  */
 final class SozdatUnitiDlyaProektovUseCase
@@ -46,6 +48,11 @@ final class SozdatUnitiDlyaProektovUseCase
         private CanFindUnitDouble $canFindUnitDouble,
         private CanGenerateGuid $uuidGenerator,
         private UmeetSozdavatUnit $sozdatUnitUseCase,
+        // Multi-runner: раннер выбирается один раз до создания юнитов, чтобы
+        // ссылки-хелперы и фактическая привязка юнитов совпадали. Без этих
+        // сервисов (legacy-тесты) ссылки на сервисы посчитать нельзя.
+        private ?RunnerSelectionService $runnerSelectionService = null,
+        private ?RunnerPublicAddressProvider $runnerPublicAddressProvider = null,
     ) {
     }
 
@@ -71,6 +78,8 @@ final class SozdatUnitiDlyaProektovUseCase
 
         $dostupnieProekti = $this->dostupnieProekti($accountId);
         $plans = [];
+
+        $runnerId = $this->vybratRunnerId();
 
         foreach ($projects as $projectRequest) {
             if (!isset($dostupnieProekti[$projectRequest->projectId])) {
@@ -111,8 +120,8 @@ final class SozdatUnitiDlyaProektovUseCase
                 $this->uuidGenerator->makeGuid(),
                 $this->uuidGenerator->makeGuid(),
                 $command->memoryLimit ?? $project->poluchitMemoryLimit(),
-                (string) $project->getProxyHost(),
                 $config,
+                $runnerId,
             );
         }
 
@@ -141,6 +150,7 @@ final class SozdatUnitiDlyaProektovUseCase
                 $plan->unitId,
                 $plan->prozesId,
                 false,
+                $plan->runnerId,
             );
 
             $result[] = new SozdanniyUnitReadModel(
@@ -188,7 +198,7 @@ final class SozdatUnitiDlyaProektovUseCase
                         $helper->port,
                         $unitName,
                         $target->projectName,
-                        $target->proxyHost,
+                        $this->poluchitPublicAddress($target, $helper->type),
                     );
 
                     if ($helper->suffix !== null && trim($helper->suffix) !== '') {
@@ -210,6 +220,54 @@ final class SozdatUnitiDlyaProektovUseCase
         }
 
         return $values;
+    }
+
+    /**
+     * Раннер для всех создаваемых юнитов выбирается один раз, чтобы
+     * ссылки-хелперы и привязка совпадали. Живых раннеров нет — создание
+     * невозможно: `runner.not_found` до первой записи.
+     *
+     * `null` возвращается только когда сервис multi-runner не подключён
+     * (legacy/ручная сборка тестов).
+     *
+     * @throws \DomainException `runner.not_found`
+     */
+    private function vybratRunnerId(): ?string
+    {
+        if ($this->runnerSelectionService === null) {
+            return null;
+        }
+
+        return $this->runnerSelectionService->select()->getId();
+    }
+
+    /**
+     * Публичный адрес (`publicAddress`) раннера, к которому будет привязана
+     * цель.
+     *
+     * @throws \DomainException `unit.runner_not_bound` | `unit.runner_public_address_missing`
+     */
+    private function poluchitPublicAddress(PlanSozdaniyaUnita $target, ?string $type): ?string
+    {
+        if (!in_array(SsylkaServisaUtil::normalizovatTip($type), ['http', 'ws', 'wss'], true)) {
+            return null;
+        }
+
+        if ($target->runnerId === null || $target->runnerId === '') {
+            throw new \DomainException('unit.runner_not_bound');
+        }
+
+        if ($this->runnerPublicAddressProvider === null) {
+            throw new \DomainException('unit.runner_public_address_missing');
+        }
+
+        $publicAddress = $this->runnerPublicAddressProvider->getPublicAddress($target->runnerId);
+
+        if ($publicAddress === null || trim($publicAddress) === '') {
+            throw new \DomainException('unit.runner_public_address_missing');
+        }
+
+        return $publicAddress;
     }
 
     /**

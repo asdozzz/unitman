@@ -113,7 +113,6 @@
         "check-background-deptrac": "php deptrac.phar analyze --config-file=./src/BackgroundJob/deptrac.yaml",
         "check-runner-deptrac": "php deptrac.phar analyze --config-file=./src/Runner/deptrac.yaml",
         "check-unitman-deptrac": "php deptrac.phar analyze --config-file=./src/Unitman/deptrac.yaml",
-        "check-init-deptrac": "php deptrac.phar analyze --config-file=./src/Initialization/deptrac.yaml",
         "check-mediateka-deptrac": "php deptrac.phar analyze --config-file=./src/Mediateka/deptrac.yaml",
         "check-opencode-deptrac": "php deptrac.phar analyze --config-file=./src/OpenCode/deptrac.yaml",
         "all-checks": [
@@ -126,7 +125,6 @@
             "@check-background-deptrac",
             "@check-runner-deptrac",
             "@check-unitman-deptrac",
-            "@check-init-deptrac",
             "@check-mediateka-deptrac",
             "@check-opencode-deptrac"
         ]

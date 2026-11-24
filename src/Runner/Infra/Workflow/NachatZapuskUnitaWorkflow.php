@@ -2,7 +2,6 @@
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
 use Temporal\Activity\ActivityOptions;
@@ -19,14 +18,18 @@ final class NachatZapuskUnitaWorkflow
      * */
     #[WorkflowMethod]
     #[ReturnType(ResultatZapuskaUnita::class)]
-    public function execute(NachatZapuskUnita $command)
+    public function execute(NachatZapuskUnita $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             'NachatZapuskUnitaActivity',
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(60*60)
-                ->withTaskQueue(WorkflowClientFactory::runnerQueueName)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

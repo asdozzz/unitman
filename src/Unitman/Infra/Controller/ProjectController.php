@@ -20,9 +20,7 @@ use App\Unitman\Business\Command\Project\PoluchitMoiProekti;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPeremenihProekta;
 use App\Unitman\Business\Command\Project\PoluchitSpisokPolzovateleiProekta;
 use App\Unitman\Business\Command\Project\PoluchitSpisokVetokProekta;
-use App\Unitman\Business\Command\Project\PostavitVOcheredNaSborku;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
-use App\Unitman\Business\Command\Project\ProveritProxyHost;
 use App\Unitman\Business\Command\Project\RemoveUserFromProject;
 use App\Unitman\Business\Command\Project\SozdatVetkuProekta;
 use App\Unitman\Business\Command\Project\UdalitPeremenuyuIzProekta;
@@ -44,7 +42,6 @@ use App\Unitman\Business\UseCase\Project\PoluchitSpisokPeremenihProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokPolzovateleiProektaQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokProektovPolzovatelyaUseCase;
 use App\Unitman\Business\UseCase\Project\PoluchitSpisokVetokProektaQuery;
-use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaSborkuUseCase;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
 use App\Unitman\Business\UseCase\Project\ProzessDobavleniyaPeremenoiVProekt;
 use App\Unitman\Business\UseCase\Project\ProzessIzmeneniyaZnacheniyaPeremenoiProekta;
@@ -55,7 +52,6 @@ use App\Unitman\Business\UseCase\Project\UpdateProjectDataUseCase;
 use App\Unitman\Business\UseCase\Project\UstanovitZashishennieVetkiProektaUseCase;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use App\Unitman\Infra\Repository\Unit\StatistikaPoProektuRepository;
-use App\Unitman\Infra\Service\ServiceProverkiProxyHost;
 use App\Utils\Service\ExceptionTranslator;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -276,10 +272,12 @@ final class ProjectController extends AbstractController
         ]
     )]
     #[Route('/add', methods: ['POST'])]
-    public function add(#[MapRequestPayload] AddProject $command, AddProjectUseCase $useCase, PostavitVOcheredNaSborkuUseCase $postavitVOcheredNaSborkuUseCase): Response
+    public function add(#[MapRequestPayload] AddProject $command, AddProjectUseCase $useCase): Response
     {
-        $id = $useCase->handle($command);
-        $postavitVOcheredNaSborkuUseCase->handle(new PostavitVOcheredNaSborku($id));
+        // Проект создаётся сразу в активном состоянии: отдельной стадии
+        // сборки проекта нет. Сборка выполняется на раннере внутри
+        // NachatSborkuUnitaActivity при сборке юнита.
+        $useCase->handle($command);
         return $this->json(\App\Utils\Model\Reponse\Response::successStub());
     }
 
@@ -730,38 +728,6 @@ final class ProjectController extends AbstractController
     }
 
     #[OA\Post(
-        path: '/api/project/build',
-        summary: 'Поставить проект в очередь на сборку',
-        tags: ['Project'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/PostavitVOcheredNaSborku')
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Пустой ответ: проект поставлен в очередь на сборку',
-                content: new OA\JsonContent(
-                    required: ['status', 'data'],
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
-                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: проект поставлен в очередь на сборку'),
-                    ],
-                    type: 'object'
-                )
-            ),
-            new OA\Response(response: 401, description: 'Не авторизован'),
-            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
-        ]
-    )]
-    #[Route('/build', methods: ['POST'])]
-    public function build(#[MapRequestPayload] PostavitVOcheredNaSborku $command, PostavitVOcheredNaSborkuUseCase $useCase): Response
-    {
-        $useCase->handle($command);
-        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
-    }
-
-    #[OA\Post(
         path: '/api/project/obnovitNastroikiHuka',
         summary: 'Обновить настройки webhook проекта',
         tags: ['Project'],
@@ -1011,38 +977,4 @@ final class ProjectController extends AbstractController
         }
     }
 
-    #[OA\Post(
-        path: '/api/project/proverkaProxyHost',
-        summary: 'Проверить доступность proxy host',
-        tags: ['Project'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/ProveritProxyHost')
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Результат проверки доступности proxy host. При перехваченной ошибке PHP тело всё равно приходит с HTTP 200 в виде ErrorEnvelope',
-                content: new OA\JsonContent(
-                    required: ['status', 'data'],
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/ProxyHostCheckResult'),
-                    ],
-                    type: 'object'
-                )
-            ),
-            new OA\Response(response: 401, description: 'Не авторизован'),
-            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
-        ]
-    )]
-    #[Route('/proverkaProxyHost', methods: ['POST'])]
-    public function proverkaProxyHost(#[MapRequestPayload] ProveritProxyHost $command, ServiceProverkiProxyHost $service): JsonResponse
-    {
-        try {
-            return $this->json(\App\Utils\Model\Reponse\Response::success(['result' => $service->proverit($command->proxyHost)]));
-        } catch (\Error $error) {
-            return new JsonResponse(\App\Utils\Model\Reponse\Response::error($this->exceptionTranslator->translateThrowable($error)));
-        }
-    }
 }

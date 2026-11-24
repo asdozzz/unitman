@@ -25,7 +25,6 @@ use App\Unitman\Business\UseCase\Unit\ProveritDostupKUnituUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitUseCase;
 use App\Unitman\Business\UseCase\Unit\SozdatUnitiDlyaProektovUseCase;
 use App\Unitman\Business\UseCase\Unit\ZahvatitZanyatostUnitovUseCase;
-use App\Unitman\Infra\Service\ServiceProverkiProxyHost;
 
 final class UnitmanApi
 {
@@ -38,7 +37,6 @@ final class UnitmanApi
     public function __construct(
         private ObnovitSostoyanieKonteyneraUnitaUseCase $obnovitSostoyanieKonteyneraUnitaUseCase,
         private ObnovitStatistikuPoKonteineruUnitaUseCase $obnovitStatistikuPoKonteineruUnitaUseCase,
-        private ServiceProverkiProxyHost $serviceProverkiProxyHost,
         private PoluchitSostoyanieUnitaQuery $poluchitSostoyanieUnitaQuery,
         private ProveritDostupKUnituUseCase $proveritDostupKUnituUseCase,
         private SozdatUnitUseCase $sozdatUnitUseCase,
@@ -62,11 +60,6 @@ final class UnitmanApi
     function obnovitStatistikuUnita(ObnovitStatistikuPoKontaineruUnita $command): void
     {
         $this->obnovitStatistikuPoKonteineruUnitaUseCase->handle($command);
-    }
-
-    function proveritProxyHost(?string $url): bool
-    {
-        return $this->serviceProverkiProxyHost->proverit($url);
     }
 
     /**

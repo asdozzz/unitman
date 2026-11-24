@@ -3,13 +3,12 @@
 namespace App\Unitman\Tests\UseCase\Proekt;
 
 use App\Runner\Api\RunnerApiInterface;
+use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Unitman\Business\Command\Project\PostavitVOcheredNaUdalenie;
 use App\Unitman\Business\Model\Account;
-use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
-use App\Unitman\Business\Model\Unit\Runner\RunnerJobStep;
-use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\UseCase\Project\PostavitVOcheredNaUdalenieUseCase;
+use App\Unitman\Business\UseCase\Project\UstanovitResultatUdaleniyaProektaUseCase;
 use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Infra\Repository\Project\SqlProjectListRepository;
 use PHPUnit\Framework\Attributes\Test;
@@ -31,17 +30,20 @@ final class ProektUspeshnoUdalenTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', $adminId);
 
         $memoryRunner = new MemoryRunnerService();
-        $steps = [new RunnerJobStep('command', 'response', true, 123123123)];
-        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, new ProjectDataAboutRemoving('jobId', true, true, $steps));
+        $memoryRunner->addResponse(MemoryRunnerService::REMOVE_PROJECT, 'jobId');
+        $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_UDALENIYA_PROEKTA, new RemoveProjectResult(true, []));
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
 
         //Кинули в очередь
         $queueCommand = new PostavitVOcheredNaUdalenie($projectId);
         $queueUseCase = self::$container->get(PostavitVOcheredNaUdalenieUseCase::class);
         $queueUseCase->handle($queueCommand);
+
+        $resultUseCase = self::$container->get(UstanovitResultatUdaleniyaProektaUseCase::class);
+        $resultUseCase->handle($projectId);
 
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
         /** @var $projectListRepo SqlProjectListRepository*/

@@ -34,8 +34,8 @@ interface UmeetUpravlyatProektamiWorkspace
     /**
      * Ссылка на редактор workspace (VS Code) или null, если её нельзя построить.
      *
-     * Формула использует `proxyHost` первого проекта и порт IDE; токен клонирования
-     * наружу не отдаётся.
+     * Формула использует публичный адрес (`publicAddress`) раннера, к которому
+     * привязан workspace, и порт IDE; токен клонирования наружу не отдаётся.
      */
     public function poluchitSsylkuRedaktora(
         string $projectId,
@@ -46,12 +46,14 @@ interface UmeetUpravlyatProektamiWorkspace
     /**
      * Ссылка на произвольный порт workspace-контейнера.
      *
-     * Workspace не привязан к одному проекту, поэтому `proxyHost` берётся у
-     * первого проекта, а псевдо-проект — `workspaces`. Формула совпадает с
-     * юнитной: `{scheme}://{port}.{workspaceSlug}.workspaces.{host}[:{port}]`.
-     * Для `ws`/`wss` схема выбирается по схеме proxy (`https` → `wss`).
+     * Workspace не привязан к одному проекту: `publicAddress` берётся у
+     * раннера, к которому привязан workspace, а псевдо-проект — `workspaces`.
+     * Формула совпадает с юнитной:
+     * `{scheme}://{port}.{workspaceSlug}.workspaces.{host}[:{publicPort}]`.
+     * Для `ws`/`wss` схема выбирается по схеме адреса (`https` → `wss`).
      *
-     * Возвращает null, если proxy host не задан или ссылку построить нельзя.
+     * Возвращает null, если публичный адрес не задан или ссылку построить
+     * нельзя.
      */
     public function poluchitSsylkuPoPortu(
         string $projectId,

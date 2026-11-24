@@ -73,8 +73,8 @@ w := worker.New(client, "unitman-runner-queue", worker.Options{ /* как сей
 
 acts := &opencode.Activities{
     BackendURL: os.Getenv("RUNNER_BACKEND_URL"), // база API бэкенда, напр. https://unitman.example/api
-    Secret:     os.Getenv("RUNNER_CALLBACK_SECRET"),
-    Client:     &http.Client{Timeout: 10 * time.Second},
+    // Авторизация v2: заголовки X-Runner-Id + X-Runner-Signature.
+    Client: &http.Client{Timeout: 10 * time.Second},
     OpenCode:   opencodeClient, // существующий клиент OpenCode
 }
 
@@ -86,9 +86,9 @@ w.RegisterActivityWithOptions(
 
 Два требования к воркеру:
 
-1. `RUNNER_CALLBACK_SECRET` должен совпадать со значением на бэкенде. Если на
-   бэкенде секрет пуст, проверка подписи отключена; на раннере пустой секрет
-   означает «не подписывать», ошибкой это не считается.
+1. Callback-запросы подписываются схемой v2: `X-Runner-Id` + `X-Runner-Signature`.
+   Per-runner секрет выводится бэкендом из `RUNNER_SECRET_MASTER_KEY`
+   (fallback — `APP_SECRET`) и отдаётся раннеру при регистрации.
 2. Ход занимает слот конкурентности воркера на всё время выполнения. Если
    `MaxConcurrentActivityExecutionSize` мал, длинные ходы начнут вытеснять
    сборки юнитов — учтите это в конфигурации воркера.
@@ -408,15 +408,17 @@ HTTP 400/403 в конверте `{"status":"fail","data":{"message":"<ключ>
 ### 6.6 Подпись
 
 ```
-X-Runner-Signature = hex( HMAC-SHA256( responseId . stepsContent , RUNNER_CALLBACK_SECRET ) )
+X-Runner-Id: <runnerId>
+X-Runner-Signature = hex( HMAC-SHA256( responseId . stepsContent , perRunnerSecret ) )
 ```
 
+- `perRunnerSecret = hex(HMAC-SHA256(runnerId, RUNNER_SECRET_MASTER_KEY ?: APP_SECRET))`;
+  общий глобальный секрет не используется.
 - Подписывается **склейка двух строк без разделителя**: сначала токен, затем
   строка `stepsContent` **ровно в том виде, в котором она лежит в JSON-поле**
   (то есть до JSON-экранирования).
 - Hex — **нижний регистр**; бэкенд сравнивает побайтово (`hash_equals`).
-- Если `RUNNER_CALLBACK_SECRET` на бэкенде пуст, заголовок не проверяется.
-  Отправлять его всё равно безвредно.
+- Неизвестный `X-Runner-Id` отклоняется с `runner.not_found`.
 
 ### 6.7 Частота
 
@@ -938,13 +940,15 @@ func prevratitRezultat(a OpenCodeAnswer) HodResult {
 ```sh
 TOKEN='0192b1c4-0000-0000-0000-000000000000'
 CONTENT='[{"command":"opencode run","response":"ok","success":true,"unixtime":1730000000}]'
-SECRET='<тот же, что RUNNER_CALLBACK_SECRET на бэкенде>'
+RUNNER_ID='<зарегистрированный runnerId>'
+SECRET='<per-runner secret: hash_hmac("sha256", runnerId, RUNNER_SECRET_MASTER_KEY)>'
 
 SIG=$(printf '%s%s' "$TOKEN" "$CONTENT" \
   | openssl dgst -sha256 -hmac "$SECRET" -r | cut -d' ' -f1)
 
 curl -sS -X POST "$BACKEND/api/runner/saveSteps" \
   -H 'Content-Type: application/json' \
+  -H "X-Runner-Id: $RUNNER_ID" \
   -H "X-Runner-Signature: $SIG" \
   --data-binary "$(jq -n \
       --arg t "$TOKEN" --arg c "$CONTENT" \
@@ -1009,9 +1013,9 @@ curl -sS -X POST "$BACKEND/api/runner/saveSteps" \
 
 ## 14. Деплой
 
-1. Секрет `RUNNER_CALLBACK_SECRET` совпадает на раннере и бэкенде. Если бэкенд
-   разворачивается с пустым секретом, проверка подписи отключена — это режим
-   поэтапного раската, а не ошибка.
+1. Бэкенд задаёт `RUNNER_SECRET_MASTER_KEY` (fallback — `APP_SECRET`); per-runner
+   секреты выводятся из него детерминированно, отдельного глобального секрета
+   регистрации/callback нет.
 2. Порядок выката: сначала раннер (новое имя активности никому не мешает),
    затем бэкенд. Обратный порядок тоже безопасен: пока активности нет,
    вызов вернёт `NotFound`, workflow упадёт, а пользователь получит ошибку хода.

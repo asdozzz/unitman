@@ -12,6 +12,8 @@ final class NachatSbrosPodgotovkiUnita
         public readonly string $StorageUrl,
         public readonly array $Commands,
         public readonly array $Variables,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

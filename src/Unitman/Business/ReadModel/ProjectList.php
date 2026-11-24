@@ -22,7 +22,6 @@ final class ProjectList
         public bool $isActive,
         public ProjectListStateType $state,
         public NastroikiHukaProekta $nastroikiHukaProekta,
-        public ?string $proxyHost = null,
         public array $users = [],
         public array $variables = [],
         public bool $waitResultRunner = false,

@@ -56,7 +56,7 @@ final class WebsocketProjectEventProjectionTest extends AbstractTestCaseWithTran
     public function sozdanie_proekta_otpravlyaet_sobitie_sozdan(): void
     {
         $this->projection->handle($this->message(
-            new ProjectWasAdded(self::PROJECT_ID, 'repo-1', 'code-1', 'project-1', 'master', 'https://test.ru', memoryLimit: 1000),
+            new ProjectWasAdded(self::PROJECT_ID, 'repo-1', 'code-1', 'project-1', 'master', memoryLimit: 1000),
             self::AUTHOR_ID
         ));
 
@@ -167,7 +167,7 @@ final class WebsocketProjectEventProjectionTest extends AbstractTestCaseWithTran
     {
         return Project::addProject(
             self::PROJECT_ID,
-            new AddProject('repo-1', 'code-1', 'project-' . self::PROJECT_ID, 'master', 'https://test.ru', 1000),
+            new AddProject('repo-1', 'code-1', 'project-' . self::PROJECT_ID, 'master', 1000),
             self::AUTHOR_ID
         );
     }

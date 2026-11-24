@@ -22,6 +22,8 @@ final class WorkspaceWorkflowTest extends TestCase
         self::assertSame('UdalitWorkspaceActivity', UdalitWorkspaceWorkflow::ACTIVITY);
         self::assertSame('ProveritIzmeneniyaWorkspaceActivity', ProveritIzmeneniyaWorkspaceWorkflow::ACTIVITY);
 
+        // Legacy-очередь как константа удалена: очередь приходит только
+        // параметром `taskQueue` от выбранного раннера.
         foreach (
             [
                 ZapustitWorkspaceWorkflow::class,
@@ -30,7 +32,7 @@ final class WorkspaceWorkflowTest extends TestCase
                 ProveritIzmeneniyaWorkspaceWorkflow::class,
             ] as $workflow
         ) {
-            self::assertSame('unitman-runner-queue', $workflow::TASK_QUEUE);
+            self::assertFalse(defined($workflow . '::TASK_QUEUE'));
         }
     }
 

@@ -6,16 +6,20 @@ namespace App\Runner\Tests\Infra\Controller;
 
 use App\Runner\Business\Command\SaveStepsCommand;
 use App\Runner\Business\Model\RunnerProgress;
+use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
+use App\Runner\Business\Utils\RunnerSecretGenerator;
 use App\Runner\Infra\Controller\RunnerController;
 use App\Runner\Infra\Service\RunnerCallbackSignatureChecker;
 use App\Runner\Infra\Service\RunnerProgressPublisher;
+use App\Runner\Tests\Support\InMemoryRunnerRepository;
 use Fresh\CentrifugoBundle\Service\CentrifugoInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 /**
  * `POST /api/runner/saveSteps` — публичный эндпоинт (без JWT), поэтому порядок
@@ -29,6 +33,8 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 final class RunnerControllerSaveStepsTest extends TestCase
 {
     private const TOKEN = 'job-777';
+    private const RUNNER_ID = 'runner-1';
+    // Мастер-ключ: секрет раннера = hmac_sha256(RUNNER_ID, SECRET).
     private const SECRET = 'runner-secret';
 
     private const STEPS = [
@@ -229,34 +235,51 @@ final class RunnerControllerSaveStepsTest extends TestCase
 
         try {
             $this->saveSteps($command, $this->requestWithSignature('deadbeef'), self::SECRET, $storage);
-            $this->fail('Ожидалось AccessDeniedHttpException');
-        } catch (AccessDeniedHttpException) {
+            $this->fail('Ожидалось UnauthorizedHttpException');
+        } catch (UnauthorizedHttpException) {
             // Ничего не записано: подпись проверяется до любых обращений к KV.
             $this->assertNull($storage->poluchit(self::TOKEN));
             $this->assertArrayNotHasKey(self::TOKEN, $storage->syrieShagi);
         }
     }
 
-    public function test_otsutstvie_podpisi_otklonyaetsya_pri_zadannom_sekrete(): void
+    public function test_otsutstvie_podpisi_otklonyaetsya(): void
     {
         $storage = new InMemorySaveStepsStorage();
         $storage->zaregistrirovat(self::TOKEN);
 
-        $this->expectException(AccessDeniedHttpException::class);
+        $this->expectException(UnauthorizedHttpException::class);
+        $this->expectExceptionMessage('runner.invalid_signature');
 
-        $this->saveSteps($this->command(self::TOKEN, self::STEPS), new Request(), self::SECRET, $storage);
+        $this->saveSteps(
+            $this->command(self::TOKEN, self::STEPS),
+            $this->requestWithRunnerIdOnly(),
+            self::SECRET,
+            $storage,
+        );
     }
 
-    public function test_pustoi_sekret_propuskaet_zapros_bez_podpisi(): void
+    public function test_neizvestnyi_runner_daet_404(): void
     {
-        // Поэтапный выкат: бэкенд уже с эндпоинтом, раннер ещё не подписывает.
         $storage = new InMemorySaveStepsStorage();
         $storage->zaregistrirovat(self::TOKEN);
 
-        $response = $this->saveSteps($this->command(self::TOKEN, self::STEPS), new Request(), '', $storage);
+        $request = Request::create(
+            '/api/runner/saveSteps',
+            'POST',
+            [],
+            [],
+            [],
+            ['HTTP_X_RUNNER_ID' => 'unknown-runner', 'HTTP_X_RUNNER_SIGNATURE' => 'deadbeef'],
+        );
 
-        $this->assertSame('true', $response->getContent());
-        $this->assertNotNull($storage->poluchit(self::TOKEN));
+        $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage('runner.not_found');
+
+        $this->saveSteps($this->command(self::TOKEN, self::STEPS), $request, self::SECRET, $storage);
+
+        // Подпись не проходит — ничего не записано.
+        $this->assertNull($storage->poluchit(self::TOKEN));
     }
 
     public function test_neizvestnyi_token_otklonyaetsya(): void
@@ -460,7 +483,18 @@ final class RunnerControllerSaveStepsTest extends TestCase
         InMemorySaveStepsStorage $storage,
         ?CentrifugoInterface $centrifugo = null,
     ): \Symfony\Component\HttpFoundation\JsonResponse {
-        $checker = new RunnerCallbackSignatureChecker($secret);
+        // В старых тестах пустая строка означала «подпись отключена». В v2
+        // такого режима нет: пустая строка = «запрос подписан корректно
+        // мастер-ключом SECRET».
+        if ($secret === '') {
+            $request = $this->signedRequest($command);
+            $secret = self::SECRET;
+        }
+
+        $repository = new InMemoryRunnerRepository();
+        $repository->save(RunnerState::sozdatRunner(self::RUNNER_ID, self::RUNNER_ID));
+
+        $checker = new RunnerCallbackSignatureChecker($repository, new RunnerSecretGenerator($secret));
         $publisher = new RunnerProgressPublisher(
             $centrifugo ?? $this->createMock(CentrifugoInterface::class),
             $storage,
@@ -472,7 +506,23 @@ final class RunnerControllerSaveStepsTest extends TestCase
     private function signedRequest(SaveStepsCommand $command): Request
     {
         return $this->requestWithSignature(
-            hash_hmac('sha256', $command->responseId . $command->stepsContent, self::SECRET),
+            hash_hmac(
+                'sha256',
+                $command->responseId . $command->stepsContent,
+                hash_hmac('sha256', self::RUNNER_ID, self::SECRET),
+            ),
+        );
+    }
+
+    private function requestWithRunnerIdOnly(): Request
+    {
+        return Request::create(
+            '/api/runner/saveSteps',
+            'POST',
+            [],
+            [],
+            [],
+            ['HTTP_X_RUNNER_ID' => self::RUNNER_ID],
         );
     }
 
@@ -484,7 +534,10 @@ final class RunnerControllerSaveStepsTest extends TestCase
             [],
             [],
             [],
-            ['HTTP_X_RUNNER_SIGNATURE' => $signature],
+            [
+                'HTTP_X_RUNNER_ID' => self::RUNNER_ID,
+                'HTTP_X_RUNNER_SIGNATURE' => $signature,
+            ],
         );
     }
 }

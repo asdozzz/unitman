@@ -262,12 +262,7 @@ final class RedaktorUseCaseTest extends TestCase
     {
         return Project::addProject(
             self::PROJECT_ID,
-            new AddProject(
-                'repo-1',
-                'group/project',
-                'Project',
-                'main',
-                'https://proxy.local',
+            new AddProject('repo-1', 'group/project', 'Project', 'main',
                 300,
                 [],
             ),

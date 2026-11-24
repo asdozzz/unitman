@@ -7,7 +7,6 @@ use Temporal\Client\GRPC\ServiceClient;
 
 final class WorkflowClientFactory
 {
-    const runnerQueueName = 'unitman-runner-queue';
     const monoQueueName = "unitman-mono-queue";
     /**
      * @param non-empty-string $temporalCliAddress

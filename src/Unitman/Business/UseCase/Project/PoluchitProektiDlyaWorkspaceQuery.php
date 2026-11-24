@@ -75,7 +75,6 @@ final class PoluchitProektiDlyaWorkspaceQuery
                 projectName: $project->getName(),
                 projectCode: $project->getCode(),
                 mainBranch: $project->getMainBranchName(),
-                proxyHost: (string) $project->getProxyHost(),
                 canPush: $this->proverkaPusha->canPush($repo, $project),
                 storageUrl: $this->urlKlonaProekta->poluchitUrlKlonaProekta($repo, $project),
                 idePort: IdePort::izOkruzheniya(),

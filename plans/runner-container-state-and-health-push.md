@@ -143,13 +143,17 @@ type UnitState struct {
 
 ### 4.1. Подпись
 
-Все новые публичные callback-эндпоинты используют HMAC-SHA256 по сырому телу запроса:
+Все новые публичные callback-эндпоинты используют HMAC-SHA256 по сырому телу запроса
+с per-runner секретом:
 
 ```text
-X-Runner-Signature: hex(HMAC-SHA256(rawBody, RUNNER_CALLBACK_SECRET))
+X-Runner-Id: <runnerId>
+X-Runner-Signature: hex(HMAC-SHA256(rawBody, perRunnerSecret))
 ```
 
-Если `RUNNER_CALLBACK_SECRET` пуст, проверка отключена. Заголовок и формат совпадают с существующим `saveSteps`.
+`perRunnerSecret` выводится бэкендом из `RUNNER_SECRET_MASTER_KEY` (fallback —
+`APP_SECRET`); глобального секрета нет. Заголовок и формат совпадают с
+существующим `saveSteps`.
 
 ### 4.2. Health
 
@@ -231,7 +235,7 @@ monitor/
 - Переменные окружения:
   - `RUNNER_STATE_DB` — путь к bbolt, по умолчанию `runner-state.db`;
   - `RUNNER_ID` — идентификатор раннера, по умолчанию `os.Hostname()`;
-  - `RUNNER_CALLBACK_SECRET` — секрет HMAC, уже используется;
+  - авторизация callback-запросов — `X-Runner-Id` + `X-Runner-Signature` (per-runner secret);
   - `RUNNER_WORK_DIR` — корень раскладки `projects/`, уже используется OpenCode.
 - Добавить `runner-state.db` в `.gitignore`.
 - Добавить `docs/runner-state.md`: назначение БД, переменные окружения, persist-требования, расписание циклов.
@@ -564,7 +568,7 @@ composer run check-deptrac
 - bbolt-файл должен лежать на постоянном диске. Если раннер запускается в контейнере без volume, состояние теряется при перезапуске; bootstrap восстановит его из каталогов юнитов.
 - Одновременный выкат PHP и Go обязателен: старый PHP будет вызывать удалённые Go-активности, новый Go не зарегистрирует старые активности.
 - Агрессивная очистка образов раз в 2 часа может замедлить последующие сборки. Это осознанное решение; тома не затрагиваются.
-- HMAC-секрет должен совпадать на раннере и unitman. При поэтапном выкате можно временно оставить `RUNNER_CALLBACK_SECRET` пустым.
+- Per-runner секреты выводятся из `RUNNER_SECRET_MASTER_KEY` (fallback — `APP_SECRET`); при поэтапном выкате мастер-ключ должен совпадать на бэкенде и в окружении, где проверяются подписи.
 
 ## 12. Критерии приёмки
 

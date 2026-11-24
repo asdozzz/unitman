@@ -26,7 +26,9 @@ final class NachatPodgotovkuUnita
         public readonly string $Branch,
         public readonly ImageConfig $ImageConfig,
         public readonly array $Volumes = [],
-        public readonly string $RezhimRedaktora = 'view'
+        public readonly string $RezhimRedaktora = 'view',
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

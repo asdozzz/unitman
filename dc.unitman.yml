@@ -55,8 +55,6 @@ services:
       - REDIS_USER=${REDIS_USER}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
-    extra_hosts: &unitman-extra-hosts
-      - "uproxy:host-gateway"
 
   # Роль Jobs + сервисы планировщика (см. .rr.worker.yaml).
   web-worker:
@@ -66,7 +64,6 @@ services:
     volumes: *unitman-volumes
     depends_on: *unitman-depends-on
     environment: *unitman-environment
-    extra_hosts: *unitman-extra-hosts
 
   # Роль Temporal activities (см. .rr.temporal.yaml).
   web-temporal:
@@ -76,7 +73,6 @@ services:
     volumes: *unitman-volumes
     depends_on: *unitman-depends-on
     environment: *unitman-environment
-    extra_hosts: *unitman-extra-hosts
 
   # ROLLBACK: одиночный процесс со старым .rr.yaml. Одной командой:
   #   docker compose -f dc.unitman.yml stop web web-worker web-temporal \
@@ -89,7 +85,6 @@ services:
     volumes: *unitman-volumes
     depends_on: *unitman-depends-on
     environment: *unitman-environment
-    extra_hosts: *unitman-extra-hosts
 
   # Канареечные edge-сервисы (профиль edge). Без --profile edge не запускаются.
   edge-progress:
@@ -148,6 +143,16 @@ services:
     extends:
       file: common-services.yml
       service: buggregator
+
+  # Локальный реестр образов (Docker Registry v2 + прокси Docker Hub).
+  # Публикуется на 5000; публичный адрес backend отдаёт раннеру при регистрации.
+  unitman-registry:
+    extends:
+      file: common-services.yml
+      service: unitman-registry
+
+volumes:
+  unitman-registry-data:
 
 networks:
   default:

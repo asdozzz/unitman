@@ -58,7 +58,8 @@ docker exec redis sh -c \
 | `UNITMAN_USER` | email тестового аккаунта с `ROLE_ADMIN` | — (обязательна) |
 | `UNITMAN_PASSWORD` | пароль аккаунта | — (обязательна) |
 | `RUNNER_PROGRESS_TOKEN` | токен, зарегистрированный в Redis | — (обязательна) |
-| `RUNNER_CALLBACK_SECRET` | HMAC-секрет, если включена подпись `saveSteps` | пусто |
+| `RUNNER_ID` | `runnerId`, зарегистрированный через `POST /api/runner/register` | — (обязательна для saveSteps) |
+| `RUNNER_SECRET` | per-runner secret из ответа регистрации v2 | пусто |
 | `SAVE_STEPS_SCENARIO` | `small`, `medium`, `max` или `all` для `save-steps.js` | `all` |
 | `LOAD_VUS` | число VU в `save-steps.js` | `5` |
 | `LOAD_DURATION` | длительность каждого сценария `save-steps.js` | `30s` |

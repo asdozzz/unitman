@@ -9,6 +9,7 @@ use App\OpenCode\Acl\RunnerAdapter;
 use App\OpenCode\Acl\UnitmanAdapter;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\Port\WorkspaceRunnerRepository;
 use App\OpenCode\Business\UnitSession\Port\UnitSessionRepository;
 use App\OpenCode\Business\UnitSession\Port\UnitSessionTurnRepository;
 use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
@@ -27,6 +28,7 @@ use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Infra\Adapter\RamseyUuidGenerator;
 use App\OpenCode\Infra\Repository\SqlHodOpenCodeRepository;
 use App\OpenCode\Infra\Repository\SqlSessiyaOpenCodeRepository;
+use App\OpenCode\Infra\Repository\SqlWorkspaceRunnerRepository;
 use App\OpenCode\Infra\Repository\SqlUvedomleniyaOpenCodeRepository;
 use App\OpenCode\Infra\Repository\UnitSession\SqlUnitSessionRepository;
 use App\OpenCode\Infra\Repository\UnitSession\SqlUnitSessionTurnRepository;
@@ -59,6 +61,7 @@ return function (ContainerConfigurator $configuration) {
     // Порты бизнес-слоя -> инфраструктурные реализации модуля.
     $services->set(SessiyaOpenCodeRepository::class, SqlSessiyaOpenCodeRepository::class);
     $services->set(HodOpenCodeRepository::class, SqlHodOpenCodeRepository::class);
+    $services->set(WorkspaceRunnerRepository::class, SqlWorkspaceRunnerRepository::class);
 
     // Независимые агрегаты: у workspace и unit-сессии свои репозитории.
     $services->set(UnitSessionRepository::class, SqlUnitSessionRepository::class);

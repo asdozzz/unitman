@@ -139,7 +139,7 @@ final class DobavitLichniyTokenUseCaseTest extends TestCase
     {
         return Project::addProject(
             $id,
-            new AddProject(self::REPO_ID, $code, 'proj', 'master', 'https://proxy.local', 300),
+            new AddProject(self::REPO_ID, $code, 'proj', 'master', 300),
             self::ACCOUNT_ID,
         );
     }
@@ -314,7 +314,7 @@ final class InMemoryProjectList implements CanGetProjectList
                 (string) $project->getName(),
                 $project->getMainBranchName(),
                 true,
-                ProjectListStateType::BUILD_SUCCESS,
+                ProjectListStateType::NEW,
                 new NastroikiHukaProekta(false, false, false),
             ),
             $this->projects,

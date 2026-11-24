@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatIzmeneniyaRezhimaRedaktora;
 use Temporal\Activity\ActivityOptions;
@@ -24,21 +23,24 @@ use Temporal\Workflow\WorkflowMethod;
 final class IzmenitRezhimRedaktoraUnitaWorkflow
 {
     public const ACTIVITY = 'IzmenitRezhimRedaktoraUnitaActivity';
-    public const TASK_QUEUE = WorkflowClientFactory::runnerQueueName;
 
     /**
      * @psalm-suppress MissingReturnType
      */
     #[WorkflowMethod(name: 'IzmenitRezhimRedaktoraUnita')]
     #[ReturnType(ResultatIzmeneniyaRezhimaRedaktora::class)]
-    public function execute(IzmenitRezhimRedaktoraUnita $command)
+    public function execute(IzmenitRezhimRedaktoraUnita $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             self::ACTIVITY,
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(60 * 10)
-                ->withTaskQueue(self::TASK_QUEUE)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

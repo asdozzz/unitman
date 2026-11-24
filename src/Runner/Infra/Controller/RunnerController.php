@@ -9,20 +9,22 @@ use App\Runner\Business\Command\ZaregistrirovatHealthRunnera;
 use App\Runner\Business\Command\ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera;
 use App\Runner\Business\Model\RunnerProgress;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
-use App\Runner\Business\UseCase\PoluchitResursiDefoltnogoRunneraQuery;
 use App\Runner\Business\UseCase\PoluchitSpisokRannerovQuery;
 use App\Runner\Business\UseCase\PoluchitUgrozyRannerovQuery;
+use App\Runner\Business\UseCase\RegisterRunner\RunnerRegistrationFailedException;
+use App\Runner\Business\UseCase\RegisterRunner\RunnerRegistrationInvalidPayloadException;
+use App\Runner\Business\UseCase\RegisterRunnerUseCase;
 use App\Runner\Business\UseCase\ZaregistrirovatHealthRunneraUseCase;
 use App\Runner\Business\UseCase\ZaregistrirovatUvedomleniyaOSostoyaniiKonteyneraUseCase;
-use App\Runner\Infra\Repository\SqlRunnerStateRepository;
 use App\Runner\Infra\Service\RunnerCallbackSignatureChecker;
 use App\Runner\Infra\Service\RunnerProgressPublisher;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/runner')]
@@ -65,54 +67,84 @@ final class RunnerController extends AbstractController
     private const MAX_STEP_RESPONSE_BYTES = 65536;
 
     #[OA\Post(
-        path: '/api/runner/getDefaultRunnerActive',
-        summary: 'Признак активности раннера по умолчанию',
+        path: '/api/runner/register',
+        summary: 'Регистрация Go-раннера (multi-runner, v2)',
+        description: 'Публичный эндпоинт без JWT и без bootstrap-подписи. '
+            . 'Принимает `{hostname, version}`. Возвращает runnerId (UUID v4), '
+            . 'taskQueue (строго равен runnerId), детерминированный secret '
+            . '(64 hex, отдаётся один раз и не хранится), registryHost и карту портов.',
         tags: ['Runner'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'hostname', type: 'string'),
+                    new OA\Property(property: 'version', type: 'string'),
+                ],
+                type: 'object'
+            )
+        ),
         responses: [
             new OA\Response(
-                response: 200,
-                description: 'Состояние раннера',
+                response: 201,
+                description: 'Раннер зарегистрирован',
                 content: new OA\JsonContent(
-                    required: ['active'],
-                    properties: [new OA\Property(property: 'active', type: 'boolean')],
+                    required: ['runnerId', 'taskQueue', 'secret', 'registryHost', 'ports'],
+                    properties: [
+                        new OA\Property(property: 'runnerId', type: 'string', format: 'uuid'),
+                        new OA\Property(property: 'taskQueue', type: 'string'),
+                        new OA\Property(property: 'secret', type: 'string', description: '64 hex, не сохраняется'),
+                        new OA\Property(property: 'registryHost', type: 'string'),
+                        new OA\Property(
+                            property: 'ports',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'api', type: 'integer'),
+                                new OA\Property(property: 'temporal', type: 'integer'),
+                                new OA\Property(property: 'registry', type: 'integer'),
+                            ]
+                        ),
+                    ],
                     type: 'object'
                 )
             ),
-            new OA\Response(response: 401, description: 'Не авторизован'),
-            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
-        ]
+            new OA\Response(response: 400, description: 'runner.registration.invalid_payload'),
+            new OA\Response(response: 500, description: 'runner.registration.failed'),
+        ],
+        security: []
     )]
-    #[Route('/getDefaultRunnerActive', methods: ['POST'])]
-    function getDefaultRunnerActive(SqlRunnerStateRepository $runnerStateRepository): JsonResponse
+    #[Route('/register', methods: ['POST'])]
+    function register(Request $request, RegisterRunnerUseCase $useCase): JsonResponse
     {
-        $runnerState = $runnerStateRepository->getDefaultRunnerState();
+        try {
+            $result = $useCase->handle($request->getContent());
+        } catch (RunnerRegistrationInvalidPayloadException $exception) {
+            return $this->registrationError($exception->getMessage(), 400);
+        } catch (RunnerRegistrationFailedException $exception) {
+            return $this->registrationError($exception->getMessage(), 500);
+        }
+
+        // Контракт v2: плоский ответ 201 Created.
         return new JsonResponse([
-            'active' => $runnerState->isActive() && $runnerState->isHealthFresh(),
-        ]);
+            'runnerId' => $result->runnerId,
+            'taskQueue' => $result->taskQueue,
+            'secret' => $result->secret,
+            'registryHost' => $result->registryHost,
+            'ports' => $result->ports,
+        ], 201);
     }
 
-    #[OA\Get(
-        path: '/api/runner/resources',
-        summary: 'Ресурсы сервера раннера по умолчанию (администратор)',
-        description: 'Снимок памяти, дисков, CPU и занятого места Docker, '
-            . 'который раннер присылает в health-push. `blocked=true` — '
-            . 'уровень «чёрный»: ресурсоёмкие операции заблокированы.',
-        tags: ['Runner'],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Состояние ресурсов раннера',
-                content: new OA\JsonContent(ref: '#/components/schemas/ResursiRunneraReadModel')
-            ),
-            new OA\Response(response: 401, description: 'Не авторизован'),
-            new OA\Response(response: 403, description: 'Недостаточно прав (не администратор)'),
-            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
-        ]
-    )]
-    #[Route('/resources', methods: ['GET'])]
-    function resources(PoluchitResursiDefoltnogoRunneraQuery $query): JsonResponse
+    /**
+     * Ошибка регистрации в общем формате приложения (`FailEnvelope`).
+     * `code` продублирован отдельным полем: клиенту нужен машинный код,
+     * а `message` проходит через человекочитаемый перевод.
+     */
+    private function registrationError(string $code, int $status): JsonResponse
     {
-        return $this->json(\App\Utils\Model\Reponse\Response::success($query->handle()));
+        return new JsonResponse(
+            \App\Utils\Model\Reponse\Response::fail(['message' => $code, 'code' => $code]),
+            $status,
+        );
     }
 
     #[OA\Get(
@@ -163,35 +195,14 @@ final class RunnerController extends AbstractController
         return $this->json(\App\Utils\Model\Reponse\Response::success($query->handle()));
     }
 
-    #[OA\Get(
-        path: '/api/runner/test',
-        summary: 'Диагностическое состояние раннера',
-        tags: ['Runner'],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Текущее состояние раннера по умолчанию',
-                content: new OA\JsonContent(ref: '#/components/schemas/RunnerState')
-            ),
-            new OA\Response(response: 401, description: 'Не авторизован'),
-            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
-        ]
-    )]
-    #[Route('/test', methods: ['GET'])]
-    function test(SqlRunnerStateRepository $runnerStateRepository): JsonResponse
-    {
-        $runners = $runnerStateRepository->getDefaultRunnerState();
-        return new JsonResponse($runners);
-    }
-
     #[OA\Post(
         path: '/api/runner/saveSteps',
         summary: 'Сохранить шаги выполнения задачи',
         description: 'Вызывается Golang-раннером, публичный эндпоинт без JWT. '
             . '`responseId` содержит токен прогресса (workflowId/jobId), '
             . '`stepsContent` — полный снапшот шагов. '
-            . 'При настроенном RUNNER_CALLBACK_SECRET обязателен заголовок '
-            . 'X-Runner-Signature: hex(HMAC-SHA256(responseId . stepsContent, secret)).',
+            . 'Обязательны X-Runner-Id и X-Runner-Signature: '
+            . 'hex(HMAC-SHA256(responseId . stepsContent, secret)).',
         tags: ['Runner'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -204,7 +215,8 @@ final class RunnerController extends AbstractController
                 content: new OA\JsonContent(type: 'boolean', example: true)
             ),
             new OA\Response(response: 400, description: 'Неизвестный токен прогресса либо превышен размер снапшота'),
-            new OA\Response(response: 403, description: 'Некорректная подпись запроса'),
+            new OA\Response(response: 401, description: 'Некорректная подпись запроса'),
+            new OA\Response(response: 404, description: 'runner.not_found'),
         ],
         security: []
     )]
@@ -216,12 +228,21 @@ final class RunnerController extends AbstractController
         UmeetHranitProgressZadachi $progressStorage,
         RunnerProgressPublisher $progressPublisher,
     ): JsonResponse {
-        if (!$signatureChecker->estPodpisValidna(
-            $command->responseId,
-            $command->stepsContent,
-            $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
-        )) {
-            throw new AccessDeniedHttpException('runner.invalid_signature');
+        $runnerId = $request->headers->get(RunnerCallbackSignatureChecker::RUNNER_ID_HEADER);
+
+        try {
+            $signatureValid = $signatureChecker->estPodpisValidna(
+                $runnerId,
+                $command->responseId,
+                $command->stepsContent,
+                $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
+            );
+        } catch (\DomainException) {
+            throw new NotFoundHttpException('runner.not_found');
+        }
+
+        if (!$signatureValid) {
+            throw new UnauthorizedHttpException('RunnerSignature', 'runner.invalid_signature');
         }
 
         if (!$progressStorage->estLiToken($command->responseId)) {
@@ -271,8 +292,8 @@ final class RunnerController extends AbstractController
         summary: 'Health-push раннера',
         description: 'Вызывается Golang-раннером, публичный эндпоинт без JWT. '
             . 'Обновляет состояние раннера и статистику контейнеров. '
-            . 'При настроенном RUNNER_CALLBACK_SECRET обязателен заголовок '
-            . 'X-Runner-Signature: hex(HMAC-SHA256(тело_запроса, secret)).',
+            . 'Обязательны X-Runner-Id и X-Runner-Signature: '
+            . 'hex(HMAC-SHA256(тело_запроса, secret)).',
         tags: ['Runner'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -285,7 +306,8 @@ final class RunnerController extends AbstractController
                 content: new OA\JsonContent(type: 'boolean', example: true)
             ),
             new OA\Response(response: 400, description: 'Пустой runnerId либо превышен размер тела'),
-            new OA\Response(response: 403, description: 'Некорректная подпись запроса'),
+            new OA\Response(response: 401, description: 'Некорректная подпись запроса'),
+            new OA\Response(response: 404, description: 'runner.not_found'),
         ],
         security: []
     )]
@@ -302,15 +324,26 @@ final class RunnerController extends AbstractController
             throw new BadRequestHttpException('runner.health_payload_too_large');
         }
 
-        if (!$signatureChecker->estPodpisTelaValidna(
-            $body,
-            $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
-        )) {
-            throw new AccessDeniedHttpException('runner.invalid_signature');
-        }
-
         if (trim($command->runnerId) === '') {
             throw new BadRequestHttpException('runner.health_runner_id_empty');
+        }
+
+        $runnerId = $request->headers->get(RunnerCallbackSignatureChecker::RUNNER_ID_HEADER);
+
+        try {
+            $signatureValid = $signatureChecker->estPodpisTelaValidna(
+                $runnerId,
+                $body,
+                $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
+            );
+        } catch (\DomainException) {
+            throw new NotFoundHttpException('runner.not_found');
+        }
+
+        // Подпись подтверждает личность раннера: обновлять состояние чужого
+        // runnerId нельзя.
+        if (!$signatureValid || $runnerId !== $command->runnerId) {
+            throw new UnauthorizedHttpException('RunnerSignature', 'runner.invalid_signature');
         }
 
         $useCase->handle($command);
@@ -322,8 +355,8 @@ final class RunnerController extends AbstractController
         path: '/api/runner/unitStateNotifications',
         summary: 'Уведомления раннера о состоянии контейнеров юнитов',
         description: 'Вызывается Golang-раннером, публичный эндпоинт без JWT. '
-            . 'При настроенном RUNNER_CALLBACK_SECRET обязателен заголовок '
-            . 'X-Runner-Signature: hex(HMAC-SHA256(тело_запроса, secret)).',
+            . 'Обязательны X-Runner-Id и X-Runner-Signature: '
+            . 'hex(HMAC-SHA256(тело_запроса, secret)).',
         tags: ['Runner'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -336,7 +369,8 @@ final class RunnerController extends AbstractController
                 content: new OA\JsonContent(type: 'boolean', example: true)
             ),
             new OA\Response(response: 400, description: 'Пустой список уведомлений либо превышен размер тела'),
-            new OA\Response(response: 403, description: 'Некорректная подпись запроса'),
+            new OA\Response(response: 401, description: 'Некорректная подпись запроса'),
+            new OA\Response(response: 404, description: 'runner.not_found'),
         ],
         security: []
     )]
@@ -353,11 +387,20 @@ final class RunnerController extends AbstractController
             throw new BadRequestHttpException('runner.unit_state_payload_too_large');
         }
 
-        if (!$signatureChecker->estPodpisTelaValidna(
-            $body,
-            $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
-        )) {
-            throw new AccessDeniedHttpException('runner.invalid_signature');
+        $runnerId = $request->headers->get(RunnerCallbackSignatureChecker::RUNNER_ID_HEADER);
+
+        try {
+            $signatureValid = $signatureChecker->estPodpisTelaValidna(
+                $runnerId,
+                $body,
+                $request->headers->get(RunnerCallbackSignatureChecker::HEADER_NAME),
+            );
+        } catch (\DomainException) {
+            throw new NotFoundHttpException('runner.not_found');
+        }
+
+        if (!$signatureValid || $runnerId !== $command->runnerId) {
+            throw new UnauthorizedHttpException('RunnerSignature', 'runner.invalid_signature');
         }
 
         if ($command->notifications === []) {

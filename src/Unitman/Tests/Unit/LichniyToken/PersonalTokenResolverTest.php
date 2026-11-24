@@ -139,7 +139,7 @@ final class PersonalTokenResolverTest extends TestCase
 
         $project = Project::addProject(
             $projectId,
-            new AddProject($repoId, 'group/project-1', 'project-one', 'master', 'https://proxy.local', 300),
+            new AddProject($repoId, 'group/project-1', 'project-one', 'master', 300),
             $accountId,
         );
 

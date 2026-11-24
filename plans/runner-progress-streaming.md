@@ -88,8 +88,8 @@ flowchart LR
 
 Порядок в `saveSteps`:
 
-1. Проверить `X-Runner-Signature` — HMAC-SHA256 от `responseId + body` на общем секрете
-   (`RUNNER_CALLBACK_SECRET`). Закрывает риск из `plans/project-audit.md` §8.4.
+1. Проверить `X-Runner-Id` + `X-Runner-Signature` — HMAC-SHA256 от `responseId + body`
+   на per-runner секрете (схема v2). Закрывает риск из `plans/project-audit.md` §8.4.
 2. Проверить, что токен зарегистрирован (маркер пишется `RunnerApi` перед стартом workflow).
    Незарегистрированный токен → `400`, без записи в KV.
 3. Ограничить размер `stepsContent` (например, 256 КБ) и число шагов.

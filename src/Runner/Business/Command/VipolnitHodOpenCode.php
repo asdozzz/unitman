@@ -36,6 +36,8 @@ final class VipolnitHodOpenCode
         public readonly array $WorkspaceProjects = [],
         public readonly bool $ReadOnly = false,
         public readonly ?string $Token = null,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

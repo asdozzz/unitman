@@ -35,12 +35,12 @@ class AbstractProjectUseCase extends AbstractUnitmanUseCase
         return 'UnitmanTestsProject-' . Uuid::uuid7()->toString();
     }
 
-    function addProject(string $repoId,string $projectCode, string $projectName, string $mainBranch, string $proxyHost, string $userId): string
+    function addProject(string $repoId,string $projectCode, string $projectName, string $mainBranch, string $userId): string
     {
         $projectId = Uuid::uuid7()->toString();
         self::$container->set(CanGenerateGuid::class, new MemoryGuidGenerator([$projectId]));
 
-        $this->addProjectRaw($repoId, $projectCode, $projectName, $mainBranch, $proxyHost);
+        $this->addProjectRaw($repoId, $projectCode, $projectName, $mainBranch);
 
         $projectListRepo = self::$container->get(SqlProjectListRepository::class);
         /** @var $projectListRepo SqlProjectListRepository*/
@@ -51,9 +51,9 @@ class AbstractProjectUseCase extends AbstractUnitmanUseCase
         $this->assertEquals($project->code, $projectCode);
         $this->assertEquals($project->name, $projectName);
         $this->assertEquals($project->mainBranch, $mainBranch);
-        $this->assertEquals($project->isActive, false);
+        // Проект активен сразу после создания: стадии сборки нет.
+        $this->assertTrue($project->isActive);
         $this->assertEquals($project->state, ProjectListStateType::NEW);
-        $this->assertEquals($project->proxyHost, $proxyHost);
         $this->assertEquals($project->users, [new ProjectUsersList($userId, 'ADMIN')]);
 
         return $projectId;

@@ -3,7 +3,6 @@
 namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\ImageConfig;
-use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
@@ -16,13 +15,14 @@ use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\UseCase\RunnerSelectionService;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatDeistviyaiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
 use App\Unitman\Business\Model\Runner\ResultatOstanovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatPodgotovkiUnita;
-use App\Unitman\Business\Model\Runner\ResultatSborkiProekta;
 use App\Unitman\Business\Model\Runner\ResultatSborkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatSbrosaPodgotovkiUnita;
 use App\Unitman\Business\Model\Runner\ResultatUdaleniyaProekta;
@@ -34,6 +34,7 @@ use App\Unitman\Business\Model\Unit;
 use App\Unitman\Business\Port\MediatekaService;
 use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\RunnerService;
+use App\Unitman\Business\Port\Unit\UnitRunnerRepository;
 use App\Unitman\Infra\Adapter\StorageApiAdapterFactory;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 
@@ -44,9 +45,42 @@ final class RunnerAdapter implements RunnerService
         private readonly RepoRepository $repoRepository,
         private SqlProjectEventsRepository $projectEventsRepository,
         private StorageApiAdapterFactory $storageApiAdapterFactory,
-        private readonly MediatekaService $mediatekaService
+        private readonly MediatekaService $mediatekaService,
+        // Необязательны для обратной совместимости ручных конструкторов в
+        // тестах; DI подставляет реальные сервисы multi-runner.
+        private readonly ?RunnerSelectionService $runnerSelectionService = null,
+        private readonly ?UnitRunnerRepository $unitRunnerRepository = null,
     )
     {
+    }
+
+    /**
+     * Раннер, на котором обязан выполняться юнит.
+     *
+     * Привязанный раннер не переносится: если он неактивен/не найден —
+     * `runner.inactive`/`runner.not_found` без fallback. Если привязки ещё нет
+     * (build/start до первой привязки), выбирается живой раннер и привязка
+     * фиксируется в `unit_runner`.
+     *
+     * `null` — сервисы multi-runner не подключены (legacy/ручная сборка).
+     *
+     * @throws \DomainException `runner.not_found` | `runner.inactive`
+     */
+    private function runnerDlyaUnita(string $unitId): ?RunnerState
+    {
+        if ($this->runnerSelectionService === null || $this->unitRunnerRepository === null) {
+            return null;
+        }
+
+        $runnerId = $this->unitRunnerRepository->findRunnerIdByUnitId($unitId);
+        if ($runnerId !== null && $runnerId !== '') {
+            return $this->runnerSelectionService->getByRunnerId($runnerId);
+        }
+
+        $runner = $this->runnerSelectionService->select();
+        $this->unitRunnerRepository->bind($unitId, $runner->getId());
+
+        return $runner;
     }
 
     /**
@@ -89,14 +123,6 @@ final class RunnerAdapter implements RunnerService
         return null;
     }
 
-    public function nachatSborkuProekta(Project $project): JobId
-    {
-        $projectUrl = $this->getProjectUrl($project);
-        $command = new InitProjectCommand($project->getId(), $project->getMainBranchName(), $projectUrl);
-        $workflowId = $this->runnerApi->initProject($command);
-        return new JobId($workflowId);
-    }
-
     public function nachatUdalenieProekta(Project $project): JobId
     {
         $command = new RemoveProjectCommand($project->getId());
@@ -108,7 +134,16 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $command = new NachatSborkuUnita($unit->getProjectId(), $unit->getId() ,$unit->getName(), $storageUrl, $unit->getBranch());
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatSborkuUnita(
+            $unit->getProjectId(),
+            $unit->getId(),
+            $unit->getName(),
+            $storageUrl,
+            $unit->getBranch(),
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatSborkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
@@ -134,7 +169,24 @@ final class RunnerAdapter implements RunnerService
             && !$project->soderzhitZashishennuyuVetku($unit->getBranch())
                 ? 'edit'
                 : 'view';
-        $command = new NachatPodgotovkuUnita($unit->getProjectId(), $project->getName() ,$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiPodgotovki(), $variables, $caches, $containerSettings, $unit->getBranch(), $imageConfig, $volumes, $rezhimRedaktora);
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatPodgotovkuUnita(
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getId(),
+            $unit->getName(),
+            $storageUrl,
+            $unit->poluchitKomandiPodgotovki(),
+            $variables,
+            $caches,
+            $containerSettings,
+            $unit->getBranch(),
+            $imageConfig,
+            $volumes,
+            $rezhimRedaktora,
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
@@ -143,7 +195,16 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $command = new NachatObnovlenieUnita($unit->getProjectId(), $project->getName(), $unit->getId() ,$unit->getName(), $storageUrl);
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatObnovlenieUnita(
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getId(),
+            $unit->getName(),
+            $storageUrl,
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatObnovlenieUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -153,7 +214,18 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
-        $command = new NachatSbrosPodgotovkiUnita($unit->getId(), $unit->getProjectId(), $project->getName(), $unit->getName(), $storageUrl, $unit->poluchitKomandiSbrosaPodgotovki(), $variables);
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatSbrosPodgotovkiUnita(
+            $unit->getId(),
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getName(),
+            $storageUrl,
+            $unit->poluchitKomandiSbrosaPodgotovki(),
+            $variables,
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatSbrosPodgotovkiUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -164,7 +236,20 @@ final class RunnerAdapter implements RunnerService
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
         $caches = $this->makeCachesListFromUnit($unit);
-        $command = new NachatZapuskUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiZapuska(), $variables, $caches, $unit->getBranch());
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatZapuskUnita(
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getId(),
+            $unit->getName(),
+            $storageUrl,
+            $unit->poluchitKomandiZapuska(),
+            $variables,
+            $caches,
+            $unit->getBranch(),
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatZapuskUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -180,7 +265,17 @@ final class RunnerAdapter implements RunnerService
             $variables[] = array('Id' => $key, 'Value' => $value, 'Type' => $konfigVariable->getType());
         }
 
-        $command = new NachatDeistvieUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $konfigDeistviya->commands, $variables);
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatDeistvieUnita(
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getId(),
+            $unit->getName(),
+            $konfigDeistviya->commands,
+            $variables,
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatDeistvieUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -191,7 +286,18 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
-        $command = new NachatOstanovkuUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName(), $storageUrl, $unit->poluchitKomandiOstanovki(), $variables);
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatOstanovkuUnita(
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getId(),
+            $unit->getName(),
+            $storageUrl,
+            $unit->poluchitKomandiOstanovki(),
+            $variables,
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatOstanovkuUnita($jobId,$command);
         return new JobId($workflowId);
     }
@@ -200,7 +306,16 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $command = new NachatUdalenieUnita($unit->getProjectId(), $project->getName(), $unit->getId() ,$unit->getName(), $storageUrl);
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new NachatUdalenieUnita(
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getId(),
+            $unit->getName(),
+            $storageUrl,
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $workflowId = $this->runnerApi->nachatUdalenieUnita($jobId, $command);
         return new JobId($workflowId);
     }
@@ -208,9 +323,15 @@ final class RunnerAdapter implements RunnerService
     public function izmenitRezhimRedaktora(string $unitId, string $mode): void
     {
         $workflowId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $runner = $this->runnerDlyaUnita($unitId);
         $this->runnerApi->izmenitRezhimRedaktoraUnita(
             $workflowId,
-            new IzmenitRezhimRedaktoraUnita($unitId, $mode),
+            new IzmenitRezhimRedaktoraUnita(
+                $unitId,
+                $mode,
+                RunnerId: $runner?->getId(),
+                TaskQueue: $runner?->getTaskQueue(),
+            ),
         );
     }
 
@@ -223,9 +344,19 @@ final class RunnerAdapter implements RunnerService
         ?string $userEmail = null,
     ): void {
         $workflowId = \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $runner = $this->runnerDlyaUnita($unitId);
         $this->runnerApi->podgotovitSessiyuRedaktora(
             $workflowId,
-            new PodgotovitSessiyuRedaktora($unitId, $userId, $mode, $token, $userName, $userEmail),
+            new PodgotovitSessiyuRedaktora(
+                $unitId,
+                $userId,
+                $mode,
+                $token,
+                $userName,
+                $userEmail,
+                RunnerId: $runner?->getId(),
+                TaskQueue: $runner?->getTaskQueue(),
+            ),
         );
     }
 
@@ -394,17 +525,6 @@ final class RunnerAdapter implements RunnerService
         return $projectUrl;
     }
 
-    public function poluchitResultatSborkiProekta(Project $project): ResultatSborkiProekta
-    {
-        $result = $this->runnerApi->poluchitResultatSborkiProekta($project->poluchitWorkflowIdDlySborki());
-
-        if (empty($result)) {
-            throw new \Exception('runner.sborka_proekta_eshe_ne_zakonchena');
-        }
-
-        return new ResultatSborkiProekta($result->Success, $this->convertRunnerSteps($result->Steps));
-    }
-
     public function poluchitResultatUdaleniyaProekta(Project $project): ResultatUdaleniyaProekta
     {
         $result = $this->runnerApi->poluchitResultatUdaleniyaProekta($project->poluchitWorkflowIdDlyUdaleniya());
@@ -446,7 +566,15 @@ final class RunnerAdapter implements RunnerService
 
     public function proveritKonteinerUnita(Unit $unit, Project $project): bool
     {
-        $command = new ProveritKonteinerUnita($unit->getProjectId(), $project->getName(),$unit->getId() ,$unit->getName());
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $command = new ProveritKonteinerUnita(
+            $unit->getProjectId(),
+            $project->getName(),
+            $unit->getId(),
+            $unit->getName(),
+            RunnerId: $runner?->getId(),
+            TaskQueue: $runner?->getTaskQueue(),
+        );
         $result = $this->runnerApi->proveritKonteinerUnita($command);
 
         if (empty($result)) {

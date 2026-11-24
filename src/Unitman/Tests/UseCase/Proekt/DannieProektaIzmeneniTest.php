@@ -26,9 +26,9 @@ final class DannieProektaIzmeneniTest extends AbstractProjectUseCase
         $securityService->expects($this->any())->method('getSystemUser')->willReturn(new Account($adminId, 'asd@asd.ru', false));
         self::$container->set(UnitmanSecurityService::class, $securityService);
 
-        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', 'http://testcase.su', $adminId);
+        $projectId = $this->addProject($repoId, $this->poluchitUnikalnyiKodProekta(), $this->poluchitUnikalnoeImyaProekta(), 'main', $adminId);
 
-        $command = new UpdateProjectData($projectId, 'Units2', 'https://testcase2.su', memoryLimit: 500);
+        $command = new UpdateProjectData($projectId, 'Units2', memoryLimit: 500);
         $useCase = self::$container->get(UpdateProjectDataUseCase::class);
         $useCase->handle($command);
 
@@ -37,7 +37,6 @@ final class DannieProektaIzmeneniTest extends AbstractProjectUseCase
         $project = $projectListRepo->getById($projectId);
 
         $this->assertEquals($project->name, 'Units2');
-        $this->assertEquals($project->proxyHost, 'https://testcase2.su');
         $this->assertEquals($project->memoryLimit, 500);
     }
 }

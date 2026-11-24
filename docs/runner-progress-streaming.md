@@ -19,7 +19,8 @@ token := activity.GetInfo(ctx).WorkflowExecution.ID
 
 // после каждой выполненной команды — накопленный полный список шагов:
 // POST /api/runner/saveSteps
-// X-Runner-Signature: <hex HMAC-SHA256(token + stepsContent, RUNNER_CALLBACK_SECRET)>
+// X-Runner-Id: <runnerId>
+// X-Runner-Signature: <hex HMAC-SHA256(token + stepsContent, perRunnerSecret)>
 // {
 //   "responseId": token,
 //   "stepsContent": "[{\"command\":\"docker build ...\",\"response\":\"...\",\"success\":true,\"unixtime\":1730000000,\"UnixtimeStart\":1729999975}]",
@@ -50,14 +51,17 @@ token := activity.GetInfo(ctx).WorkflowExecution.ID
 
 ### Подпись запроса
 
-Заголовок `X-Runner-Signature`:
+Заголовки `X-Runner-Id: <runnerId>` и `X-Runner-Signature`:
 
 ```
-hex( hash_hmac('sha256', responseId . stepsContent, RUNNER_CALLBACK_SECRET) )
+hex( hash_hmac('sha256', responseId . stepsContent, perRunnerSecret) )
 ```
 
-- Если `RUNNER_CALLBACK_SECRET` пуст, проверка отключена — режим поэтапного
-  раската, чтобы старый раннер мог работать без изменений.
+где `perRunnerSecret = hash_hmac('sha256', runnerId, RUNNER_SECRET_MASTER_KEY ?: APP_SECRET)`
+— секрет, выданный при регистрации v2 и не хранящийся в БД.
+
+- Неизвестный `X-Runner-Id` — `404 runner.not_found`; неверная подпись —
+  `401 runner.invalid_signature`.
 - Подпись сравнивается через `hash_equals`, регистр hex-символов важен.
 
 ### Совместимость при деплое

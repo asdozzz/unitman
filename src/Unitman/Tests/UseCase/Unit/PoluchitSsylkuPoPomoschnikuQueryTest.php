@@ -4,9 +4,12 @@ namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatSbrokiUnita;
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\Port\RunnerRepository;
 use App\Unitman\Acl\MemoryRunnerService;
 use App\Unitman\Business\Command\Unit\PoluchitSsylkuPoPomoschniku;
 use App\Unitman\Business\Port\CanGenerateGuid;
+use App\Unitman\Business\Port\Unit\UnitRunnerRepository;
 use App\Unitman\Business\UseCase\Unit\ObrabotatProzesiUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\PoluchitSsylkuPoPomoschnikuQuery;
 use App\Unitman\Infra\Adapter\MemoryGuidGenerator;
@@ -57,6 +60,29 @@ final class PoluchitSsylkuPoPomoschnikuQueryTest extends AbstractUnitUseCase
         $memoryRunner->addResponse(MemoryRunnerService::SBORKA_UNITA, 'SBORKA_UNITA');
         $memoryRunner->addResponse(MemoryRunnerService::RESULTAT_SBORKI, new ResultatSbrokiUnita(true, $stepsSuccess, $configText3));
         self::$container->set(RunnerApiInterface::class, $memoryRunner);
+
+        // Ссылки http/ws строятся только по publicAddress раннера, к которому
+        // привязаны юниты. Раннер зарегистрирован по контракту v2: публичный
+        // адрес задаётся отдельно и только он влияет на ссылку.
+        $runnerRepository = self::$container->get(RunnerRepository::class);
+        $runnerTest = RunnerState::sozdatZaregistrirovanniiRunnerV2(
+            'runner-test',
+            null,
+            null,
+            time(),
+        );
+        self::assertNull($runnerTest->getPublicAddress(), 'v2-раннер не должен иметь публичный адрес до явного назначения');
+        $runnerTest->ustanovitPublicAddress('https://testcase.ru');
+        $runnerRepository->save($runnerTest);
+        $unitRunnerRepository = self::$container->get(UnitRunnerRepository::class);
+        // Привязка жёсткая: если юнит уже привязан к legacy-раннеру без
+        // публичного адреса, сначала снимаем привязку, затем привязываем тестовый.
+        $unitRunnerRepository->unbind($unitAId);
+        $unitRunnerRepository->unbind($unitBId);
+        $unitRunnerRepository->unbind($unitCId);
+        $unitRunnerRepository->bind($unitAId, 'runner-test');
+        $unitRunnerRepository->bind($unitBId, 'runner-test');
+        $unitRunnerRepository->bind($unitCId, 'runner-test');
 
         $useCase = self::$container->get(ObrabotatProzesiUnitaUseCase::class);
         $useCase->handle($unitAId);
@@ -113,6 +139,29 @@ final class PoluchitSsylkuPoPomoschnikuQueryTest extends AbstractUnitUseCase
             $this->fail('Expected DomainException was not thrown');
         } catch (\DomainException $e) {
             $this->assertEquals('unit.pomoschnik.servis_ne_naiden', $e->getMessage());
+        }
+
+        // Fallback-host запрещён: раннер без publicAddress даёт явную
+        // доменную ошибку, даже если устаревшее поле адреса было бы задан.
+        $runnerRepository->save(new RunnerState('runner-noproxy', 'runner-noproxy', true));
+        $unitRunnerRepository->unbind($unitBId);
+        $unitRunnerRepository->bind($unitBId, 'runner-noproxy');
+
+        try {
+            $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId));
+            $this->fail('Expected DomainException was not thrown');
+        } catch (\DomainException $e) {
+            $this->assertEquals('unit.runner_public_address_missing', $e->getMessage());
+        }
+
+        // Юнит без привязки к раннеру также не получает default-host.
+        $unitRunnerRepository->unbind($unitBId);
+
+        try {
+            $query->handle(new PoluchitSsylkuPoPomoschniku($projectIdB, 'web', 8080, $unitBId));
+            $this->fail('Expected DomainException was not thrown');
+        } catch (\DomainException $e) {
+            $this->assertEquals('unit.runner_not_bound', $e->getMessage());
         }
     }
 }

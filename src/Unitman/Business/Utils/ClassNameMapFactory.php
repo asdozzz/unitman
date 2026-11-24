@@ -9,15 +9,12 @@ use App\Unitman\Business\Model\LichniyToken\Event\PravaLichnogoTokenaObnovleni;
 use App\Unitman\Business\Model\LichniyToken\LichniyTokenId;
 use App\Unitman\Business\Model\Project;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
-use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasAdded;
-use App\Unitman\Business\Model\Project\Event\ProjectWasBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeleted;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeletedManually;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDisabled;
 use App\Unitman\Business\Model\Project\Event\ProjectWasEnabled;
-use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
@@ -83,14 +80,11 @@ final class ClassNameMapFactory
             ProjectId::class => UnitmanClassNameMapEnum::ProjectId,
             ProjectWasAdded::class => UnitmanClassNameMapEnum::ProjectWasAdded,
             ProjectDataWasChanged::class => UnitmanClassNameMapEnum::ProjectDataWasChanged,
-            ProektPostavlenVOcheredNaSborku::class => UnitmanClassNameMapEnum::ProektPostavlenVOcheredNaSborku,
             ProektPostavlenVOcheredNaUdalenie::class => UnitmanClassNameMapEnum::ProektPostavlenVOcheredNaUdalenie,
-            ProjectWasBuilt::class => UnitmanClassNameMapEnum::ProjectWasBuilt,
             ProjectWasDeleted::class => UnitmanClassNameMapEnum::ProjectWasDeleted,
             ProjectWasDeletedManually::class => UnitmanClassNameMapEnum::ProjectWasDeletedManually,
             ProjectWasDisabled::class => UnitmanClassNameMapEnum::ProjectWasDisabled,
             ProjectWasEnabled::class => UnitmanClassNameMapEnum::ProjectWasEnabled,
-            ProjectWasNotBuilt::class => UnitmanClassNameMapEnum::ProjectWasNotBuilt,
             ProjectWasNotDeleted::class => UnitmanClassNameMapEnum::ProjectWasNotDeleted,
             UserAddedToProject::class => UnitmanClassNameMapEnum::UserAddedToProject,
             UserRemovedFromProject::class => UnitmanClassNameMapEnum::UserRemovedFromProject,

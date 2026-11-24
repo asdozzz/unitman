@@ -25,6 +25,8 @@ final class PodgotovitSessiyuRedaktora
         public readonly string $Token,
         public readonly ?string $UserName = null,
         public readonly ?string $UserEmail = null,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

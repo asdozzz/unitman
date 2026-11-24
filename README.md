@@ -59,7 +59,7 @@ Unitman решает это так:
 
 | Сущность | Где живёт | Описание |
 | --- | --- | --- |
-| **Project** | [`Project.php`](src/Unitman/Business/Model/Project.php) | Git-репозиторий, подключённый к системе. Хранит настройки хуков, переменные, участников, proxy host. |
+| **Project** | [`Project.php`](src/Unitman/Business/Model/Project.php) | Git-репозиторий, подключённый к системе. Хранит настройки хуков, переменные и участников. |
 | **Repo** | [`Repo.php`](src/Unitman/Business/Model/Repo.php) | Учётные данные для доступа к Git-хостингу (`GITLAB` / `GITHUB` / `BITBUCKET`). |
 | **Unit** («юнит») | [`Unit.php`](src/Unitman/Business/Model/Unit.php) | Тестовый стенд, собранный из конкретной ветки проекта. Имеет состояние, конфиг, переменные, тома, процессы и задачи Runner'а. |
 | **Runner** | [`src/Runner/`](src/Runner) | Исполнитель: собирает образы, поднимает/останавливает контейнеры, проверяет работоспособность. Общается с Golang-runner'ом через Temporal. |
@@ -129,11 +129,65 @@ src/
   Unitman/         — ядро: проекты, репо, юниты, webhook'и (основная бизнес-логика)
   Runner/          — сборка/запуск/управление контейнерами (Golang-runner + Temporal)
   BackgroundJob/   — фоновые задачи (очередь RoadRunner Jobs)
-  Initialization/  — первичная инициализация системы (proxy host, параметры)
   Mediateka/       — файлы и архивы томов (MinIO)
   App/             — общая инфраструктура (workflow client, event-store декораторы)
   Utils/           — разделяемые утилиты (EventSauce-инфраструктура, конвертеры, Response)
 ```
+
+### Multi-runner: регистрация, публичный адрес и выбор
+
+- `POST /api/project/add` создаёт проект **без отдельной стадии сборки
+  проекта**: `add` больше не ставит проект в очередь и не вызывает
+  InitProject-workflow; публичный эндпоинт `/api/project/build` удалён.
+- Сборка проекта выполняется на раннере внутри сборки юнита
+  (`NachatSborkuUnitaActivity`), а не отдельным workflow проекта.
+- Ссылки на сервисы юнитов и IDE workspace строятся через публичный
+  `publicAddress` раннера, к которому жёстко привязан юнит (`unit_runner`) или
+  workspace (`workspace_runner`). Default/fallback адрес запрещён:
+  отсутствие привязки или `publicAddress` даёт явную доменную ошибку.
+- Legacy-модуль `Initialization` (глобальный proxy-хост) удалён; отдельного
+  эндпоинта проверки proxy host больше нет.
+
+**Регистрация v2.** `POST /api/runner/register` — публичный эндпоинт без JWT и
+без bootstrap-подписи. Тело: `{"hostname":"...","version":"..."}`. Ответ `201`:
+
+```json
+{
+  "runnerId": "550e8400-e29b-41d4-a716-446655440000",
+  "taskQueue": "550e8400-e29b-41d4-a716-446655440000",
+  "secret": "<64 hex>",
+  "registryHost": "registry.example.com",
+  "ports": {"api": 8082, "temporal": 7233, "registry": 5000}
+}
+```
+
+`registryHost` — bare host без схемы и порта; порты сервисов раннера передаются
+отдельно в `ports`, а хосты сервисов выводятся из `registryHost` и `ports`.
+
+`taskQueue` строго равен `runnerId`; `secret =
+hash_hmac('sha256', runnerId, RUNNER_SECRET_MASTER_KEY ?: APP_SECRET)` — не
+хранится в БД и отдаётся один раз. Callback-и раннера (`saveSteps`, `health`,
+`unitStateNotifications`, build-state) аутентифицируются per-runner заголовками
+`X-Runner-Id` + `X-Runner-Signature`, а не JWT и не общим секретом.
+
+**Публичный адрес (только администратор).**
+
+- `PUT /api/runner/{runnerId}/public-address`, тело
+  `{"publicAddress":"https://runner-1.example.com"}` → `{runnerId, publicAddress}`.
+  Адрес обязан быть абсолютным `http`/`https` URL с непустым host и без
+  userinfo (`user:pass@`); неизвестный `runnerId` → 404.
+- `DELETE /api/runner/{runnerId}/public-address` → `204`.
+- `POST /api/runner/{runnerId}/public-address/check`, тело
+  `{"publicAddress":"..."}` → `{reachable: bool, error?: string}`. Проверка —
+  best-effort `GET <publicAddress>/__unitman/health` с коротким таймаутом
+  (connect 2 с, запрос 3 с, максимум 5 с); она ничего не сохраняет и не
+  блокирует сохранение адреса.
+
+**Правило выбора.** `GET /api/runner/list` отдаёт для каждого раннера
+`publicAddress`, `registeredAt`, `hasPublicAddress` (секрета в списке нет).
+Автоматический выбор (`DefaultRunnerSelector` / `RunnerSelectionService`)
+исключает раннеры без публичного адреса: такой раннер может присылать health,
+но не выбирается для сборок и построения ссылок.
 
 Структура модуля:
 
@@ -185,6 +239,9 @@ git clone <repo-url> unitman && cd unitman
 
 # 2. Скопировать окружение
 cp .env.dist .env
+# сгенерировать общий RUNNER_SECRET_MASTER_KEY (64 hex) в .env;
+# повторный запуск ключ не меняет, ротация — make runner-secret-rotate
+make runner-secret
 # при необходимости переопределить значения в .env.local (секреты не коммитим!)
 
 # 3. Внешняя сеть, в которой живут все контейнеры
@@ -246,7 +303,7 @@ make mvp-stop
 ## Конфигурация окружения
 
 Все переменные описаны в [`.env.dist`](.env.dist). Копия — в `.env` (коммитится только
-`.env.dist`; секреты — в `.env.local`). Основные группы:
+`.env.dist`; `.env` и `.env.local` в `.gitignore`). Основные группы:
 
 ```dotenv
 # --- Приложение ---
@@ -294,6 +351,13 @@ MEDIATEKA_BUCKET=unitman-mediateka
 MEDIATEKA_PRESIGN_TTL=3600
 MEDIATEKA_MAX_FILE_SIZE=209715200
 
+# --- Runner registry (контракт v2) ---
+# 64 hex; генерируется один раз: make runner-secret
+# Должен совпадать у backend и edge-progress.
+RUNNER_SECRET_MASTER_KEY=
+UNITMAN_REGISTRY_PUBLIC_ADDRESS=
+UNITMAN_REGISTRY_PUBLIC_PORT=5000
+
 # --- Прочее ---
 LOCK_DSN=flock
 RR_RPC=tcp://127.0.0.1:6001
@@ -303,6 +367,14 @@ RR_TEMPORAL_NUM_WORKERS=12
 MIN_FREE_MEMORY_PERCENT_FOR_RUN_UNIT=10
 CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
 ```
+
+`RUNNER_SECRET_MASTER_KEY` — корень доверия для per-runner секретов:
+`secret = hash_hmac('sha256', runnerId, RUNNER_SECRET_MASTER_KEY ?: APP_SECRET)`.
+Генерируйте его один раз при первичной настройке командой `make runner-secret`
+(пишет в `.env`, который не коммитится). Ключ должен совпадать на backend и в
+`edge-progress`. Повторный запуск идемпотентен; для ротации используйте
+`make runner-secret-rotate` — после неё **все** раннеры нужно переинициализировать.
+Подробнее: [`docs/runner-registration-v2-rollout.md`](docs/runner-registration-v2-rollout.md).
 
 > JWT-ключи (`config/jwt/*.pem`), `var/`, `vendor/` и `.env` **не коммитятся**
 > (см. `.rooignore`). В проде секреты храните в `.env.local` / секретах CI.
@@ -376,8 +448,11 @@ services:
 | Метод | Путь | Назначение |
 | --- | --- | --- |
 | `POST` | `/api/account/refreshToken` | Обновление токена |
-| `POST` | `/api/runner/saveSteps` | Приём шагов задачи от Runner'а |
-| `GET`  | `/api/initialization/list` | Параметры инициализации |
+| `POST` | `/api/runner/register` | Регистрация раннера v2 (без bootstrap-подписи) |
+| `POST` | `/api/runner/saveSteps` | Приём шагов задачи от Runner'а (per-runner HMAC) |
+| `POST` | `/api/runner/health` | Health-push раннера (per-runner HMAC) |
+| `POST` | `/api/runner/unitStateNotifications` | Уведомления о контейнерах (per-runner HMAC) |
+| `GET/PUT` | `/api/runner/{runnerId}/projects/{projectId}/build-state` | Build-state (per-runner HMAC) |
 | `POST` | `/api/project/{id}/hook` | Webhook Git-хостинга |
 | `GET`  | `/api/doc` | Swagger UI |
 
@@ -389,14 +464,13 @@ services:
 | Префикс | Модуль | Примеры методов |
 | --- | --- | --- |
 | `/api/account` | Account | `register`, `changeMyPassword`, `poluchitVsehPolzovatelei`, `changeRoleByAdmin` |
-| `/api/project` | Unitman | `list`, `add`, `my`, `build`, `branchesList`, `{id}/hook`, `statistikaPoProektam` |
+| `/api/project` | Unitman | `list`, `add`, `my`, `branchesList`, `{id}/hook`, `statistikaPoProektam` |
 | `/api/project/webhook` | Unitman | `dobavit`, `{id}/otkluchit`, `poluchitSobitiyaWebhooka` |
 | `/api/repo` | Unitman | `add`, `list`, `confirm`, `changeCredentials` |
 | `/api/unit` | Unitman | `sozdat`, `sobrat`, `zapustit`, `ostanovit`, `udalit`, `poluchitKonfigUnita`, `zapolnitPeremenie`, `vipolnitDeistviye` |
 | `/api/volumeType` | Unitman | `poluchitTipyVolumov`, `dobavitTipVoluma`, `prikrepitFaylKTipuVoluma` |
 | `/api/mediateka` | Mediateka | `upload`, `file/{id}`, `unit/{unitId}` |
-| `/api/runner` | Runner | `getDefaultRunnerActive`, `saveSteps` |
-| `/api/initialization` | Initialization | `proxy_host` (PUT), `list` |
+| `/api/runner` | Runner | `list` (админ), `register` (публичный), `saveSteps`, `health`, `unitStateNotifications`, `{runnerId}/public-address` (PUT/DELETE/check, админ) |
 
 Пример создания юнита:
 
@@ -481,6 +555,11 @@ make tl    / tl-stop                      # Temporal
 make tools / tools-stop                   # инструменты
 make stop-all                             # остановить всё
 make update                               # git pull + миграции + рестарт jobs
+
+# Секреты раннера
+make runner-secret                        # создать RUNNER_SECRET_MASTER_KEY (идемпотентно)
+make runner-secret-rotate                 # ротация ключа (все раннеры нужно переинициализировать)
+make runner-secret ENV_FILE=/tmp/t.env    # безопасная проверка на временном env-файле
 
 # Внутри контейнера web
 php bin/console doctrine:migrations:migrate

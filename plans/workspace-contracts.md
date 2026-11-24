@@ -325,7 +325,7 @@ final class ProektDlyaWorkspaceReadModel
         public readonly string $projectId,
         public readonly string $projectName,
         public readonly string $projectCode,
-        public readonly ?string $proxyHost,
+        public readonly string $mainBranch,
         public readonly bool $canPush,
         public readonly string $storageUrl,
         public readonly int $idePort,

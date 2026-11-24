@@ -20,6 +20,9 @@ final class UgrozyRannerovReadModel implements \JsonSerializable
         public string $worstLevel,
         public int $count,
         public array $runners,
+        // Общее число записей реестра, включая неактивные и без публичного
+        // адреса. Нужно шапке, чтобы отличить «всё в норме» от «раннеров нет».
+        public int $registeredCount,
     ) {
     }
 

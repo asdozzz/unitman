@@ -16,15 +16,12 @@ use App\Unitman\Business\Model\Project\Event\OshibkaOchistkiProektaUstanovlena;
 use App\Unitman\Business\Model\Project\Event\PeremenayaDobavlenaVProekt;
 use App\Unitman\Business\Model\Project\Event\PeremenayaUdalenaIzProekta;
 use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaUdalenie;
-use App\Unitman\Business\Model\Project\Event\ProektPostavlenVOcheredNaSborku;
 use App\Unitman\Business\Model\Project\Event\ProjectDataWasChanged;
 use App\Unitman\Business\Model\Project\Event\ProjectWasAdded;
-use App\Unitman\Business\Model\Project\Event\ProjectWasBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeleted;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDeletedManually;
 use App\Unitman\Business\Model\Project\Event\ProjectWasDisabled;
 use App\Unitman\Business\Model\Project\Event\ProjectWasEnabled;
-use App\Unitman\Business\Model\Project\Event\ProjectWasNotBuilt;
 use App\Unitman\Business\Model\Project\Event\ProjectWasNotDeleted;
 use App\Unitman\Business\Model\Project\Event\UserAddedToProject;
 use App\Unitman\Business\Model\Project\Event\UserRemovedFromProject;
@@ -34,7 +31,6 @@ use App\Unitman\Business\Model\Project\Event\ZnacheniePeremnoiProektaIzmeneno;
 use App\Unitman\Business\Model\Project\NastroikiHuka;
 use App\Unitman\Business\Model\Project\ProjectCode;
 use App\Unitman\Business\Model\Project\ProjectContainerSettings;
-use App\Unitman\Business\Model\Project\ProjectDataAboutBuilding;
 use App\Unitman\Business\Model\Project\ProjectDataAboutRemoving;
 use App\Unitman\Business\Model\Project\ProjectId;
 use App\Unitman\Business\Model\Project\ProjectName;
@@ -42,7 +38,6 @@ use App\Unitman\Business\Model\Project\ProjectUser;
 use App\Unitman\Business\Model\Project\ProjectUserRole;
 use App\Unitman\Business\Model\Project\ProjectVariable;
 use App\Unitman\Business\Model\Project\ProjectVariableType;
-use App\Unitman\Business\Model\Project\ProxyHost;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJob;
 use App\Unitman\Business\Model\Unit\Runner\RunnerJobType;
@@ -82,13 +77,10 @@ final class Project implements AggregateRoot
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private string $mainBranch;
     /** @psalm-suppress PropertyNotSetInConstructor*/
-    private ProxyHost $proxyHost;
-    /** @psalm-suppress PropertyNotSetInConstructor*/
     private NastroikiHuka $nastroikiHuka;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private ProjectContainerSettings $projectContainerSettings;
 
-    private ?ProjectDataAboutBuilding $dataAboutBuilding = null;
     private ?ProjectDataAboutRemoving $dataAboutRemoving = null;
 
     private ?RunnerJob $ochistka = null;
@@ -114,7 +106,7 @@ final class Project implements AggregateRoot
         ProjectName::validate($command->projectName);
         ProjectContainerSettings::validateMemory($command->memoryLimit);
         self::validateZashishennieVetki($command->zashishennieVetki);
-        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, $command->proxyHost, memoryLimit: $command->memoryLimit, zashishennieVetki: $command->zashishennieVetki));
+        $project->recordThat(new ProjectWasAdded($id, $command->repoId, $command->projectCode, $command->projectName, $command->mainBranch, memoryLimit: $command->memoryLimit, zashishennieVetki: $command->zashishennieVetki));
         $project->recordThat(new UserAddedToProject($id, $userId, ProjectUserRole::ADMIN->name));
         return $project;
     }
@@ -123,8 +115,9 @@ final class Project implements AggregateRoot
     {
         $this->code = new ProjectCode($fact->projectCode);
         $this->name = new ProjectName($fact->projectName);
-        $this->proxyHost = new ProxyHost($fact->proxyHost);
         $this->projectContainerSettings = new ProjectContainerSettings($fact->memoryLimit);
+        // Проект активен сразу после создания: отдельной стадии сборки нет.
+        $this->isActive = true;
 
         $this->repoId = $fact->repoId;
         $this->mainBranch = $fact->mainBranch;
@@ -146,10 +139,6 @@ final class Project implements AggregateRoot
 
         if (!empty($this->ochistka) && !$this->ochistka->isFinish()) {
             throw new DomainException('project.ochistka_uge_nachalas');
-        }
-
-        if ($this->dataAboutBuilding && !$this->dataAboutBuilding->isFinish) {
-            throw new DomainException('project.eshe_ne_sobran');
         }
     }
 
@@ -329,13 +318,12 @@ final class Project implements AggregateRoot
         }*/
         ProjectName::validate($command->newProjectName);
         ProjectContainerSettings::validateMemory($command->memoryLimit);
-        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->newProxyHost, $command->memoryLimit));
+        $this->recordThat(new ProjectDataWasChanged($this->getId(), $command->newProjectName, $command->memoryLimit));
     }
 
     private function applyProjectDataWasChanged(ProjectDataWasChanged $fact): void
     {
         $this->name = new ProjectName($fact->newName);
-        $this->proxyHost = new ProxyHost($fact->newProxyHost);
         $this->projectContainerSettings = new ProjectContainerSettings($fact->memoryLimit);
     }
 
@@ -343,10 +331,6 @@ final class Project implements AggregateRoot
     {
         if ($this->dataAboutRemoving) {
             throw new DomainException('project.already_in_queue');
-        }
-
-        if ($this->dataAboutBuilding && !$this->dataAboutBuilding->isFinish) {
-            throw new DomainException('project.in_pending_for_build');
         }
 
         $this->recordThat(new ProektPostavlenVOcheredNaUdalenie($this->getId(), $jobId));
@@ -424,75 +408,8 @@ final class Project implements AggregateRoot
         $this->dataAboutRemoving = $this->dataAboutRemoving->removeManually();
     }
 
-    public function postavitVOcheredNaSborku(string $jobId): void
-    {
-        $errors = $this->proverkaProektaDlyNachlaSborki();
-
-        if (!empty($errors)) {
-            throw new DomainException($errors[0]);
-        }
-
-        $this->recordThat(new ProektPostavlenVOcheredNaSborku($this->getId(), $jobId));
-    }
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyProektPostavlenVOcheredNaSborku(ProektPostavlenVOcheredNaSborku $fact): void
-    {
-        $this->dataAboutBuilding = new ProjectDataAboutBuilding($fact->jobId);
-    }
-
-    public function successfullyBuild(array $steps): void
-    {
-        if (!$this->dataAboutBuilding) {
-            throw new DomainException('project.not_found_data_about_building');
-        }
-
-        if ($this->dataAboutBuilding->isFinish) {
-            throw new DomainException('project.building_already_execute');
-        }
-
-        $this->recordThat(new ProjectWasBuilt($this->getId(), $steps));
-    }
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyProjectWasBuilt(ProjectWasBuilt $fact): void
-    {
-        $this->dataAboutBuilding = $this->dataAboutBuilding->success($fact->steps);
-    }
-
-    public function errorWhenBuild(array $steps): void
-    {
-        if (!$this->dataAboutBuilding) {
-            throw new DomainException('project.not_found_data_about_building');
-        }
-
-        if ($this->dataAboutBuilding->isFinish) {
-            throw new DomainException('project.building_already_execute');
-        }
-
-        $this->recordThat(new ProjectWasNotBuilt($this->getId(), $steps));
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function applyProjectWasNotBuilt(ProjectWasNotBuilt $fact): void
-    {
-        $this->dataAboutBuilding = $this->dataAboutBuilding->fail($fact->steps);
-    }
-
     public function enable(): void
     {
-        if (!$this->dataAboutBuilding) {
-            throw new DomainException('project.not_found_data_about_building');
-        }
-
-        if (!$this->dataAboutBuilding->isFinish) {
-            throw new DomainException('project.pending_building');
-        }
-
         if ($this->isActive) {
             throw new DomainException('project.already_enabled');
         }
@@ -511,14 +428,6 @@ final class Project implements AggregateRoot
 
     public function disable(): void
     {
-        if (!$this->dataAboutBuilding) {
-            throw new DomainException('project.not_found_data_about_building');
-        }
-
-        if (!$this->dataAboutBuilding->isFinish) {
-            throw new DomainException('project.pending_building');
-        }
-
         if ($this->dataAboutRemoving) {
             throw new DomainException('project.removing');
         }
@@ -560,32 +469,6 @@ final class Project implements AggregateRoot
     public function getMainBranchName(): string
     {
         return $this->mainBranch;
-    }
-
-    public function esliProektBilSobran(): bool
-    {
-        return isset($this->dataAboutBuilding) && $this->dataAboutBuilding->isFinish;
-    }
-
-    /**
-     * @return array|string
-     */
-    public function proverkaProektaDlyNachlaSborki(): string|array
-    {
-        $errors = [];
-        if ($this->dataAboutBuilding) {
-            $errors = 'project.already_in_queue';
-        }
-
-        if ($this->dataAboutRemoving) {
-            $errors = 'project.removed';
-        }
-        return $errors;
-    }
-
-    public function getProxyHost(): ProxyHost
-    {
-        return $this->proxyHost;
     }
 
     public function getProjectUserById(string $userId): ProjectUser
@@ -693,14 +576,6 @@ final class Project implements AggregateRoot
     public function poluchitNastroikiHuka(): NastroikiHuka
     {
         return $this->nastroikiHuka;
-    }
-
-    public function poluchitWorkflowIdDlySborki(): string
-    {
-        if (empty($this->dataAboutBuilding)) {
-            throw new DomainException('unit.prozes_sborki_ne_naiden');
-        }
-        return $this->dataAboutBuilding->jobId;
     }
 
     public function poluchitWorkflowIdDlyUdaleniya(): string

@@ -105,13 +105,14 @@ final class SobitiyaIzHranilishaActivityTest extends AbstractUnitUseCase
     /**
      * Несобранный юнит не откладываем: такое состояние не транзиентное, и
      * намерение висело бы вечно. Сохраняется прежняя ошибка статуса.
+     *
+     * Захват OpenCode здесь не эмулируется: занятость проверяется раньше
+     * статуса сборки, поэтому захваченный юнит штатно уходит в `deferred`.
      */
     #[Test]
     public function nesobrannii_unit_ne_otkladyvaet_obnovlenie_koda(): void
     {
         [$projectId, $unitId] = $this->podgotovka();
-
-        $this->zahvatit($unitId);
 
         $result = $this->activity()->obrabotatZadachu($this->sobitieObnovleniyaKoda($projectId));
 
@@ -119,7 +120,7 @@ final class SobitiyaIzHranilishaActivityTest extends AbstractUnitUseCase
         self::assertSame(
             [],
             $this->otlozhennie()->poluchitGotovieDlyaUnita($unitId, $this->neskolkoMinutVpered()),
-            'несобранный юнит не должен попадать в отложенные намерения даже под захватом',
+            'несобранный свободный юнит не должен попадать в отложенные намерения',
         );
     }
 

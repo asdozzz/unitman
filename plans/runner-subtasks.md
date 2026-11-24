@@ -231,7 +231,7 @@ func Bootstrap(ctx context.Context, store state.Store, workdir string)
 - `RUNNER_STATE_DB` — путь к bbolt, default `runner-state.db`.
 - `RUNNER_ID` — default `os.Hostname()`.
 - `RUNNER_WORK_DIR` — default `os.Getwd()`.
-- `RUNNER_CALLBACK_SECRET` — из env.
+- `X-Runner-Id` / `X-Runner-Signature` — заголовки авторизации callback-запросов (v2).
 - После `config.ParseConfig()`:
   - `state.Init(dbPath)`;
   - `client := &monitor.Client{BaseURL: backendURL, Secret: secret, RunnerID: runnerID, TaskQueue: TaskQueue, HTTPClient: ...}`;

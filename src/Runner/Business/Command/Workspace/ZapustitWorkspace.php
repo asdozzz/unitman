@@ -24,6 +24,8 @@ final class ZapustitWorkspace
         public readonly bool $ReadOnly,
         public readonly int $MemoryLimit,
         public readonly array $Projects,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     ) {
     }
 }

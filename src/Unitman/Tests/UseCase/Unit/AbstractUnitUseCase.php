@@ -2,6 +2,9 @@
 
 namespace App\Unitman\Tests\UseCase\Unit;
 
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\Model\RunnerState\MemoryInfo;
+use App\Runner\Business\Port\RunnerRepository;
 use App\Unitman\Business\Command\Project\AddProject;
 use App\Unitman\Business\Command\Project\AddUserToProject;
 use App\Unitman\Business\Command\Project\ObnovitNastroikiHuka;
@@ -28,6 +31,15 @@ use Ramsey\Uuid\Uuid;
 
 class AbstractUnitUseCase extends AbstractUnitmanUseCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        // Multi-runner: сборка юнита требует живого раннера. В тестах
+        // используем один общий раннер с публичным proxy, чтобы проекция
+        // ссылок работала без fallback-хоста.
+        $this->obespechitZhivoyTestoviyRunner();
+    }
 
     /**
      * @param string $userId
@@ -61,11 +73,9 @@ class AbstractUnitUseCase extends AbstractUnitmanUseCase
             $repoId = Uuid::uuid7()->toString();
         }
 
-        $command = new AddProject($repoId, 'projectCode', $projectName, 'master', 'https://testcase.ru', memoryLimit: 500);
+        $command = new AddProject($repoId, 'projectCode', $projectName, 'master', memoryLimit: 500);
         $project = Project::addProject($projectId, $command, $userId);
-        $project->postavitVOcheredNaSborku('stub');
-        $project->successfullyBuild([new RunnerJobStep('command', 'response', true, 1231231)]);
-        $project->enable();
+        // Проект активен сразу после создания; build-стадии нет.
         $project->obnovitNastrokiHuka(new ObnovitNastroikiHuka($projectId, true, true, true, false));
         return $project;
     }
@@ -122,5 +132,21 @@ class AbstractUnitUseCase extends AbstractUnitmanUseCase
         $this->assertEquals($spisokUnitovReadModel2->branch, 'feature/123');
         $this->assertEquals($spisokUnitovReadModel2->projectId, $projectId);
         $this->assertEquals($spisokUnitovReadModel2->commands, ['nachatUdalenie']);
+    }
+
+    protected function obespechitZhivoyTestoviyRunner(): void
+    {
+        $runnerRepository = self::$container->get(RunnerRepository::class);
+        /** @var RunnerRepository $runnerRepository */
+
+        $runner = new RunnerState(
+            'test-runner',
+            'test-runner',
+            true,
+            publicAddress: 'https://testcase.ru',
+        );
+        $runner->ustanovitResultatRabotosposobnosti(true, [], new MemoryInfo(1000, 900), time());
+
+        $runnerRepository->save($runner);
     }
 }

@@ -1158,99 +1158,6 @@
                 }
             }
         },
-        "/api/initialization/proxy_host": {
-            "put": {
-                "tags": [
-                    "Initialization"
-                ],
-                "summary": "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c defoltn\u044b\u0439 proxy host",
-                "operationId": "put_app_initialization_infra_initialization_updateproxyhost",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ObnovitDefoltnyiProxyHost"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: defoltnyi proxy host \u043e\u0431\u043d\u043e\u0432\u043b\u0451\u043d. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "required": [
-                                        "status",
-                                        "data"
-                                    ],
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "enum": [
-                                                "success"
-                                            ],
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: defoltnyi proxy host \u043e\u0431\u043d\u043e\u0432\u043b\u0451\u043d",
-                                            "type": "null"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
-                    }
-                }
-            }
-        },
-        "/api/initialization/list": {
-            "get": {
-                "tags": [
-                    "Initialization"
-                ],
-                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432 \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438",
-                "operationId": "get_app_initialization_infra_initialization_list",
-                "responses": {
-                    "200": {
-                        "description": "\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "required": [
-                                        "status",
-                                        "data"
-                                    ],
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "enum": [
-                                                "success"
-                                            ],
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "description": "\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438",
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/InitializationRecord"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": []
-            }
-        },
         "/api/mediateka/upload": {
             "post": {
                 "tags": [
@@ -3670,25 +3577,193 @@
                 }
             }
         },
-        "/api/runner/getDefaultRunnerActive": {
+        "/api/runner/{runnerId}/projects/{projectId}/build-state": {
+            "get": {
+                "tags": [
+                    "Runner"
+                ],
+                "summary": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0441\u0431\u043e\u0440\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043d\u0430 \u0440\u0430\u043d\u043d\u0435\u0440\u0435",
+                "description": "\u041f\u0440\u043e\u0432\u0435\u0440\u044f\u0435\u0442, \u0441\u043e\u0431\u0440\u0430\u043d \u043b\u0438 \u043f\u0440\u043e\u0435\u043a\u0442 \u043d\u0430 \u043a\u043e\u043d\u043a\u0440\u0435\u0442\u043d\u043e\u043c \u0440\u0430\u043d\u043d\u0435\u0440\u0435 (multi-runner). \u0410\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f \u2014 X-Runner-Id + X-Runner-Signature: hex(HMAC-SHA256(\u043f\u0443\u0441\u0442\u043e\u0435_\u0442\u0435\u043b\u043e, secret)).",
+                "operationId": "get_runner_project_build_state",
+                "parameters": [
+                    {
+                        "name": "runnerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0441\u0431\u043e\u0440\u043a\u0438 (built=false, \u0435\u0441\u043b\u0438 \u0437\u0430\u043f\u0438\u0441\u0438 \u043d\u0435\u0442)"
+                    },
+                    "400": {
+                        "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0439 projectId"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435\u0432\u0435\u0440\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c \u043b\u0438\u0431\u043e X-Runner-Id \u043d\u0435 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u0435\u0442 \u0441 \u043f\u0443\u0442\u0451\u043c"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
+                    },
+                    "409": {
+                        "description": "runner.inactive"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Runner"
+                ],
+                "summary": "\u0417\u0430\u043f\u0438\u0441\u0430\u0442\u044c \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0441\u0431\u043e\u0440\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043d\u0430 \u0440\u0430\u043d\u043d\u0435\u0440\u0435",
+                "description": "\u0418\u0434\u0435\u043c\u043f\u043e\u0442\u0435\u043d\u0442\u043d\u043e \u0444\u0438\u043a\u0441\u0438\u0440\u0443\u0435\u0442 \u0444\u0430\u043a\u0442 \u0441\u0431\u043e\u0440\u043a\u0438 \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043d\u0430 \u0440\u0430\u043d\u043d\u0435\u0440\u0435 (upsert). \u0410\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f \u2014 X-Runner-Id + X-Runner-Signature: hex(HMAC-SHA256(raw_body, secret)).",
+                "operationId": "put_runner_project_build_state",
+                "parameters": [
+                    {
+                        "name": "runnerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "builtAt": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "commit": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "branch": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u043e\u0445\u0440\u0430\u043d\u0451\u043d\u043d\u043e\u0435 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0441\u0431\u043e\u0440\u043a\u0438"
+                    },
+                    "400": {
+                        "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0439 projectId \u0438\u043b\u0438 payload"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435\u0432\u0435\u0440\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c \u043b\u0438\u0431\u043e X-Runner-Id \u043d\u0435 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u0435\u0442 \u0441 \u043f\u0443\u0442\u0451\u043c"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
+                    },
+                    "409": {
+                        "description": "runner.inactive"
+                    }
+                }
+            }
+        },
+        "/api/runner/register": {
             "post": {
                 "tags": [
                     "Runner"
                 ],
-                "summary": "\u041f\u0440\u0438\u0437\u043d\u0430\u043a \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u0438 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
-                "operationId": "post_app_runner_infra_runner_getdefaultrunneractive",
+                "summary": "\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f Go-\u0440\u0430\u043d\u043d\u0435\u0440\u0430 (multi-runner, v2)",
+                "description": "\u041f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT \u0438 \u0431\u0435\u0437 bootstrap-\u043f\u043e\u0434\u043f\u0438\u0441\u0438. \u041f\u0440\u0438\u043d\u0438\u043c\u0430\u0435\u0442 `{hostname, version}`. \u0412\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 runnerId (UUID v4), taskQueue (\u0441\u0442\u0440\u043e\u0433\u043e \u0440\u0430\u0432\u0435\u043d runnerId), \u0434\u0435\u0442\u0435\u0440\u043c\u0438\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 secret (64 hex, \u043e\u0442\u0434\u0430\u0451\u0442\u0441\u044f \u043e\u0434\u0438\u043d \u0440\u0430\u0437 \u0438 \u043d\u0435 \u0445\u0440\u0430\u043d\u0438\u0442\u0441\u044f), registryHost \u0438 \u043a\u0430\u0440\u0442\u0443 \u043f\u043e\u0440\u0442\u043e\u0432.",
+                "operationId": "post_app_runner_infra_runner_register",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "hostname": {
+                                        "type": "string"
+                                    },
+                                    "version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "200": {
-                        "description": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0440\u0430\u043d\u043d\u0435\u0440\u0430",
+                    "201": {
+                        "description": "\u0420\u0430\u043d\u043d\u0435\u0440 \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "required": [
-                                        "active"
+                                        "runnerId",
+                                        "taskQueue",
+                                        "secret",
+                                        "registryHost",
+                                        "ports"
                                     ],
                                     "properties": {
-                                        "active": {
-                                            "type": "boolean"
+                                        "runnerId": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "taskQueue": {
+                                            "type": "string"
+                                        },
+                                        "secret": {
+                                            "description": "64 hex, \u043d\u0435 \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442\u0441\u044f",
+                                            "type": "string"
+                                        },
+                                        "registryHost": {
+                                            "type": "string"
+                                        },
+                                        "ports": {
+                                            "properties": {
+                                                "api": {
+                                                    "type": "integer"
+                                                },
+                                                "temporal": {
+                                                    "type": "integer"
+                                                },
+                                                "registry": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -3696,8 +3771,43 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "runner.registration.invalid_payload"
+                    },
+                    "500": {
+                        "description": "runner.registration.failed"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/api/runner/list": {
+            "get": {
+                "tags": [
+                    "Runner"
+                ],
+                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u0440\u0430\u043d\u043d\u0435\u0440\u043e\u0432 \u0441 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435\u043c \u0440\u0435\u0441\u0443\u0440\u0441\u043e\u0432 (\u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)",
+                "description": "\u041a\u0430\u0440\u0442\u043e\u0447\u043a\u0438 \u0432\u0441\u0435\u0445 \u0440\u0430\u043d\u043d\u0435\u0440\u043e\u0432, \u043e\u0442\u0441\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u043e\u0442 \u0445\u0443\u0434\u0448\u0435\u0433\u043e \u0443\u0440\u043e\u0432\u043d\u044f \u0443\u0433\u0440\u043e\u0437\u044b. \u0414\u043e\u0441\u0442\u0443\u043f\u043d\u043e \u0442\u043e\u043b\u044c\u043a\u043e \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u0443.",
+                "operationId": "get_app_runner_infra_runner_list",
+                "responses": {
+                    "200": {
+                        "description": "\u041a\u0430\u0440\u0442\u043e\u0447\u043a\u0438 \u0440\u0430\u043d\u043d\u0435\u0440\u043e\u0432",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RannerKartaReadModel"
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "403": {
+                        "description": "\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043f\u0440\u0430\u0432 (\u043d\u0435 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)"
                     },
                     "500": {
                         "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
@@ -3705,20 +3815,21 @@
                 }
             }
         },
-        "/api/runner/test": {
+        "/api/runner/threats": {
             "get": {
                 "tags": [
                     "Runner"
                 ],
-                "summary": "\u0414\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0440\u0430\u043d\u043d\u0435\u0440\u0430",
-                "operationId": "get_app_runner_infra_runner_test",
+                "summary": "\u0421\u0432\u043e\u0434\u043a\u0430 \u0443\u0433\u0440\u043e\u0437 \u043f\u043e \u0440\u0430\u043d\u043d\u0435\u0440\u0430\u043c \u0434\u043b\u044f \u0448\u0430\u043f\u043a\u0438 \u0441\u0430\u0439\u0442\u0430",
+                "description": "\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u043e \u0432\u0441\u0435\u043c \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d\u043d\u044b\u043c \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f\u043c. \u0421\u043e\u0434\u0435\u0440\u0436\u0438\u0442 \u0442\u043e\u043b\u044c\u043a\u043e \u0443\u0440\u043e\u0432\u043d\u0438 \u0438 \u0438\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440\u044b \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u043d\u044b\u0445 \u0440\u0430\u043d\u043d\u0435\u0440\u043e\u0432, \u0431\u0435\u0437 \u0434\u0435\u0442\u0430\u043b\u0435\u0439 \u0440\u0435\u0441\u0443\u0440\u0441\u043e\u0432.",
+                "operationId": "get_app_runner_infra_runner_threats",
                 "responses": {
                     "200": {
-                        "description": "\u0422\u0435\u043a\u0443\u0449\u0435\u0435 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
+                        "description": "\u0421\u0432\u043e\u0434\u043a\u0430 \u0443\u0433\u0440\u043e\u0437",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RunnerState"
+                                    "$ref": "#/components/schemas/UgrozyRannerovReadModel"
                                 }
                             }
                         }
@@ -3738,7 +3849,7 @@
                     "Runner"
                 ],
                 "summary": "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0448\u0430\u0433\u0438 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u0437\u0430\u0434\u0430\u0447\u0438",
-                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. `responseId` \u0441\u043e\u0434\u0435\u0440\u0436\u0438\u0442 \u0442\u043e\u043a\u0435\u043d \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430 (workflowId/jobId), `stepsContent` \u2014 \u043f\u043e\u043b\u043d\u044b\u0439 \u0441\u043d\u0430\u043f\u0448\u043e\u0442 \u0448\u0430\u0433\u043e\u0432. \u041f\u0440\u0438 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u043e\u043c RUNNER_CALLBACK_SECRET \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u0435\u043d \u0437\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a X-Runner-Signature: hex(HMAC-SHA256(responseId . stepsContent, secret)).",
+                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. `responseId` \u0441\u043e\u0434\u0435\u0440\u0436\u0438\u0442 \u0442\u043e\u043a\u0435\u043d \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430 (workflowId/jobId), `stepsContent` \u2014 \u043f\u043e\u043b\u043d\u044b\u0439 \u0441\u043d\u0430\u043f\u0448\u043e\u0442 \u0448\u0430\u0433\u043e\u0432. \u041e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b X-Runner-Id \u0438 X-Runner-Signature: hex(HMAC-SHA256(responseId . stepsContent, secret)).",
                 "operationId": "post_app_runner_infra_runner_savesteps",
                 "requestBody": {
                     "required": true,
@@ -3765,8 +3876,11 @@
                     "400": {
                         "description": "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0442\u043e\u043a\u0435\u043d \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430 \u043b\u0438\u0431\u043e \u043f\u0440\u0435\u0432\u044b\u0448\u0435\u043d \u0440\u0430\u0437\u043c\u0435\u0440 \u0441\u043d\u0430\u043f\u0448\u043e\u0442\u0430"
                     },
-                    "403": {
+                    "401": {
                         "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c \u0437\u0430\u043f\u0440\u043e\u0441\u0430"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
                     }
                 },
                 "security": []
@@ -3778,7 +3892,7 @@
                     "Runner"
                 ],
                 "summary": "Health-push \u0440\u0430\u043d\u043d\u0435\u0440\u0430",
-                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. \u041e\u0431\u043d\u043e\u0432\u043b\u044f\u0435\u0442 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 \u0438 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0443 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u043e\u0432. \u041f\u0440\u0438 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u043e\u043c RUNNER_CALLBACK_SECRET \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u0435\u043d \u0437\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a X-Runner-Signature: hex(HMAC-SHA256(\u0442\u0435\u043b\u043e_\u0437\u0430\u043f\u0440\u043e\u0441\u0430, secret)).",
+                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. \u041e\u0431\u043d\u043e\u0432\u043b\u044f\u0435\u0442 \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 \u0438 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0443 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u043e\u0432. \u041e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b X-Runner-Id \u0438 X-Runner-Signature: hex(HMAC-SHA256(\u0442\u0435\u043b\u043e_\u0437\u0430\u043f\u0440\u043e\u0441\u0430, secret)).",
                 "operationId": "post_app_runner_infra_runner_health",
                 "requestBody": {
                     "required": true,
@@ -3805,8 +3919,11 @@
                     "400": {
                         "description": "\u041f\u0443\u0441\u0442\u043e\u0439 runnerId \u043b\u0438\u0431\u043e \u043f\u0440\u0435\u0432\u044b\u0448\u0435\u043d \u0440\u0430\u0437\u043c\u0435\u0440 \u0442\u0435\u043b\u0430"
                     },
-                    "403": {
+                    "401": {
                         "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c \u0437\u0430\u043f\u0440\u043e\u0441\u0430"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
                     }
                 },
                 "security": []
@@ -3818,7 +3935,7 @@
                     "Runner"
                 ],
                 "summary": "\u0423\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u044f \u0440\u0430\u043d\u043d\u0435\u0440\u0430 \u043e \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0438 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u043e\u0432 \u044e\u043d\u0438\u0442\u043e\u0432",
-                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. \u041f\u0440\u0438 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u043e\u043c RUNNER_CALLBACK_SECRET \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u0435\u043d \u0437\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a X-Runner-Signature: hex(HMAC-SHA256(\u0442\u0435\u043b\u043e_\u0437\u0430\u043f\u0440\u043e\u0441\u0430, secret)).",
+                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. \u041e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b X-Runner-Id \u0438 X-Runner-Signature: hex(HMAC-SHA256(\u0442\u0435\u043b\u043e_\u0437\u0430\u043f\u0440\u043e\u0441\u0430, secret)).",
                 "operationId": "post_app_runner_infra_runner_unitstatenotifications",
                 "requestBody": {
                     "required": true,
@@ -3845,11 +3962,172 @@
                     "400": {
                         "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u0441\u043f\u0438\u0441\u043e\u043a \u0443\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u0439 \u043b\u0438\u0431\u043e \u043f\u0440\u0435\u0432\u044b\u0448\u0435\u043d \u0440\u0430\u0437\u043c\u0435\u0440 \u0442\u0435\u043b\u0430"
                     },
-                    "403": {
+                    "401": {
                         "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c \u0437\u0430\u043f\u0440\u043e\u0441\u0430"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
                     }
                 },
                 "security": []
+            }
+        },
+        "/api/runner/{runnerId}/public-address": {
+            "put": {
+                "tags": [
+                    "Runner"
+                ],
+                "summary": "\u0417\u0430\u0434\u0430\u0442\u044c \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 (\u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)",
+                "description": "\u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044f\u0437\u0430\u043d \u0431\u044b\u0442\u044c \u0430\u0431\u0441\u043e\u043b\u044e\u0442\u043d\u044b\u043c http/https URL \u0441 \u043d\u0435\u043f\u0443\u0441\u0442\u044b\u043c host \u0438 \u0431\u0435\u0437 userinfo (`user:pass@`). \u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 runnerId \u2014 404. \u041d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u044c \u0430\u0434\u0440\u0435\u0441\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0438\u0435 \u043d\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0435\u0442: \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u2014 \u043e\u0442\u0434\u0435\u043b\u044c\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442.",
+                "operationId": "put_app_runner_infra_runnerpublicaddress_putpublicaddress",
+                "parameters": [
+                    {
+                        "name": "runnerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RunnerPublicAddressRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0410\u0434\u0440\u0435\u0441 \u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RunnerPublicAddress"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "runner.public_address.invalid"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "403": {
+                        "description": "\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043f\u0440\u0430\u0432 (\u043d\u0435 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Runner"
+                ],
+                "summary": "\u041e\u0447\u0438\u0441\u0442\u0438\u0442\u044c \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 (\u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)",
+                "description": "\u0420\u0430\u043d\u043d\u0435\u0440 \u043e\u0441\u0442\u0430\u0451\u0442\u0441\u044f \u0432 \u0440\u0435\u0435\u0441\u0442\u0440\u0435 \u0438 \u043c\u043e\u0436\u0435\u0442 \u043f\u0440\u0438\u0441\u044b\u043b\u0430\u0442\u044c health, \u043d\u043e \u043f\u0435\u0440\u0435\u0441\u0442\u0430\u0451\u0442 \u0432\u044b\u0431\u0438\u0440\u0430\u0442\u044c\u0441\u044f \u0434\u043b\u044f \u0441\u0431\u043e\u0440\u043e\u043a \u0438 \u043f\u043e\u0441\u0442\u0440\u043e\u0435\u043d\u0438\u044f \u0441\u0441\u044b\u043b\u043e\u043a.",
+                "operationId": "delete_app_runner_infra_runnerpublicaddress_deletepublicaddress",
+                "parameters": [
+                    {
+                        "name": "runnerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "\u0410\u0434\u0440\u0435\u0441 \u043e\u0447\u0438\u0449\u0435\u043d"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "403": {
+                        "description": "\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043f\u0440\u0430\u0432 (\u043d\u0435 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/runner/{runnerId}/public-address/check": {
+            "post": {
+                "tags": [
+                    "Runner"
+                ],
+                "summary": "\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u044c \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u043e\u0433\u043e \u0430\u0434\u0440\u0435\u0441\u0430 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 (\u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)",
+                "description": "Best-effort `GET <publicAddress>` \u0441 \u043a\u043e\u0440\u043e\u0442\u043a\u0438\u043c \u0442\u0430\u0439\u043c\u0430\u0443\u0442\u043e\u043c. \u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u0442\u0438\u0432\u043d\u0430\u044f: \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u044c \u043d\u0435 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043e\u0448\u0438\u0431\u043a\u043e\u0439 \u0437\u0430\u043f\u0440\u043e\u0441\u0430 \u0438 \u043d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442.",
+                "operationId": "post_app_runner_infra_runnerpublicaddress_checkpublicaddress",
+                "parameters": [
+                    {
+                        "name": "runnerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RunnerPublicAddressRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RunnerPublicAddressCheck"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "runner.public_address.invalid"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "403": {
+                        "description": "\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043f\u0440\u0430\u0432 (\u043d\u0435 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440)"
+                    },
+                    "404": {
+                        "description": "runner.not_found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/lichniyToken/dobavit": {
@@ -5102,60 +5380,6 @@
                 }
             }
         },
-        "/api/project/build": {
-            "post": {
-                "tags": [
-                    "Project"
-                ],
-                "summary": "\u041f\u043e\u0441\u0442\u0430\u0432\u0438\u0442\u044c \u043f\u0440\u043e\u0435\u043a\u0442 \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u044c \u043d\u0430 \u0441\u0431\u043e\u0440\u043a\u0443",
-                "operationId": "post_app_unitman_infra_project_build",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PostavitVOcheredNaSborku"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u043f\u0440\u043e\u0435\u043a\u0442 \u043f\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u044c \u043d\u0430 \u0441\u0431\u043e\u0440\u043a\u0443",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "required": [
-                                        "status",
-                                        "data"
-                                    ],
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "enum": [
-                                                "success"
-                                            ],
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "description": "\u041f\u0443\u0441\u0442\u043e\u0439 \u043e\u0442\u0432\u0435\u0442: \u043f\u0440\u043e\u0435\u043a\u0442 \u043f\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u044c \u043d\u0430 \u0441\u0431\u043e\u0440\u043a\u0443",
-                                            "type": "null"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
-                    },
-                    "500": {
-                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
-                    }
-                }
-            }
-        },
         "/api/project/obnovitNastroikiHuka": {
             "post": {
                 "tags": [
@@ -5525,59 +5749,6 @@
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/ProjectRunnerJobDetailed"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
-                    },
-                    "500": {
-                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
-                    }
-                }
-            }
-        },
-        "/api/project/proverkaProxyHost": {
-            "post": {
-                "tags": [
-                    "Project"
-                ],
-                "summary": "\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u044c proxy host",
-                "operationId": "post_app_unitman_infra_project_proverkaproxyhost",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ProveritProxyHost"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u0438 proxy host. \u041f\u0440\u0438 \u043f\u0435\u0440\u0435\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u043e\u0439 \u043e\u0448\u0438\u0431\u043a\u0435 PHP \u0442\u0435\u043b\u043e \u0432\u0441\u0451 \u0440\u0430\u0432\u043d\u043e \u043f\u0440\u0438\u0445\u043e\u0434\u0438\u0442 \u0441 HTTP 200 \u0432 \u0432\u0438\u0434\u0435 ErrorEnvelope",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "required": [
-                                        "status",
-                                        "data"
-                                    ],
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "enum": [
-                                                "success"
-                                            ],
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "$ref": "#/components/schemas/ProxyHostCheckResult"
                                         }
                                     },
                                     "type": "object"
@@ -9315,7 +9486,7 @@
                         ]
                     },
                     "ideLink": {
-                        "description": "\u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440 workspace; null \u0434\u043b\u044f unit-\u0441\u0435\u0441\u0441\u0438\u0439 \u0438 \u0435\u0441\u043b\u0438 proxy host \u043f\u0435\u0440\u0432\u043e\u0433\u043e \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u043f\u0443\u0441\u0442",
+                        "description": "\u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440 workspace; null \u0434\u043b\u044f unit-\u0441\u0435\u0441\u0441\u0438\u0439 \u0438 \u0435\u0441\u043b\u0438 \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 workspace \u043d\u0435 \u0437\u0430\u0434\u0430\u043d",
                         "type": [
                             "string",
                             "null"
@@ -9905,7 +10076,7 @@
                         "example": "/api/v1"
                     },
                     "type": {
-                        "description": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0441\u0441\u044b\u043b\u043a\u0438: `http` (\u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e), `ws`, `wss` \u2014 \u0447\u0435\u0440\u0435\u0437 proxy host; \u043e\u0441\u0442\u0430\u043b\u044c\u043d\u044b\u0435 \u2014 \u043d\u0430\u043f\u0440\u044f\u043c\u0443\u044e \u043d\u0430 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440",
+                        "description": "\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b \u0441\u0441\u044b\u043b\u043a\u0438: `http` (\u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e), `ws`, `wss` \u2014 \u0447\u0435\u0440\u0435\u0437 \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 \u0440\u0430\u043d\u043d\u0435\u0440\u0430; \u043e\u0441\u0442\u0430\u043b\u044c\u043d\u044b\u0435 \u2014 \u043d\u0430\u043f\u0440\u044f\u043c\u0443\u044e \u043d\u0430 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440",
                         "type": [
                             "string",
                             "null"
@@ -10295,21 +10466,6 @@
                 },
                 "type": "object"
             },
-            "ObnovitDefoltnyiProxyHost": {
-                "required": [
-                    "value"
-                ],
-                "properties": {
-                    "value": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "example": "http://proxy.example"
-                    }
-                },
-                "type": "object"
-            },
             "SaveStepsCommand": {
                 "required": [
                     "responseId",
@@ -10339,8 +10495,9 @@
                         "example": "runner-1"
                     },
                     "taskQueue": {
+                        "description": "\u0412\u0441\u0435\u0433\u0434\u0430 \u0441\u0442\u0440\u043e\u0433\u043e \u0440\u0430\u0432\u0435\u043d `runnerId` \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0433\u043e \u0440\u0430\u043d\u043d\u0435\u0440\u0430.",
                         "type": "string",
-                        "example": "unitman-runner-queue"
+                        "example": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed"
                     },
                     "active": {
                         "type": "boolean",
@@ -11067,7 +11224,7 @@
                         "example": 1730000000
                     },
                     "status": {
-                        "description": "ready \u2014 \u043c\u043e\u0436\u043d\u043e \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0442\u044c; held_autoobnovlenie \u2014 \u0436\u0434\u0451\u0442 \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u0430\u0432\u0442\u043e\u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f",
+                        "description": "ready \u2014 \u043c\u043e\u0436\u043d\u043e \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0442\u044c; held_autoobnovlenie \u2014 \u0436\u0434\u0451\u0442 \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u0430\u0432\u0442\u043e\u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u043f\u0440\u043e\u0435\u043a\u0442\u0430",
                         "type": "string",
                         "enum": [
                             "ready",
@@ -11168,7 +11325,7 @@
                     },
                     "redaktorLink": {
                         "description": "\u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 read-only \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440 \u0444\u0430\u0439\u043b\u043e\u0432 \u044e\u043d\u0438\u0442\u0430. \u041f\u043e\u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043f\u043e\u0441\u043b\u0435 \u0443\u0441\u043f\u0435\u0448\u043d\u043e\u0439 \u043f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0438, \u043e\u0447\u0438\u0449\u0430\u0435\u0442\u0441\u044f \u043f\u0440\u0438 \u0441\u0431\u0440\u043e\u0441\u0435 \u043f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0438 \u0438\u043b\u0438 \u043f\u0435\u0440\u0435\u0441\u0431\u043e\u0440\u043a\u0435.",
-                        "example": "https://47000.feature-123.my-app.proxy.example",
+                        "example": "https://47000.feature-123.my-app.workspaces.example.com",
                         "oneOf": [
                             {
                                 "type": "string"
@@ -11637,7 +11794,7 @@
                     },
                     "path": {
                         "type": "string",
-                        "example": "http://8080.feature-123.my-app.proxy.example"
+                        "example": "http://8080.feature-123.my-app.workspaces.example.com"
                     },
                     "port": {
                         "type": "integer",
@@ -12441,7 +12598,6 @@
                     "isActive",
                     "state",
                     "nastroikiHukaProekta",
-                    "proxyHost",
                     "users",
                     "variables",
                     "waitResultRunner",
@@ -12475,22 +12631,12 @@
                         "type": "string",
                         "enum": [
                             "NEW",
-                            "BUILD_PENDING",
-                            "BUILD_SUCCESS",
-                            "BUILD_ERROR",
                             "REMOVE_PENDING",
                             "REMOVE_ERROR"
                         ]
                     },
                     "nastroikiHukaProekta": {
                         "$ref": "#/components/schemas/ProjectHookSettings"
-                    },
-                    "proxyHost": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "example": "proxy.example"
                     },
                     "users": {
                         "type": "array",
@@ -12548,7 +12694,7 @@
                         "type": "boolean"
                     },
                     "vebhukNastroen": {
-                        "description": "Git-\u0432\u0435\u0431\u0445\u0443\u043a \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u0443\u0436\u0435 \u043f\u0440\u0438\u0441\u044b\u043b\u0430\u043b \u0432\u0430\u043b\u0438\u0434\u043d\u043e\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u0435. \u041f\u043e\u043a\u0430 false, Unitman \u0441\u0430\u043c \u043e\u043f\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0432\u0435\u0442\u043a\u0438.",
+                        "description": "Git-\u0432\u0435\u0431\u0445\u0443\u043a \u043f\u0440\u043e\u0435\u043a\u0442\u0430 \u0443\u0436\u0435 \u043f\u0440\u0438\u0441\u044b\u043b\u0430\u043b \u0432\u0430\u043b\u0438\u0434\u043d\u043e\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u0435. \u041f\u043e\u043a\u0430 false, Unitman \u0441\u0430\u043c \u043e\u043f\u0440\u0430\u0448\u0438\u0432\u0430\u0435\u0442 \u0432\u0435\u0442\u043a\u0438 \u0440\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u044f.",
                         "type": "boolean",
                         "example": false
                     }
@@ -12999,36 +13145,6 @@
                 },
                 "type": "object"
             },
-            "InitializationRecord": {
-                "description": "\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440 \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 (InitializationRecord)",
-                "required": [
-                    "id",
-                    "prop",
-                    "value",
-                    "init"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "prop": {
-                        "type": "string"
-                    },
-                    "value": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "init": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ]
-                    }
-                },
-                "type": "object"
-            },
             "MediatekaFaylUnita": {
                 "description": "\u041c\u0435\u0442\u0430\u0434\u0430\u043d\u043d\u044b\u0435 \u0444\u0430\u0439\u043b\u0430 \u044e\u043d\u0438\u0442\u0430 (FaylUnita::toArray)",
                 "required": [
@@ -13155,18 +13271,6 @@
                 },
                 "type": "object"
             },
-            "ProxyHostCheckResult": {
-                "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u0438 proxy host",
-                "required": [
-                    "result"
-                ],
-                "properties": {
-                    "result": {
-                        "type": "boolean"
-                    }
-                },
-                "type": "object"
-            },
             "RunnerState": {
                 "description": "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 (RunnerState::jsonSerialize)",
                 "required": [
@@ -13181,8 +13285,9 @@
                         "type": "string"
                     },
                     "taskQueue": {
+                        "description": "\u0412\u0441\u0435\u0433\u0434\u0430 \u0441\u0442\u0440\u043e\u0433\u043e \u0440\u0430\u0432\u0435\u043d `id` \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0433\u043e \u0440\u0430\u043d\u043d\u0435\u0440\u0430.",
                         "type": "string",
-                        "example": "unitman-runner-queue"
+                        "example": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed"
                     },
                     "active": {
                         "type": "boolean"
@@ -13195,6 +13300,208 @@
                     },
                     "memoryInfo": {
                         "$ref": "#/components/schemas/RunnerMemoryInfo"
+                    },
+                    "publicAddress": {
+                        "description": "\u041f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 \u0440\u0430\u043d\u043d\u0435\u0440\u0430, \u0437\u0430\u0434\u0430\u043d\u043d\u044b\u0439 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u043e\u043c. `null` \u2014 \u043d\u0435 \u0437\u0430\u0434\u0430\u043d.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uri"
+                    },
+                    "registeredAt": {
+                        "description": "Unix-\u0432\u0440\u0435\u043c\u044f \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438 (\u043a\u043e\u043d\u0442\u0440\u0430\u043a\u0442 v2; fallback \u043d\u0430 lastRegisteredAt).",
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UgrozyRannerovReadModel": {
+                "description": "\u0421\u0432\u043e\u0434\u043a\u0430 \u0443\u0433\u0440\u043e\u0437 \u043f\u043e \u0440\u0430\u043d\u043d\u0435\u0440\u0430\u043c \u0434\u043b\u044f `GET /api/runner/threats` (UgrozyRannerovReadModel).",
+                "required": [
+                    "hasThreats",
+                    "worstLevel",
+                    "count",
+                    "runners",
+                    "registeredCount"
+                ],
+                "properties": {
+                    "hasThreats": {
+                        "type": "boolean"
+                    },
+                    "worstLevel": {
+                        "description": "\u0425\u0443\u0434\u0448\u0438\u0439 \u0443\u0440\u043e\u0432\u0435\u043d\u044c \u0443\u0433\u0440\u043e\u0437\u044b \u0441\u0440\u0435\u0434\u0438 \u0440\u0430\u043d\u043d\u0435\u0440\u043e\u0432.",
+                        "type": "string"
+                    },
+                    "count": {
+                        "description": "\u041a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u043d\u044b\u0445 \u0440\u0430\u043d\u043d\u0435\u0440\u043e\u0432.",
+                        "type": "integer"
+                    },
+                    "registeredCount": {
+                        "description": "\u041e\u0431\u0449\u0435\u0435 \u0447\u0438\u0441\u043b\u043e \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0445 \u0440\u0430\u043d\u043d\u0435\u0440\u043e\u0432 (\u0432\u043a\u043b\u044e\u0447\u0430\u044f \u043d\u0435\u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0435). \u041d\u043e\u043b\u044c \u043e\u0437\u043d\u0430\u0447\u0430\u0435\u0442, \u0447\u0442\u043e \u043d\u0435 \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d \u043d\u0438 \u043e\u0434\u0438\u043d \u0440\u0430\u043d\u043d\u0435\u0440.",
+                        "type": "integer"
+                    },
+                    "runners": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "id",
+                                "level",
+                                "blocked",
+                                "healthFresh"
+                            ],
+                            "properties": {
+                                "id": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "level": {
+                                    "type": "string"
+                                },
+                                "blocked": {
+                                    "type": "boolean"
+                                },
+                                "healthFresh": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "RannerKartaReadModel": {
+                "description": "\u041a\u0430\u0440\u0442\u043e\u0447\u043a\u0430 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 \u0434\u043b\u044f `GET /api/runner/list` (RannerKartaReadModel).",
+                "required": [
+                    "id",
+                    "taskQueue",
+                    "active",
+                    "healthFresh",
+                    "lastHealthAt",
+                    "level",
+                    "blocked",
+                    "blockReason",
+                    "resources",
+                    "memoryInfo",
+                    "publicAddress",
+                    "registeredAt",
+                    "hasPublicAddress"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "taskQueue": {
+                        "description": "\u0412\u0441\u0435\u0433\u0434\u0430 \u0441\u0442\u0440\u043e\u0433\u043e \u0440\u0430\u0432\u0435\u043d `id` \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0433\u043e \u0440\u0430\u043d\u043d\u0435\u0440\u0430.",
+                        "type": "string"
+                    },
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "healthFresh": {
+                        "description": "\u0411\u044b\u043b \u043b\u0438 health-push \u0437\u0430 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0435 180 \u0441\u0435\u043a\u0443\u043d\u0434.",
+                        "type": "boolean"
+                    },
+                    "lastHealthAt": {
+                        "description": "Unix-\u0432\u0440\u0435\u043c\u044f \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0435\u0433\u043e health-push (0 \u2014 \u0435\u0449\u0451 \u043d\u0435 \u0431\u044b\u043b\u043e).",
+                        "type": "integer"
+                    },
+                    "level": {
+                        "description": "\u042d\u0444\u0444\u0435\u043a\u0442\u0438\u0432\u043d\u044b\u0439 \u0443\u0440\u043e\u0432\u0435\u043d\u044c \u0440\u0435\u0441\u0443\u0440\u0441\u043d\u043e\u0439 \u0443\u0433\u0440\u043e\u0437\u044b.",
+                        "type": "string"
+                    },
+                    "blocked": {
+                        "description": "\u0420\u0435\u0441\u0443\u0440\u0441\u043e\u0451\u043c\u043a\u0438\u0435 \u043e\u043f\u0435\u0440\u0430\u0446\u0438\u0438 \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d\u044b.",
+                        "type": "boolean"
+                    },
+                    "blockReason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "resources": {
+                        "description": "\u041f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439 \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u0441\u043d\u0438\u043c\u043e\u043a \u0440\u0435\u0441\u0443\u0440\u0441\u043e\u0432 (RunnerResources).",
+                        "type": [
+                            "object",
+                            "null"
+                        ]
+                    },
+                    "memoryInfo": {
+                        "$ref": "#/components/schemas/RunnerMemoryInfo"
+                    },
+                    "publicAddress": {
+                        "description": "\u041f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 \u0440\u0430\u043d\u043d\u0435\u0440\u0430, \u0437\u0430\u0434\u0430\u043d\u043d\u044b\u0439 \u0430\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440\u043e\u043c.",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uri"
+                    },
+                    "registeredAt": {
+                        "description": "Unix-\u0432\u0440\u0435\u043c\u044f \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438.",
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "hasPublicAddress": {
+                        "description": "true \u2014 \u0440\u0430\u043d\u043d\u0435\u0440 \u043c\u043e\u0436\u043d\u043e \u0432\u044b\u0431\u0438\u0440\u0430\u0442\u044c \u0434\u043b\u044f \u0441\u0431\u043e\u0440\u043e\u043a \u0438 \u043f\u043e\u0441\u0442\u0440\u043e\u0435\u043d\u0438\u044f \u0441\u0441\u044b\u043b\u043e\u043a. \u0421\u0435\u043a\u0440\u0435\u0442 \u0440\u0430\u043d\u043d\u0435\u0440\u0430 \u0432 \u0441\u043f\u0438\u0441\u043a\u0435 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442.",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "RunnerPublicAddressRequest": {
+                "description": "\u0422\u0435\u043b\u043e PUT/DELETE-check \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u043e\u0433\u043e \u0430\u0434\u0440\u0435\u0441\u0430 \u0440\u0430\u043d\u043d\u0435\u0440\u0430.",
+                "required": [
+                    "publicAddress"
+                ],
+                "properties": {
+                    "publicAddress": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://runner-1.example.com"
+                    }
+                },
+                "type": "object"
+            },
+            "RunnerPublicAddress": {
+                "description": "\u0421\u043e\u0445\u0440\u0430\u043d\u0451\u043d\u043d\u044b\u0439 \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u0430\u0434\u0440\u0435\u0441 \u0440\u0430\u043d\u043d\u0435\u0440\u0430.",
+                "required": [
+                    "runnerId",
+                    "publicAddress"
+                ],
+                "properties": {
+                    "runnerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "publicAddress": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://runner-1.example.com"
+                    }
+                },
+                "type": "object"
+            },
+            "RunnerPublicAddressCheck": {
+                "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 best-effort \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438 `GET <publicAddress>`. \u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043d\u0435 \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442 \u0430\u0434\u0440\u0435\u0441 \u0438 \u043d\u0435 \u0431\u043b\u043e\u043a\u0438\u0440\u0443\u0435\u0442 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0438\u0435.",
+                "required": [
+                    "reachable"
+                ],
+                "properties": {
+                    "reachable": {
+                        "type": "boolean"
+                    },
+                    "error": {
+                        "description": "\u041f\u0440\u0438\u0447\u0438\u043d\u0430 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e\u0441\u0442\u0438 (HTTP-\u0441\u0442\u0430\u0442\u0443\u0441 \u0438\u043b\u0438 \u0442\u0440\u0430\u043d\u0441\u043f\u043e\u0440\u0442\u043d\u0430\u044f \u043e\u0448\u0438\u0431\u043a\u0430).",
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -13261,17 +13568,6 @@
                             "null"
                         ],
                         "default": null
-                    }
-                },
-                "type": "object"
-            },
-            "ObnovitDefoltnyiProxyHost2": {
-                "properties": {
-                    "value": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
                     }
                 },
                 "type": "object"
@@ -13379,10 +13675,6 @@
                         "type": "string",
                         "default": "master"
                     },
-                    "proxyHost": {
-                        "type": "string",
-                        "default": ""
-                    },
                     "memoryLimit": {
                         "type": "integer",
                         "default": 0
@@ -13439,7 +13731,6 @@
                 "required": [
                     "id",
                     "newProjectName",
-                    "newProxyHost",
                     "memoryLimit"
                 ],
                 "properties": {
@@ -13447,9 +13738,6 @@
                         "type": "string"
                     },
                     "newProjectName": {
-                        "type": "string"
-                    },
-                    "newProxyHost": {
                         "type": "string"
                     },
                     "memoryLimit": {
@@ -13611,25 +13899,13 @@
                 },
                 "type": "object"
             },
-            "PostavitVOcheredNaSborku": {
-                "required": [
-                    "id"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    }
-                },
-                "type": "object"
-            },
             "ObnovitNastroikiHuka": {
                 "required": [
                     "id",
                     "avtosozdanie",
                     "avtoobnovlenie",
                     "avtoudalenie",
-                    "obnovlenieBezSbrosaPodgotovki",
-                    "vebhukNastroen"
+                    "obnovlenieBezSbrosaPodgotovki"
                 ],
                 "properties": {
                     "id": {
@@ -13648,7 +13924,8 @@
                         "type": "boolean"
                     },
                     "vebhukNastroen": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "default": false
                     }
                 },
                 "type": "object"
@@ -13708,15 +13985,6 @@
                 "properties": {
                     "id": {
                         "type": "string"
-                    }
-                },
-                "type": "object"
-            },
-            "ProveritProxyHost": {
-                "properties": {
-                    "proxyHost": {
-                        "type": "string",
-                        "default": ""
                     }
                 },
                 "type": "object"
@@ -14117,10 +14385,6 @@
         {
             "name": "Account",
             "description": "\u0410\u043a\u043a\u0430\u0443\u043d\u0442\u044b, \u0440\u043e\u043b\u0438, \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438"
-        },
-        {
-            "name": "Initialization",
-            "description": "\u041f\u0435\u0440\u0432\u0438\u0447\u043d\u0430\u044f \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u0441\u0438\u0441\u0442\u0435\u043c\u044b"
         },
         {
             "name": "Runner",

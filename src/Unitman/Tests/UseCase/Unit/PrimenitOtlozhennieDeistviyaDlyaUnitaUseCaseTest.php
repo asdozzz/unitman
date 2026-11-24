@@ -286,7 +286,7 @@ final class PrimenitOtlozhennieDeistviyaDlyaUnitaUseCaseTest extends TestCase
         $projectRepository = new InMemoryProjectRepository();
         $project = Project::addProject(
             self::PROJECT_ID,
-            new AddProject('repo-1', 'group/project', 'Project', 'main', 'https://proxy.local', 300),
+            new AddProject('repo-1', 'group/project', 'Project', 'main', 300),
             'author-1',
         );
         $projectRepository->save($project);

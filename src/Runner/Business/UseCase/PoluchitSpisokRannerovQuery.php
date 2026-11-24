@@ -8,6 +8,7 @@ use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Business\Port\UmeetProveryatPravaAdmina;
 use App\Runner\Business\ReadModel\RannerKartaReadModel;
 use App\Runner\Business\Utils\UgrozyRannerov;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Список раннеров с состоянием ресурсов. Доступно только администратору.
@@ -26,7 +27,7 @@ final class PoluchitSpisokRannerovQuery
     public function handle(): array
     {
         if (!$this->security->estAdministrator()) {
-            throw new \Exception('security.access_denied');
+            throw new AccessDeniedHttpException('security.access_denied');
         }
 
         $karty = [];
@@ -45,6 +46,9 @@ final class PoluchitSpisokRannerovQuery
                 $resources?->blockReason,
                 $resources,
                 $state->getMemoryInfo(),
+                $state->getPublicAddress(),
+                $state->getRegisteredAt(),
+                $state->hasPublicAddress(),
             );
         }
 

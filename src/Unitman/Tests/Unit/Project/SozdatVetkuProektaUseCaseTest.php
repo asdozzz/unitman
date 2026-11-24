@@ -128,7 +128,7 @@ final class SozdatVetkuProektaUseCaseTest extends TestCase
     {
         $project = Project::addProject(
             self::PROJECT_ID,
-            new AddProject(self::REPO_ID, self::PROJECT_CODE, 'project-one', 'main', 'https://proxy.local', 300),
+            new AddProject(self::REPO_ID, self::PROJECT_CODE, 'project-one', 'main', 300),
             self::ACCOUNT_ID,
         );
 

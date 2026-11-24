@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Runner\Infra\Workflow;
 
-use App\App\Infra\Workflow\WorkflowClientFactory;
 use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatProverkiIzmeneniyWorkspace;
 use Temporal\Activity\ActivityOptions;
@@ -21,21 +20,24 @@ use Temporal\Workflow\WorkflowMethod;
 final class ProveritIzmeneniyaWorkspaceWorkflow
 {
     public const ACTIVITY = 'ProveritIzmeneniyaWorkspaceActivity';
-    public const TASK_QUEUE = WorkflowClientFactory::runnerQueueName;
 
     /**
      * @psalm-suppress MissingReturnType
      */
     #[WorkflowMethod(name: 'ProveritIzmeneniyaWorkspace')]
     #[ReturnType(ResultatProverkiIzmeneniyWorkspace::class)]
-    public function proverit(ProveritIzmeneniyaWorkspace $command)
+    public function proverit(ProveritIzmeneniyaWorkspace $command, string $taskQueue = '')
     {
+        if ($taskQueue === '') {
+            throw new \InvalidArgumentException('taskQueue обязателен для запуска workflow');
+        }
+
         return yield Workflow::executeActivity(
             self::ACTIVITY,
             [$command],
             ActivityOptions::new()
                 ->withStartToCloseTimeout(30)
-                ->withTaskQueue(self::TASK_QUEUE)
+                ->withTaskQueue($taskQueue)
         );
     }
 }

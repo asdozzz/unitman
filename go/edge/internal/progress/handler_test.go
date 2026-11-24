@@ -2,6 +2,9 @@ package progress
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -15,6 +18,8 @@ import (
 const (
 	testToken         = "job-1"
 	testFixedUnixTime = int64(1730000000)
+	testRunnerID      = "runner-1"
+	testMasterKey     = "test-master-key"
 )
 
 var testFixedNow = time.UnixMilli(1730000000123)
@@ -83,12 +88,22 @@ func (p *fakePublisher) Publish(_ context.Context, channel string, data []byte) 
 	return p.err
 }
 
-func newTestHandler(kv KV, publisher Publisher, secret string) *Handler {
+func newTestHandler(kv KV, publisher Publisher) *Handler {
 	return NewHandler(kv, publisher, Options{
-		Secret: secret,
-		Now:    func() time.Time { return testFixedNow },
-		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Now:                   func() time.Time { return testFixedNow },
+		Logger:                slog.New(slog.NewTextHandler(io.Discard, nil)),
+		RunnerSecretMasterKey: testMasterKey,
 	})
+}
+
+// signSaveSteps mirrors the PHP v2 contract:
+// hex(HMAC-SHA256(responseId . stepsContent, hex(HMAC-SHA256(runnerId, masterKey)))).
+func signSaveSteps(runnerID, masterKey, responseID, stepsContent string) string {
+	mac := hmac.New(sha256.New, runnerSecret(masterKey, runnerID))
+	mac.Write([]byte(responseID))
+	mac.Write([]byte(stepsContent))
+
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 func registerProgressToken(kv *fakeKV, token string) {
@@ -106,7 +121,25 @@ type saveStepsBody struct {
 	Success      bool   `json:"success"`
 }
 
-func doSaveSteps(t *testing.T, handler *Handler, body saveStepsBody, signature string) *httptest.ResponseRecorder {
+func doSaveSteps(t *testing.T, handler *Handler, body saveStepsBody) *httptest.ResponseRecorder {
+	t.Helper()
+
+	return doSaveStepsSigned(
+		t,
+		handler,
+		body,
+		testRunnerID,
+		signSaveSteps(testRunnerID, testMasterKey, body.ResponseID, body.StepsContent),
+	)
+}
+
+func doSaveStepsSigned(
+	t *testing.T,
+	handler *Handler,
+	body saveStepsBody,
+	runnerID string,
+	signature string,
+) *httptest.ResponseRecorder {
 	t.Helper()
 
 	encoded, err := json.Marshal(body)
@@ -116,8 +149,11 @@ func doSaveSteps(t *testing.T, handler *Handler, body saveStepsBody, signature s
 
 	request := httptest.NewRequest(http.MethodPost, "/api/runner/saveSteps", strings.NewReader(string(encoded)))
 	request.Header.Set("Content-Type", "application/json")
+	if runnerID != "" {
+		request.Header.Set(RunnerIDHeader, runnerID)
+	}
 	if signature != "" {
-		request.Header.Set(SignatureHeader, signature)
+		request.Header.Set(RunnerSignatureHeader, signature)
 	}
 
 	recorder := httptest.NewRecorder()
@@ -144,7 +180,7 @@ func TestSaveStepsHappyPathWritesPHPCompatibleKVAndPublishes(t *testing.T) {
 	registerProgressToken(kv, testToken)
 
 	publisher := &fakePublisher{}
-	handler := newTestHandler(kv, publisher, "")
+	handler := newTestHandler(kv, publisher)
 
 	stepsContent := `[{"Command":"docker build","Response":"ok","Success":true,"Unixtime":1730000000,"unixtimeStart":"1729999975"}]`
 
@@ -153,7 +189,7 @@ func TestSaveStepsHappyPathWritesPHPCompatibleKVAndPublishes(t *testing.T) {
 		StepsContent: stepsContent,
 		Finished:     false,
 		Success:      true,
-	}, "")
+	})
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200 (%s)", recorder.Code, recorder.Body.String())
@@ -235,12 +271,12 @@ func TestSaveStepsUnknownToken(t *testing.T) {
 
 	kv := newFakeKV()
 	publisher := &fakePublisher{}
-	handler := newTestHandler(kv, publisher, "")
+	handler := newTestHandler(kv, publisher)
 
 	recorder := doSaveSteps(t, handler, saveStepsBody{
 		ResponseID:   "missing",
 		StepsContent: `[]`,
-	}, "")
+	})
 
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400", recorder.Code)
@@ -260,65 +296,6 @@ func TestSaveStepsUnknownToken(t *testing.T) {
 	}
 }
 
-func TestSaveStepsSignature(t *testing.T) {
-	t.Parallel()
-
-	const secret = "runner-secret"
-	stepsContent := `[{"Command":"x","Unixtime":10}]`
-	body := saveStepsBody{ResponseID: testToken, StepsContent: stepsContent}
-
-	t.Run("missing signature rejected", func(t *testing.T) {
-		t.Parallel()
-
-		kv := newFakeKV()
-		registerProgressToken(kv, testToken)
-		handler := newTestHandler(kv, &fakePublisher{}, secret)
-
-		recorder := doSaveSteps(t, handler, body, "")
-
-		if recorder.Code != http.StatusForbidden {
-			t.Fatalf("status = %d, want 403", recorder.Code)
-		}
-
-		if envelope := decodeErrorEnvelope(t, recorder); envelope.Message != CodeInvalidSignature {
-			t.Fatalf("envelope = %+v", envelope)
-		}
-
-		if len(kv.setCalls) != 0 {
-			t.Fatalf("set calls = %d, want 0", len(kv.setCalls))
-		}
-	})
-
-	t.Run("valid signature accepted", func(t *testing.T) {
-		t.Parallel()
-
-		kv := newFakeKV()
-		registerProgressToken(kv, testToken)
-		handler := newTestHandler(kv, &fakePublisher{}, secret)
-
-		signature := ComputeSignature(secret, body.ResponseID, body.StepsContent)
-		recorder := doSaveSteps(t, handler, body, signature)
-
-		if recorder.Code != http.StatusOK || recorder.Body.String() != "true" {
-			t.Fatalf("status = %d body = %q", recorder.Code, recorder.Body.String())
-		}
-	})
-
-	t.Run("empty secret bypasses verification", func(t *testing.T) {
-		t.Parallel()
-
-		kv := newFakeKV()
-		registerProgressToken(kv, testToken)
-		handler := newTestHandler(kv, &fakePublisher{}, "")
-
-		recorder := doSaveSteps(t, handler, body, "totally-wrong")
-
-		if recorder.Code != http.StatusOK || recorder.Body.String() != "true" {
-			t.Fatalf("status = %d body = %q", recorder.Code, recorder.Body.String())
-		}
-	})
-}
-
 func TestSaveStepsThrottlesPublishing(t *testing.T) {
 	t.Parallel()
 
@@ -330,13 +307,13 @@ func TestSaveStepsThrottlesPublishing(t *testing.T) {
 	}
 
 	publisher := &fakePublisher{}
-	handler := newTestHandler(kv, publisher, "")
+	handler := newTestHandler(kv, publisher)
 
 	recorder := doSaveSteps(t, handler, saveStepsBody{
 		ResponseID:   testToken,
 		StepsContent: `[{"Command":"x","Unixtime":10}]`,
 		Finished:     false,
-	}, "")
+	})
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("status = %d", recorder.Code)
@@ -363,14 +340,14 @@ func TestSaveStepsFinishedBypassesThrottle(t *testing.T) {
 	}
 
 	publisher := &fakePublisher{}
-	handler := newTestHandler(kv, publisher, "")
+	handler := newTestHandler(kv, publisher)
 
 	recorder := doSaveSteps(t, handler, saveStepsBody{
 		ResponseID:   testToken,
 		StepsContent: `[{"Command":"x","Unixtime":10}]`,
 		Finished:     true,
 		Success:      true,
-	}, "")
+	})
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("status = %d", recorder.Code)
@@ -388,12 +365,12 @@ func TestSaveStepsPublishErrorsAreSwallowed(t *testing.T) {
 	registerProgressToken(kv, testToken)
 
 	publisher := &fakePublisher{err: context.DeadlineExceeded}
-	handler := newTestHandler(kv, publisher, "")
+	handler := newTestHandler(kv, publisher)
 
 	recorder := doSaveSteps(t, handler, saveStepsBody{
 		ResponseID:   testToken,
 		StepsContent: `[{"Command":"x","Unixtime":10}]`,
-	}, "")
+	})
 
 	if recorder.Code != http.StatusOK || recorder.Body.String() != "true" {
 		t.Fatalf("status = %d body = %q", recorder.Code, recorder.Body.String())
@@ -439,15 +416,16 @@ func TestSaveStepsLimitErrors(t *testing.T) {
 			registerProgressToken(kv, testToken)
 
 			handler := NewHandler(kv, &fakePublisher{}, Options{
-				Limits: tc.limits,
-				Now:    func() time.Time { return testFixedNow },
-				Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+				Limits:                tc.limits,
+				Now:                   func() time.Time { return testFixedNow },
+				Logger:                slog.New(slog.NewTextHandler(io.Discard, nil)),
+				RunnerSecretMasterKey: testMasterKey,
 			})
 
 			recorder := doSaveSteps(t, handler, saveStepsBody{
 				ResponseID:   testToken,
 				StepsContent: tc.content,
-			}, "")
+			})
 
 			if recorder.Code != http.StatusBadRequest {
 				t.Fatalf("status = %d, want 400", recorder.Code)
@@ -469,14 +447,20 @@ func TestSaveStepsRejectsMalformedJSON(t *testing.T) {
 
 	kv := newFakeKV()
 	registerProgressToken(kv, testToken)
-	handler := newTestHandler(kv, &fakePublisher{}, "")
+	handler := newTestHandler(kv, &fakePublisher{})
 
-	encoded, _ := json.Marshal(saveStepsBody{
+	body := saveStepsBody{
 		ResponseID:   testToken,
 		StepsContent: `{not-an-array}`,
-	})
+	}
+	encoded, _ := json.Marshal(body)
 
 	request := httptest.NewRequest(http.MethodPost, "/api/runner/saveSteps", strings.NewReader(string(encoded)))
+	request.Header.Set(RunnerIDHeader, testRunnerID)
+	request.Header.Set(
+		RunnerSignatureHeader,
+		signSaveSteps(testRunnerID, testMasterKey, body.ResponseID, body.StepsContent),
+	)
 	recorder := httptest.NewRecorder()
 	handler.SaveSteps(recorder, request)
 
@@ -500,7 +484,7 @@ func TestGetProgressReadsPHPWrittenSnapshot(t *testing.T) {
 		ttl:   2 * time.Hour,
 	}
 
-	handler := newTestHandler(kv, &fakePublisher{}, "")
+	handler := newTestHandler(kv, &fakePublisher{})
 
 	request := httptest.NewRequest(http.MethodGet, "/api/runner/progress/"+testToken, nil)
 	request.SetPathValue("responseId", testToken)
@@ -521,7 +505,7 @@ func TestGetProgressMissingKeyReturnsEmptySnapshot(t *testing.T) {
 	t.Parallel()
 
 	kv := newFakeKV()
-	handler := newTestHandler(kv, &fakePublisher{}, "")
+	handler := newTestHandler(kv, &fakePublisher{})
 
 	request := httptest.NewRequest(http.MethodGet, "/api/runner/progress/"+testToken, nil)
 	request.SetPathValue("responseId", testToken)
@@ -541,7 +525,7 @@ func TestGetProgressMissingKeyReturnsEmptySnapshot(t *testing.T) {
 func TestHealthz(t *testing.T) {
 	t.Parallel()
 
-	handler := newTestHandler(newFakeKV(), &fakePublisher{}, "")
+	handler := newTestHandler(newFakeKV(), &fakePublisher{})
 	recorder := httptest.NewRecorder()
 
 	handler.Healthz(recorder, httptest.NewRequest(http.MethodGet, "/healthz", nil))

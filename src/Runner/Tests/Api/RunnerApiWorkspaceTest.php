@@ -18,14 +18,20 @@ use App\Runner\Business\Command\Workspace\UdalitWorkspace;
 use App\Runner\Business\Command\Workspace\ZapustitWorkspace;
 use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\OpenCode\RekvizityOpenCode;
+use App\Runner\Business\Model\RunnerState;
+use App\Runner\Business\Model\RunnerState\MemoryInfo;
+use App\Runner\Business\Port\RunnerRepository;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
 use App\Runner\Business\Port\UmeetPoluchatRekvizityOpenCode;
 use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
+use App\Runner\Business\UseCase\RunnerSelectionService;
+use App\Runner\Infra\Adapter\DefaultRunnerSelector;
 use App\Runner\Infra\Workflow\OstanovitWorkspaceWorkflow;
 use App\Runner\Infra\Workflow\OpenCodeTurnWorkflow;
 use App\Runner\Infra\Workflow\ProveritIzmeneniyaWorkspaceWorkflow;
 use App\Runner\Infra\Workflow\UdalitWorkspaceWorkflow;
 use App\Runner\Infra\Workflow\ZapustitWorkspaceWorkflow;
+use App\Unitman\Business\Port\Unit\UnitRunnerRepository;
 use PHPUnit\Framework\TestCase;
 use Temporal\Client\WorkflowClient;
 use Temporal\Client\WorkflowOptions;
@@ -344,6 +350,8 @@ final class RunnerApiWorkspaceTest extends TestCase
         $api = (new \ReflectionClass(RunnerApi::class))->newInstanceWithoutConstructor();
 
         $this->setProperty($api, 'workflowClient', $client);
+        $this->setProperty($api, 'runnerSelectionService', $this->selectionService());
+        $this->setProperty($api, 'minFreeMemoryPercent', 0.0);
         if ($storage !== null) {
             $this->setProperty($api, 'progressStorage', $storage);
         }
@@ -355,6 +363,33 @@ final class RunnerApiWorkspaceTest extends TestCase
         }
 
         return $api;
+    }
+
+    /**
+     * Детерминированный выбор раннера для тестов API: один живой раннер с
+     * очередью `runner-queue-1`. Репозитории подменяются моками, алгоритм
+     * выбора — реальный (`DefaultRunnerSelector`).
+     */
+    private function selectionService(): RunnerSelectionService
+    {
+        $runner = new RunnerState(
+            'runner-1',
+            'runner-queue-1',
+            true,
+            publicAddress: 'https://runner-1.example.com',
+        );
+        $runner->ustanovitResultatRabotosposobnosti(true, [], new MemoryInfo(100, 90), time());
+
+        $runnerRepository = $this->createMock(RunnerRepository::class);
+        $runnerRepository->method('getAll')->willReturn([$runner]);
+        $runnerRepository->method('findById')->willReturnCallback(
+            static fn (string $id): ?RunnerState => $id === 'runner-1' ? $runner : null,
+        );
+
+        $unitRunnerRepository = $this->createMock(UnitRunnerRepository::class);
+        $unitRunnerRepository->method('countByRunnerId')->willReturn(0);
+
+        return new RunnerSelectionService($runnerRepository, new DefaultRunnerSelector(), $unitRunnerRepository);
     }
 
     private function hasProperty(object $object, string $name): bool

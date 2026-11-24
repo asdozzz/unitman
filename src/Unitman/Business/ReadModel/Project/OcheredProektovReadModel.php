@@ -4,7 +4,6 @@ namespace App\Unitman\Business\ReadModel\Project;
 
 final class OcheredProektovReadModel
 {
-    const SBORKA_PROEKTA = 'SBORKA_PROEKTA';
     const UDALENIE_PROEKTA = 'UDALENIE_PROEKTA';
     const OCHISTKA_PROEKTA = 'OCHISTKA_PROEKTA';
 

@@ -5,7 +5,8 @@
 //   UNITMAN_USER           — email тестового аккаунта с ROLE_ADMIN;
 //   UNITMAN_PASSWORD       — пароль тестового аккаунта;
 //   RUNNER_PROGRESS_TOKEN  — токен прогресса, зарегистрированный в Redis;
-//   RUNNER_CALLBACK_SECRET — опционально, если на стенде включена HMAC-подпись.
+//   RUNNER_ID              — runnerId, зарегистрированный через API;
+//   RUNNER_SECRET          — per-runner secret из ответа регистрации v2.
 //
 // SLO-пороги можно ослабить/ужесточить через переменные SLO_*_P95_MS
 // (см. thresholdMs), не меняя код сценариев.
@@ -16,7 +17,8 @@ import { hmac } from 'k6/crypto';
 
 export const BASE_URL = (__ENV.UNITMAN_BASE_URL || 'http://web:8080').replace(/\/+$/, '');
 export const PROGRESS_TOKEN = (__ENV.RUNNER_PROGRESS_TOKEN || '').trim();
-export const CALLBACK_SECRET = __ENV.RUNNER_CALLBACK_SECRET || '';
+export const RUNNER_ID = (__ENV.RUNNER_ID || '').trim();
+export const RUNNER_SECRET = __ENV.RUNNER_SECRET || '';
 
 const USER = (__ENV.UNITMAN_USER || '').trim();
 const PASSWORD = __ENV.UNITMAN_PASSWORD || '';
@@ -147,27 +149,32 @@ export function buildSaveStepsRequest(stepsContent) {
 }
 
 /**
- * HMAC-SHA256(responseId . stepsContent, secret), если секрет задан.
+ * HMAC-SHA256(responseId . stepsContent, per-runner secret).
  *
  * @param {string} stepsContent
- * @returns {?string} hex-подпись либо null
+ * @returns {?string} hex-подпись либо null, если секрет не задан
  */
 export function runnerSignature(stepsContent) {
-  if (CALLBACK_SECRET === '') {
+  if (RUNNER_SECRET === '') {
     return null;
   }
 
-  return hmac('sha256', CALLBACK_SECRET, PROGRESS_TOKEN + stepsContent, 'hex');
+  return hmac('sha256', RUNNER_SECRET, PROGRESS_TOKEN + stepsContent, 'hex');
 }
 
 /**
- * Заголовки saveSteps, включая подпись при включённом RUNNER_CALLBACK_SECRET.
+ * Заголовки saveSteps: `X-Runner-Id` обязателен, подпись — при заданном
+ * per-runner секрете.
  *
  * @param {?string} signature
  * @returns {Object<string, string>}
  */
 export function saveStepsHeaders(signature) {
   const headers = { 'Content-Type': 'application/json' };
+
+  if (RUNNER_ID !== '') {
+    headers['X-Runner-Id'] = RUNNER_ID;
+  }
 
   if (signature !== null) {
     headers['X-Runner-Signature'] = signature;

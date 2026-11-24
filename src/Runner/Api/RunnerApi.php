@@ -2,7 +2,6 @@
 
 namespace App\Runner\Api;
 
-use App\Runner\Business\Command\InitProjectCommand;
 use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatHodOpenCode;
@@ -28,7 +27,6 @@ use App\Runner\Business\Command\Workspace\UdalitWorkspace;
 use App\Runner\Business\Command\Workspace\ZapustitWorkspace;
 use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
-use App\Runner\Business\Model\GolangRunner\Project\InitProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\RemoveProjectResult;
 use App\Runner\Business\Model\GolangRunner\Project\ResultatOchistkiProekta;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
@@ -44,14 +42,14 @@ use App\Runner\Business\Model\GolangRunner\Unit\ResultatUdaleniyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatZapuskaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\Step;
 use App\Runner\Business\Model\RunnerProgress;
-use App\Runner\Business\Port\RunnerRepository;
+use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\Port\UmeetChitatProgressZadachi;
 use App\Runner\Business\Port\UmeetHranitProgressZadachi;
 use App\Runner\Business\Port\UmeetPoluchatRekvizityOpenCode;
 use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
+use App\Runner\Business\UseCase\RunnerSelectionService;
 use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Service\RunnerProgressPublisher;
-use App\Runner\Infra\Workflow\InitProjectWorkflow;
 use App\Runner\Infra\Workflow\IzmenitRezhimRedaktoraUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
 use App\Runner\Infra\Workflow\OpenCodeTurnWorkflow;
@@ -82,7 +80,7 @@ final class RunnerApi implements RunnerApiInterface
 {
     public function __construct(
         private WorkflowClient $workflowClient,
-        private RunnerRepository $runnerRepository,
+        private RunnerSelectionService $runnerSelectionService,
         private float $minFreeMemoryPercent,
         private RedisService $redisService,
         private SerializerInterface $serializer,
@@ -109,48 +107,23 @@ final class RunnerApi implements RunnerApiInterface
         return RunnerProgressPublisher::kanalDlyaToken($workflowId);
     }
 
-    function getTaskQueue(): string
+    public function getTaskQueue(): string
     {
-        $runnerState = $this->runnerRepository->getDefaultRunnerState();
-
-        if (!$runnerState->isActive() || !$runnerState->isHealthFresh()) {
-            throw new \Exception('runner.state.is_non_active');
-        }
-
-        return $runnerState->getTaskQueue();
-    }
-
-    public function initProject(InitProjectCommand $command): string
-    {
-        // Клонирование проекта — ресурсоёмкая операция.
-        $this->proveritResursy();
-
-        $workflow = $this->workflowClient->newWorkflowStub(
-            InitProjectWorkflow::class,
-            WorkflowOptions::new()
-                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
-                ->withWorkflowExecutionTimeout(CarbonInterval::minute())
-        );
-
-        $run = $this->workflowClient->start($workflow, $command);
-        return $run->getExecution()->getID();
-    }
-
-    public function poluchitResultatSborkiProekta(string $workflowId): ?InitProjectResult
-    {
-        $workflow = $this->getWorkflowById($workflowId);
-        return $this->makeResult($workflow, InitProjectResult::class);
+        return $this->runnerSelectionService->getTaskQueue();
     }
 
     public function removeProject(RemoveProjectCommand $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $workflow = $this->workflowClient->newWorkflowStub(
             RemoveProjectWorkflow::class,
             WorkflowOptions::new()
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::seconds(10))
         );
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -168,7 +141,10 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatSborkuUnita(string $workflowId,NachatSborkuUnita $command): string
     {
-        $this->proveritResursy();
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
+
+        $this->proveritResursy($runnerState);
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -179,7 +155,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -191,6 +167,9 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatUdalenieUnita(string $workflowId,NachatUdalenieUnita $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -201,7 +180,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -213,7 +192,10 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatPodgotovkuUnita(string $workflowId,NachatPodgotovkuUnita $command): string
     {
-        $this->proveritResursy();
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
+
+        $this->proveritResursy($runnerState);
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -224,7 +206,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -233,7 +215,10 @@ final class RunnerApi implements RunnerApiInterface
      */
     public function izmenitRezhimRedaktoraUnita(string $workflowId, IzmenitRezhimRedaktoraUnita $command): string
     {
-        $this->proveritResursy();
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->UnitId);
+        $taskQueue = $runnerState->getTaskQueue();
+
+        $this->proveritResursy($runnerState);
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -244,7 +229,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -253,7 +238,10 @@ final class RunnerApi implements RunnerApiInterface
      */
     public function podgotovitSessiyuRedaktora(string $workflowId, PodgotovitSessiyuRedaktora $command): string
     {
-        $this->proveritResursy();
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->UnitId);
+        $taskQueue = $runnerState->getTaskQueue();
+
+        $this->proveritResursy($runnerState);
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -264,13 +252,16 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
     public function nachatObnovlenieUnita(string $workflowId,NachatObnovlenieUnita $command): string
     {
-        $this->proveritResursy();
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
+
+        $this->proveritResursy($runnerState);
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -281,12 +272,15 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
     public function nachatSbrosPodgotovkiUnita(string $workflowId,NachatSbrosPodgotovkiUnita $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->UnitId);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -297,19 +291,16 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
     public function nachatZapuskUnita(string $workflowId,NachatZapuskUnita $command): string
     {
-        $this->proveritResursy();
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
 
-        $runnerState = $this->runnerRepository->getDefaultRunnerState();
-
-        if (!$runnerState->isActive() || !$runnerState->isHealthFresh()) {
-            throw new \DomainException('runner.state.is_non_active');
-        }
+        $this->proveritResursy($runnerState);
 
         $percentFree = $runnerState->getMemoryInfo()->getFreePercent();
 
@@ -328,12 +319,15 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(60))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
     public function nachatOstanovkuUnita(string $workflowId,NachatOstanovkuUnita $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -344,13 +338,16 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
 
     public function nachatDeistvieUnita(string $workflowId,NachatDeistvieUnita $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -361,7 +358,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -468,17 +465,29 @@ final class RunnerApi implements RunnerApiInterface
      * сразу, не дожидаясь выполнения Temporal-активности. Если состояние
      * раннера недоступно, проверка пропускается.
      */
-    private function proveritResursy(): void
+    private function proveritResursy(RunnerState $runnerState): void
     {
-        try {
-            $runnerState = $this->runnerRepository->getDefaultRunnerState();
-        } catch (\Throwable) {
-            return;
-        }
-
         if ($runnerState->isResourcesBlocked()) {
             throw new \DomainException('runner.resources.blocker');
         }
+    }
+
+    /**
+     * Разрешает раннер операции и его Temporal-очередь.
+     *
+     * `taskQueue` зарегистрированного раннера всегда равен `runnerId`
+     * (контракт §4); для уже привязанного юнита используется `unit_runner`,
+     * для остальных операций — выбор самого свободного живого раннера.
+     *
+     * @throws \DomainException `runner.not_found` | `runner.inactive`
+     */
+    private function resolveRunnerState(
+        ?string $taskQueue = null,
+        ?string $runnerId = null,
+        ?string $unitId = null,
+    ): RunnerState
+    {
+        return $this->runnerSelectionService->resolve($taskQueue, $runnerId, $unitId);
     }
 
     private function getWorkflowById(string $workflowId): \Temporal\Client\WorkflowStubInterface
@@ -577,6 +586,9 @@ final class RunnerApi implements RunnerApiInterface
 
     public function nachatHodOpenCode(string $workflowId, NachatHodOpenCode $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->UnitId);
+        $taskQueue = $runnerState->getTaskQueue();
+
         // Реквизиты забираются до старта workflow: если ключ не расшифровывается
         // или реквизиты чужие, ошибка возвращается сразу, без «висящего» workflow.
         $rekvizity = $this->rekvizityOpenCode->poluchitRekvizity(
@@ -603,6 +615,8 @@ final class RunnerApi implements RunnerApiInterface
             $command->WorkspaceProjects,
             $command->ReadOnly,
             $command->Token,
+            RunnerId: $runnerState->getId(),
+            TaskQueue: $taskQueue,
         );
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -613,7 +627,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(15))
         );
 
-        $run = $this->workflowClient->start($workflow, $activityCommand);
+        $run = $this->workflowClient->start($workflow, $activityCommand, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -647,20 +661,26 @@ final class RunnerApi implements RunnerApiInterface
 
     public function proveritKonteinerUnita(ProveritKonteinerUnita $command): ResultatProverkiKonteineraUnita
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId, $command->Id);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $workflow = $this->workflowClient->newWorkflowStub(
             ProveritKonteinerUnitaWorkflow::class,
             WorkflowOptions::new()
                 ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
                 ->withWorkflowExecutionTimeout(CarbonInterval::seconds(30))
         );
-        $result = $workflow->proverit($command);
+        $result = $workflow->proverit($command, $taskQueue);
 
         return $result;
     }
 
     public function zapustitWorkspace(string $workflowId, ZapustitWorkspaceZapros $command): string
     {
-        $this->proveritResursy();
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId);
+        $taskQueue = $runnerState->getTaskQueue();
+
+        $this->proveritResursy($runnerState);
 
         // Токен не приходит от вызывающей стороны: URL клона дозапрашивается
         // у Unitman здесь, и только обогащённая команда уходит в workflow.
@@ -685,6 +705,8 @@ final class RunnerApi implements RunnerApiInterface
             $command->ReadOnly,
             $command->MemoryLimit,
             $projects,
+            RunnerId: $runnerState->getId(),
+            TaskQueue: $taskQueue,
         );
 
         $this->zaregistrirovatProgressToken($workflowId);
@@ -697,7 +719,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(30))
         );
 
-        $run = $this->workflowClient->start($workflow, $activityCommand);
+        $run = $this->workflowClient->start($workflow, $activityCommand, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -709,6 +731,9 @@ final class RunnerApi implements RunnerApiInterface
 
     public function ostanovitWorkspace(string $workflowId, OstanovitWorkspace $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -719,7 +744,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -731,6 +756,9 @@ final class RunnerApi implements RunnerApiInterface
 
     public function udalitWorkspace(string $workflowId, UdalitWorkspace $command): string
     {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $this->zaregistrirovatProgressToken($workflowId);
 
         $workflow = $this->workflowClient->newWorkflowStub(
@@ -741,7 +769,7 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::minute(10))
         );
 
-        $run = $this->workflowClient->start($workflow, $command);
+        $run = $this->workflowClient->start($workflow, $command, $taskQueue);
         return $run->getExecution()->getID();
     }
 
@@ -754,6 +782,9 @@ final class RunnerApi implements RunnerApiInterface
     public function proveritIzmeneniyaWorkspace(
         ProveritIzmeneniyaWorkspace $command,
     ): ResultatProverkiIzmeneniyWorkspace {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId);
+        $taskQueue = $runnerState->getTaskQueue();
+
         $workflow = $this->workflowClient->newWorkflowStub(
             ProveritIzmeneniyaWorkspaceWorkflow::class,
             WorkflowOptions::new()
@@ -761,6 +792,6 @@ final class RunnerApi implements RunnerApiInterface
                 ->withWorkflowExecutionTimeout(CarbonInterval::seconds(30))
         );
 
-        return $workflow->proverit($command);
+        return $workflow->proverit($command, $taskQueue);
     }
 }

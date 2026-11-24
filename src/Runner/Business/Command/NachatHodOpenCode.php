@@ -36,6 +36,8 @@ final class NachatHodOpenCode
         public readonly bool $ReadOnly = false,
         public readonly ?string $Token = null,
         public readonly ?string $Model = null,
+        public readonly ?string $RunnerId = null,
+        public readonly ?string $TaskQueue = null,
     )
     {
     }

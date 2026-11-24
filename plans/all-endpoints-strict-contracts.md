@@ -1,5 +1,10 @@
  # Строгие контракты ответов OpenAPI для всех ендпоинтов
 
+> **Архив.** План выполнен. Модуль `Initialization` (`/api/initialization/*`,
+> схема `InitializationRecord`) удалён из backend и не входит в текущий API.
+> Разделы ниже сохранены как историческая запись; актуальные инструкции см.
+> в [openapi-generation.md](openapi-generation.md).
+
 ## 1. Проблема
 
 `/api/unit/list`, `/api/unit/moi`, `/api/unit/obnovit` уже переведены на строгий контракт
@@ -49,7 +54,7 @@ content: new OA\JsonContent(
 
 | Компонент | Источник | Поля |
 |---|---|---|
-| `ProjectListItem` | `ProjectList` | id, repoId, code, name, mainBranch, isActive, state, nastroikiHukaProekta, proxyHost, users, variables, waitResultRunner, memoryLimit |
+| `ProjectListItem` | `ProjectList` | id, repoId, code, name, mainBranch, isActive, state, nastroikiHukaProekta, users, variables, waitResultRunner, memoryLimit |
 | `ProjectHookSettings` | `NastroikiHukaProekta` | avtosozdanie, avtoobnovlenie, avtoudalenie, obnovlenieBezSbrosaPodgotovki |
 | `ProjectUser` | `ProjectUsersList` | userId, role |
 | `ProjectVariable` | `ProjectListVariable` | tip, code, value |
@@ -67,11 +72,9 @@ content: new OA\JsonContent(
 | `AccountUser` | `UserList` | id, email, isBlocked, nickname |
 | `ManagedAccount` | `AccountForManaging` | id, email, isBlocked, roles, password, nickname |
 | `AccountSettings` | `AccountSettingsReadModel` | nickname |
-| `InitializationRecord` | `InitializationRecord` | id, prop, value, init |
 | `IdHolder` | `['id' => $id]` | id |
 | `EventIdHolder` | `['eventId' => $id]` | eventId |
 | `UnitLinkHolder` | `['link' => $link]` | link |
-| `ProxyHostCheckResult` | `['result' => $bool]` | result |
 | `UnitConfig` | `ConfigUnita::toArray` | build, variables, prepare, reset_prepare, up, down, services, actions |
 | `UnitConfigBuild` | `KonfigStadiiSborki::toArray` | image, commands |
 | `UnitConfigService` | `KonfigServisa::toArray` | name, ports, cache |
@@ -123,7 +126,6 @@ content: new OA\JsonContent(
 | `statistikaPoProektam` | `array<ProjectStatistics>` |
 | `poluchitVipolnenieZadachiRunnera` | `array<ProjectRunnerJob>` |
 | `poluchitShagiZadachiRunnera` | `ProjectRunnerJobDetailed` |
-| `proverkaProxyHost` | `ProxyHostCheckResult` |
 | `{id}/hook` | `EventIdHolder` (был inline — добавляем `required`) |
 | `add`, `updateData`, `remove`, `forceRemove`, `enable`, `disable`, `addUser`, `removeUser`, `dobavitPeremenuyu`, `udalitPeremenuyu`, `izmenitPeremenuyu`, `build`, `obnovitNastroikiHuka` | `null` |
 
@@ -156,13 +158,6 @@ content: new OA\JsonContent(
 | `poluchitNastroikiPolzovatelya` | `AccountSettings` |
 | `changePasswordByAdmin`, `changeMyPassword`, `changeNicknameByAdmin`, `changeRoleByAdmin`, `changeMyNickname`, `changeEmailByAdmin`, `blockByAdmin`, `unblockByAdmin`, `changeMyLocale` | `null` |
 
-### 4.6 `InitializationController` (`/api/initialization`)
-
-| path | 200 `data` |
-|---|---|
-| `proxy_host` | `null` |
-| `list` | `array<InitializationRecord>` |
-
 ### 4.7 `RunnerController` (`/api/runner`)
 
 | path | правка |
@@ -183,7 +178,6 @@ docker compose exec -T web sh -lc "composer check-openapi"
 docker compose exec -T web sh -lc "composer check-psalm"
 docker compose exec -T web sh -lc "composer check-unitman-deptrac"
 docker compose exec -T web sh -lc "composer check-account-deptrac"
-docker compose exec -T web sh -lc "composer check-initialization-deptrac"
 docker compose exec -T web sh -lc "composer check-runner-deptrac"
 docker compose exec -T web sh -lc "rr reset"
 ```
@@ -194,28 +188,23 @@ docker compose exec -T web sh -lc "rr reset"
   это осознанно: 500 всё ещё достижим для не-`Error` исключений (DBAL, доменные).
 - `poluchitKonfigUnita` возвращает `[]` вместо объекта, когда конфигурация не задана —
   описано через `oneOf[UnitConfig, array(maxItems 0)]`.
-- Часть репозиториев отдаёт «сырые» строки БД (`InitializationRecord`), поэтому у схемы
-  возможны дополнительные ключи; `required` покрывает только гарантированные поля.
 
 ## 7. Результат (применено)
 
 | Контроллер | операций | из них `data: null` | новых схем |
 |---|---|---|---|
 | `UnitConroller` | 24 | 14 | `UnitConfig*`, `UnitVariable`, `UnitProcessBrief*`, 9 ранних |
-| `ProjectController` | 25 | 13 | `ProjectListItem`, `ProjectUser`, `ProjectVariable`, `ProjectBranch`, `ProjectRunnerJob*`, `ProjectStatistics`, `ProxyHostCheckResult`, `EventIdHolder` |
+| `ProjectController` | 25 | 13 | `ProjectListItem`, `ProjectUser`, `ProjectVariable`, `ProjectBranch`, `ProjectRunnerJob*`, `ProjectStatistics`, `EventIdHolder` |
 | `ProjectWebhookController` | 8 | 4 | `ProjectWebhook`, `WebhookEvent`, `WebhookEventPage`, `IdHolder` |
 | `RepoController` | 8 | 4 | `Repo`, `RepoProject`, `RepoType` |
 | `AccountController` | 13 | 9 | `AccountUser`, `ManagedAccount`, `AccountSettings` |
-| `InitializationController` | 2 | 1 | `InitializationRecord` |
 | `RunnerController` | 3 | — | `RunnerState`, `RunnerContainerStats`, `RunnerMemoryInfo` |
 
-Итог по спецификации: **85 операций, 121 схема, 0 висячих `$ref`, 0 оставшихся
+Итог по спецификации: **83 операции, 120 схем, 0 висячих `$ref`, 0 оставшихся
 `oneOf: [SuccessEnvelope, ErrorEnvelope]`**.
 
 Осознанные исключения (у операции нет ответа `500`):
 
-- `InitializationController` — оба обработчика ловят `\Throwable`, слушатель исключений
-  недостижим;
 - `/api/login` — `lexik/jwt` отвечает сам, `500` не наш канал;
 - `/api/runner/saveSteps` — публичный эндпоинт раннера, тело `boolean`, без конверта;
 - `/api/project/{id}/hook` — публичный webhook; `500` добавлен, `401` отсутствует намеренно.

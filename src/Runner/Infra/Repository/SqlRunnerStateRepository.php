@@ -10,7 +10,6 @@ use Symfony\Component\Serializer\Serializer;
 final class SqlRunnerStateRepository implements RunnerRepository
 {
     const TABLE = 'runner_state';
-    const UNITMAN_MONO_QUEUE = "unitman-mono-queue";
 
     public function __construct(private Connection $connection, private Serializer $serializer)
     {
@@ -51,6 +50,20 @@ final class SqlRunnerStateRepository implements RunnerRepository
         return $this->makeReadModel($row['payload']);
     }
 
+    function savePublicAddress(string $id, ?string $publicAddress): RunnerState
+    {
+        $runner = $this->findById($id);
+
+        if ($runner === null) {
+            throw new \DomainException('runner.not_found');
+        }
+
+        $runner->ustanovitPublicAddress($publicAddress);
+        $this->save($runner);
+
+        return $runner;
+    }
+
     /**
      * @param string $id
      * @return false|mixed[]
@@ -61,21 +74,6 @@ final class SqlRunnerStateRepository implements RunnerRepository
         $table = self::TABLE;
         $row = $this->connection->fetchAssociative("SELECT * from $table WHERE id = ?", [$id]);
         return $row;
-    }
-
-    function getDefaultRunnerState(): RunnerState
-    {
-        $table = self::TABLE;
-        $row = $this->connection->fetchAssociative(
-            "SELECT * FROM $table ORDER BY COALESCE((payload->>'unixtimeLastHealth')::bigint, 0) DESC LIMIT 1"
-        );
-
-        if (empty($row)) {
-            throw new \Exception('runner.state.not_found');
-        }
-
-        $object = $this->makeReadModel($row['payload']);
-        return $object;
     }
 
     /**

@@ -17,7 +17,9 @@ use App\Unitman\Business\Model\Unit\Event\UspehPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSborkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehSbrosaPodgotovkiUnitaUstanovlen;
 use App\Unitman\Business\Model\Unit\Event\UspehZapuskaUnitaUstanovlen;
+use App\Runner\Tests\Support\InMemoryUnitRunnerRepository;
 use App\Unitman\Business\Port\Project\ProjectRepository;
+use App\Unitman\Business\Port\RunnerPublicAddressProvider;
 use App\Unitman\Business\Port\UnitmanSecurityService;
 use App\Unitman\Business\ReadModel\Unit\SpisokUnitovReadModel;
 use App\Unitman\Infra\Projection\SpisokUnitovProjection;
@@ -38,7 +40,7 @@ final class SpisokUnitovProjectionRedaktorLinkTest extends AbstractUnitUseCase
 
     private const PROJECT_ID = 'project-1';
 
-    private const PROXY_HOST = 'https://proxy.example';
+    private const PUBLIC_ADDRESS = 'https://runner-1.example.com';
 
     private SpisokUnitovRepository $repository;
 
@@ -54,17 +56,22 @@ final class SpisokUnitovProjectionRedaktorLinkTest extends AbstractUnitUseCase
 
         $project = Project::addProject(
             self::PROJECT_ID,
-            new AddProject('repo-1', 'my-app-code', 'my-app', 'master', self::PROXY_HOST, memoryLimit: 500),
+            new AddProject('repo-1', 'my-app-code', 'my-app', 'master', memoryLimit: 500),
             'author-1'
         );
 
         $projectRepository = $this->createMock(ProjectRepository::class);
         $projectRepository->method('getById')->willReturn($project);
 
+        $proxyProvider = $this->createMock(RunnerPublicAddressProvider::class);
+        $proxyProvider->method('getPublicAddress')->with('runner-1')->willReturn(self::PUBLIC_ADDRESS);
+
         $this->projection = new SpisokUnitovProjection(
             $this->repository,
             $projectRepository,
-            $this->createMock(UnitmanSecurityService::class)
+            $this->createMock(UnitmanSecurityService::class),
+            new InMemoryUnitRunnerRepository([self::UNIT_ID => 'runner-1']),
+            $proxyProvider,
         );
     }
 
@@ -76,7 +83,7 @@ final class SpisokUnitovProjectionRedaktorLinkTest extends AbstractUnitUseCase
         $this->podgotovkaUspehna();
 
         $this->assertSame(
-            'https://47000.feature-123.my-app.proxy.example',
+            'https://47000.feature-123.my-app.runner-1.example.com',
             $this->repository->getById(self::UNIT_ID)->redaktorLink
         );
     }
@@ -142,14 +149,14 @@ final class SpisokUnitovProjectionRedaktorLinkTest extends AbstractUnitUseCase
             [
                 [
                     'service' => 'web',
-                    'path' => 'https://80.feature-123.my-app.proxy.example/test',
+                    'path' => 'https://80.feature-123.my-app.runner-1.example.com/test',
                     'port' => 80,
                     'protocol' => 'http',
                     'startUri' => '/test',
                 ],
                 [
                     'service' => 'web',
-                    'path' => 'wss://8080.feature-123.my-app.proxy.example/socket',
+                    'path' => 'wss://8080.feature-123.my-app.runner-1.example.com/socket',
                     'port' => 8080,
                     'protocol' => 'ws',
                     'startUri' => '/socket',
@@ -179,7 +186,7 @@ final class SpisokUnitovProjectionRedaktorLinkTest extends AbstractUnitUseCase
         $this->projection->handle(new Message($sozdatSobitie(self::UNIT_ID, $this->prozess())));
 
         $this->assertSame(
-            'https://47000.feature-123.my-app.proxy.example',
+            'https://47000.feature-123.my-app.runner-1.example.com',
             $this->repository->getById(self::UNIT_ID)->redaktorLink
         );
     }
