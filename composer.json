@@ -20,6 +20,7 @@
         "knplabs/github-api": "^3.0",
         "lexik/jwt-authentication-bundle": "^2.18",
         "m4tthumphrey/php-gitlab-api": "^11.14",
+        "minishlink/web-push": "^8.0",
         "nelmio/api-doc-bundle": "^5.0",
         "nelmio/cors-bundle": "^2.4",
         "nyholm/psr7": "^1.8",

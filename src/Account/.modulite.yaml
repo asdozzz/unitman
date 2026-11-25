@@ -9,6 +9,12 @@ export:
   # DTO, который AccountApi отдаёт другим модулям (Runner/OpenCode).
   # Ключ в нём расшифрован, поэтому использовать его можно только внутри бэкенда.
   - "Business\\ReadModel\\OpenCodeCredentialSecretReadModel"
+  # Политика provider-сессии: enum транспорта, доменная политика и её read-model.
+  # Нужны модулю AiChat, чтобы выбирать транспорт сессии и блокировать
+  # провайдеров без описанного транспорта.
+  - "Business\\Model\\OpenCode\\ProviderSessionTransport"
+  - "Business\\Model\\OpenCode\\ProviderSessionPolicy"
+  - "Business\\ReadModel\\ProviderSessionPolicyReadModel"
 
 # Class members to exclude, they override "export".
 force-internal:

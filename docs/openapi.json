@@ -1224,6 +1224,15 @@
                                             "string",
                                             "null"
                                         ]
+                                    },
+                                    "sessionId": {
+                                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 provider-\u0441\u0435\u0441\u0441\u0438\u0438; \u043f\u0435\u0440\u0435\u0434\u0430\u0451\u0442\u0441\u044f \u0442\u0430\u043a, \u043a\u0430\u043a \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u043e\u043b\u0438\u0442\u0438\u043a\u0430 \u043f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440\u0430 (header/body/query/none)",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 128,
+                                        "pattern": "^[A-Za-z0-9._:-]{1,128}$"
                                     }
                                 },
                                 "type": "object"
@@ -1268,6 +1277,451 @@
                     },
                     "502": {
                         "description": "\u041e\u0448\u0438\u0431\u043a\u0430 upstream OpenCode",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ai/chat/sessions": {
+            "get": {
+                "tags": [
+                    "AI"
+                ],
+                "summary": "\u0421\u043f\u0438\u0441\u043e\u043a \u0441\u0435\u0441\u0441\u0438\u0439 AI-\u0447\u0430\u0442\u0430 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                "description": "\u041f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u044f (`limit`, `offset`), \u043f\u043e\u0438\u0441\u043a (`search`) \u043f\u043e \u0437\u0430\u0433\u043e\u043b\u043e\u0432\u043a\u0443 \u0438 \u043f\u0435\u0440\u0432\u043e\u043c\u0443 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044e, \u0444\u0438\u043b\u044c\u0442\u0440 \u0430\u0440\u0445\u0438\u0432\u043d\u044b\u0445 (`includeArchived`). \u0412\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u044e\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u0441\u0435\u0441\u0441\u0438\u0438 \u0441 \u0445\u043e\u0442\u044f \u0431\u044b \u043e\u0434\u043d\u0438\u043c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435\u043c; \u0432 \u043a\u0430\u0436\u0434\u043e\u0439 \u043a\u0430\u0440\u0442\u043e\u0447\u043a\u0435 \u0440\u043e\u0432\u043d\u043e \u043e\u0434\u043d\u043e \u043f\u0440\u0435\u0432\u044c\u044e \u043f\u0435\u0440\u0432\u043e\u0433\u043e \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f.",
+                "operationId": "get_app_aichat_infra_sessiiaichata_list",
+                "parameters": [
+                    {
+                        "name": "includeArchived",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430 \u0441\u0435\u0441\u0441\u0438\u0439",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AiChatSessionList"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "422": {
+                        "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0430\u044f \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u044f \u0438\u043b\u0438 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0437\u0430\u043f\u0440\u043e\u0441\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "AI"
+                ],
+                "summary": "\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0441\u0435\u0441\u0441\u0438\u044e AI-\u0447\u0430\u0442\u0430",
+                "description": "\u0411\u0435\u0437 `credentialId` \u0431\u0435\u0440\u0451\u0442\u0441\u044f \u043f\u0435\u0440\u0432\u044b\u0439 \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430, \u0431\u0435\u0437 `model` \u2014 \u043c\u043e\u0434\u0435\u043b\u044c \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e. \u041f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440 \u043e\u0431\u044f\u0437\u0430\u043d \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0442\u044c AI-\u0447\u0430\u0442.",
+                "operationId": "post_app_aichat_infra_sessiiaichata_create",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AiChatSessionCreateRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u0441\u043e\u0437\u0434\u0430\u043d\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AiChatSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "422": {
+                        "description": "\u041d\u0435\u0442 \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432, \u043d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0439 payload \u0438\u043b\u0438 \u043f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440 \u043d\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 AI-\u0447\u0430\u0442",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ai/chat/sessions/{id}": {
+            "get": {
+                "tags": [
+                    "AI"
+                ],
+                "summary": "\u0421\u0435\u0441\u0441\u0438\u044f AI-\u0447\u0430\u0442\u0430 \u0441 \u043f\u043e\u043b\u043d\u043e\u0439 \u0438\u0441\u0442\u043e\u0440\u0438\u0435\u0439",
+                "description": "\u0410\u0440\u0445\u0438\u0432\u043d\u0430\u044f \u0438\u043b\u0438 \u0438\u0441\u0442\u0451\u043a\u0448\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430 \u0442\u043e\u043b\u044c\u043a\u043e \u0434\u043b\u044f \u0447\u0442\u0435\u043d\u0438\u044f. \u0427\u0443\u0436\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f \u2014 404.",
+                "operationId": "get_app_aichat_infra_sessiiaichata_show",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u0438 \u0438\u0441\u0442\u043e\u0440\u0438\u044f \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0439",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AiChatSessionDetail"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "404": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430 \u0438\u043b\u0438 \u043f\u0440\u0438\u043d\u0430\u0434\u043b\u0435\u0436\u0438\u0442 \u0434\u0440\u0443\u0433\u043e\u043c\u0443 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0443",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "AI"
+                ],
+                "summary": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0430\u0440\u0445\u0438\u0432\u043d\u0443\u044e \u0441\u0435\u0441\u0441\u0438\u044e AI-\u0447\u0430\u0442\u0430",
+                "description": "\u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u043e \u0442\u043e\u043b\u044c\u043a\u043e \u0434\u043b\u044f \u0430\u0440\u0445\u0438\u0432\u043d\u043e\u0439 \u0441\u0435\u0441\u0441\u0438\u0438; \u0430\u043a\u0442\u0438\u0432\u043d\u0443\u044e \u0441\u043d\u0430\u0447\u0430\u043b\u0430 \u043d\u0443\u0436\u043d\u043e \u0430\u0440\u0445\u0438\u0432\u0438\u0440\u043e\u0432\u0430\u0442\u044c. \u0427\u0443\u0436\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f \u2014 404.",
+                "operationId": "delete_app_aichat_infra_sessiiaichata_remove",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u0443\u0434\u0430\u043b\u0435\u043d\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "404": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430 \u0438\u043b\u0438 \u043f\u0440\u0438\u043d\u0430\u0434\u043b\u0435\u0436\u0438\u0442 \u0434\u0440\u0443\u0433\u043e\u043c\u0443 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0443",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u043d\u0435 \u0430\u0440\u0445\u0438\u0432\u0438\u0440\u043e\u0432\u0430\u043d\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ai/chat/sessions/{id}/archive": {
+            "post": {
+                "tags": [
+                    "AI"
+                ],
+                "summary": "\u0410\u0440\u0445\u0438\u0432\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0435\u0441\u0441\u0438\u044e AI-\u0447\u0430\u0442\u0430",
+                "description": "\u0418\u0434\u0435\u043c\u043f\u043e\u0442\u0435\u043d\u0442\u043d\u043e: \u043f\u043e\u0432\u0442\u043e\u0440\u043d\u0430\u044f \u0430\u0440\u0445\u0438\u0432\u0430\u0446\u0438\u044f \u043d\u0435 \u043c\u0435\u043d\u044f\u0435\u0442 \u043f\u0440\u0438\u0447\u0438\u043d\u0443 \u0438 \u0432\u0440\u0435\u043c\u044f. \u0427\u0443\u0436\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f \u2014 404.",
+                "operationId": "post_app_aichat_infra_sessiiaichata_archive",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u0430\u0440\u0445\u0438\u0432\u0438\u0440\u043e\u0432\u0430\u043d\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AiChatSession"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "404": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430 \u0438\u043b\u0438 \u043f\u0440\u0438\u043d\u0430\u0434\u043b\u0435\u0436\u0438\u0442 \u0434\u0440\u0443\u0433\u043e\u043c\u0443 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0443",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ai/chat/sessions/{id}/turns": {
+            "post": {
+                "tags": [
+                    "AI"
+                ],
+                "summary": "\u041e\u0434\u0438\u043d \u0448\u0430\u0433 \u0434\u0438\u0430\u043b\u043e\u0433\u0430 AI-\u0447\u0430\u0442\u0430",
+                "description": "\u0420\u043e\u0432\u043d\u043e \u043e\u0434\u043d\u043e \u0438\u0437 `message` \u0438\u043b\u0438 `toolResults`. \u0410\u0440\u0445\u0438\u0432\u043d\u0430\u044f/\u0438\u0441\u0442\u0451\u043a\u0448\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f \u2014 409; \u043d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u043f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440 \u2014 422. \u0427\u0443\u0436\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f \u2014 404.",
+                "operationId": "post_app_aichat_infra_sessiiaichata_turn",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AiChatTurnRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041e\u0442\u0432\u0435\u0442 \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442\u0430 \u0438 \u043c\u0435\u0442\u0430\u0434\u0430\u043d\u043d\u044b\u0435 \u0441\u0435\u0441\u0441\u0438\u0438",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AiChatTurnResult"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "404": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430 \u0438\u043b\u0438 \u043f\u0440\u0438\u043d\u0430\u0434\u043b\u0435\u0436\u0438\u0442 \u0434\u0440\u0443\u0433\u043e\u043c\u0443 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0443",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u0430\u0440\u0445\u0438\u0432\u043d\u0430, \u0438\u0441\u0442\u0435\u043a\u043b\u0430 \u0438\u043b\u0438 \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b \u0443\u0434\u0430\u043b\u0435\u043d\u044b",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0439 payload, \u043d\u0435\u0442 \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u043e\u0432 \u0438\u043b\u0438 \u043f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440 \u043d\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044f",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FailEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 upstream-\u043f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440\u0430",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13760,6 +14214,404 @@
                     "freeAsKb": {
                         "type": "integer",
                         "example": 8388608
+                    }
+                },
+                "type": "object"
+            },
+            "AiChatSession": {
+                "description": "\u041a\u0430\u0440\u0442\u043e\u0447\u043a\u0430 \u0441\u0435\u0441\u0441\u0438\u0438 AI-\u0447\u0430\u0442\u0430 (SessiyaAiChataReadModel). `preview` \u2014 \u0440\u043e\u0432\u043d\u043e \u043e\u0434\u043d\u043e \u043f\u0435\u0440\u0432\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0441\u0435\u0441\u0441\u0438\u0438",
+                "required": [
+                    "id",
+                    "title",
+                    "provider",
+                    "model",
+                    "archived",
+                    "archiveReason",
+                    "credentialDeleted",
+                    "preview",
+                    "createdAt",
+                    "updatedAt",
+                    "expiresAt",
+                    "messageCount"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "example": "6f9619ff-8b86-d011-b42d-00cf4fc964ff"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "example": "\u0421\u043e\u0437\u0434\u0430\u0439 \u043f\u0440\u043e\u0435\u043a\u0442"
+                    },
+                    "provider": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "example": "openai"
+                    },
+                    "model": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "example": "gpt-4o-mini"
+                    },
+                    "archived": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "archiveReason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "manual",
+                            "expired",
+                            "credential_deleted"
+                        ],
+                        "example": null
+                    },
+                    "credentialDeleted": {
+                        "description": "\u0420\u0435\u043a\u0432\u0438\u0437\u0438\u0442\u044b \u0441\u0435\u0441\u0441\u0438\u0438 \u0431\u043e\u043b\u044c\u0448\u0435 \u043d\u0435 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044e\u0442: \u0441\u0435\u0441\u0441\u0438\u044f \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430 \u0442\u043e\u043b\u044c\u043a\u043e \u0434\u043b\u044f \u0447\u0442\u0435\u043d\u0438\u044f",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "preview": {
+                        "description": "\u041f\u0440\u0435\u0432\u044c\u044e \u043f\u0435\u0440\u0432\u043e\u0433\u043e \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f, \u043e\u0431\u0440\u0435\u0437\u0430\u043d\u043d\u043e\u0435 \u0434\u043e 200 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432",
+                        "type": "string",
+                        "example": "\u0421\u043e\u0437\u0434\u0430\u0439 \u043f\u0440\u043e\u0435\u043a\u0442..."
+                    },
+                    "createdAt": {
+                        "description": "\u041c\u043e\u043c\u0435\u043d\u0442 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f, unix timestamp (\u0441\u0435\u043a\u0443\u043d\u0434\u044b)",
+                        "type": "integer",
+                        "example": 1764000000
+                    },
+                    "updatedAt": {
+                        "description": "\u041c\u043e\u043c\u0435\u043d\u0442 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0435\u0439 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u0438, unix timestamp (\u0441\u0435\u043a\u0443\u043d\u0434\u044b)",
+                        "type": "integer",
+                        "example": 1764000300
+                    },
+                    "expiresAt": {
+                        "description": "\u041a\u043e\u0433\u0434\u0430 \u0441\u0435\u0441\u0441\u0438\u044f \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438 \u0430\u0440\u0445\u0438\u0432\u0438\u0440\u0443\u0435\u0442\u0441\u044f, unix timestamp (\u0441\u0435\u043a\u0443\u043d\u0434\u044b)",
+                        "type": "integer",
+                        "example": 1764086400
+                    },
+                    "messageCount": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "example": 2
+                    }
+                },
+                "type": "object"
+            },
+            "AiChatSessionMessage": {
+                "description": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0438\u0441\u0442\u043e\u0440\u0438\u0438 AI-\u0447\u0430\u0442\u0430 (SoobshenieAiChataReadModel). `toolCalls` \u2014 \u043f\u043b\u043e\u0441\u043a\u0438\u0439 \u0441\u043f\u0438\u0441\u043e\u043a `{id, name, arguments}`",
+                "required": [
+                    "id",
+                    "seq",
+                    "role",
+                    "content",
+                    "toolCalls",
+                    "toolCallId",
+                    "name",
+                    "createdAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 64
+                    },
+                    "seq": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "system",
+                            "user",
+                            "assistant",
+                            "tool"
+                        ]
+                    },
+                    "content": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "toolCalls": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "id",
+                                "name",
+                                "arguments"
+                            ],
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "arguments": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "toolCallId": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "createdAt": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "AiChatSessionList": {
+                "description": "\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430 \u0441\u043f\u0438\u0441\u043a\u0430 \u0441\u0435\u0441\u0441\u0438\u0439 (SpisokSessiyAiChataReadModel). \u041f\u0443\u0441\u0442\u044b\u0435 \u0441\u0435\u0441\u0441\u0438\u0438 \u0432 \u0441\u043f\u0438\u0441\u043e\u043a \u043d\u0435 \u043f\u043e\u043f\u0430\u0434\u0430\u044e\u0442",
+                "required": [
+                    "items",
+                    "limit",
+                    "offset",
+                    "total",
+                    "hasMore"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiChatSession"
+                        }
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "maximum": 100,
+                        "minimum": 1
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "total": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "AiChatSessionDetail": {
+                "description": "\u0421\u0435\u0441\u0441\u0438\u044f \u0432\u043c\u0435\u0441\u0442\u0435 \u0441 \u043f\u043e\u043b\u043d\u043e\u0439 \u0438\u0441\u0442\u043e\u0440\u0438\u0435\u0439 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0439 (SessiyaAiChataSPolnoiIstorieiReadModel)",
+                "required": [
+                    "session",
+                    "messages"
+                ],
+                "properties": {
+                    "session": {
+                        "$ref": "#/components/schemas/AiChatSession"
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiChatSessionMessage"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "AiChatSessionCreateRequest": {
+                "description": "\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0441\u0435\u0441\u0441\u0438\u0438 AI-\u0447\u0430\u0442\u0430. \u0412\u0441\u0435 \u043f\u043e\u043b\u044f \u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u044b: \u0431\u0435\u0437 credentialId \u0431\u0435\u0440\u0451\u0442\u0441\u044f \u043f\u0435\u0440\u0432\u044b\u0439 \u0440\u0435\u043a\u0432\u0438\u0437\u0438\u0442 \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430",
+                "properties": {
+                    "credentialId": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 128
+                    },
+                    "model": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 128
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 256
+                    }
+                },
+                "type": "object"
+            },
+            "AiChatToolResult": {
+                "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u043e\u0434\u043d\u043e\u0433\u043e tool-\u0432\u044b\u0437\u043e\u0432\u0430",
+                "required": [
+                    "toolCallId"
+                ],
+                "properties": {
+                    "toolCallId": {
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 tool_call \u0438\u0437 \u043f\u0440\u0435\u0434\u044b\u0434\u0443\u0449\u0435\u0433\u043e \u043e\u0442\u0432\u0435\u0442\u0430 \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442\u0430",
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "content": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    }
+                },
+                "type": "object"
+            },
+            "AiChatTurnRequest": {
+                "description": "\u041e\u0434\u0438\u043d \u0448\u0430\u0433 \u0434\u0438\u0430\u043b\u043e\u0433\u0430: \u0440\u043e\u0432\u043d\u043e \u043e\u0434\u043d\u043e \u0438\u0437 `message` \u0438\u043b\u0438 `toolResults`",
+                "properties": {
+                    "message": {
+                        "description": "\u041d\u043e\u0432\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100000
+                    },
+                    "toolResults": {
+                        "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u043e\u0432 \u0434\u043b\u044f \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0435\u043d\u0438\u044f \u0434\u0438\u0430\u043b\u043e\u0433\u0430",
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "$ref": "#/components/schemas/AiChatToolResult"
+                        }
+                    },
+                    "tools": {
+                        "description": "\u0410\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u044b\u0439 \u043d\u0430\u0431\u043e\u0440 OpenAI tools",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "maxItems": 64
+                    },
+                    "model": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 128
+                    }
+                },
+                "type": "object",
+                "oneOf": [
+                    {
+                        "required": [
+                            "message"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "toolResults"
+                        ]
+                    }
+                ]
+            },
+            "AiChatTurnResult": {
+                "description": "\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 \u043e\u0434\u043d\u043e\u0433\u043e \u0445\u043e\u0434\u0430 (RezultatHodaAiChataReadModel)",
+                "required": [
+                    "assistant",
+                    "session"
+                ],
+                "properties": {
+                    "assistant": {
+                        "required": [
+                            "content",
+                            "toolCalls"
+                        ],
+                        "properties": {
+                            "content": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "toolCalls": {
+                                "type": "array",
+                                "items": {
+                                    "required": [
+                                        "id",
+                                        "name",
+                                        "arguments"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "arguments": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "session": {
+                        "required": [
+                            "id",
+                            "providerSessionExpiresAt",
+                            "archived",
+                            "updatedAt",
+                            "title"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "providerSessionExpiresAt": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "archived": {
+                                "type": "boolean"
+                            },
+                            "updatedAt": {
+                                "type": "integer"
+                            },
+                            "title": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"

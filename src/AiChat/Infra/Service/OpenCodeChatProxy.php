@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\AiChat\Infra\Service;
 
+use App\Account\Business\Model\OpenCode\ProviderSessionPolicy;
+use App\AiChat\Infra\Service\Transport\ApplierTransportaPoPolitike;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -14,9 +15,14 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *
  * ВАЖНО: воркеры RoadRunner долго живут и переиспользуются между запросами
  * разных пользователей. Поэтому в этом классе НЕТ изменяемых свойств:
- * API-ключ, заголовки авторизации, сообщения, инструменты, модель и базовый
- * URL существуют только как локальные переменные метода. Конструктор хранит
- * лишь неизменяемую конфигурацию (HTTP-клиент, логгер и таймаут).
+ * API-ключ, заголовки авторизации, сообщения, инструменты, модель, политика
+ * provider-сессии и её идентификатор существуют только как локальные
+ * переменные метода. Конструктор хранит лишь неизменяемую конфигурацию
+ * (HTTP-клиент, логгер, таймаут и резолвер транспорта).
+ *
+ * Провайдер влияет только на способ авторизации. Как передавать
+ * provider-сессию, решает {@see ProviderSessionPolicy} и её applier: прокси
+ * не содержит provider-specific веток для сессии и не генерирует UUID.
  *
  * Заголовки и тело запроса/ответа не логируются: при 4xx/5xx в лог попадают
  * только статус, провайдер и `error.message`/`error.code` из ответа upstream.
@@ -32,9 +38,6 @@ final class OpenCodeChatProxy
     /** Провайдер, который ждёт ключ в заголовке `x-api-key`. */
     private const PROVIDER_ANTHROPIC = 'anthropic';
 
-    /** Session-scoped шлюз, требующий заголовок `x-opencode-session`. */
-    private const PROVIDER_OPENCODE_GO = 'opencode-go';
-
     /** Провайдеры, которым авторизация не передаётся вовсе. */
     private const PROVIDERS_BEZ_AVTORIZACII = ['ollama', 'custom'];
 
@@ -44,27 +47,27 @@ final class OpenCodeChatProxy
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         private readonly float $timeout,
+        private readonly ApplierTransportaPoPolitike $applierTransporta,
     ) {
     }
 
     /**
      * Отправляет чат-запрос и возвращает статус upstream вместе с разобранным телом.
      *
-     * `$provider` определяет способ авторизации. По умолчанию пустая строка
-     * трактуется как «обычный Bearer», что сохраняет поведение прежних
-     * вызовов, не знавших о провайдере.
+     * `$provider` определяет только способ авторизации.
      *
-     * `$sessionId` передаётся заголовком `x-opencode-session` только для
-     * провайдера `opencode-go`; при пустом значении генерируется UUID v4.
-     * Значение используется только как аргумент и нигде не сохраняется.
+     * `$policy` определяет, куда положить `$sessionId`: в заголовок, тело,
+     * query или никуда. Прокси не генерирует идентификатор сессии: `null`
+     * означает «сессия не задана» и не добавляет никаких session-полей.
      *
      * @param list<array<string, mixed>> $messages
      * @param list<array<string, mixed>> $tools
      *
      * @return array{status: int, payload: array<array-key, mixed>}
      *
-     * @throws UpstreamUnavailableException      при транспортной ошибке
-     * @throws UpstreamInvalidResponseException  при не-JSON или слишком большом теле
+     * @throws UpstreamUnavailableException                 при транспортной ошибке
+     * @throws UpstreamInvalidResponseException             при не-JSON или слишком большом теле
+     * @throws \DomainException                             при неизвестном транспорте сессии
      */
     public function otpravit(
         string $baseUrl,
@@ -72,10 +75,11 @@ final class OpenCodeChatProxy
         string $model,
         array $messages,
         array $tools,
-        string $provider = '',
+        string $provider,
+        ProviderSessionPolicy $policy,
         ?string $sessionId = null,
     ): array {
-        $url = rtrim($baseUrl, '/').'/chat/completions';
+        $url = $this->sozdatUrl($baseUrl);
 
         $headers = [
             'Content-Type' => 'application/json',
@@ -91,12 +95,6 @@ final class OpenCodeChatProxy
             $headers['Authorization'] = 'Bearer '.$apiKey;
         }
 
-        if ($provider === self::PROVIDER_OPENCODE_GO) {
-            $headers['x-opencode-session'] = $sessionId !== null && $sessionId !== ''
-                ? $sessionId
-                : Uuid::v4()->toRfc4122();
-        }
-
         $payload = [
             'model' => $model,
             'messages' => $messages,
@@ -104,6 +102,18 @@ final class OpenCodeChatProxy
 
         if ($tools !== []) {
             $payload['tools'] = $tools;
+        }
+
+        $query = [];
+
+        if ($sessionId !== null && $sessionId !== '') {
+            $this->applierTransporta
+                ->poluchit($policy)
+                ->apply($policy, $sessionId, $headers, $payload, $query);
+        }
+
+        if ($query !== []) {
+            $url = $this->dopolnitUrlQuery($url, $query);
         }
 
         try {
@@ -141,6 +151,38 @@ final class OpenCodeChatProxy
             'status' => $status,
             'payload' => $decoded,
         ];
+    }
+
+    /**
+     * Собирает URL `chat/completions`, сохраняя query-параметры базового URL.
+     *
+     * `baseUrl` может содержать query (`?api-version=...`): путь дописывается
+     * до него, а не после.
+     */
+    private function sozdatUrl(string $baseUrl): string
+    {
+        $baseUrl = rtrim($baseUrl, '/');
+        $queryPosition = strpos($baseUrl, '?');
+
+        if ($queryPosition === false) {
+            return $baseUrl.'/chat/completions';
+        }
+
+        return rtrim(substr($baseUrl, 0, $queryPosition), '/')
+            .'/chat/completions'
+            .substr($baseUrl, $queryPosition);
+    }
+
+    /**
+     * Добавляет query-параметры к URL, не ломая уже существующие.
+     *
+     * @param array<string, string> $query
+     */
+    private function dopolnitUrlQuery(string $url, array $query): string
+    {
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        return $url.$separator.http_build_query($query);
     }
 
     /**

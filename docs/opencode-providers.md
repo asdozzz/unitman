@@ -156,3 +156,33 @@ live-запроса — в
 `account.opencode_credential.model_not_available`. Подробности — в
 [`docs/opencode-sessions.md`](docs/opencode-sessions.md:1), раздел «Провайдеры и
 несколько моделей».
+
+## 7. Provider-сессии AI-чата
+
+AI-чат использует отдельный слой политик provider-сессии. Политика задаётся
+для каждого провайдера в `ProvayderOpenCode::politikaSessii()` и отдаётся
+через `AccountApi::poluchitPolitikuSessiiProvaydera()`. Read model содержит
+ровно поля `provider`, `transport`, `key`, `ttlSeconds`, `supportsAiChat`.
+
+| Провайдер | `transport` | `key` | `ttlSeconds` | AI-чат |
+|---|---|---|---|---|
+| `opencode`, `opencode-go` | `header` | `x-opencode-session` | 300 | да |
+| `openai`, `anthropic`, `openrouter`, `deepseek`, `mistral`, `groq`, `xai`, `together`, `ollama`, `custom` | `none` | — | 300 | да |
+| `google` | `none` | — | 3600 | да |
+| неизвестный провайдер | `unknown` | — | 300 | нет (`supportsAiChat=false`) |
+
+Правила:
+
+- `match` в `ProvayderOpenCode` не имеет `default`: новый провайдер без
+  политики ломает выполнение, а не тихо получает `none`.
+- `SessionTransportApplier` применяет политику к headers/body/query; для
+  `unknown` выбрасывается `ai.chat.provider_session_transport_unknown`.
+- `OpenCodeChatProxy` не содержит `if ($provider === 'opencode-go')`: заголовок
+  ставит транспорт по политике.
+- Provider-сессия живёт 300 секунд и ротируется по TTL; история
+  пользовательской сессии при этом не удаляется.
+- Неизвестный/неподдерживаемый провайдер возвращает
+  `422 ai.chat.provider_not_supported`.
+- Тесты-гейты: итерация по всем case провайдеров, проверка `ttlSeconds > 0`,
+  проверка `supportsAiChat=false` для `unknown`, применение header/body/query/
+  none и ротация после TTL.

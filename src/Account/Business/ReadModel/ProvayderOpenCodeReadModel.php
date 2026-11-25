@@ -9,6 +9,8 @@ namespace App\Account\Business\ReadModel;
  *
  * Список моделей в каталог не входит: он запрашивается у провайдера, а для
  * провайдеров без live-списка модели вводятся вручную в форме реквизитов.
+ * Поля `session*` и `supportsAiChat` описывают политику provider-сессии и
+ * позволяют UI блокировать провайдеров без настроенного транспорта.
  */
 final class ProvayderOpenCodeReadModel
 {
@@ -19,6 +21,10 @@ final class ProvayderOpenCodeReadModel
         public readonly string $modelsPath,
         public readonly string $authStyle,
         public readonly bool $supportsModelList,
+        public readonly string $sessionTransport,
+        public readonly ?string $sessionKey,
+        public readonly int $sessionTtlSeconds,
+        public readonly bool $supportsAiChat,
     ) {
     }
 }

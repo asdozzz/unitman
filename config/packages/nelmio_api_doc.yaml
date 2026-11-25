@@ -2996,6 +2996,228 @@ nelmio_api_doc:
                         freeAsKb:
                             type: integer
                             example: 8388608
+                # --- AI chat: sessions and turns ---
+                AiChatSession:
+                    type: object
+                    description: 'Карточка сессии AI-чата (SessiyaAiChataReadModel). `preview` — ровно одно первое сообщение сессии'
+                    required: [id, title, provider, model, archived, archiveReason, credentialDeleted, preview, createdAt, updatedAt, expiresAt, messageCount]
+                    properties:
+                        id:
+                            type: string
+                            maxLength: 64
+                            example: 6f9619ff-8b86-d011-b42d-00cf4fc964ff
+                        title:
+                            type: string
+                            maxLength: 256
+                            example: 'Создай проект'
+                        provider:
+                            type: string
+                            maxLength: 64
+                            example: openai
+                        model:
+                            type: string
+                            maxLength: 128
+                            example: gpt-4o-mini
+                        archived:
+                            type: boolean
+                            example: false
+                        archiveReason:
+                            type: string
+                            nullable: true
+                            enum: [manual, expired, credential_deleted]
+                            example: null
+                        credentialDeleted:
+                            type: boolean
+                            description: 'Реквизиты сессии больше не существуют: сессия доступна только для чтения'
+                            example: false
+                        preview:
+                            type: string
+                            description: 'Превью первого сообщения, обрезанное до 200 символов'
+                            example: 'Создай проект...'
+                        createdAt:
+                            type: integer
+                            description: 'Момент создания, unix timestamp (секунды)'
+                            example: 1764000000
+                        updatedAt:
+                            type: integer
+                            description: 'Момент последней активности, unix timestamp (секунды)'
+                            example: 1764000300
+                        expiresAt:
+                            type: integer
+                            description: 'Когда сессия автоматически архивируется, unix timestamp (секунды)'
+                            example: 1764086400
+                        messageCount:
+                            type: integer
+                            minimum: 0
+                            example: 2
+                AiChatSessionMessage:
+                    type: object
+                    description: 'Сообщение истории AI-чата (SoobshenieAiChataReadModel). `toolCalls` — плоский список `{id, name, arguments}`'
+                    required: [id, seq, role, content, toolCalls, toolCallId, name, createdAt]
+                    properties:
+                        id:
+                            type: string
+                            maxLength: 64
+                        seq:
+                            type: integer
+                            minimum: 0
+                        role:
+                            type: string
+                            enum: [system, user, assistant, tool]
+                        content:
+                            type: string
+                            nullable: true
+                        toolCalls:
+                            type: array
+                            items:
+                                type: object
+                                required: [id, name, arguments]
+                                properties:
+                                    id:
+                                        type: string
+                                    name:
+                                        type: string
+                                    arguments:
+                                        type: string
+                        toolCallId:
+                            type: string
+                            nullable: true
+                        name:
+                            type: string
+                            nullable: true
+                        createdAt:
+                            type: integer
+                AiChatSessionList:
+                    type: object
+                    description: 'Страница списка сессий (SpisokSessiyAiChataReadModel). Пустые сессии в список не попадают'
+                    required: [items, limit, offset, total, hasMore]
+                    properties:
+                        items:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/AiChatSession'
+                        limit:
+                            type: integer
+                            minimum: 1
+                            maximum: 100
+                        offset:
+                            type: integer
+                            minimum: 0
+                        total:
+                            type: integer
+                            minimum: 0
+                        hasMore:
+                            type: boolean
+                AiChatSessionDetail:
+                    type: object
+                    description: 'Сессия вместе с полной историей сообщений (SessiyaAiChataSPolnoiIstorieiReadModel)'
+                    required: [session, messages]
+                    properties:
+                        session:
+                            $ref: '#/components/schemas/AiChatSession'
+                        messages:
+                            type: array
+                            items:
+                                $ref: '#/components/schemas/AiChatSessionMessage'
+                AiChatSessionCreateRequest:
+                    type: object
+                    description: 'Создание сессии AI-чата. Все поля необязательны: без credentialId берётся первый реквизит аккаунта'
+                    properties:
+                        credentialId:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                        title:
+                            type: string
+                            maxLength: 256
+                            nullable: true
+                AiChatToolResult:
+                    type: object
+                    description: 'Результат выполнения одного tool-вызова'
+                    required: [toolCallId]
+                    properties:
+                        toolCallId:
+                            type: string
+                            maxLength: 128
+                            description: 'Идентификатор tool_call из предыдущего ответа ассистента'
+                        content:
+                            type: string
+                            nullable: true
+                        name:
+                            type: string
+                            maxLength: 64
+                            nullable: true
+                AiChatTurnRequest:
+                    type: object
+                    description: 'Один шаг диалога: ровно одно из `message` или `toolResults`'
+                    oneOf:
+                        - required: [message]
+                        - required: [toolResults]
+                    properties:
+                        message:
+                            type: string
+                            maxLength: 100000
+                            nullable: true
+                            description: 'Новое сообщение пользователя'
+                        toolResults:
+                            type: array
+                            nullable: true
+                            description: 'Результаты инструментов для продолжения диалога'
+                            items:
+                                $ref: '#/components/schemas/AiChatToolResult'
+                        tools:
+                            type: array
+                            maxItems: 64
+                            description: 'Актуальный набор OpenAI tools'
+                            items:
+                                type: object
+                        model:
+                            type: string
+                            maxLength: 128
+                            nullable: true
+                AiChatTurnResult:
+                    type: object
+                    description: 'Результат одного хода (RezultatHodaAiChataReadModel)'
+                    required: [assistant, session]
+                    properties:
+                        assistant:
+                            type: object
+                            required: [content, toolCalls]
+                            properties:
+                                content:
+                                    type: string
+                                    nullable: true
+                                toolCalls:
+                                    type: array
+                                    items:
+                                        type: object
+                                        required: [id, name, arguments]
+                                        properties:
+                                            id:
+                                                type: string
+                                            name:
+                                                type: string
+                                            arguments:
+                                                type: string
+                        session:
+                            type: object
+                            required: [id, providerSessionExpiresAt, archived, updatedAt, title]
+                            properties:
+                                id:
+                                    type: string
+                                providerSessionExpiresAt:
+                                    type: integer
+                                    nullable: true
+                                archived:
+                                    type: boolean
+                                updatedAt:
+                                    type: integer
+                                title:
+                                    type: string
     areas: # to filter documented areas
         path_patterns:
             - ^/api(?!/doc$) # Accepts routes under /api except /api/doc

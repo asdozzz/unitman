@@ -6,10 +6,12 @@ namespace App\Account\Api;
 
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\Model\OpenCode\OpenCodeCredential;
+use App\Account\Business\Model\OpenCode\ProvayderOpenCode;
 use App\Account\Business\Port\OpenCodeCredentialRepository;
 use App\Account\Business\Port\UmeetShifrovatSekrety;
 use App\Account\Business\ReadModel\OpenCodeCredentialModelsReadModel;
 use App\Account\Business\ReadModel\OpenCodeCredentialSecretReadModel;
+use App\Account\Business\ReadModel\ProviderSessionPolicyReadModel;
 use App\Account\Infra\Adapter\SymfonySecurityService;
 use App\Account\Infra\Repository\JWTUserRepository;
 
@@ -145,8 +147,42 @@ final class AccountApi
         $credential->trebovatVladelca($accountId);
 
         return new OpenCodeCredentialModelsReadModel(
+            $credential->getProvider(),
             $credential->getDefaultModel(),
             $credential->getModels(),
+        );
+    }
+
+    /**
+     * Политика provider-сессии для провайдера по его коду.
+     *
+     * @throws \DomainException `account.opencode_credential.empty_provider`
+     *                          или `account.opencode_credential.unknown_provider`
+     *                          для неизвестного провайдера
+     */
+    public function poluchitPolitikuSessiiProvaydera(string $provider): ProviderSessionPolicyReadModel
+    {
+        $provayder = ProvayderOpenCode::izKoda($provider);
+
+        return ProviderSessionPolicyReadModel::izPolitiki(
+            $provayder->value,
+            $provayder->politikaSessii(),
+        );
+    }
+
+    /**
+     * Идентификаторы всех существующих реквизитов аккаунта.
+     *
+     * Используется AI-чатом, чтобы понять, какие сессии опираются на ещё
+     * существующие реквизиты. Ничего не создаёт и не расшифровывает.
+     *
+     * @return list<string>
+     */
+    public function poluchitIdentifikatorySushchestvuyushchihRekvizitov(string $accountId): array
+    {
+        return array_map(
+            static fn (OpenCodeCredential $credential): string => $credential->getId(),
+            $this->openCodeCredentialRepository->findByAccountId($accountId),
         );
     }
 

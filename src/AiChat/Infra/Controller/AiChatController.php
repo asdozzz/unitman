@@ -7,6 +7,7 @@ namespace App\AiChat\Infra\Controller;
 use App\Account\Api\AccountApi;
 use App\AiChat\Infra\Command\AiChatRequest;
 use App\AiChat\Infra\Service\OpenCodeChatProxy;
+use App\AiChat\Infra\Service\Transport\ProviderSessionTransportUnknownException;
 use App\AiChat\Infra\Service\UpstreamInvalidResponseException;
 use App\AiChat\Infra\Service\UpstreamUnavailableException;
 use App\Utils\Model\Reponse\Response as ApiResponse;
@@ -79,6 +80,14 @@ final class AiChatController
                     ),
                     new OA\Property(property: 'model', type: 'string', nullable: true),
                     new OA\Property(property: 'credentialId', type: 'string', nullable: true),
+                    new OA\Property(
+                        property: 'sessionId',
+                        description: 'Идентификатор provider-сессии; передаётся так, как требует политика провайдера (header/body/query/none)',
+                        type: 'string',
+                        nullable: true,
+                        maxLength: 128,
+                        pattern: '^[A-Za-z0-9._:-]{1,128}$',
+                    ),
                 ],
                 type: 'object',
             ),
@@ -132,6 +141,9 @@ final class AiChatController
                 $chatRequest->credentialId,
                 $chatRequest->model,
             );
+            $policy = $this->accountApi
+                ->poluchitPolitikuSessiiProvaydera($credential->provider)
+                ->vPolitiku();
         } catch (\DomainException $exception) {
             return $this->izDomainOshibki($exception);
         }
@@ -151,7 +163,13 @@ final class AiChatController
                 $chatRequest->messages,
                 $chatRequest->tools,
                 $credential->provider,
+                $policy,
                 $chatRequest->sessionId,
+            );
+        } catch (ProviderSessionTransportUnknownException) {
+            return $this->oshibka(
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+                'ai.chat.provider_session_transport_unknown',
             );
         } catch (UpstreamUnavailableException) {
             return $this->oshibka(Response::HTTP_BAD_GATEWAY, 'ai.chat.upstream_unavailable');
@@ -172,6 +190,11 @@ final class AiChatController
             'account.opencode_credential.model_not_available' => $this->oshibka(
                 Response::HTTP_UNPROCESSABLE_ENTITY,
                 'account.opencode_credential.model_not_available',
+            ),
+            'account.opencode_credential.empty_provider',
+            'account.opencode_credential.unknown_provider' => $this->oshibka(
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+                'ai.chat.provider_not_supported',
             ),
             'account.not_authenticated' => $this->oshibka(
                 Response::HTTP_UNAUTHORIZED,

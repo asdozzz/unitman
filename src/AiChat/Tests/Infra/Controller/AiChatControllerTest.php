@@ -12,6 +12,7 @@ use App\Account\Infra\Adapter\SymfonySecurityService;
 use App\Account\Infra\Repository\JWTUserRepository;
 use App\AiChat\Infra\Controller\AiChatController;
 use App\AiChat\Infra\Service\OpenCodeChatProxy;
+use App\AiChat\Infra\Service\Transport\ApplierTransportaPoPolitike;
 use App\AiChat\Tests\Support\InMemoryOpenCodeCredentialRepository;
 use App\AiChat\Tests\Support\PlainTextCipher;
 use App\AiChat\Tests\Support\RecordingHttpClient;
@@ -302,7 +303,7 @@ final class AiChatControllerTest extends TestCase
         );
     }
 
-    public function test_opencode_go_bez_session_id_podstavlyaet_uuid_v4(): void
+    public function test_opencode_go_bez_session_id_ne_podstavlyaet_sessiyu(): void
     {
         $this->dobavitRekvizity(
             'cred-go',
@@ -320,12 +321,8 @@ final class AiChatControllerTest extends TestCase
             'messages' => [['role' => 'user', 'content' => 'hi']],
         ]));
 
-        $session = $client->requests[0]['options']['headers']['x-opencode-session'];
-        self::assertIsString($session);
-        self::assertMatchesRegularExpression(
-            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/',
-            $session,
-        );
+        // Прокси больше не генерирует UUID: без sessionId заголовка нет.
+        self::assertArrayNotHasKey('x-opencode-session', $client->requests[0]['options']['headers']);
     }
 
     public function test_nesessiya_ne_peredayotsya_drugim_provayderam(): void
@@ -609,7 +606,12 @@ final class AiChatControllerTest extends TestCase
 
         return new AiChatController(
             $accountApi,
-            new OpenCodeChatProxy($client, $this->logger, self::TIMEOUT),
+            new OpenCodeChatProxy(
+                $client,
+                $this->logger,
+                self::TIMEOUT,
+                new ApplierTransportaPoPolitike(),
+            ),
             new ExceptionTranslator(new IdentityTranslator(), 'en'),
             self::FALLBACK_URL,
         );

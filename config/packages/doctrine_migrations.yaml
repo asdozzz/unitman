@@ -9,4 +9,5 @@ doctrine_migrations:
         'App\Mediateka\Migrations': '%kernel.project_dir%/src/Mediateka/Migrations'
         'App\BackgroundJob\Migrations': '%kernel.project_dir%/src/BackgroundJob/Migrations'
         'App\OpenCode\Migrations': '%kernel.project_dir%/src/OpenCode/Migrations'
+        'App\AiChat\Migrations': '%kernel.project_dir%/src/AiChat/Migrations'
     enable_profiler: false

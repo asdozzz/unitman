@@ -119,9 +119,13 @@ final class OpenApiDocumentationTest extends KernelTestCase
         // Контракты build-state (GET+PUT) и публичного адреса (PUT+DELETE)
         // намеренно используют один путь для разных методов — это разрешённые
         // исключения из правила «один глагол на путь».
+        // Сессии AI-чата: список+создание (GET+POST) и чтение+удаление
+        // (GET+DELETE) по одному REST-пути.
         $multiVerbAllowed = [
             '/api/runner/{runnerId}/projects/{projectId}/build-state',
             '/api/runner/{runnerId}/public-address',
+            '/api/ai/chat/sessions',
+            '/api/ai/chat/sessions/{id}',
         ];
 
         $untagged = [];

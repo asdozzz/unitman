@@ -16,6 +16,9 @@ use App\Account\Business\ReadModel\ProvayderOpenCodeReadModel;
  */
 enum ProvayderOpenCode: string
 {
+    /** Заголовок, которым OpenCode-провайдеры принимают provider-сессию. */
+    public const OPENCODE_SESSION_HEADER = 'x-opencode-session';
+
     case OPENAI = 'openai';
     case ANTHROPIC = 'anthropic';
     case GOOGLE = 'google';
@@ -77,6 +80,33 @@ enum ProvayderOpenCode: string
     }
 
     /**
+     * Политика provider-сессии для провайдера.
+     *
+     * `match` намеренно без `default`: добавление нового case провайдера
+     * без явной политики ломает выполнение на этапе разработки.
+     */
+    public function politikaSessii(): ProviderSessionPolicy
+    {
+        return match ($this) {
+            self::OPENCODE, self::OPENCODE_GO => ProviderSessionPolicy::header(
+                self::OPENCODE_SESSION_HEADER,
+                ProviderSessionPolicy::DEFAULT_TTL_SECONDS,
+            ),
+            self::GOOGLE => ProviderSessionPolicy::none(3600),
+            self::OPENAI,
+            self::ANTHROPIC,
+            self::OPENROUTER,
+            self::DEEPSEEK,
+            self::MISTRAL,
+            self::GROQ,
+            self::XAI,
+            self::TOGETHER,
+            self::OLLAMA,
+            self::CUSTOM => ProviderSessionPolicy::none(ProviderSessionPolicy::DEFAULT_TTL_SECONDS),
+        };
+    }
+
+    /**
      * Способ передачи ключа: `bearer`, `x-api-key` или `none`.
      */
     public function authStyle(): string
@@ -125,14 +155,22 @@ enum ProvayderOpenCode: string
     public static function katalog(): array
     {
         return array_map(
-            static fn (self $provider): ProvayderOpenCodeReadModel => new ProvayderOpenCodeReadModel(
-                $provider->value,
-                $provider->nazvanie(),
-                $provider->baseUrl(),
-                $provider->modelsPath(),
-                $provider->authStyle(),
-                $provider->podderzhivaetSpisokModelei(),
-            ),
+            static function (self $provider): ProvayderOpenCodeReadModel {
+                $policy = $provider->politikaSessii();
+
+                return new ProvayderOpenCodeReadModel(
+                    $provider->value,
+                    $provider->nazvanie(),
+                    $provider->baseUrl(),
+                    $provider->modelsPath(),
+                    $provider->authStyle(),
+                    $provider->podderzhivaetSpisokModelei(),
+                    $policy->transport->value,
+                    $policy->key,
+                    $policy->ttlSeconds,
+                    $policy->supportsAiChat,
+                );
+            },
             self::cases(),
         );
     }
