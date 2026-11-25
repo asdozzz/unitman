@@ -153,6 +153,12 @@ final class RunnerController extends AbstractController
         description: 'Карточки всех раннеров, отсортированные от худшего уровня угрозы. '
             . 'Доступно только администратору.',
         tags: ['Runner'],
+        x: [
+            'ai-enabled' => true,
+            'ai-roles' => ['ROLE_ADMIN'],
+            'ai-confirm' => false,
+            'ai-deps' => [],
+        ],
         responses: [
             new OA\Response(
                 response: 200,

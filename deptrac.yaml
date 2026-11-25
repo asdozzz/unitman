@@ -10,6 +10,10 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Account/.*
+    - name: AiChat
+      collectors:
+        - type: directory
+          regex: ./src/AiChat/.*
     - name: App
       collectors:
         - type: directory
@@ -47,6 +51,11 @@ deptrac:
     # Account — самостоятельный модуль: свои EventSauce-декораторы из App и утилиты.
     Account:
       - App
+      - Utils
+    # AiChat — прокси к OpenCode: реквизиты берёт из Account через AccountApi,
+    # переводы и конверты ответов — из Utils.
+    AiChat:
+      - Account
       - Utils
     # BackgroundJob — независимый примитив, ни от кого не зависит.
     BackgroundJob: ~

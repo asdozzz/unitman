@@ -98,6 +98,41 @@ final class AccountApi
     }
 
     /**
+     * Реквизиты OpenCode текущего пользователя с расшифрованным ключом.
+     *
+     * Используется HTTP-слоем (AI-чат), которому нужен ключ для исходящего
+     * запроса к OpenAI-совместимому API. Если `$credentialId` не передан,
+     * берутся первые реквизиты пользователя. Расшифровка и проверка владения
+     * остаются в {@see self::poluchitRekvizityOpenCodeDlyVladelca()}, чтобы не
+     * дублировать криптографию и правила доступа.
+     *
+     * @throws \DomainException `account.not_authenticated`, если пользователь
+     *                          не аутентифицирован; `account.opencode_credential.not_found`,
+     *                          если реквизитов нет/они чужие; `account.opencode_credential.model_not_available`
+     *                          если запрошенная модель недоступна
+     */
+    public function poluchitRekvizityOpenCodeDlyaTekuschegoPolzovatelya(
+        ?string $credentialId = null,
+        ?string $model = null,
+    ): OpenCodeCredentialSecretReadModel {
+        $accountId = $this->securityService->getCurrentUserId();
+
+        $credentialId = $credentialId !== null ? trim($credentialId) : '';
+
+        if ($credentialId === '') {
+            $credentials = $this->openCodeCredentialRepository->findByAccountId($accountId);
+
+            if ($credentials === []) {
+                throw new \DomainException('account.opencode_credential.not_found');
+            }
+
+            $credentialId = $credentials[0]->getId();
+        }
+
+        return $this->poluchitRekvizityOpenCodeDlyVladelca($accountId, $credentialId, $model);
+    }
+
+    /**
      * Дефолтная модель и список моделей реквизитов для конкретного владельца.
      *
      * @throws \DomainException если реквизиты не найдены или принадлежат другому аккаунту

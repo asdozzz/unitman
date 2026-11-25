@@ -24,6 +24,8 @@ nelmio_api_doc:
               description: Файлы юнитов (zip-архивы в MinIO)
             - name: OpenCode
               description: Сессии и ходы OpenCode (вопросы, ответы, прогресс)
+            - name: AI
+              description: AI-чат с инструментами, сгенерированными из OpenAPI
         # Маршруты, которые создаются не контроллерами проекта, а бандлами
         # (lexik JSON-логин), поэтому описываются декларативно.
         paths:

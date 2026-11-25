@@ -63,6 +63,12 @@ final class RepoController extends AbstractController
         path: '/api/repo/list',
         summary: 'Список репозиториев',
         tags: ['Repo'],
+        x: [
+            'ai-enabled' => true,
+            'ai-roles' => [],
+            'ai-confirm' => false,
+            'ai-deps' => [],
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/GetRepoList')
@@ -174,6 +180,12 @@ final class RepoController extends AbstractController
         path: '/api/repo/type/list',
         summary: 'Список типов репозиториев',
         tags: ['Repo'],
+        x: [
+            'ai-enabled' => true,
+            'ai-roles' => [],
+            'ai-confirm' => false,
+            'ai-deps' => [],
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/GetRepoTypeList')

@@ -74,6 +74,12 @@ final class ProjectController extends AbstractController
         path: '/api/project/list',
         summary: 'Список проектов',
         tags: ['Project'],
+        x: [
+            'ai-enabled' => true,
+            'ai-roles' => [],
+            'ai-confirm' => false,
+            'ai-deps' => [],
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/GetProjectList')
@@ -252,6 +258,15 @@ final class ProjectController extends AbstractController
         path: '/api/project/add',
         summary: 'Добавить проект',
         tags: ['Project'],
+        x: [
+            'ai-enabled' => true,
+            'ai-roles' => [],
+            'ai-confirm' => true,
+            'ai-deps' => [
+                'post_app_unitman_infra_repo_list',
+                'post_app_unitman_infra_repo_typelist',
+            ],
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/AddProject')

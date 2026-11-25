@@ -65,7 +65,7 @@ enum ProvayderOpenCode: string
             self::XAI => 'https://api.x.ai/v1',
             self::TOGETHER => 'https://api.together.xyz/v1',
             self::OLLAMA => 'http://localhost:11434/v1',
-            self::OPENCODE => 'https://api.opencode.ai',
+            self::OPENCODE => 'https://api.opencode.ai/v1',
             self::OPENCODE_GO => 'https://opencode.ai/inference/go/openai/v1',
             self::CUSTOM => '',
         };

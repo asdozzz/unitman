@@ -79,6 +79,17 @@ return [
         ],
     ],
 
+    // ─── AI chat ─────────────────────────────────────────────────────────────
+    'ai' => [
+        'chat' => [
+            'invalid_payload' => 'Некорректный запрос к AI-чату',
+            'credential_required' => 'Для AI-чата нужны реквизиты OpenCode',
+            'upstream_not_configured' => 'URL API OpenCode не настроен',
+            'upstream_unavailable' => 'API OpenCode недоступен',
+            'upstream_invalid_response' => 'API OpenCode вернул некорректный ответ',
+        ],
+    ],
+
     // ─── Shared ──────────────────────────────────────────────────────────────
     'common' => [
         'internal_error' => 'Внутренняя ошибка',

@@ -82,6 +82,17 @@ return [
         ],
     ],
 
+    // ─── AI chat ─────────────────────────────────────────────────────────────
+    'ai' => [
+        'chat' => [
+            'invalid_payload' => 'The AI chat request payload is invalid',
+            'credential_required' => 'OpenCode credentials are required to use the AI chat',
+            'upstream_not_configured' => 'The OpenCode API URL is not configured',
+            'upstream_unavailable' => 'The OpenCode API is unavailable',
+            'upstream_invalid_response' => 'The OpenCode API returned an invalid response',
+        ],
+    ],
+
     // ─── Shared ──────────────────────────────────────────────────────────────
     'common' => [
         'internal_error' => 'An internal error occurred',
