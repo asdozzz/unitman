@@ -242,6 +242,23 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         return $result;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function poluchitIdAdministratorov(): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchFirstColumn(
+            "SELECT id FROM $table WHERE roles LIKE :role",
+            ['role' => '%' . Role::ROLE_ADMIN->value . '%'],
+        );
+
+        return array_values(array_map(
+            static fn (mixed $id): string => (string) $id,
+            $rows,
+        ));
+    }
+
     function findSystemAccountId(): ?string
     {
         $table = self::TABLE;

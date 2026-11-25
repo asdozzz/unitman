@@ -608,6 +608,28 @@ return [
         'payload_too_large' => 'Тело вебхука слишком велико',
     ],
 
+    // ─── Notifications ───────────────────────────────────────────────────────
+    'notification' => [
+        'not_found' => 'Уведомление не найдено',
+        'type_not_found' => 'Неизвестный тип уведомления',
+        'preference' => [
+            'invalid_payload' => 'Некорректное тело настройки уведомлений',
+            'system_type' => 'Системные уведомления нельзя отключить',
+        ],
+        'push' => [
+            'endpoint_invalid' => 'Некорректный адрес push-подписки',
+            'keys_invalid' => 'Некорректные ключи push-подписки',
+        ],
+        'runner_threat' => [
+            'push_title' => 'Критическая угроза раннера',
+            'push_body' => 'Раннер %hostname%: уровень %level%, память %memory%.',
+        ],
+        'unit_started' => [
+            'push_title' => 'Юнит запущен',
+            'push_body' => 'Юнит %unitName% успешно запущен.',
+        ],
+    ],
+
     // ─── Infrastructure / utils ──────────────────────────────────────────────
     'projections_manager' => [
         'rebuild_not_allowed' => 'Пересборка этой проекции запрещена',

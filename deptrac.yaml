@@ -22,6 +22,10 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Mediateka/.*
+    - name: Notification
+      collectors:
+        - type: directory
+          regex: ./src/Notification/.*
     - name: OpenCode
       collectors:
         - type: directory
@@ -65,11 +69,17 @@ deptrac:
       - Runner
       - Unitman
       - Utils
+    # Notification — общий модуль уведомлений: знает только Account, BackgroundJob и Utils.
+    Notification:
+      - Account
+      - BackgroundJob
+      - Utils
     # Runner управляет контейнерами и обращается к Unitman и Account только через Acl-адаптеры.
     Runner:
       - Account
       - App
       - BackgroundJob
+      - Notification
       - Unitman
       - Utils
     # Unitman — ядро: оперирует сущностями всех остальных модулей через порты и Acl-адаптеры.
@@ -78,5 +88,6 @@ deptrac:
       - App
       - BackgroundJob
       - Mediateka
+      - Notification
       - Runner
       - Utils

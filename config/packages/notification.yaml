@@ -1,0 +1,6 @@
+parameters:
+    # Значения по умолчанию для ретеншна уведомлений. Используются через
+    # %env(default:...)% в src/Notification/di.php, поэтому старый .env без
+    # этих переменных продолжает работать.
+    notification_info_retention_days: '7'
+    notification_actionable_retention_days: '90'

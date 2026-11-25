@@ -43,7 +43,8 @@ jobs:
     "sobitiya_iz_hranilisha",
     "websocket_unit_event",
     "websocket_project_event",
-    "webhook_event"
+    "webhook_event",
+    "notification_push"
   ]
   pipelines:
     sobitiya_iz_hranilisha:
@@ -62,6 +63,10 @@ jobs:
       driver: beanstalk
       config:
         priority: 50
+    notification_push:
+      driver: beanstalk
+      config:
+        priority: 20
 
 # Сохраняет плагин RR services и RPC service.Create/Terminate, через которые
 # app:jobs start создаёт сервисы планировщика в этом контейнере.

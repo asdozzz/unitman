@@ -53,6 +53,14 @@ final class AccountApi
         return $user;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function poluchitIdAdministratorov(): array
+    {
+        return $this->userRepository->poluchitIdAdministratorov();
+    }
+
     public function getSystemUser(): JWTUser
     {
         return $this->userRepository->getSystemAccount();
