@@ -633,6 +633,28 @@ return [
         'payload_too_large' => 'The webhook payload is too large',
     ],
 
+    // ─── Notifications ───────────────────────────────────────────────────────
+    'notification' => [
+        'not_found' => 'The notification was not found',
+        'type_not_found' => 'Unknown notification type',
+        'preference' => [
+            'invalid_payload' => 'The notification preference payload is invalid',
+            'system_type' => 'System notifications cannot be disabled',
+        ],
+        'push' => [
+            'endpoint_invalid' => 'The push subscription endpoint is invalid',
+            'keys_invalid' => 'The push subscription keys are invalid',
+        ],
+        'runner_threat' => [
+            'push_title' => 'Critical runner threat',
+            'push_body' => 'Runner %hostname%: level %level%, memory %memory%.',
+        ],
+        'unit_started' => [
+            'push_title' => 'Unit started',
+            'push_body' => 'Unit %unitName% started successfully.',
+        ],
+    ],
+
     // ─── Infrastructure / utils ──────────────────────────────────────────────
     'projections_manager' => [
         'rebuild_not_allowed' => 'Rebuilding this projection is not allowed',

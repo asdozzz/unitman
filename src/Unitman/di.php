@@ -108,6 +108,10 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UmeetObnovlyatStatistikuKonteinera::class, SpisokUnitovRepository::class);
     $services->set(UmeetObnovlyatSostoyanieKonteyneraUnita::class, SpisokUnitovRepository::class);
     $services->set(UmeetOpoveshatObIzmeneniiUnita::class, WebsocketUnitEventNotifier::class);
+    $services->set(
+        \App\Unitman\Business\Port\Unit\UmeetSozdavatUvedomlenieOZapuskeUnita::class,
+        \App\Unitman\Acl\NotificationAdapter::class,
+    );
     $services->set(ZanyatostUnitaRepository::class, SqlZanyatostUnitaRepository::class);
     $services->set(OtlozhennieDeistviyaRepository::class, SqlOtlozhennieDeistviyaRepository::class);
     $services->set(CanGetProjectRunnerJobs::class, ProjectRunnerJobRepository::class);
