@@ -61,4 +61,62 @@ final class PushPermissionTest extends TestCase
         ]));
         self::assertFalse(PushPermission::izGithub([]));
     }
+
+    public function testGiteaPushRazreshen(): void
+    {
+        self::assertTrue(PushPermission::izGitea([
+            'permissions' => ['push' => true],
+        ]));
+    }
+
+    public function testGiteaPushZapreshchen(): void
+    {
+        self::assertFalse(PushPermission::izGitea([
+            'permissions' => ['push' => false],
+        ]));
+        self::assertFalse(PushPermission::izGitea([]));
+    }
+
+    public function testGitflicPushRazreshenPoRoli(): void
+    {
+        self::assertTrue(PushPermission::izGitflic(['role' => 'DEVELOPER']));
+        self::assertTrue(PushPermission::izGitflic(['accessLevel' => 30]));
+        self::assertTrue(PushPermission::izGitflic([
+            'permissions' => ['push' => true],
+        ]));
+    }
+
+    public function testGitflicPushZapreshchen(): void
+    {
+        self::assertFalse(PushPermission::izGitflic(['role' => 'REPORTER']));
+        self::assertFalse(PushPermission::izGitflic(['accessLevel' => 20]));
+        self::assertFalse(PushPermission::izGitflic([]));
+    }
+
+    public function testGitversePushRazreshen(): void
+    {
+        self::assertTrue(PushPermission::izGitverse([
+            'permissions' => ['push' => true],
+        ]));
+        self::assertTrue(PushPermission::izGitverse(['role' => 'MAINTAINER']));
+    }
+
+    public function testGitversePushZapreshchen(): void
+    {
+        self::assertFalse(PushPermission::izGitverse(['role' => 'READ']));
+        self::assertFalse(PushPermission::izGitverse([]));
+    }
+
+    public function testBitbucketPushRazreshen(): void
+    {
+        self::assertTrue(PushPermission::izBitbucket(['permission' => 'write']));
+        self::assertTrue(PushPermission::izBitbucket(['permission' => 'admin']));
+        self::assertTrue(PushPermission::izBitbucket(['role' => 'MAINTAINER']));
+    }
+
+    public function testBitbucketPushZapreshchen(): void
+    {
+        self::assertFalse(PushPermission::izBitbucket(['permission' => 'read']));
+        self::assertFalse(PushPermission::izBitbucket([]));
+    }
 }

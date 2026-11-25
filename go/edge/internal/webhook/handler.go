@@ -25,9 +25,14 @@ const (
 	// DefaultRateLimitPerSecond is the per project/provider token bucket rate.
 	DefaultRateLimitPerSecond = 100
 
-	// ProviderGitLab and ProviderGitHub are the two supported ingress sources.
-	ProviderGitLab = "gitlab"
-	ProviderGitHub = "github"
+	// Supported webhook ingress sources.
+	ProviderGitLab    = "gitlab"
+	ProviderGitHub    = "github"
+	ProviderGitea     = "gitea"
+	ProviderForgejo   = "forgejo"
+	ProviderGitflic   = "gitflic"
+	ProviderGitverse  = "gitverse"
+	ProviderBitbucket = "bitbucket"
 
 	gitHubSignaturePrefix = "sha256="
 
@@ -48,6 +53,16 @@ type Options struct {
 	GitLabSecret string
 	// GitHubSecret enables the X-Hub-Signature-256 check when non-empty.
 	GitHubSecret string
+	// GiteaSecret enables the X-Gitea-Signature check when non-empty.
+	GiteaSecret string
+	// ForgejoSecret enables the X-Forgejo-Signature check when non-empty.
+	ForgejoSecret string
+	// GitflicSecret enables the GitFlic signature or token check when non-empty.
+	GitflicSecret string
+	// GitverseSecret enables the GitVerse Authorization check when non-empty.
+	GitverseSecret string
+	// BitbucketSecret enables the X-Hub-Signature check when non-empty.
+	BitbucketSecret string
 	// RateLimitPerSecond is the per project/provider token bucket rate;
 	// 0 disables rate limiting.
 	RateLimitPerSecond int
@@ -61,13 +76,18 @@ type Options struct {
 
 // Handler implements POST /api/project/{id}/hook and GET /healthz.
 type Handler struct {
-	phpBaseURL   string
-	maxBytes     int64
-	gitLabSecret string
-	gitHubSecret string
-	client       *http.Client
-	limiter      *RateLimiter
-	logger       *slog.Logger
+	phpBaseURL      string
+	maxBytes        int64
+	gitLabSecret    string
+	gitHubSecret    string
+	giteaSecret     string
+	forgejoSecret   string
+	gitflicSecret   string
+	gitverseSecret  string
+	bitbucketSecret string
+	client          *http.Client
+	limiter         *RateLimiter
+	logger          *slog.Logger
 }
 
 // NewHandler validates options and wires the ingress.
@@ -98,13 +118,18 @@ func NewHandler(options Options) (*Handler, error) {
 	}
 
 	return &Handler{
-		phpBaseURL:   baseURL,
-		maxBytes:     maxBytes,
-		gitLabSecret: options.GitLabSecret,
-		gitHubSecret: options.GitHubSecret,
-		client:       client,
-		limiter:      NewRateLimiter(options.RateLimitPerSecond, options.Now),
-		logger:       logger,
+		phpBaseURL:      baseURL,
+		maxBytes:        maxBytes,
+		gitLabSecret:    options.GitLabSecret,
+		gitHubSecret:    options.GitHubSecret,
+		giteaSecret:     options.GiteaSecret,
+		forgejoSecret:   options.ForgejoSecret,
+		gitflicSecret:   options.GitflicSecret,
+		gitverseSecret:  options.GitverseSecret,
+		bitbucketSecret: options.BitbucketSecret,
+		client:          client,
+		limiter:         NewRateLimiter(options.RateLimitPerSecond, options.Now),
+		logger:          logger,
 	}, nil
 }
 
@@ -215,14 +240,69 @@ func (h *Handler) verify(provider string, header http.Header, body []byte) bool 
 		return verifyGitLabToken(h.gitLabSecret, header.Get("X-Gitlab-Token"))
 	case ProviderGitHub:
 		return verifyGitHubSignature(h.gitHubSecret, body, header.Get("X-Hub-Signature-256"))
+	case ProviderGitea:
+		return verifyHexSignature(h.giteaSecret, body, header.Get("X-Gitea-Signature"))
+	case ProviderForgejo:
+		return verifyHexSignature(h.forgejoSecret, body, header.Get("X-Forgejo-Signature"))
+	case ProviderGitflic:
+		return verifyGitflicSecret(
+			h.gitflicSecret,
+			body,
+			header.Get("X-Gitflic-Signature"),
+			header.Get("X-Gitflic-Token"),
+		)
+	case ProviderGitverse:
+		return verifySharedSecret(
+			h.gitverseSecret,
+			body,
+			header.Get("X-Gitverse-Signature"),
+			header.Get("Authorization"),
+		)
+	case ProviderBitbucket:
+		return verifyBitbucketSignature(
+			h.bitbucketSecret,
+			body,
+			header.Get("X-Hub-Signature"),
+		)
 	default:
 		return false
 	}
 }
 
-// detectProvider derives the provider from provider-specific headers. GitLab is
-// checked first because its headers are the stricter pair.
+// detectProvider derives the provider from provider-specific headers. Gitea and
+// Forgejo are checked first because their header names are unique to them.
 func detectProvider(header http.Header) (string, bool) {
+	if header.Get("X-Forgejo-Event") != "" || header.Get("X-Forgejo-Signature") != "" {
+		return ProviderForgejo, true
+	}
+
+	if header.Get("X-Gitflic-Event") != "" ||
+		header.Get("X-Gitflic-Signature") != "" ||
+		header.Get("X-Gitflic-Token") != "" {
+		return ProviderGitflic, true
+	}
+
+	if header.Get("X-Gitverse-Event") != "" ||
+		header.Get("X-Gitverse-Signature") != "" ||
+		header.Get("X-Gitverse-Token") != "" {
+		return ProviderGitverse, true
+	}
+
+	// GitVerse настраивает custom webhook с заголовком Authorization и не
+	// присылает отдельного заголовка провайдера. Проверяем его последним,
+	// чтобы не перехватить запросы остальных провайдеров.
+	if strings.HasPrefix(header.Get("Authorization"), "Bearer ") {
+		return ProviderGitverse, true
+	}
+
+	if header.Get("X-Gitea-Event") != "" || header.Get("X-Gitea-Signature") != "" {
+		return ProviderGitea, true
+	}
+
+	if header.Get("X-Event-Key") != "" || header.Get("X-Hub-Signature") != "" {
+		return ProviderBitbucket, true
+	}
+
 	if header.Get("X-Gitlab-Event") != "" || header.Get("X-Gitlab-Token") != "" {
 		return ProviderGitLab, true
 	}
@@ -250,6 +330,87 @@ func verifyGitLabToken(secret, token string) bool {
 
 // verifyGitHubSignature checks X-Hub-Signature-256 = "sha256=" + hex HMAC.
 func verifyGitHubSignature(secret string, body []byte, signature string) bool {
+	if secret == "" {
+		return true
+	}
+
+	if !strings.HasPrefix(signature, gitHubSignaturePrefix) {
+		return false
+	}
+
+	provided, err := hex.DecodeString(signature[len(gitHubSignaturePrefix):])
+	if err != nil {
+		return false
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write(body)
+
+	return hmac.Equal(mac.Sum(nil), provided)
+}
+
+// verifyHexSignature checks an unprefixed hex HMAC-SHA256 signature used by
+// Gitea and Forgejo. An empty secret disables the check.
+func verifyHexSignature(secret string, body []byte, signature string) bool {
+	if secret == "" {
+		return true
+	}
+
+	if signature == "" {
+		return false
+	}
+
+	provided, err := hex.DecodeString(strings.TrimSpace(signature))
+	if err != nil {
+		return false
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write(body)
+
+	return hmac.Equal(mac.Sum(nil), provided)
+}
+
+// verifyGitflicSecret accepts either a hex HMAC signature or a shared token
+// header. GitFlic documents a webhook secret field but versions differ in how
+// they send it, so both are supported.
+func verifyGitflicSecret(secret string, body []byte, signature, token string) bool {
+	if secret == "" {
+		return true
+	}
+
+	if signature != "" {
+		return verifyHexSignature(secret, body, signature)
+	}
+
+	if token == "" {
+		return false
+	}
+
+	return subtle.ConstantTimeCompare([]byte(token), []byte(secret)) == 1
+}
+
+// verifySharedSecret accepts either a hex HMAC signature or a shared secret in
+// the Authorization header. GitVerse uses the latter for custom webhooks.
+func verifySharedSecret(secret string, body []byte, signature, authorization string) bool {
+	if secret == "" {
+		return true
+	}
+
+	if signature != "" {
+		return verifyHexSignature(secret, body, signature)
+	}
+
+	token := strings.TrimSpace(strings.TrimPrefix(authorization, "Bearer "))
+	if token == "" {
+		return false
+	}
+
+	return subtle.ConstantTimeCompare([]byte(token), []byte(secret)) == 1
+}
+
+// verifyBitbucketSignature checks X-Hub-Signature = "sha256=" + hex HMAC.
+func verifyBitbucketSignature(secret string, body []byte, signature string) bool {
 	if secret == "" {
 		return true
 	}
@@ -309,7 +470,25 @@ func copyProxyHeaders(target, source http.Header) {
 
 	for name, values := range source {
 		lower := strings.ToLower(name)
-		if !strings.HasPrefix(lower, "x-gitlab-") && !strings.HasPrefix(lower, "x-github-") && lower != "x-hub-signature-256" {
+
+		if lower == "authorization" {
+			for _, value := range values {
+				if strings.HasPrefix(value, "Bearer ") {
+					target.Add(name, value)
+				}
+			}
+			continue
+		}
+
+		if !strings.HasPrefix(lower, "x-gitlab-") &&
+			!strings.HasPrefix(lower, "x-github-") &&
+			!strings.HasPrefix(lower, "x-gitea-") &&
+			!strings.HasPrefix(lower, "x-forgejo-") &&
+			!strings.HasPrefix(lower, "x-gitflic-") &&
+			!strings.HasPrefix(lower, "x-gitverse-") &&
+			lower != "x-event-key" &&
+			lower != "x-hub-signature" &&
+			lower != "x-hub-signature-256" {
 			continue
 		}
 

@@ -23,8 +23,13 @@ type WebhookConfig struct {
 
 	MaxBytes int64
 
-	GitLabSecret string
-	GitHubSecret string
+	GitLabSecret    string
+	GitHubSecret    string
+	GiteaSecret     string
+	ForgejoSecret   string
+	GitflicSecret   string
+	GitverseSecret  string
+	BitbucketSecret string
 
 	RateLimitPerSecond int
 }
@@ -41,6 +46,11 @@ func LoadWebhook() (WebhookConfig, error) {
 		MaxBytes:           DefaultWebhookMaxBytes,
 		GitLabSecret:       os.Getenv("GITLAB_WEBHOOK_SECRET"),
 		GitHubSecret:       os.Getenv("GITHUB_WEBHOOK_SECRET"),
+		GiteaSecret:        os.Getenv("GITEA_WEBHOOK_SECRET"),
+		ForgejoSecret:      os.Getenv("FORGEJO_WEBHOOK_SECRET"),
+		GitflicSecret:      os.Getenv("GITFLIC_WEBHOOK_SECRET"),
+		GitverseSecret:     os.Getenv("GITVERSE_WEBHOOK_SECRET"),
+		BitbucketSecret:    os.Getenv("BITBUCKET_WEBHOOK_SECRET"),
 		RateLimitPerSecond: DefaultWebhookRateLimitPerSecond,
 	}
 
