@@ -198,6 +198,11 @@ func runWebhook() error {
 		MaxBytes:           cfg.MaxBytes,
 		GitLabSecret:       cfg.GitLabSecret,
 		GitHubSecret:       cfg.GitHubSecret,
+		GiteaSecret:        cfg.GiteaSecret,
+		ForgejoSecret:      cfg.ForgejoSecret,
+		GitflicSecret:      cfg.GitflicSecret,
+		GitverseSecret:     cfg.GitverseSecret,
+		BitbucketSecret:    cfg.BitbucketSecret,
 		RateLimitPerSecond: cfg.RateLimitPerSecond,
 		Logger:             logger,
 	})
@@ -224,6 +229,11 @@ func runWebhook() error {
 		"max_bytes", cfg.MaxBytes,
 		"gitlab_secret_enabled", cfg.GitLabSecret != "",
 		"github_secret_enabled", cfg.GitHubSecret != "",
+		"gitea_secret_enabled", cfg.GiteaSecret != "",
+		"forgejo_secret_enabled", cfg.ForgejoSecret != "",
+		"gitflic_secret_enabled", cfg.GitflicSecret != "",
+		"gitverse_secret_enabled", cfg.GitverseSecret != "",
+		"bitbucket_secret_enabled", cfg.BitbucketSecret != "",
 		"rate_limit_per_second", cfg.RateLimitPerSecond,
 	)
 

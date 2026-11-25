@@ -60,7 +60,7 @@ Unitman решает это так:
 | Сущность | Где живёт | Описание |
 | --- | --- | --- |
 | **Project** | [`Project.php`](src/Unitman/Business/Model/Project.php) | Git-репозиторий, подключённый к системе. Хранит настройки хуков, переменные и участников. |
-| **Repo** | [`Repo.php`](src/Unitman/Business/Model/Repo.php) | Учётные данные для доступа к Git-хостингу (`GITLAB` / `GITHUB` / `BITBUCKET`). |
+| **Repo** | [`Repo.php`](src/Unitman/Business/Model/Repo.php) | Учётные данные для доступа к Git-хостингу (`GITLAB` / `GITHUB` / `BITBUCKET` / `GITEA` / `FORGEJO` / `CODEBERG` / `GITFLIC` / `GITVERSE`). |
 | **Unit** («юнит») | [`Unit.php`](src/Unitman/Business/Model/Unit.php) | Тестовый стенд, собранный из конкретной ветки проекта. Имеет состояние, конфиг, переменные, тома, процессы и задачи Runner'а. |
 | **Runner** | [`src/Runner/`](src/Runner) | Исполнитель: собирает образы, поднимает/останавливает контейнеры, проверяет работоспособность. Общается с Golang-runner'ом через Temporal. |
 

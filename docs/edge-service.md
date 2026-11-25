@@ -14,7 +14,7 @@ Go-сервис `go/edge` собирается в образ `unitman-edge:dev` 
 | `edge-progress`  | `progress`            | 8081  | `POST /api/runner/saveSteps` (per-runner HMAC-подпись v2 `X-Runner-Id` + `X-Runner-Signature`, проверка зарегистрированного токена `responseId`, лимиты, запись в Redis `runner.progress.*`), `GET /api/runner/progress/{responseId}`, публикация в Centrifugo `unit_progress#<jobId>`. |
 | `edge-media`     | `media`               | 8082  | Потоковые `PUT/GET/DELETE /media/{key...}` в MinIO/S3 без буферизации в памяти. Проверяет ZIP-сигнатуру, ограничивает размер (по умолчанию 200 МиБ). |
 | `edge-telemetry` | `telemetry`           | 8083  | `GET /metrics` — Docker-метрики контейнеров для Prometheus. Читает `/var/run/docker.sock` (только чтение). |
-| `edge-webhook`   | `webhook`             | 8084  | `POST /api/project/{id}/hook`: определяет GitLab/GitHub по заголовкам, проверяет подпись и лимит, проксирует тело в существующий PHP-эндпоинт. |
+| `edge-webhook`   | `webhook`             | 8084  | `POST /api/project/{id}/hook`: определяет провайдера (GitLab, GitHub, Gitea, Forgejo, Codeberg, GitFlic, GitVerse, Bitbucket) по заголовкам, проверяет подпись/секрет и лимит, проксирует тело в существующий PHP-эндпоинт. |
 | `edge-gateway`   | `nginx:1.27-alpine`   | 8080 → host `EDGE_GATEWAY_PORT` (по умолчанию 8090) | Канареечный шлюз: маршрутизирует только три потока в Go, всё остальное — в `web:8080`. |
 
 Все Go-сервисы отдают `GET /healthz`. Отдельных host-портов у них по умолчанию
@@ -47,6 +47,11 @@ Go-сервис `go/edge` собирается в образ `unitman-edge:dev` 
 | `DOCKER_GID` | `999` (`${DOCKER_GID:-999}`) | GID группы `/var/run/docker.sock`. Узнать: `stat -c '%g' /var/run/docker.sock`. |
 | `GITLAB_WEBHOOK_SECRET` | пусто | Пусто — проверка `X-Gitlab-Token` отключена. |
 | `GITHUB_WEBHOOK_SECRET` | пусто | Пусто — проверка `X-Hub-Signature-256` отключена. |
+| `GITEA_WEBHOOK_SECRET` | пусто | Пусто — проверка `X-Gitea-Signature` отключена. |
+| `FORGEJO_WEBHOOK_SECRET` | пусто | Пусто — проверка `X-Forgejo-Signature` отключена. |
+| `GITFLIC_WEBHOOK_SECRET` | пусто | Пусто — проверка `X-Gitflic-Signature`/`X-Gitflic-Token` отключена. |
+| `GITVERSE_WEBHOOK_SECRET` | пусто | Пусто — проверка `Authorization: Bearer`/`X-Gitverse-Signature` отключена. |
+| `BITBUCKET_WEBHOOK_SECRET` | пусто | Пусто — проверка `X-Hub-Signature` отключена. |
 | `WEBHOOK_RATE_LIMIT_PER_SECOND` | `100` | Лимит на проект/провайдер, `0` отключает. |
 | `PHP_WEBHOOK_BASE_URL` | `http://web:8080` | Куда `edge-webhook` проксирует события. |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | пусто | Если пусто, compose подставляет `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`. |
@@ -220,7 +225,7 @@ POST http://<host>:8090/api/runner/saveSteps
 проверка токена `responseId` (`runner.progress.token.*`); секрет и подпись не
 логируются.
 
-### Webhook GitLab/GitHub
+### Webhook провайдеров
 
 В настройках проекта укажите URL канареечного шлюза:
 
@@ -231,6 +236,16 @@ http://<host>:8090/api/project/<projectId>/hook
 - GitLab: Secret Token должен совпадать с `GITLAB_WEBHOOK_SECRET` (если задан).
 - GitHub: Content type `application/json`, Secret = `GITHUB_WEBHOOK_SECRET`
   (если задан).
+- Gitea/Codeberg: Secret должен совпадать с `GITEA_WEBHOOK_SECRET`
+  (`X-Gitea-Signature`, hex HMAC-SHA256).
+- Forgejo: Secret должен совпадать с `FORGEJO_WEBHOOK_SECRET`
+  (`X-Forgejo-Signature`, hex HMAC-SHA256).
+- GitFlic: Secret должен совпадать с `GITFLIC_WEBHOOK_SECRET`
+  (`X-Gitflic-Signature` как hex HMAC или `X-Gitflic-Token` как общий секрет).
+- GitVerse: `Authorization: Bearer <secret>` должен совпадать с
+  `GITVERSE_WEBHOOK_SECRET`; также поддерживается `X-Gitverse-Signature`.
+- Bitbucket Cloud: Secret должен совпадать с `BITBUCKET_WEBHOOK_SECRET`
+  (`X-Hub-Signature`, `sha256=<hex hmac>`).
 
 `edge-webhook` **не заменяет** event store: он валидирует запрос и проксирует
 его в существующий PHP-эндпоинт, поэтому события, проекции и обработчики
