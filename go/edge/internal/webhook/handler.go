@@ -63,6 +63,10 @@ type Options struct {
 	GitverseSecret string
 	// BitbucketSecret enables the X-Hub-Signature check when non-empty.
 	BitbucketSecret string
+	// AllowUnsigned permits requests from providers without a configured
+	// secret. It is a development escape hatch and must be enabled explicitly;
+	// when false (the default) an unconfigured provider rejects every request.
+	AllowUnsigned bool
 	// RateLimitPerSecond is the per project/provider token bucket rate;
 	// 0 disables rate limiting.
 	RateLimitPerSecond int
@@ -85,6 +89,7 @@ type Handler struct {
 	gitflicSecret   string
 	gitverseSecret  string
 	bitbucketSecret string
+	allowUnsigned   bool
 	client          *http.Client
 	limiter         *RateLimiter
 	logger          *slog.Logger
@@ -127,6 +132,7 @@ func NewHandler(options Options) (*Handler, error) {
 		gitflicSecret:   options.GitflicSecret,
 		gitverseSecret:  options.GitverseSecret,
 		bitbucketSecret: options.BitbucketSecret,
+		allowUnsigned:   options.AllowUnsigned,
 		client:          client,
 		limiter:         NewRateLimiter(options.RateLimitPerSecond, options.Now),
 		logger:          logger,
@@ -198,7 +204,12 @@ func (h *Handler) serve(w http.ResponseWriter, r *http.Request) requestResult {
 	bodyBytes := len(raw)
 
 	if !h.verify(provider, r.Header, raw) {
-		writeError(w, http.StatusForbidden, "webhook.invalid_signature")
+		message := "webhook.invalid_signature"
+		if h.secretFor(provider) == "" {
+			message = "webhook.signature_not_configured"
+		}
+
+		writeError(w, http.StatusForbidden, message)
 		return requestResult{status: http.StatusForbidden, provider: provider, bodyBytes: bodyBytes}
 	}
 
@@ -226,15 +237,35 @@ func (h *Handler) serve(w http.ResponseWriter, r *http.Request) requestResult {
 	return requestResult{status: status, provider: provider, bodyBytes: bodyBytes}
 }
 
-// Healthz handles GET /healthz.
+// Healthz handles GET /healthz. It reports degraded when signing is neither
+// configured nor explicitly disabled, so orchestration can surface the unsafe
+// configuration instead of silently accepting unsigned calls.
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
+	if !h.allowUnsigned && !h.hasAnySecret() {
+		writeError(w, http.StatusServiceUnavailable, "webhook.signature_not_configured")
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(`{"status":"ok"}`))
 }
 
-// verify applies the provider-specific check; an empty secret disables it.
+// verify applies the provider-specific check. A provider with no configured
+// secret fails closed unless the explicit development escape hatch is enabled.
 func (h *Handler) verify(provider string, header http.Header, body []byte) bool {
+	if h.secretFor(provider) == "" {
+		if h.allowUnsigned {
+			h.logger.Warn("webhook signature verification disabled",
+				"provider", provider,
+				"reason", "no signing secret configured and WEBHOOK_ALLOW_UNSIGNED=true",
+			)
+			return true
+		}
+
+		return false
+	}
+
 	switch provider {
 	case ProviderGitLab:
 		return verifyGitLabToken(h.gitLabSecret, header.Get("X-Gitlab-Token"))
@@ -267,6 +298,47 @@ func (h *Handler) verify(provider string, header http.Header, body []byte) bool 
 	default:
 		return false
 	}
+}
+
+// secretFor returns the configured signing secret for a provider.
+func (h *Handler) secretFor(provider string) string {
+	switch provider {
+	case ProviderGitLab:
+		return h.gitLabSecret
+	case ProviderGitHub:
+		return h.gitHubSecret
+	case ProviderGitea:
+		return h.giteaSecret
+	case ProviderForgejo:
+		return h.forgejoSecret
+	case ProviderGitflic:
+		return h.gitflicSecret
+	case ProviderGitverse:
+		return h.gitverseSecret
+	case ProviderBitbucket:
+		return h.bitbucketSecret
+	default:
+		return ""
+	}
+}
+
+// hasAnySecret reports whether at least one provider signing secret is set.
+func (h *Handler) hasAnySecret() bool {
+	for _, provider := range []string{
+		ProviderGitLab,
+		ProviderGitHub,
+		ProviderGitea,
+		ProviderForgejo,
+		ProviderGitflic,
+		ProviderGitverse,
+		ProviderBitbucket,
+	} {
+		if h.secretFor(provider) != "" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // detectProvider derives the provider from provider-specific headers. Gitea and

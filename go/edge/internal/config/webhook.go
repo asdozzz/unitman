@@ -31,14 +31,31 @@ type WebhookConfig struct {
 	GitverseSecret  string
 	BitbucketSecret string
 
+	// AllowUnsigned disables signature verification for providers without a
+	// secret. It is only honored when APP_ENV is dev/local/test and must be
+	// requested explicitly via WEBHOOK_ALLOW_UNSIGNED=true.
+	AllowUnsigned bool
+
 	RateLimitPerSecond int
+}
+
+// hasAnySecret reports whether at least one provider signing secret is set.
+func (c WebhookConfig) hasAnySecret() bool {
+	return c.GitLabSecret != "" ||
+		c.GitHubSecret != "" ||
+		c.GiteaSecret != "" ||
+		c.ForgejoSecret != "" ||
+		c.GitflicSecret != "" ||
+		c.GitverseSecret != "" ||
+		c.BitbucketSecret != ""
 }
 
 // LoadWebhook reads the webhook ingress configuration from the environment.
 //
 // PHP_WEBHOOK_BASE_URL points at the Symfony HTTP worker (for example
-// http://web:8080) and is the only required value. Signing secrets are
-// optional: an empty secret disables the corresponding provider check.
+// http://web:8080). At least one provider signing secret is required unless the
+// explicit WEBHOOK_ALLOW_UNSIGNED=true development escape hatch is set, which is
+// only honored when APP_ENV is dev, development, local or test.
 func LoadWebhook() (WebhookConfig, error) {
 	cfg := WebhookConfig{
 		ListenAddr:         getenv("WEBHOOK_LISTEN_ADDR", "0.0.0.0:8084"),
@@ -65,6 +82,32 @@ func LoadWebhook() (WebhookConfig, error) {
 		return WebhookConfig{}, err
 	}
 	cfg.RateLimitPerSecond = rateLimit
+
+	allowUnsigned, err := boolEnv("WEBHOOK_ALLOW_UNSIGNED", false)
+	if err != nil {
+		return WebhookConfig{}, err
+	}
+	cfg.AllowUnsigned = allowUnsigned
+
+	if cfg.AllowUnsigned {
+		switch strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV"))) {
+		case "dev", "development", "local", "test":
+		default:
+			return WebhookConfig{}, fmt.Errorf(
+				"WEBHOOK_ALLOW_UNSIGNED is only allowed when APP_ENV is dev/local/test (got %q)",
+				os.Getenv("APP_ENV"),
+			)
+		}
+	}
+
+	if !cfg.AllowUnsigned && !cfg.hasAnySecret() {
+		return WebhookConfig{}, fmt.Errorf(
+			"no webhook signing secret configured: set at least one of " +
+				"GITLAB_WEBHOOK_SECRET, GITHUB_WEBHOOK_SECRET, GITEA_WEBHOOK_SECRET, " +
+				"FORGEJO_WEBHOOK_SECRET, GITFLIC_WEBHOOK_SECRET, GITVERSE_WEBHOOK_SECRET, " +
+				"BITBUCKET_WEBHOOK_SECRET or explicitly set WEBHOOK_ALLOW_UNSIGNED=true in development",
+		)
+	}
 
 	if cfg.PHPBaseURL == "" {
 		return WebhookConfig{}, fmt.Errorf("PHP_WEBHOOK_BASE_URL is required")

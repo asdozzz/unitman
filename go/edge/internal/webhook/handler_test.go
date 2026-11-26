@@ -147,7 +147,7 @@ func TestGitLabTokenVerification(t *testing.T) {
 		{name: "valid token", secret: "test", token: "test", wantStatus: http.StatusOK, wantUpstream: 1},
 		{name: "invalid token", secret: "test", token: "other", wantStatus: http.StatusForbidden, wantUpstream: 0},
 		{name: "missing token", secret: "test", token: "", wantStatus: http.StatusForbidden, wantUpstream: 0},
-		{name: "empty secret bypass", secret: "", token: "", wantStatus: http.StatusOK, wantUpstream: 1},
+		{name: "empty secret fails closed", secret: "", token: "", wantStatus: http.StatusForbidden, wantUpstream: 0},
 	}
 
 	for _, test := range tests {
@@ -209,11 +209,11 @@ func TestGitHubSignatureVerification(t *testing.T) {
 			wantUpstream: 0,
 		},
 		{
-			name:         "empty secret bypass",
+			name:         "empty secret fails closed",
 			secret:       "",
 			signature:    func(string, []byte) string { return "" },
-			wantStatus:   http.StatusOK,
-			wantUpstream: 1,
+			wantStatus:   http.StatusForbidden,
+			wantUpstream: 0,
 		},
 	}
 
@@ -384,9 +384,12 @@ func TestProxyReturns502WhenPHPIsDown(t *testing.T) {
 	fakeURL := fake.server.URL
 	fake.server.Close()
 
-	server := newIngress(t, Options{PHPBaseURL: fakeURL})
+	server := newIngress(t, Options{PHPBaseURL: fakeURL, GitLabSecret: "test"})
 
-	status, payload := doHook(t, server, "5", []byte(`{}`), map[string]string{"X-Gitlab-Event": "Push Hook"})
+	status, payload := doHook(t, server, "5", []byte(`{}`), map[string]string{
+		"X-Gitlab-Event": "Push Hook",
+		"X-Gitlab-Token": "test",
+	})
 
 	if status != http.StatusBadGateway {
 		t.Fatalf("status = %d, want %d", status, http.StatusBadGateway)
@@ -405,6 +408,7 @@ func TestRateLimiterRejectsBurstAndCanBeDisabled(t *testing.T) {
 		fake := newUpstream(t)
 		server := newIngress(t, Options{
 			PHPBaseURL:         fake.server.URL,
+			AllowUnsigned:      true,
 			RateLimitPerSecond: 2,
 			Now:                clock,
 		})
@@ -428,6 +432,7 @@ func TestRateLimiterRejectsBurstAndCanBeDisabled(t *testing.T) {
 		fake := newUpstream(t)
 		server := newIngress(t, Options{
 			PHPBaseURL:         fake.server.URL,
+			AllowUnsigned:      true,
 			RateLimitPerSecond: 0,
 			Now:                clock,
 		})
@@ -447,8 +452,105 @@ func TestRateLimiterRejectsBurstAndCanBeDisabled(t *testing.T) {
 	})
 }
 
+func TestWebhookSignatureMatrix(t *testing.T) {
+	body := []byte(`{"ref":"refs/heads/main"}`)
+
+	tests := []struct {
+		name          string
+		secret        string
+		allowUnsigned bool
+		signature     string
+		wantStatus    int
+		wantUpstream  int
+		wantBody      string
+	}{
+		{
+			name:          "no secret and flag off is rejected",
+			secret:        "",
+			allowUnsigned: false,
+			signature:     "",
+			wantStatus:    http.StatusForbidden,
+			wantUpstream:  0,
+			wantBody:      "webhook.signature_not_configured",
+		},
+		{
+			name:          "no secret and explicit flag on is allowed",
+			secret:        "",
+			allowUnsigned: true,
+			signature:     "",
+			wantStatus:    http.StatusOK,
+			wantUpstream:  1,
+		},
+		{
+			name:          "wrong signature is rejected",
+			secret:        "github-secret",
+			allowUnsigned: false,
+			signature:     signGitHub("a-different-secret", body),
+			wantStatus:    http.StatusForbidden,
+			wantUpstream:  0,
+			wantBody:      "webhook.invalid_signature",
+		},
+		{
+			name:          "correct signature is accepted",
+			secret:        "github-secret",
+			allowUnsigned: false,
+			signature:     signGitHub("github-secret", body),
+			wantStatus:    http.StatusOK,
+			wantUpstream:  1,
+		},
+		{
+			name:          "malformed signature header is rejected",
+			secret:        "github-secret",
+			allowUnsigned: false,
+			signature:     "sha256=not-hex",
+			wantStatus:    http.StatusForbidden,
+			wantUpstream:  0,
+			wantBody:      "webhook.invalid_signature",
+		},
+		{
+			name:          "malformed empty-encoding signature is rejected",
+			secret:        "github-secret",
+			allowUnsigned: false,
+			signature:     "sha256=",
+			wantStatus:    http.StatusForbidden,
+			wantUpstream:  0,
+			wantBody:      "webhook.invalid_signature",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fake := newUpstream(t)
+			server := newIngress(t, Options{
+				PHPBaseURL:    fake.server.URL,
+				GitHubSecret:  test.secret,
+				AllowUnsigned: test.allowUnsigned,
+			})
+
+			headers := map[string]string{"X-GitHub-Event": "push"}
+			if test.signature != "" {
+				headers["X-Hub-Signature-256"] = test.signature
+			}
+
+			status, payload := doHook(t, server, "42", body, headers)
+
+			if status != test.wantStatus {
+				t.Fatalf("status = %d, want %d", status, test.wantStatus)
+			}
+
+			if got := fake.count(); got != test.wantUpstream {
+				t.Fatalf("upstream calls = %d, want %d", got, test.wantUpstream)
+			}
+
+			if test.wantBody != "" && !strings.Contains(string(payload), test.wantBody) {
+				t.Fatalf("payload = %s, want %q", payload, test.wantBody)
+			}
+		})
+	}
+}
+
 func TestHealthz(t *testing.T) {
-	server := newIngress(t, Options{PHPBaseURL: "http://127.0.0.1:1"})
+	server := newIngress(t, Options{PHPBaseURL: "http://127.0.0.1:1", GitLabSecret: "test"})
 
 	response, err := http.Get(server.URL + "/healthz")
 	if err != nil {
@@ -466,5 +568,21 @@ func TestHealthz(t *testing.T) {
 
 	if !strings.Contains(string(payload), `"status":"ok"`) {
 		t.Fatalf("payload = %s, want status ok", payload)
+	}
+}
+
+func TestHealthzReportsUnconfiguredSigning(t *testing.T) {
+	server := newIngress(t, Options{PHPBaseURL: "http://127.0.0.1:1"})
+
+	response, err := http.Get(server.URL + "/healthz")
+	if err != nil {
+		t.Fatalf("perform request: %v", err)
+	}
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	if response.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusServiceUnavailable)
 	}
 }

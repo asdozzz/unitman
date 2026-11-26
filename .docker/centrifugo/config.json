@@ -1,17 +1,10 @@
 {
-  "admin": true,
-  "api_key": "secret",
-  "admin_password": "asd",
-  "admin_secret": "admin_secret",
-  "allowed_origins": [
-    "*"
-  ],
+  "allowed_origins": ["__CENTRIFUGO_ALLOWED_ORIGINS__"],
   "allow_subscribe_for_client": true,
-  "allow_anonymous_connect_without_token": true,
-  "allow_publish_for_client": true,
-  "allow_publish_for_subscriber": true,
-  "allow_presence_for_subscriber":true,
+  "allow_publish_for_client": false,
+  "allow_publish_for_subscriber": false,
+  "allow_presence_for_subscriber": true,
   "allow_presence_for_client": true,
-  "force_push_join_leave": true,
-  "allow_subscribe_for_anonymous": true
+  "allow_anonymous_connect_without_token": false,
+  "force_push_join_leave": true
 }

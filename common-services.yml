@@ -174,8 +174,14 @@ services:
     expose:
       - '8084'
     environment:
+      # APP_ENV gates the WEBHOOK_ALLOW_UNSIGNED escape hatch: it is only
+      # honored for dev/local/test, never in production.
+      - "APP_ENV=${APP_ENV:-dev}"
       - "PHP_WEBHOOK_BASE_URL=${PHP_WEBHOOK_BASE_URL:-http://web:8080}"
       - "WEBHOOK_MAX_BYTES=5242880"
+      # Explicit development escape hatch; empty/absent signing secrets are
+      # rejected with 403 unless this is literally "true" and APP_ENV is dev.
+      - "WEBHOOK_ALLOW_UNSIGNED=${WEBHOOK_ALLOW_UNSIGNED:-false}"
       - "GITLAB_WEBHOOK_SECRET=${GITLAB_WEBHOOK_SECRET:-}"
       - "GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET:-}"
       - "GITEA_WEBHOOK_SECRET=${GITEA_WEBHOOK_SECRET:-}"
@@ -263,10 +269,19 @@ services:
     container_name: centrifugo
     image: centrifugo/centrifugo:v5
     volumes:
-      - ./.docker/centrifugo/config.json:/centrifugo/config.json
-    command: centrifugo -c config.json
+      - ./.docker/centrifugo/config.json:/centrifugo/config.json:ro
+      - ./.docker/centrifugo/entrypoint.sh:/centrifugo-entrypoint.sh:ro
+    # Renders the origin allowlist and fails closed when secrets/origins are
+    # missing; secrets come from the environment, not the config file.
+    entrypoint: ["/bin/sh", "/centrifugo-entrypoint.sh"]
+    command: ["-c", "/tmp/centrifugo.json"]
+    environment:
+      - "UNITMAN_CENTRIFUGO_SECRET=${CENTRIFUGO_SECRET:-}"
+      - "UNITMAN_CENTRIFUGO_API_KEY=${CENTRIFUGO_API_KEY:-}"
+      - "UNITMAN_CENTRIFUGO_ALLOWED_ORIGINS=${CENTRIFUGO_ALLOWED_ORIGINS:-http://localhost:3000}"
     ports:
-      - ${UNITMAN_CENTRIFUGO_PORT:-8000}:8000
+      # Loopback by default; set CENTRIFUGO_BIND_HOST=0.0.0.0 explicitly.
+      - "${CENTRIFUGO_BIND_HOST:-127.0.0.1}:${UNITMAN_CENTRIFUGO_PORT:-8000}:8000"
     ulimits:
       nofile:
         soft: 65535
@@ -342,8 +357,9 @@ services:
       # Автоматическое создание бакета при первом запуске (можно указать несколько через запятую)
       - MINIO_DEFAULT_BUCKETS=${MEDIATEKA_BUCKET}
     ports:
-      - "${MINIO_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      # Loopback by default; opt in to external exposure explicitly.
+      - "${MINIO_BIND_HOST:-127.0.0.1}:${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_BIND_HOST:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - ./var/volume/minio:/data
     healthcheck:

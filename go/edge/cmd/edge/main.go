@@ -193,6 +193,13 @@ func runWebhook() error {
 
 	logger := logging.NewLogger(os.Stderr)
 
+	if cfg.AllowUnsigned {
+		logger.Warn("SECURITY WARNING: webhook signature verification is disabled",
+			"reason", "WEBHOOK_ALLOW_UNSIGNED=true",
+			"app_env", os.Getenv("APP_ENV"),
+		)
+	}
+
 	handler, err := webhook.NewHandler(webhook.Options{
 		PHPBaseURL:         cfg.PHPBaseURL,
 		MaxBytes:           cfg.MaxBytes,
@@ -203,6 +210,7 @@ func runWebhook() error {
 		GitflicSecret:      cfg.GitflicSecret,
 		GitverseSecret:     cfg.GitverseSecret,
 		BitbucketSecret:    cfg.BitbucketSecret,
+		AllowUnsigned:      cfg.AllowUnsigned,
 		RateLimitPerSecond: cfg.RateLimitPerSecond,
 		Logger:             logger,
 	})
@@ -234,6 +242,7 @@ func runWebhook() error {
 		"gitflic_secret_enabled", cfg.GitflicSecret != "",
 		"gitverse_secret_enabled", cfg.GitverseSecret != "",
 		"bitbucket_secret_enabled", cfg.BitbucketSecret != "",
+		"allow_unsigned", cfg.AllowUnsigned,
 		"rate_limit_per_second", cfg.RateLimitPerSecond,
 	)
 

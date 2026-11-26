@@ -36,8 +36,17 @@ func TestGiteaSignatureVerification(t *testing.T) {
 		t.Fatalf("build handler: %v", err)
 	}
 
-	if !empty.verify(ProviderGitea, http.Header{}, body) {
-		t.Fatal("empty secret must disable the check")
+	if empty.verify(ProviderGitea, http.Header{}, body) {
+		t.Fatal("empty secret must fail closed by default")
+	}
+
+	unsigned, err := NewHandler(Options{PHPBaseURL: "http://php:8080", AllowUnsigned: true})
+	if err != nil {
+		t.Fatalf("build handler: %v", err)
+	}
+
+	if !unsigned.verify(ProviderGitea, http.Header{}, body) {
+		t.Fatal("empty secret with AllowUnsigned must be permitted")
 	}
 }
 
