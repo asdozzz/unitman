@@ -46,3 +46,47 @@ jobs:
 
       - name: Run dependency-free scanner
         run: scripts/check-secrets.sh
+
+  contracts:
+    name: no-credentials contracts (LT-4)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout unitman
+        uses: actions/checkout@v4
+        with:
+          path: unitman
+
+      - name: Checkout unitman-front (AI manifest)
+        uses: actions/checkout@v4
+        with:
+          repository: asdozzz/unitman-front
+          path: unitman-front
+          # Для приватного front-репозитория нужен PAT/read-token.
+          token: ${{ secrets.UNITMAN_FRONT_READ_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Contract check (OpenAPI + AI manifest)
+        working-directory: unitman
+        run: >
+          php scripts/check-no-credentials-in-contracts.php
+          --openapi=docs/openapi.json
+          --ai-manifest=../unitman-front/src/modules/ai-chat/generated/openapi.tools.json
+
+      - name: Self-test (synthetic violation must be detected)
+        working-directory: unitman
+        run: >
+          php scripts/check-no-credentials-in-contracts.php --self-test
+          --openapi=docs/openapi.json
+          --ai-manifest=../unitman-front/src/modules/ai-chat/generated/openapi.tools.json
+
+  # LT-3 authorization matrix (ReadEndpointsAuthorizationMatrixTest) и runtime
+  # LT-4 scan требуют PostgreSQL и .env.test (см. phpunit.xml.dist). В этом
+  # workflow инфраструктура приложения не поднимается, поэтому матрица
+  # запускается в среде с docker-compose:
+  #   make up && docker exec <web> vendor/bin/phpunit --filter ReadEndpointsAuthorizationMatrixTest
+  # Non-DB контрактный сторож (contracts) выполняется всегда.

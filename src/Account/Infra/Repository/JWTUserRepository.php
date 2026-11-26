@@ -261,7 +261,6 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             $row['email'],
             $row['is_blocked'],
             $row['roles'],
-            $row['password'],
             $row['nickname'],
             (bool) ($row['is_pending_activation'] ?? false),
             (bool) ($row['is_email_verified'] ?? true),

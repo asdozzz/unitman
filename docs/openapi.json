@@ -14493,7 +14493,6 @@
                     "email",
                     "isBlocked",
                     "roles",
-                    "password",
                     "nickname",
                     "pendingActivation",
                     "emailVerified"
@@ -14510,9 +14509,6 @@
                         "type": "boolean"
                     },
                     "roles": {
-                        "type": "string"
-                    },
-                    "password": {
                         "type": "string"
                     },
                     "nickname": {

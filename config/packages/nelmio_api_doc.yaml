@@ -2770,7 +2770,7 @@ nelmio_api_doc:
                 ManagedAccount:
                     type: object
                     description: Аккаунт для администрирования (AccountForManaging)
-                    required: [id, email, isBlocked, roles, password, nickname, pendingActivation, emailVerified]
+                    required: [id, email, isBlocked, roles, nickname, pendingActivation, emailVerified]
                     properties:
                         id:
                             type: string
@@ -2780,8 +2780,6 @@ nelmio_api_doc:
                         isBlocked:
                             type: boolean
                         roles:
-                            type: string
-                        password:
                             type: string
                         nickname:
                             type: string
