@@ -49,6 +49,8 @@ return [
         ],
         'refresh_token' => [
             'empty' => 'The refresh token is missing',
+            'missing' => 'The refresh session is missing',
+            'invalid' => 'The refresh session is invalid or expired',
             'empty_hash' => 'The refresh token hash is empty',
             'empty_account_id' => 'The refresh token account is missing',
             'invalid_expires_at' => 'The refresh token lifetime is invalid',
@@ -56,6 +58,10 @@ return [
             'revoked' => 'The refresh token was revoked',
             'already_revoked' => 'The refresh token is already revoked',
             'expired' => 'The refresh token has expired',
+        ],
+        'cookie_auth' => [
+            'header_required' => 'The request is missing the required X-Requested-With header',
+            'origin_denied' => 'The request origin is not allowed',
         ],
         'access_token' => [
             'invalid_payload' => 'Unable to issue an access token',

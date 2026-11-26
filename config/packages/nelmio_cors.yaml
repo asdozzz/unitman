@@ -1,14 +1,20 @@
 nelmio_cors:
     defaults:
+        # CORS_ALLOW_ORIGIN — список точных origin через запятую. Кастомный
+        # env-процессор `cors_allowlist` превращает его в anchored regex,
+        # поэтому wildcard и подстрочные совпадения невозможны.
         origin_regex: true
-        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+        allow_credentials: true
+        allow_origin: ['%env(cors_allowlist:CORS_ALLOW_ORIGIN)%']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
-        allow_headers: ['Content-Type', 'Authorization']
+        allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With']
         expose_headers: ['Link']
         max_age: 3600
     paths:
         '^/api/':
-            allow_origin: [ '*' ]
-            allow_headers: [ '*' ]
-            allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE' ]
+            origin_regex: true
+            allow_credentials: true
+            allow_origin: ['%env(cors_allowlist:CORS_ALLOW_ORIGIN)%']
+            allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With']
+            allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
             max_age: 3600

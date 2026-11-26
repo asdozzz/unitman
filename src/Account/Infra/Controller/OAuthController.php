@@ -9,6 +9,7 @@ use App\Account\Business\UseCase\NachatOAuthAvtorizaciyuUseCase;
 use App\Account\Business\UseCase\ObmenyatOAuthKodUseCase;
 use App\Account\Business\UseCase\PoluchitOAuthProvayderyQuery;
 use App\Account\Business\UseCase\ZavershitOAuthAvtorizaciyuUseCase;
+use App\Account\Infra\Http\RefreshTokenCookie;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -19,8 +20,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/oauth')]
 final class OAuthController extends AbstractController
 {
-    public function __construct(private readonly string $oauthFrontendUrl)
-    {
+    public function __construct(
+        private readonly string $oauthFrontendUrl,
+        private readonly RefreshTokenCookie $refreshTokenCookie,
+    ) {
     }
 
     #[OA\Get(
@@ -136,11 +139,15 @@ final class OAuthController extends AbstractController
     {
         $result = $useCase->handle($command);
 
-        return $this->json(\App\Utils\Model\Reponse\Response::success([
+        $response = $this->json(\App\Utils\Model\Reponse\Response::success([
             'token' => $result->token,
-            'refreshToken' => $result->refreshToken,
             'user' => $result->user,
         ]));
+
+        // Refresh-токен доставляется только HttpOnly cookie, не в JSON.
+        $response->headers->setCookie($this->refreshTokenCookie->create($result->refreshToken));
+
+        return $response;
     }
 
     private function errorRedirect(string $error): RedirectResponse

@@ -27,6 +27,7 @@ use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
 use App\Account\Business\UseCase\ChangeRoleByAdminUseCase;
 use App\Account\Business\UseCase\ObnovitTokenUseCase;
+use App\Account\Business\UseCase\OtzyvRefreshTokenUseCase;
 use App\Account\Business\UseCase\PoluchitMoiStatusQuery;
 use App\Account\Business\UseCase\PoluchitNastroikiAccountaUseCase;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery;
@@ -36,8 +37,11 @@ use App\Account\Business\UseCase\RegisterPendingAccountUseCase;
 use App\Account\Business\UseCase\ResendEmailVerificationCodeUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
 use App\Account\Business\UseCase\VerifyEmailUseCase;
+use App\Account\Infra\Http\CookieAuthRequestGuard;
+use App\Account\Infra\Http\RefreshTokenCookie;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -433,28 +437,23 @@ final class AccountController extends AbstractController
 
     #[OA\Post(
         path: '/api/account/refreshToken',
-        summary: 'Обновить пару токенов по refresh-токену',
+        summary: 'Обновить access-токен по HttpOnly refresh-cookie',
         tags: ['Account'],
-        description: 'Публичный эндпоинт. Refresh-токен одноразовый: после успешного обновления старый отзывается.',
+        description: 'Публичный эндпоинт. Refresh-токен читается из HttpOnly cookie, ротируется и возвращается только обновлённой cookie. Requires Origin allowlist + X-Requested-With.',
         security: [],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/ObnovitToken')
-        ),
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Новая пара токенов',
+                description: 'Новый access-токен в теле; новый refresh-токен — в HttpOnly cookie',
                 content: new OA\JsonContent(
                     required: ['status', 'data'],
                     properties: [
                         new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
                         new OA\Property(
                             property: 'data',
-                            required: ['token', 'refreshToken'],
+                            required: ['token'],
                             properties: [
                                 new OA\Property(property: 'token', type: 'string', example: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...'),
-                                new OA\Property(property: 'refreshToken', type: 'string', example: 'a1b2c3...'),
                             ],
                             type: 'object'
                         ),
@@ -462,17 +461,83 @@ final class AccountController extends AbstractController
                     type: 'object'
                 )
             ),
-            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+            new OA\Response(response: 401, description: 'Cookie отсутствует, просрочена или отозвана'),
+            new OA\Response(response: 403, description: 'CSRF-проверка Origin/X-Requested-With не пройдена'),
         ]
     )]
     #[Route('/refreshToken', methods: ['POST'])]
-    function refreshToken(ObnovitToken $command, ObnovitTokenUseCase $useCase): Response
-    {
-        $result = $useCase->handle($command);
-        return $this->json(\App\Utils\Model\Reponse\Response::success([
+    function refreshToken(
+        Request $request,
+        CookieAuthRequestGuard $guard,
+        RefreshTokenCookie $refreshTokenCookie,
+        ObnovitTokenUseCase $useCase,
+    ): Response {
+        $guard->assertAllowed($request);
+
+        $refreshToken = $request->cookies->get(RefreshTokenCookie::NAME);
+        $refreshToken = is_string($refreshToken) ? $refreshToken : '';
+
+        if ($refreshToken === '') {
+            $response = $this->json(
+                \App\Utils\Model\Reponse\Response::fail(['message' => 'account.refresh_token.missing']),
+                Response::HTTP_UNAUTHORIZED,
+            );
+            $response->headers->setCookie($refreshTokenCookie->clear());
+
+            return $response;
+        }
+
+        try {
+            $result = $useCase->handle(new ObnovitToken($refreshToken));
+        } catch (\DomainException) {
+            // Не раскрываем причину (not_found/expired/revoked) и не логируем cookie.
+            $response = $this->json(
+                \App\Utils\Model\Reponse\Response::fail(['message' => 'account.refresh_token.invalid']),
+                Response::HTTP_UNAUTHORIZED,
+            );
+            $response->headers->setCookie($refreshTokenCookie->clear());
+
+            return $response;
+        }
+
+        $response = $this->json(\App\Utils\Model\Reponse\Response::success([
             'token' => $result->token,
-            'refreshToken' => $result->refreshToken,
         ]));
+        $response->headers->setCookie($refreshTokenCookie->create($result->refreshToken));
+
+        return $response;
+    }
+
+    #[OA\Post(
+        path: '/api/account/logout',
+        summary: 'Завершить сессию: отозвать refresh-токен и очистить cookie',
+        tags: ['Account'],
+        description: 'Публичный эндпоинт. Требует Origin allowlist + X-Requested-With. Всегда очищает cookie.',
+        security: [],
+        responses: [
+            new OA\Response(response: 200, description: 'Сессия завершена'),
+            new OA\Response(response: 403, description: 'CSRF-проверка Origin/X-Requested-With не пройдена'),
+        ]
+    )]
+    #[Route('/logout', methods: ['POST'])]
+    function logout(
+        Request $request,
+        CookieAuthRequestGuard $guard,
+        RefreshTokenCookie $refreshTokenCookie,
+        OtzyvRefreshTokenUseCase $otzyvRefreshTokenUseCase,
+    ): Response {
+        $guard->assertAllowed($request);
+
+        $refreshToken = $request->cookies->get(RefreshTokenCookie::NAME);
+        $refreshToken = is_string($refreshToken) ? $refreshToken : '';
+
+        // Отзыв best-effort: неизвестный/просроченный токен не мешает logout.
+        $otzyvRefreshTokenUseCase->handle($refreshToken);
+
+        $response = $this->json(\App\Utils\Model\Reponse\Response::successStub());
+        $response->headers->setCookie($refreshTokenCookie->clear());
+
+        return $response;
     }
 
     #[OA\Get(

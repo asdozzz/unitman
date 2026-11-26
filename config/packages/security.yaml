@@ -44,6 +44,9 @@ security:
         - { path: ^/api/runner/health$, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/unitStateNotifications$, roles: PUBLIC_ACCESS }
         - { path: ^/api/account/refreshToken$, roles: PUBLIC_ACCESS }
+        # Logout аутентифицируется HttpOnly cookie, а не JWT; CSRF проверяется
+        # в контроллере (Origin allowlist + X-Requested-With).
+        - { path: ^/api/account/logout$, roles: PUBLIC_ACCESS }
         # Саморегистрация публична: аккаунт создаётся неподтверждённым.
         - { path: ^/api/account/requestRegistration$, roles: PUBLIC_ACCESS }
         # Подтверждение email и повторная отправка кода доступны до входа.

@@ -5,14 +5,17 @@ namespace App\Account\Infra\EventListener;
 use App\Account\Business\Model\Account\Role;
 use App\Account\Business\Model\JWTUser;
 use App\Account\Business\UseCase\VipustitRefreshTokenUseCase;
+use App\Account\Infra\Http\RefreshTokenCookie;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 #[AsEventListener(event: 'lexik_jwt_authentication.on_authentication_success')]
 final class AuthenticationSuccessListener
 {
-    public function __construct(private VipustitRefreshTokenUseCase $vipustitRefreshTokenUseCase)
-    {
+    public function __construct(
+        private VipustitRefreshTokenUseCase $vipustitRefreshTokenUseCase,
+        private RefreshTokenCookie $refreshTokenCookie,
+    ) {
     }
 
     function __invoke(AuthenticationSuccessEvent $event)
@@ -36,7 +39,10 @@ final class AuthenticationSuccessListener
             'activationPending' => $user->isPendingActivation(),
             'emailVerified' => $user->isEmailVerified(),
         );
-        $data['refreshToken'] = $this->vipustitRefreshTokenUseCase->handle($user->getId());
+
+        // Refresh-токен доставляется только HttpOnly cookie. В JSON его нет.
+        $refreshToken = $this->vipustitRefreshTokenUseCase->handle($user->getId());
+        $event->getResponse()->headers->setCookie($this->refreshTokenCookie->create($refreshToken));
 
         $event->setData($data);
     }

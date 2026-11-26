@@ -63,6 +63,10 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return function (ContainerConfigurator $configuration) {
+    // Secure-флаг refresh-cookie по умолчанию включён. Dev-override задаётся
+    // только явной переменной COOKIE_SECURE=false (см. .env.dist).
+    $configuration->parameters()->set('refresh_token_cookie_secure', true);
+
     $services = $configuration->services()
         ->defaults()
         ->autowire()
@@ -70,6 +74,8 @@ return function (ContainerConfigurator $configuration) {
         ->bind('$appEnv','%env(APP_ENV)%')
         ->bind('$defaultLocale','%env(ACCOUNT_DEFAULT_LOCALE)%')
         ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%')
+        ->bind('$refreshTokenCookieSecure','%env(default:refresh_token_cookie_secure:bool:COOKIE_SECURE)%')
+        ->bind('$allowedOrigins','%env(csv:CORS_ALLOW_ORIGIN)%')
         ->bind('$openCodeCredentialsKey','%env(OPENCODE_CREDENTIALS_KEY)%')
         ->bind('$mailerFromAddress','%env(MAILER_FROM_ADDRESS)%')
         ->bind('$mailerFromName','%env(MAILER_FROM_NAME)%')

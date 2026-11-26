@@ -46,6 +46,8 @@ return [
         ],
         'refresh_token' => [
             'empty' => 'Refresh-токен не передан',
+            'missing' => 'Refresh-сессия отсутствует',
+            'invalid' => 'Refresh-сессия недействительна или истекла',
             'empty_hash' => 'Пустой хеш refresh-токена',
             'empty_account_id' => 'Не указан аккаунт для refresh-токена',
             'invalid_expires_at' => 'Некорректное время жизни refresh-токена',
@@ -53,6 +55,10 @@ return [
             'revoked' => 'Refresh-токен отозван',
             'already_revoked' => 'Refresh-токен уже отозван',
             'expired' => 'Refresh-токен истёк',
+        ],
+        'cookie_auth' => [
+            'header_required' => 'В запросе отсутствует обязательный заголовок X-Requested-With',
+            'origin_denied' => 'Origin запроса не разрешён',
         ],
         'access_token' => [
             'invalid_payload' => 'Не удалось выпустить access-токен',
