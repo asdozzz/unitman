@@ -2709,8 +2709,8 @@ nelmio_api_doc:
                             type: integer
                 Repo:
                     type: object
-                    description: Репозиторий (RepoList)
-                    required: [id, type, name, repoUrl, token, confirmed]
+                    description: Репозиторий (RepoListItem) — публичное представление без учётных данных
+                    required: [id, type, name, repoUrl, tokenHint, confirmed]
                     properties:
                         id:
                             type: string
@@ -2723,8 +2723,9 @@ nelmio_api_doc:
                         repoUrl:
                             type: string
                             format: uri
-                        token:
+                        tokenHint:
                             type: string
+                            description: Последние 4 символа токена; пустая строка, если токен короче 8 символов. Необратим.
                         confirmed:
                             type: boolean
                 RepoType:

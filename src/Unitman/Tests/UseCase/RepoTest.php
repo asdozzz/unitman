@@ -12,7 +12,7 @@ use App\Unitman\Business\Model\RepoAdapter\CheckAccessResponse;
 use App\Unitman\Business\Port\CanGenerateGuid;
 use App\Unitman\Business\Port\Repo\CanCheckAccessToRepo;
 use App\Unitman\Business\Port\UnitmanSecurityService;
-use App\Unitman\Business\ReadModel\RepoList;
+use App\Unitman\Business\ReadModel\RepoListItem;
 use App\Unitman\Business\UseCase\Repo\AddRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\ChangeCredentialsOfRepoUseCase;
 use App\Unitman\Business\UseCase\Repo\CheckAccessToRepoUseCase;
@@ -101,15 +101,16 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         $query = self::$container->get(GetActiveRepoListQuery::class);
         /** @var $query GetActiveRepoListQuery*/
         $actualResultRaw = $query->handle($command);
-        $actualResult = array_filter($actualResultRaw, fn(RepoList $repo) => in_array($repo->id, [$repoId, $repoId2]));
+        $actualResult = array_filter($actualResultRaw, fn(RepoListItem $repo) => in_array($repo->id, [$repoId, $repoId2]));
         $actualResult = array_values($actualResult);
 
-        $readModel = new RepoList();
+        $readModel = new RepoListItem();
         $readModel->id = $repoId;
         $readModel->name = $repoName;
         $readModel->type = RepoType::GITLAB->value;
         $readModel->repoUrl = 'https://org@gitlab.ru';
-        $readModel->token = 'token';
+        // Токен 'token' короче 8 символов, поэтому публичный hint пуст.
+        $readModel->tokenHint = '';
         $readModel->confirmed = true;
 
         $expectedResult = [$readModel];

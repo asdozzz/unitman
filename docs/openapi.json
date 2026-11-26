@@ -7718,6 +7718,9 @@
           "401": {
             "description": "Не авторизован"
           },
+          "403": {
+            "description": "Доступ только для администратора"
+          },
           "500": {
             "description": "Ошибка обработки (FailEnvelope либо ErrorEnvelope)"
           }
@@ -7835,6 +7838,9 @@
           },
           "401": {
             "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Доступ только для администратора"
           },
           "500": {
             "description": "Ошибка обработки (FailEnvelope либо ErrorEnvelope)"
@@ -14268,13 +14274,13 @@
         "type": "object"
       },
       "Repo": {
-        "description": "Репозиторий (RepoList)",
+        "description": "Репозиторий (RepoListItem) — публичное представление без учётных данных",
         "required": [
           "id",
           "type",
           "name",
           "repoUrl",
-          "token",
+          "tokenHint",
           "confirmed"
         ],
         "properties": {
@@ -14293,7 +14299,8 @@
             "type": "string",
             "format": "uri"
           },
-          "token": {
+          "tokenHint": {
+            "description": "Последние 4 символа токена; пустая строка, если токен короче 8 символов. Необратим.",
             "type": "string"
           },
           "confirmed": {

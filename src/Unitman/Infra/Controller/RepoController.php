@@ -92,6 +92,7 @@ final class RepoController extends AbstractController
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 403, description: 'Доступ только для администратора'),
             new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
@@ -166,6 +167,7 @@ final class RepoController extends AbstractController
                 )
             ),
             new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 403, description: 'Доступ только для администратора'),
             new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
         ]
     )]
