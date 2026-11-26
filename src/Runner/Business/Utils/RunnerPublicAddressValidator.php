@@ -36,13 +36,13 @@ final class RunnerPublicAddressValidator
             throw $this->invalid();
         }
 
-        $scheme = strtolower((string) $parts['scheme']);
+        $scheme = strtolower($parts['scheme']);
 
         if (!in_array($scheme, ['http', 'https'], true)) {
             throw $this->invalid();
         }
 
-        if (trim((string) $parts['host']) === '') {
+        if (trim($parts['host']) === '') {
             throw $this->invalid();
         }
 

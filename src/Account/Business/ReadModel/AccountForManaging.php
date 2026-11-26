@@ -10,7 +10,9 @@ final class AccountForManaging
         public readonly bool $isBlocked,
         public readonly string $roles,
         public readonly string $password,
-        public readonly ?string $nickname = null
+        public readonly ?string $nickname = null,
+        public readonly bool $pendingActivation = false,
+        public readonly bool $emailVerified = true,
     )
     {
     }

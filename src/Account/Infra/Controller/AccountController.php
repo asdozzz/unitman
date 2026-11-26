@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Account\Infra\Controller;
+use App\Account\Business\Command\ActivateAccountByAdmin;
 use App\Account\Business\Command\BlockByAdmin;
 use App\Account\Business\Command\ChangeEmailByAdmin;
 use App\Account\Business\Command\ChangeMyLocale;
@@ -12,7 +13,11 @@ use App\Account\Business\Command\ChangeRoleByAdmin;
 use App\Account\Business\Command\ObnovitToken;
 use App\Account\Business\Command\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniya;
 use App\Account\Business\Command\RegisterAccount;
+use App\Account\Business\Command\RegisterPendingAccount;
+use App\Account\Business\Command\ResendEmailVerificationCode;
 use App\Account\Business\Command\UnblockByAdmin;
+use App\Account\Business\Command\VerifyEmail;
+use App\Account\Business\UseCase\ActivateAccountByAdminUseCase;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
 use App\Account\Business\UseCase\ChangeEmailByAdminUseCase;
 use App\Account\Business\UseCase\ChangeMyLocaleUseCase;
@@ -22,11 +27,15 @@ use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
 use App\Account\Business\UseCase\ChangeRoleByAdminUseCase;
 use App\Account\Business\UseCase\ObnovitTokenUseCase;
+use App\Account\Business\UseCase\PoluchitMoiStatusQuery;
 use App\Account\Business\UseCase\PoluchitNastroikiAccountaUseCase;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiDlyAdministrirovaniyaQuery;
 use App\Account\Business\UseCase\PoluchitSpisokVsehPolzovateleiQuery;
 use App\Account\Business\UseCase\RegisterAccountUseCase;
+use App\Account\Business\UseCase\RegisterPendingAccountUseCase;
+use App\Account\Business\UseCase\ResendEmailVerificationCodeUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
+use App\Account\Business\UseCase\VerifyEmailUseCase;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -491,5 +500,140 @@ final class AccountController extends AbstractController
     function poluchitNastroikiPolzovatelya(PoluchitNastroikiAccountaUseCase $useCase): Response
     {
         return $this->json(\App\Utils\Model\Reponse\Response::success($useCase->handle()));
+    }
+
+    #[OA\Post(
+        path: '/api/account/requestRegistration',
+        summary: 'Публичная заявка на регистрацию',
+        tags: ['Account'],
+        description: 'Создаёт неподтверждённый аккаунт и отправляет код на email. Доступ откроется после подтверждения email и активации администратором.',
+        security: [],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/RegisterPendingAccount')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Идентификатор созданного аккаунта',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/IdHolder'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/requestRegistration', methods: ['POST'])]
+    function requestRegistration(RegisterPendingAccount $command, RegisterPendingAccountUseCase $useCase): Response
+    {
+        $id = $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::success(['id' => $id]));
+    }
+
+    #[OA\Post(
+        path: '/api/account/verifyEmail',
+        summary: 'Подтвердить email кодом из письма',
+        tags: ['Account'],
+        security: [],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/VerifyEmail')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Email подтверждён'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/verifyEmail', methods: ['POST'])]
+    function verifyEmail(VerifyEmail $command, VerifyEmailUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[OA\Post(
+        path: '/api/account/resendEmailVerification',
+        summary: 'Повторно отправить код подтверждения email',
+        tags: ['Account'],
+        security: [],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ResendEmailVerification')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Код отправлен, если аккаунт существует и не подтверждён'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/resendEmailVerification', methods: ['POST'])]
+    function resendEmailVerification(ResendEmailVerificationCode $command, ResendEmailVerificationCodeUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[OA\Post(
+        path: '/api/account/activateByAdmin',
+        summary: 'Активировать аккаунт (администратор)',
+        tags: ['Account'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ActivateAccountByAdmin')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Пустой ответ: аккаунт активирован',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', type: 'null', description: 'Пустой ответ: аккаунт активирован'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/activateByAdmin', methods: ['POST'])]
+    function activateByAdmin(ActivateAccountByAdmin $command, ActivateAccountByAdminUseCase $useCase): Response
+    {
+        $useCase->handle($command);
+        return $this->json(\App\Utils\Model\Reponse\Response::successStub());
+    }
+
+    #[OA\Get(
+        path: '/api/account/myStatus',
+        summary: 'Статус активации текущего пользователя',
+        tags: ['Account'],
+        description: 'Доступен неактивированному пользователю: по нему фронтенд понимает, что аккаунт уже активирован.',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Статус активации и роли',
+                content: new OA\JsonContent(
+                    required: ['status', 'data'],
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', enum: ['success'], example: 'success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/AccountActivationStatus'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки (FailEnvelope либо ErrorEnvelope)'),
+        ]
+    )]
+    #[Route('/myStatus', methods: ['GET'])]
+    function myStatus(PoluchitMoiStatusQuery $query): Response
+    {
+        return $this->json(\App\Utils\Model\Reponse\Response::success($query->handle()));
     }
 }

@@ -66,7 +66,7 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
         $url = rtrim(trim($repoUrl), '/');
         $url = preg_replace('~/api$~i', '', $url) ?? $url;
 
-        $host = strtolower((string)(parse_url($url, PHP_URL_HOST) ?: ''));
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?: '');
         if ($host === 'api.gitverse.ru' || $host === 'www.gitverse.ru') {
             return self::SAAS_URL;
         }
@@ -212,8 +212,8 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
     public function getUrlForInitProject(Repo $repo, Project $project): string
     {
         $url = $this->poluchitUrlHranilisha($repo->getCredentials()->url);
-        $scheme = (string)(parse_url($url, PHP_URL_SCHEME) ?: 'https');
-        $host = (string)(parse_url($url, PHP_URL_HOST) ?: '');
+        $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'https';
+        $host = parse_url($url, PHP_URL_HOST) ?: '';
 
         if ($host === '') {
             throw new \RuntimeException('gitverse.url_invalid');
@@ -223,7 +223,7 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
         $prefix = $scheme.'://'.$repo->getCredentials()->token.'@'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
-        $path = trim((string)(parse_url($url, PHP_URL_PATH) ?: ''), '/');
+        $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');
         if ($path !== '') {
             $prefix .= '/'.$path;
         }
@@ -381,7 +381,7 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
     private function apiBase(Repo $repo): string
     {
         $url = $this->poluchitUrlHranilisha($repo->getCredentials()->url);
-        $host = strtolower((string)(parse_url($url, PHP_URL_HOST) ?: ''));
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?: '');
 
         if ($host === 'gitverse.ru' || $host === 'www.gitverse.ru') {
             return self::SAAS_API_URL;

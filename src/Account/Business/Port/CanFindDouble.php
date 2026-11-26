@@ -8,5 +8,5 @@ interface CanFindDouble
 
     public function isExistDoubleByNickname(string $id, string $nickname): bool;
 
-
+    public function findIdByEmail(string $email): ?string;
 }

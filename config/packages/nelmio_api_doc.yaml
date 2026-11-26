@@ -122,16 +122,13 @@ nelmio_api_doc:
                 # Nelmio читает атрибуты только с контроллера, поэтому DTO-схемы описаны здесь.
                 RegisterAccount:
                     type: object
-                    required: [email, password, roles, locale]
+                    description: 'Пароль не передаётся: система генерирует его и отправляет на email'
+                    required: [email, roles, locale]
                     properties:
                         email:
                             type: string
                             format: email
                             example: user@example.com
-                        password:
-                            type: string
-                            format: password
-                            example: secret
                         roles:
                             type: string
                             description: В коде объявлено строкой, а не массивом
@@ -143,6 +140,70 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             example: nickname
+                RegisterPendingAccount:
+                    type: object
+                    description: Публичная заявка на регистрацию; роль всегда ROLE_PENDING
+                    required: [email, password]
+                    properties:
+                        email:
+                            type: string
+                            format: email
+                            example: user@example.com
+                        password:
+                            type: string
+                            format: password
+                            example: secret
+                        locale:
+                            type: string
+                            example: ru
+                        nickname:
+                            type: string
+                            nullable: true
+                            example: nickname
+                VerifyEmail:
+                    type: object
+                    required: [email, code]
+                    properties:
+                        email:
+                            type: string
+                            format: email
+                            example: user@example.com
+                        code:
+                            type: string
+                            minLength: 6
+                            maxLength: 6
+                            example: '123456'
+                ResendEmailVerification:
+                    type: object
+                    required: [email]
+                    properties:
+                        email:
+                            type: string
+                            format: email
+                            example: user@example.com
+                OAuthExchange:
+                    type: object
+                    required: [code]
+                    properties:
+                        code:
+                            type: string
+                            description: Одноразовый код из callback-редиректа
+                OAuthProviderList:
+                    type: object
+                    required: [providers]
+                    properties:
+                        providers:
+                            type: array
+                            items:
+                                type: string
+                                enum: [google, github]
+                ActivateAccountByAdmin:
+                    type: object
+                    required: [accountId]
+                    properties:
+                        accountId:
+                            type: string
+                            format: uuid
                 ChangeEmailByAdmin:
                     type: object
                     required: [accountId, newEmail]
@@ -1188,6 +1249,25 @@ nelmio_api_doc:
                         locale:
                             type: string
                             example: ru
+                        activationPending:
+                            type: boolean
+                            description: Аккаунт ещё не активирован администратором
+                        emailVerified:
+                            type: boolean
+                            description: Email подтверждён кодом или OAuth-провайдером
+                AccountActivationStatus:
+                    type: object
+                    required: [activationPending, emailVerified, roles]
+                    properties:
+                        activationPending:
+                            type: boolean
+                        emailVerified:
+                            type: boolean
+                        roles:
+                            type: array
+                            items:
+                                type: string
+                            example: [ROLE_PENDING]
                 BlockByAdmin:
                     type: object
                     required: [accountId]
@@ -2705,7 +2785,7 @@ nelmio_api_doc:
                 AccountUser:
                     type: object
                     description: Пользователь (UserList)
-                    required: [id, email, isBlocked, nickname]
+                    required: [id, email, isBlocked, nickname, pendingActivation, emailVerified]
                     properties:
                         id:
                             type: string
@@ -2717,10 +2797,14 @@ nelmio_api_doc:
                         nickname:
                             type: string
                             nullable: true
+                        pendingActivation:
+                            type: boolean
+                        emailVerified:
+                            type: boolean
                 ManagedAccount:
                     type: object
                     description: Аккаунт для администрирования (AccountForManaging)
-                    required: [id, email, isBlocked, roles, password, nickname]
+                    required: [id, email, isBlocked, roles, password, nickname, pendingActivation, emailVerified]
                     properties:
                         id:
                             type: string
@@ -2736,6 +2820,10 @@ nelmio_api_doc:
                         nickname:
                             type: string
                             nullable: true
+                        pendingActivation:
+                            type: boolean
+                        emailVerified:
+                            type: boolean
                 AccountSettings:
                     type: object
                     description: Настройки пользователя (AccountSettingsReadModel)

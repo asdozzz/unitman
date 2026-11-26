@@ -65,7 +65,7 @@ final class OpenCodeCredentialTest extends AbstractTestCaseWithTransactionWrappe
         \assert($sut instanceof RegisterAccountUseCase);
 
         $accountId = $sut->handle(
-            new RegisterAccount(uniqid('opencode_', true) . '@asd.ru', 'asd', Role::ROLE_USER->value, 'ru')
+            new RegisterAccount(uniqid('opencode_', true) . '@asd.ru', Role::ROLE_USER->value, 'ru')
         );
 
         $this->assertNotEmpty($accountId);

@@ -21,7 +21,14 @@ return function (ContainerConfigurator $configuration) {
     ;
 
     $services->load('App\\Utils\\', './')
-        ->exclude(['./{di.php,di_test.php,routing.php,Tests}', './Model/', './EventSauce/', './Exception/'])
+        ->exclude([
+            './{di.php,di_test.php,routing.php,Tests}',
+            './Model/',
+            './EventSauce/',
+            './Exception/',
+            // Интеграционные события — DTO, а не сервисы: их создают модули.
+            './Event/',
+        ])
         ->public();
 
     $services->set(Serializer::class, Serializer::class)

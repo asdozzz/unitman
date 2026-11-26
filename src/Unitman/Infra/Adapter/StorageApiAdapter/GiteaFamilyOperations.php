@@ -156,8 +156,8 @@ trait GiteaFamilyOperations
     public function getUrlForInitProject(Repo $repo, Project $project): string
     {
         $url = $this->normalizovatUrl($repo->getCredentials()->url);
-        $scheme = (string)(parse_url($url, PHP_URL_SCHEME) ?: 'https');
-        $host = (string)(parse_url($url, PHP_URL_HOST) ?: '');
+        $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'https';
+        $host = parse_url($url, PHP_URL_HOST) ?: '';
 
         if ($host === '') {
             throw new \RuntimeException('gitea.url_invalid');
@@ -167,7 +167,7 @@ trait GiteaFamilyOperations
         $prefix = $scheme.'://'.$repo->getCredentials()->token.'@'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
-        $path = trim((string)(parse_url($url, PHP_URL_PATH) ?: ''), '/');
+        $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');
         if ($path !== '') {
             $prefix .= '/'.$path;
         }

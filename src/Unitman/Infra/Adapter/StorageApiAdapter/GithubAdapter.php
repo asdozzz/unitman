@@ -71,7 +71,9 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
         string $mainBranch,
     ): SostoyanieVetki {
         $client = $this->githubClientFactory->makeClient($repo);
-        [$login, $code] = explode('/', $projectCode, 2);
+        $parts = explode('/', $projectCode, 2);
+        $login = $parts[0];
+        $code = $parts[1] ?? '';
 
         try {
             $branchData = $client->repositories()->branches($login, $code, $branch);

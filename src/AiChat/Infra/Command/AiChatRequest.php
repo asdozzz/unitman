@@ -149,8 +149,8 @@ final class AiChatRequest
         }
 
         return new self(
-            array_values($messages),
-            array_values($tools),
+            $messages,
+            $tools,
             self::normalizeOptionalString($payload['model'] ?? null, self::MAX_MODEL_LENGTH),
             self::normalizeOptionalString($payload['credentialId'] ?? null, self::MAX_CREDENTIAL_ID_LENGTH),
             self::normalizeSessionId($payload['sessionId'] ?? null),

@@ -8,6 +8,7 @@ use App\Notification\Business\Command\SozdatUvedomlenie;
 use App\Notification\Business\Model\TipUvedomleniya;
 use App\Notification\Business\Model\UrovenVazhnosti;
 use App\Notification\Business\Port\UmeetPoluchatAdministratorov;
+use App\Notification\Business\UseCase\SozdatUvedomlenieOZaproseAktivaciiUseCase;
 use App\Notification\Business\UseCase\SozdatUvedomlenieUseCase;
 use App\Notification\Business\Utils\UrovenVazhnostiIzUgrozy;
 
@@ -19,6 +20,7 @@ final class NotificationApi
     public function __construct(
         private readonly SozdatUvedomlenieUseCase $sozdatUvedomlenie,
         private readonly UmeetPoluchatAdministratorov $administratory,
+        private readonly SozdatUvedomlenieOZaproseAktivaciiUseCase $activationRequest,
     ) {
     }
 
@@ -46,6 +48,20 @@ final class NotificationApi
             $payload + ['runnerId' => $runnerId, 'level' => $level],
             $dedupKey,
         ));
+    }
+
+    /**
+     * Уведомление администраторам о заявке на активацию аккаунта.
+     *
+     * Тип системный: отключить его в настройках нельзя. Уведомление создаётся
+     * один раз на аккаунт благодаря dedup-ключу.
+     */
+    public function sozdatUvedomlenieOZaproseAktivacii(
+        string $accountId,
+        string $email,
+        ?string $nickname,
+    ): void {
+        $this->activationRequest->handle($accountId, $email, $nickname);
     }
 
     /**

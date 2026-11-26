@@ -16,7 +16,9 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
         private array $roles,
         private bool $isBlocked = false,
         private string $locale = SupportedLocale::CANON_VALUE,
-        private ?string $nickname = null
+        private ?string $nickname = null,
+        private bool $isPendingActivation = false,
+        private bool $isEmailVerified = true,
     )
     {
     }
@@ -31,6 +33,8 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
             (bool) ($payload['isBlocked'] ?? false),
             SupportedLocale::normalize($payload['locale'] ?? null),
             $payload['nickname'] ?? null,
+            (bool) ($payload['pendingActivation'] ?? false),
+            (bool) ($payload['emailVerified'] ?? true),
         );
     }
 
@@ -60,6 +64,27 @@ final class JWTUser implements PasswordAuthenticatedUserInterface, JWTUserInterf
     public function updateEmail(string $newEmail): void
     {
         $this->email = $newEmail;
+    }
+
+    public function activate(): void
+    {
+        $this->isPendingActivation = false;
+        $this->roles = [Role::ROLE_USER->value];
+    }
+
+    public function confirmEmail(): void
+    {
+        $this->isEmailVerified = true;
+    }
+
+    public function isPendingActivation(): bool
+    {
+        return $this->isPendingActivation;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->isEmailVerified;
     }
 
     public function block(): void

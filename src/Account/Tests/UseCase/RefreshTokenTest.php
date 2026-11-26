@@ -30,7 +30,7 @@ final class RefreshTokenTest extends AbstractTestCaseWithTransactionWrapper
         $sut = self::$container->get(RegisterAccountUseCase::class);
         /** @var RegisterAccountUseCase $sut */
         $accountId = $sut->handle(
-            new RegisterAccount($email, 'asd', Role::ROLE_USER->value, 'ru')
+            new RegisterAccount($email, Role::ROLE_USER->value, 'ru')
         );
 
         $this->assertNotEmpty($accountId);

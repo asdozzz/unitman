@@ -4,8 +4,12 @@ namespace App\Account\Business\Utils;
 
 use App\Account\Business\Model\Account;
 use App\Account\Business\Model\Account\AccountId;
+use App\Account\Business\Model\Event\AccountEmailVerified;
+use App\Account\Business\Model\Event\AccountRegistrationRequested;
+use App\Account\Business\Model\Event\AccountWasActivatedByAdmin;
 use App\Account\Business\Model\Event\AccountWasBlockedByAdmin;
 use App\Account\Business\Model\Event\AccountWasRegistered;
+use App\Account\Business\Model\Event\AccountWasRegisteredViaOAuth;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\LocaleChanged;
@@ -26,6 +30,10 @@ final class EventTypeMapFactory
             AccountId::class => AccountEventTypeEnum::AccountId,
             AccountWasBlockedByAdmin::class => AccountEventTypeEnum::AccountWasBlockedByAdmin,
             AccountWasRegistered::class => AccountEventTypeEnum::AccountWasRegistered,
+            AccountWasRegisteredViaOAuth::class => AccountEventTypeEnum::AccountWasRegisteredViaOAuth,
+            AccountRegistrationRequested::class => AccountEventTypeEnum::AccountRegistrationRequested,
+            AccountEmailVerified::class => AccountEventTypeEnum::AccountEmailVerified,
+            AccountWasActivatedByAdmin::class => AccountEventTypeEnum::AccountWasActivatedByAdmin,
             SystemAccountWasRegistered::class => AccountEventTypeEnum::SystemAccountWasRegistered,
             AccountWasUnblockedByAdmin::class => AccountEventTypeEnum::AccountWasUnblockedByAdmin,
             EmailWasChangedByAdmin::class => AccountEventTypeEnum::EmailWasChangedByAdmin,

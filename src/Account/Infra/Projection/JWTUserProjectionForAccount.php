@@ -2,8 +2,13 @@
 
 namespace App\Account\Infra\Projection;
 
+use App\Account\Business\Model\Account\Role;
+use App\Account\Business\Model\Event\AccountEmailVerified;
+use App\Account\Business\Model\Event\AccountRegistrationRequested;
+use App\Account\Business\Model\Event\AccountWasActivatedByAdmin;
 use App\Account\Business\Model\Event\AccountWasBlockedByAdmin;
 use App\Account\Business\Model\Event\AccountWasRegistered;
+use App\Account\Business\Model\Event\AccountWasRegisteredViaOAuth;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
 use App\Account\Business\Model\Event\EmailWasChangedByAdmin;
 use App\Account\Business\Model\Event\LocaleChanged;
@@ -57,8 +62,60 @@ final class JWTUserProjectionForAccount extends AbstractProjection implements Sy
 
     public function handleAccountWasRegistered(AccountWasRegistered $event): void
     {
-        $user = new JWTUser($event->accountId, $event->email, $event->password, [$event->role], locale: $event->locale, nickname: $event->nickname);
+        $user = new JWTUser(
+            $event->accountId,
+            $event->email,
+            $event->password,
+            [$event->role],
+            locale: $event->locale,
+            nickname: $event->nickname,
+            isPendingActivation: false,
+        );
         $this->JWTUserRepository->save($user);
+    }
+
+    public function handleAccountRegistrationRequested(AccountRegistrationRequested $event): void
+    {
+        $user = new JWTUser(
+            $event->accountId,
+            $event->email,
+            $event->password,
+            [$event->role],
+            locale: $event->locale,
+            nickname: $event->nickname,
+            isPendingActivation: true,
+            isEmailVerified: false,
+        );
+        $this->JWTUserRepository->save($user);
+    }
+
+    public function handleAccountWasRegisteredViaOAuth(AccountWasRegisteredViaOAuth $event): void
+    {
+        $user = new JWTUser(
+            $event->accountId,
+            $event->email,
+            $event->password,
+            [Role::ROLE_PENDING->value],
+            locale: $event->locale,
+            nickname: $event->nickname,
+            isPendingActivation: true,
+            isEmailVerified: true,
+        );
+        $this->JWTUserRepository->save($user);
+    }
+
+    public function handleAccountEmailVerified(AccountEmailVerified $event): void
+    {
+        $user = $this->JWTUserRepository->getById($event->accountId);
+        $user->confirmEmail();
+        $this->JWTUserRepository->update($user);
+    }
+
+    public function handleAccountWasActivatedByAdmin(AccountWasActivatedByAdmin $event): void
+    {
+        $user = $this->JWTUserRepository->getById($event->accountId);
+        $user->activate();
+        $this->JWTUserRepository->update($user);
     }
 
     public function handleSystemAccountWasRegistered(SystemAccountWasRegistered $event): void

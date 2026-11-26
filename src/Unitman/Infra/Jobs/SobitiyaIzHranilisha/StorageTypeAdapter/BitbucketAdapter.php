@@ -74,9 +74,11 @@ final class BitbucketAdapter implements StorageTypeAdapter
             $type = TipSobitiya::KOD_OBNOVLEN;
         }
 
-        $unixtime = $this->unixtimePoslednegoKommita($change)
-            ?? $this->unixtimeIzStroki($new['target']['date'] ?? null)
-            ?? time();
+        $unixtime = $this->unixtimePoslednegoKommita($change);
+
+        if ($unixtime === null) {
+            $unixtime = $this->unixtimeIzStroki($new['target']['date'] ?? null);
+        }
 
         if ($type === TipSobitiya::VETKA_UDALENA || $type === TipSobitiya::VETKA_SOZDANA) {
             return new DannieSobitiya($type, $vetka, $unixtime);

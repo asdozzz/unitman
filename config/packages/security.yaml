@@ -1,4 +1,9 @@
 security:
+    # Администратор обладает всеми правами обычного пользователя. Нужно,
+    # чтобы общее правило `ROLE_USER` ниже пропускало администраторов.
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER
+
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
@@ -39,13 +44,24 @@ security:
         - { path: ^/api/runner/health$, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/unitStateNotifications$, roles: PUBLIC_ACCESS }
         - { path: ^/api/account/refreshToken$, roles: PUBLIC_ACCESS }
+        # Саморегистрация публична: аккаунт создаётся неподтверждённым.
+        - { path: ^/api/account/requestRegistration$, roles: PUBLIC_ACCESS }
+        # Подтверждение email и повторная отправка кода доступны до входа.
+        - { path: ^/api/account/verifyEmail$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/account/resendEmailVerification$, roles: PUBLIC_ACCESS }
+        # OAuth: redirect/callback/exchange публичны, state проверяется подписью.
+        - { path: ^/api/oauth/, roles: PUBLIC_ACCESS }
+        # Неактивированный пользователь видит только статус активации.
+        - { path: ^/api/account/myStatus$, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/project/(.*)/hook$, roles: PUBLIC_ACCESS }
         # Логин по определению выполняется до аутентификации: требование
         # ROLE_USER/ROLE_ADMIN здесь делает вход невозможным (ролей ещё нет).
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        # Остальные API требуют полноценной роли пользователя. Аккаунт в
+        # статусе ожидания активации имеет только ROLE_PENDING и получает 403.
         # Административные маршруты (/api/runner/list и т.п.) остаются за
         # JWT; проверка роли администратора — в use case.
-        - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api,       roles: ROLE_USER }
 
 when@test:
     security:

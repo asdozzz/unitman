@@ -103,7 +103,7 @@ final class BitbucketAdapter implements \App\Unitman\Infra\Adapter\StorageApiAda
             );
         }
 
-        if (!is_array($branchData) || ($branchData['name'] ?? null) !== $branch) {
+        if (($branchData['name'] ?? null) !== $branch) {
             return new SostoyanieVetki($branch, StatusVetki::DELETED);
         }
 

@@ -2,7 +2,7 @@ deptrac:
   paths:
     - ./
   exclude_files:
-    - '#.*test.*#'
+    - '#(?i).*tests?.*#'
   layers:
     - name: Api
       collectors:

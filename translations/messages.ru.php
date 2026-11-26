@@ -29,8 +29,17 @@ return [
         'old_nickname_equal_new_nickname' => 'Новый никнейм совпадает с текущим',
         'old_password_equal_new_password' => 'Новый пароль совпадает с текущим',
         'old_role_equal_new_role' => 'Новая роль совпадает с текущей',
+        'not_pending_activation' => 'Аккаунт не ожидает активации',
         'email' => [
             'double' => 'Учетная запись с таким email уже существует',
+            'already_verified' => 'Email уже подтверждён',
+            'not_verified' => 'Сначала подтвердите email',
+            'send_failed' => 'Не удалось отправить код подтверждения. Запросите код повторно.',
+            'code_invalid' => 'Неверный код подтверждения',
+            'code_expired' => 'Срок действия кода подтверждения истёк',
+            'too_many_attempts' => 'Слишком много неверных попыток. Запросите новый код.',
+            'resend_too_often' => 'Код уже отправлен. Подождите перед повторной отправкой.',
+            'too_many_resends' => 'Слишком много запросов кода. Попробуйте позже.',
         ],
         'nickname' => [
             'double' => 'Учетная запись с таким никнеймом уже существует',
@@ -76,6 +85,58 @@ return [
             'too_many_models' => 'Слишком много моделей OpenCode',
             'unknown_provider' => 'Неизвестный провайдер OpenCode',
             'url_too_long' => 'URL OpenCode слишком длинный',
+        ],
+    ],
+
+    // ─── Storage providers ───────────────────────────────────────────────────
+    'bitbucket' => [
+        'config_not_found' => 'Учётные данные Bitbucket не найдены',
+        'project_code_invalid' => 'Некорректный код проекта Bitbucket',
+        'request_failed' => 'Запрос к Bitbucket не удался',
+    ],
+    'gitea' => [
+        'config_not_found' => 'Учётные данные Gitea не найдены',
+        'project_code_invalid' => 'Некорректный код проекта Gitea',
+        'request_failed' => 'Запрос к Gitea не удался',
+        'url_invalid' => 'Некорректный URL Gitea',
+    ],
+    'gitflic' => [
+        'commit_not_found' => 'Коммит GitFlic не найден',
+        'config_not_found' => 'Учётные данные GitFlic не найдены',
+        'project_code_invalid' => 'Некорректный код проекта GitFlic',
+        'request_failed' => 'Запрос к GitFlic не удался',
+        'url_invalid' => 'Некорректный URL GitFlic',
+    ],
+    'gitverse' => [
+        'config_decode_failed' => 'Не удалось декодировать учётные данные GitVerse',
+        'config_not_found' => 'Учётные данные GitVerse не найдены',
+        'project_code_invalid' => 'Некорректный код проекта GitVerse',
+        'request_failed' => 'Запрос к GitVerse не удался',
+        'url_invalid' => 'Некорректный URL GitVerse',
+    ],
+
+    // ─── OAuth ───────────────────────────────────────────────────────────────
+    'oauth' => [
+        'provider' => [
+            'not_configured' => 'Вход через этого провайдера не настроен',
+            'error' => 'Провайдер вернул некорректные данные',
+        ],
+        'email' => [
+            'not_verified' => 'Провайдер не подтвердил email',
+        ],
+        'account' => [
+            'blocked' => 'Аккаунт заблокирован',
+            'system' => 'Вход в системный аккаунт запрещён',
+        ],
+        'state' => [
+            'invalid' => 'Некорректное состояние OAuth-входа',
+            'expired' => 'Сессия OAuth-входа истекла',
+        ],
+        'exchange' => [
+            'failed' => 'Не удалось завершить OAuth-вход',
+        ],
+        'code' => [
+            'invalid' => 'Одноразовый OAuth-код недействителен',
         ],
     ],
 
@@ -648,6 +709,33 @@ return [
         'unit_started' => [
             'push_title' => 'Юнит запущен',
             'push_body' => 'Юнит %unitName% успешно запущен.',
+        ],
+        'account_activation_request' => [
+            'push_title' => 'Заявка на активацию аккаунта',
+            'push_body' => 'Пользователь %email% ожидает активации.',
+        ],
+    ],
+
+    // ─── Email ───────────────────────────────────────────────────────────────
+    'email' => [
+        'invalid' => 'Некорректный email',
+        'is' => [
+            'empty' => 'Email не может быть пустым',
+        ],
+        'temporary_password' => [
+            'subject' => 'Unitman: пароль для входа',
+            'greeting' => 'Здравствуйте, %name%!',
+            'intro' => 'Администратор создал для вас аккаунт в Unitman. Для входа используйте временный пароль:',
+            'password_label' => 'Временный пароль:',
+            'outro' => 'После входа рекомендуем сменить пароль в настройках аккаунта.',
+        ],
+        'email_verification' => [
+            'subject' => 'Unitman: код подтверждения email',
+            'greeting' => 'Здравствуйте, %name%!',
+            'intro' => 'Для подтверждения email введите код:',
+            'code_label' => 'Код подтверждения:',
+            'expires' => 'Код действует %minutes% минут.',
+            'outro' => 'Если вы не регистрировались в Unitman, просто проигнорируйте это письмо.',
         ],
     ],
 

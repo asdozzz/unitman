@@ -14,6 +14,11 @@ return [
     FluffyDiscord\RoadRunnerBundle\FluffyDiscordRoadRunnerBundle::class => ['all' => true],
     Fresh\CentrifugoBundle\FreshCentrifugoBundle::class => ['all' => true],
     Highcore\TemporalBundle\TemporalBundle::class => ['all' => true],
-    Iluckhack\XhprofBuggregatorBundle\XhprofBuggregatorBundle::class => ['dev' => true, 'test' => true],
+    // Бандл требует расширение xhprof. В окружениях без него (например, в
+    // минимальном CLI-образе) его нельзя подключать: иначе компиляция
+    // контейнера падает на неопределённых константах профилировщика.
+    Iluckhack\XhprofBuggregatorBundle\XhprofBuggregatorBundle::class => \extension_loaded('xhprof')
+        ? ['dev' => true, 'test' => true]
+        : [],
     Nelmio\ApiDocBundle\NelmioApiDocBundle::class => ['all' => true],
 ];

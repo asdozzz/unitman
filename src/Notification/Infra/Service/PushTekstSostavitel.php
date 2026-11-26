@@ -25,7 +25,39 @@ final class PushTekstSostavitel
         return match ($uvedomlenie->getType()) {
             TipUvedomleniya::RUNNER_THREAT => $this->runnerThreat($uvedomlenie, $locale),
             TipUvedomleniya::UNIT_STARTED => $this->unitStarted($uvedomlenie, $locale),
+            TipUvedomleniya::ACCOUNT_ACTIVATION_REQUEST => $this->accountActivationRequest($uvedomlenie, $locale),
         };
+    }
+
+    /**
+     * @return array{title: string, body: string, data: array<string, mixed>}
+     */
+    private function accountActivationRequest(Uvedomlenie $uvedomlenie, string $locale): array
+    {
+        $payload = $uvedomlenie->getPayload();
+        $email = (string) ($payload['email'] ?? '');
+        $nickname = (string) ($payload['nickname'] ?? '');
+
+        return [
+            'title' => $this->translator->trans(
+                'notification.account_activation_request.push_title',
+                [],
+                'messages',
+                $locale,
+            ),
+            'body' => $this->translator->trans(
+                'notification.account_activation_request.push_body',
+                ['%email%' => $email, '%nickname%' => $nickname],
+                'messages',
+                $locale,
+            ),
+            'data' => [
+                'notificationId' => $uvedomlenie->getId(),
+                'severity' => $uvedomlenie->getSeverity()->value,
+                'requiresRead' => $uvedomlenie->requiresRead(),
+                'url' => '/account/list',
+            ],
+        ];
     }
 
     /**

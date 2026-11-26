@@ -3,12 +3,16 @@
 namespace App\Account\Business\Model;
 
 use App\Account\Business\Command\ChangeMyLocale;
-use App\Account\Business\Command\RegisterAccount;
+use App\Account\Business\Command\RegisterPendingAccount;
 use App\Account\Business\Model\Account\AccountId;
 use App\Account\Business\Model\Account\Email;
 use App\Account\Business\Model\Account\Nickname;
 use App\Account\Business\Model\Account\Password;
 use App\Account\Business\Model\Account\Role;
+use App\Account\Business\Model\Event\AccountEmailVerified;
+use App\Account\Business\Model\Event\AccountRegistrationRequested;
+use App\Account\Business\Model\Event\AccountWasActivatedByAdmin;
+use App\Account\Business\Model\Event\AccountWasRegisteredViaOAuth;
 use App\Account\Business\Model\Event\AccountWasBlockedByAdmin;
 use App\Account\Business\Model\Event\AccountWasRegistered;
 use App\Account\Business\Model\Event\AccountWasUnblockedByAdmin;
@@ -44,18 +48,78 @@ final class Account implements AggregateRoot
     private Role $role;
 
     private bool $isBlocked = false;
+
+    /**
+     * Аккаунт зарегистрировался самостоятельно и ещё не активирован
+     * администратором.
+     */
+    private bool $isPendingActivation = false;
+
+    /**
+     * Email подтверждён кодом из письма или OAuth-провайдером.
+     */
+    private bool $isEmailVerified = false;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private string $locale;
     /** @psalm-suppress PropertyNotSetInConstructor*/
     private Nickname $nickname;
 
-    public static function registerAccount(string $accountId, RegisterAccount $command): static
-    {
-        if ($command->getRoles() === Account\Role::ROLE_SYSTEM->value) {
+    public static function registerActiveAccount(
+        string $accountId,
+        string $email,
+        string $passwordHash,
+        string $role,
+        string $locale,
+        string $nickname = '',
+    ): static {
+        if ($role === Account\Role::ROLE_SYSTEM->value) {
             throw new \DomainException(TranslatorKeyword::SYSTEM_CANNOT_ADD_USERS->value);
         }
+
         $account = new static(AccountId::fromString($accountId));
-        $account->recordThat(new AccountWasRegistered($accountId, $command->getEmail(), $command->getPassword(), $command->getRoles(), $command->getLocale(), $command->nickname ?? ""));
+        $account->recordThat(new AccountWasRegistered($accountId, $email, $passwordHash, $role, $locale, $nickname));
+        return $account;
+    }
+
+    /**
+     * Самостоятельная регистрация: аккаунт создаётся сразу, но остаётся
+     * неактивированным до решения администратора.
+     */
+    public static function requestRegistration(string $accountId, RegisterPendingAccount $command): static
+    {
+        $account = new static(AccountId::fromString($accountId));
+        $account->recordThat(new AccountRegistrationRequested(
+            $accountId,
+            $command->getEmail(),
+            $command->getPassword(),
+            Role::ROLE_PENDING->value,
+            $command->getLocale(),
+            $command->nickname ?? '',
+        ));
+
+        return $account;
+    }
+
+    /**
+     * Аккаунт, созданный через Google/GitHub: email уже подтверждён
+     * провайдером, но аккаунт ещё должен активировать администратор.
+     */
+    public static function registerOauthAccount(
+        string $accountId,
+        string $email,
+        string $passwordHash,
+        string $locale,
+        string $nickname = '',
+    ): static {
+        $account = new static(AccountId::fromString($accountId));
+        $account->recordThat(new AccountWasRegisteredViaOAuth(
+            $accountId,
+            $email,
+            $passwordHash,
+            $locale,
+            $nickname,
+        ));
+
         return $account;
     }
 
@@ -67,6 +131,32 @@ final class Account implements AggregateRoot
         $this->role = Role::from($fact->role);
         $this->locale = $fact->locale;
         $this->nickname = new Nickname($fact->nickname);
+        $this->isPendingActivation = false;
+        $this->isEmailVerified = true;
+    }
+
+    private function applyAccountRegistrationRequested(AccountRegistrationRequested $fact): void
+    {
+        $this->accountId = AccountId::fromString($fact->accountId);
+        $this->email = new Email($fact->email);
+        $this->password = new Password($fact->password);
+        $this->role = Role::from($fact->role);
+        $this->locale = $fact->locale;
+        $this->nickname = new Nickname($fact->nickname);
+        $this->isPendingActivation = true;
+        $this->isEmailVerified = false;
+    }
+
+    private function applyAccountWasRegisteredViaOAuth(AccountWasRegisteredViaOAuth $fact): void
+    {
+        $this->accountId = AccountId::fromString($fact->accountId);
+        $this->email = new Email($fact->email);
+        $this->password = new Password($fact->password);
+        $this->role = Role::ROLE_PENDING;
+        $this->locale = $fact->locale;
+        $this->nickname = new Nickname($fact->nickname);
+        $this->isEmailVerified = true;
+        $this->isPendingActivation = true;
     }
 
     public static function registerSystemAccount(string $accountId, string $password, string $locale): static
@@ -83,6 +173,7 @@ final class Account implements AggregateRoot
         $this->password = new Password($fact->password);
         $this->role = Role::from($fact->role);
         $this->locale = $fact->locale;
+        $this->isEmailVerified = true;
     }
 
     public function changeMyLocale(ChangeMyLocale $command): void
@@ -196,6 +287,68 @@ final class Account implements AggregateRoot
         $this->role = Role::from($fact->newRole);
     }
 
+    /**
+     * Подтверждение email после ввода кода из письма.
+     */
+    public function confirmEmail(): void
+    {
+        if ($this->isEmailVerified) {
+            throw new \DomainException('account.email.already_verified');
+        }
+
+        $this->recordThat(new AccountEmailVerified(
+            $this->accountId->toString(),
+            (new \DateTimeImmutable())->format(DATE_ATOM),
+        ));
+    }
+
+    private function applyAccountEmailVerified(AccountEmailVerified $fact): void
+    {
+        $this->isEmailVerified = true;
+    }
+
+    /**
+     * Активация самостоятельно зарегистрированного аккаунта администратором.
+     */
+    public function activateByAdmin(): void
+    {
+        if (!$this->isEmailVerified) {
+            throw new \DomainException('account.email.not_verified');
+        }
+
+        if (!$this->isPendingActivation) {
+            throw new \DomainException('account.not_pending_activation');
+        }
+
+        $this->recordThat(new AccountWasActivatedByAdmin($this->accountId->toString(), Role::ROLE_USER->value));
+    }
+
+    private function applyAccountWasActivatedByAdmin(AccountWasActivatedByAdmin $fact): void
+    {
+        $this->role = Role::from($fact->newRole);
+        $this->isPendingActivation = false;
+    }
+
+    public function isPendingActivation(): bool
+    {
+        return $this->isPendingActivation;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->isEmailVerified;
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->isBlocked;
+    }
+
+    public function getId(): string
+    {
+        return $this->accountId->toString();
+    }
+
     public function blockByAdmin(?string $reason): void
     {
         if ($this->isBlocked) {
@@ -229,6 +382,11 @@ final class Account implements AggregateRoot
         return (string) $this->email;
     }
 
+    public function getRoleValue(): string
+    {
+        return $this->role->value;
+    }
+
     /**
      * @return void
      */
@@ -242,5 +400,10 @@ final class Account implements AggregateRoot
     public function getLocale(): string
     {
         return $this->locale;
+    }
+
+    public function getNickname(): string
+    {
+        return (string) $this->nickname;
     }
 }

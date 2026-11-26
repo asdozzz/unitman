@@ -29,7 +29,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/notifications')]
 final class NotificationController extends AbstractController
 {
-    public function __construct(private readonly string $vapidPublicKey)
+    public function __construct(private readonly ?string $vapidPublicKey = null)
     {
     }
 
@@ -173,7 +173,7 @@ final class NotificationController extends AbstractController
     #[Route('/push/public-key', methods: ['GET'])]
     public function pushPublicKey(): JsonResponse
     {
-        return $this->json(Response::success(['publicKey' => $this->vapidPublicKey]));
+        return $this->json(Response::success(['publicKey' => $this->vapidPublicKey ?? '']));
     }
 
     #[OA\Post(

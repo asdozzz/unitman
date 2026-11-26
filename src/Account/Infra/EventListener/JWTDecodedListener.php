@@ -23,6 +23,8 @@ final class JWTDecodedListener
         $payload['roles'] = $user->getRoles();
         $payload['password'] = $user->getPassword();
         $payload['locale'] = $user->getLocale();
+        $payload['pendingActivation'] = $user->isPendingActivation();
+        $payload['emailVerified'] = $user->isEmailVerified();
 
         $event->setPayload($payload);
     }

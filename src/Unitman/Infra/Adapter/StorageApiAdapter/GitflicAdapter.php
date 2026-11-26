@@ -69,7 +69,7 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
         $url = rtrim(trim($repoUrl), '/');
         $url = preg_replace('~/rest-api$~i', '', $url) ?? $url;
 
-        $host = strtolower((string)(parse_url($url, PHP_URL_HOST) ?: ''));
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?: '');
         if ($host === 'api.'.self::SAAS_HOST || $host === 'www.'.self::SAAS_HOST) {
             return self::SAAS_URL;
         }
@@ -165,8 +165,8 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
     public function getUrlForInitProject(Repo $repo, Project $project): string
     {
         $url = $this->poluchitUrlHranilisha($repo->getCredentials()->url);
-        $scheme = (string)(parse_url($url, PHP_URL_SCHEME) ?: 'https');
-        $host = (string)(parse_url($url, PHP_URL_HOST) ?: '');
+        $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'https';
+        $host = parse_url($url, PHP_URL_HOST) ?: '';
 
         if ($host === '') {
             throw new \RuntimeException('gitflic.url_invalid');
@@ -176,7 +176,7 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
         $prefix = $scheme.'://'.$repo->getCredentials()->token.'@'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
-        $path = trim((string)(parse_url($url, PHP_URL_PATH) ?: ''), '/');
+        $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');
         if ($path !== '') {
             $prefix .= '/'.$path;
         }
@@ -348,7 +348,7 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
     private function apiBase(Repo $repo): string
     {
         $url = $this->poluchitUrlHranilisha($repo->getCredentials()->url);
-        $host = strtolower((string)(parse_url($url, PHP_URL_HOST) ?: ''));
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?: '');
 
         if ($host === self::SAAS_HOST || $host === 'www.'.self::SAAS_HOST) {
             return self::SAAS_API_URL;

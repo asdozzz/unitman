@@ -2,6 +2,7 @@
 
 namespace App\Account\Tests\UseCase;
 
+use App\Account\Business\Command\ActivateAccountByAdmin;
 use App\Account\Business\Command\BlockByAdmin;
 use App\Account\Business\Command\ChangeEmailByAdmin;
 use App\Account\Business\Command\ChangeMyNickname;
@@ -10,10 +11,23 @@ use App\Account\Business\Command\ChangeNicknameByAdmin;
 use App\Account\Business\Command\ChangePasswordByAdmin;
 use App\Account\Business\Command\ChangeRoleByAdmin;
 use App\Account\Business\Command\RegisterAccount;
+use App\Account\Business\Command\RegisterPendingAccount;
 use App\Account\Business\Command\UnblockByAdmin;
+use App\Account\Business\Command\VerifyEmail;
 use App\Account\Business\Model\Account\Role;
+use App\Account\Business\Port\AccountRepository;
+use App\Account\Business\Port\CanFindDouble;
+use App\Account\Business\Port\CanGenerateEmailVerificationCode;
+use App\Account\Business\Port\CanHashPassword;
+use App\Account\Business\Port\CanSendEmailVerificationCode;
+use App\Account\Business\Port\EmailVerificationCodeRepository;
 use App\Account\Business\Port\SecurityService;
+use App\Account\Business\Port\UmeetOpoveshatOZaproseAktivacii;
+use App\Account\Business\Port\SocialIdentityRepository;
 use App\Account\Business\Port\UuidGenerator;
+use App\Account\Business\ReadModel\OAuthUserReadModel;
+use App\Account\Business\UseCase\ActivateAccountByAdminUseCase;
+use App\Account\Business\UseCase\AuthenticateWithOAuthUseCase;
 use App\Account\Business\UseCase\BlockByAdminUseCase;
 use App\Account\Business\UseCase\ChangeEmailByAdminUseCase;
 use App\Account\Business\UseCase\ChangeMyNicknameUseCase;
@@ -22,8 +36,11 @@ use App\Account\Business\UseCase\ChangeNicknameByAdminUseCase;
 use App\Account\Business\UseCase\ChangePasswordByAdminUseCase;
 use App\Account\Business\UseCase\ChangeRoleByAdminUseCase;
 use App\Account\Business\UseCase\RegisterAccountUseCase;
+use App\Account\Business\UseCase\RegisterPendingAccountUseCase;
 use App\Account\Business\UseCase\RegisterSystemAccountUseCase;
 use App\Account\Business\UseCase\UnblockByAdminUseCase;
+use App\Account\Business\UseCase\VerifyEmailUseCase;
+use App\Account\Infra\Adapter\PasswordEmailVerificationCodeHasher;
 use App\Account\Infra\Adapter\SymfonySecurityService;
 use App\Account\Infra\Repository\JWTUserRepository;
 use App\Utils\EventSauce\AbstractTestCaseWithTransactionWrapper;
@@ -47,7 +64,6 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
 
         $command = new RegisterAccount(
             $email,
-            'asd',
             Role::ROLE_USER->value,
             'ru',
             $nickname
@@ -128,7 +144,6 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $email = 'asd123123123@asd.ru';
         $command = new RegisterAccount(
             $email,
-            'asd',
             Role::ROLE_USER->value,
             'ru'
         );
@@ -191,7 +206,6 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $email = 'asd123123123@asd.ru';
         $command = new RegisterAccount(
             $email,
-            'asd',
             Role::ROLE_USER->value,
             'ru',
             'first'
@@ -286,5 +300,238 @@ final class AccountTest extends AbstractTestCaseWithTransactionWrapper
         $sut = self::$container->get(ChangeRoleByAdminUseCase::class);
         /** @var ChangeRoleByAdminUseCase $sut */
         $sut->handle($command);
+    }
+
+    #[Test]
+    public function samostoyatelnaya_registraciya_sozdaet_ozhidayushchiy_akkaunt(): void
+    {
+        $userId = Uuid::uuid7()->toString();
+        $uuidGenerator = $this->getMockBuilder(UuidGenerator::class)->getMock();
+        $uuidGenerator->expects($this->any())->method('makeGuid')->willReturn($userId);
+        self::$container->set(UuidGenerator::class, $uuidGenerator);
+
+        $sut = self::$container->get(RegisterPendingAccountUseCase::class);
+        \assert($sut instanceof RegisterPendingAccountUseCase);
+        $sut->handle(new RegisterPendingAccount(
+            uniqid('pending_', true) . '@asd.ru',
+            'secret123',
+            'ru',
+            'pending',
+        ));
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        \assert($jwtRepository instanceof JWTUserRepository);
+        $row = $jwtRepository->findRowById($userId);
+
+        $this->assertNotFalse($row);
+        $this->assertSame(Role::ROLE_PENDING->value, $row['roles']);
+        $this->assertTrue((bool) $row['is_pending_activation']);
+        $this->assertFalse((bool) $row['is_email_verified']);
+    }
+
+    #[Test]
+    public function admin_aktiviraet_ozhidayushchiy_akkaunt(): void
+    {
+        $userId = Uuid::uuid7()->toString();
+        $uuidGenerator = $this->getMockBuilder(UuidGenerator::class)->getMock();
+        $uuidGenerator->expects($this->any())->method('makeGuid')->willReturn($userId);
+        self::$container->set(UuidGenerator::class, $uuidGenerator);
+
+        $registration = self::$container->get(RegisterPendingAccountUseCase::class);
+        \assert($registration instanceof RegisterPendingAccountUseCase);
+        $registration->handle(new RegisterPendingAccount(
+            uniqid('pending_', true) . '@asd.ru',
+            'secret123',
+            'ru',
+            'pending',
+        ));
+
+        $accountRepository = self::$container->get(AccountRepository::class);
+        \assert($accountRepository instanceof AccountRepository);
+        $account = $accountRepository->getBy($userId);
+        $account->confirmEmail();
+        $accountRepository->save($account);
+
+        $securityService = $this->getMockBuilder(SecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        self::$container->set(SecurityService::class, $securityService);
+
+        $sut = self::$container->get(ActivateAccountByAdminUseCase::class);
+        \assert($sut instanceof ActivateAccountByAdminUseCase);
+        $sut->handle(new ActivateAccountByAdmin($userId));
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        \assert($jwtRepository instanceof JWTUserRepository);
+        $row = $jwtRepository->findRowById($userId);
+
+        $this->assertNotFalse($row);
+        $this->assertSame(Role::ROLE_USER->value, $row['roles']);
+        $this->assertFalse((bool) $row['is_pending_activation']);
+        $this->assertTrue((bool) $row['is_email_verified']);
+    }
+
+    #[Test]
+    public function kod_podtverzhdaet_email_i_ostavlyaet_akkaunt_na_aktivacii(): void
+    {
+        $userId = Uuid::uuid7()->toString();
+        $uuidGenerator = $this->getMockBuilder(UuidGenerator::class)->getMock();
+        $uuidGenerator->expects($this->any())->method('makeGuid')->willReturn($userId);
+        self::$container->set(UuidGenerator::class, $uuidGenerator);
+
+        $codeGenerator = $this->getMockBuilder(CanGenerateEmailVerificationCode::class)->getMock();
+        $codeGenerator->expects($this->any())->method('generate')->willReturn('123456');
+
+        $sender = $this->getMockBuilder(CanSendEmailVerificationCode::class)->getMock();
+        $sender->expects($this->once())->method('otpravit');
+
+        $codeHasher = new PasswordEmailVerificationCodeHasher();
+
+        $email = uniqid('verify_', true) . '@asd.ru';
+        $registration = new RegisterPendingAccountUseCase(
+            self::$container->get(AccountRepository::class),
+            self::$container->get(CanHashPassword::class),
+            self::$container->get(CanFindDouble::class),
+            self::$container->get(UuidGenerator::class),
+            $codeGenerator,
+            $codeHasher,
+            self::$container->get(EmailVerificationCodeRepository::class),
+            $sender,
+            900,
+        );
+        $registration->handle(new RegisterPendingAccount($email, 'secret123', 'ru', 'verify'));
+
+        $sut = new VerifyEmailUseCase(
+            self::$container->get(EmailVerificationCodeRepository::class),
+            $codeHasher,
+            self::$container->get(AccountRepository::class),
+            self::$container->get(UmeetOpoveshatOZaproseAktivacii::class),
+            5,
+        );
+        $sut->handle(new VerifyEmail($email, '123456'));
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        \assert($jwtRepository instanceof JWTUserRepository);
+        $row = $jwtRepository->findUserByEmail($email);
+
+        $this->assertNotFalse($row);
+        $this->assertTrue((bool) $row['is_email_verified']);
+        $this->assertTrue((bool) $row['is_pending_activation']);
+        $this->assertSame(Role::ROLE_PENDING->value, $row['roles']);
+    }
+
+    #[Test]
+    public function aktivaciya_zapreshchena_ne_adminu(): void
+    {
+        $userId = Uuid::uuid7()->toString();
+        $uuidGenerator = $this->getMockBuilder(UuidGenerator::class)->getMock();
+        $uuidGenerator->expects($this->any())->method('makeGuid')->willReturn($userId);
+        self::$container->set(UuidGenerator::class, $uuidGenerator);
+
+        $registration = self::$container->get(RegisterPendingAccountUseCase::class);
+        \assert($registration instanceof RegisterPendingAccountUseCase);
+        $registration->handle(new RegisterPendingAccount(
+            uniqid('pending_', true) . '@asd.ru',
+            'secret123',
+            'ru',
+            'pending',
+        ));
+
+        $securityService = $this->getMockBuilder(SecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(false);
+        self::$container->set(SecurityService::class, $securityService);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('security.access_denied');
+
+        $sut = self::$container->get(ActivateAccountByAdminUseCase::class);
+        \assert($sut instanceof ActivateAccountByAdminUseCase);
+        $sut->handle(new ActivateAccountByAdmin($userId));
+    }
+
+    #[Test]
+    public function admin_ne_aktiviraet_nepodtverzhdennyy_email(): void
+    {
+        $userId = Uuid::uuid7()->toString();
+        $uuidGenerator = $this->getMockBuilder(UuidGenerator::class)->getMock();
+        $uuidGenerator->expects($this->any())->method('makeGuid')->willReturn($userId);
+        self::$container->set(UuidGenerator::class, $uuidGenerator);
+
+        $registration = self::$container->get(RegisterPendingAccountUseCase::class);
+        \assert($registration instanceof RegisterPendingAccountUseCase);
+        $registration->handle(new RegisterPendingAccount(
+            uniqid('pending_', true) . '@asd.ru',
+            'secret123',
+            'ru',
+            'pending',
+        ));
+
+        $securityService = $this->getMockBuilder(SecurityService::class)->getMock();
+        $securityService->expects($this->any())->method('isAdmin')->willReturn(true);
+        self::$container->set(SecurityService::class, $securityService);
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('account.email.not_verified');
+
+        $sut = self::$container->get(ActivateAccountByAdminUseCase::class);
+        \assert($sut instanceof ActivateAccountByAdminUseCase);
+        $sut->handle(new ActivateAccountByAdmin($userId));
+    }
+
+    #[Test]
+    public function oauth_sozdaet_podtverzhdennyy_ozhidayushchiy_akkaunt(): void
+    {
+        $email = uniqid('oauth_', true) . '@asd.ru';
+        $providerUserId = 'google-' . $email;
+
+        $sut = self::$container->get(AuthenticateWithOAuthUseCase::class);
+        \assert($sut instanceof AuthenticateWithOAuthUseCase);
+        $accountId = $sut->handle(
+            'google',
+            new OAuthUserReadModel($providerUserId, $email, 'OAuth User'),
+            'ru',
+        );
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        \assert($jwtRepository instanceof JWTUserRepository);
+        $row = $jwtRepository->findRowById($accountId);
+
+        $this->assertNotFalse($row);
+        $this->assertSame(Role::ROLE_PENDING->value, $row['roles']);
+        $this->assertTrue((bool) $row['is_pending_activation']);
+        $this->assertTrue((bool) $row['is_email_verified']);
+
+        $identityRepository = self::$container->get(SocialIdentityRepository::class);
+        \assert($identityRepository instanceof SocialIdentityRepository);
+        $this->assertNotNull($identityRepository->findByProviderAndUserId('google', $providerUserId));
+    }
+
+    #[Test]
+    public function oauth_privyazyvaetsya_k_sushchestvuyushchemu_akkauntu_po_email(): void
+    {
+        $email = uniqid('oauth_link_', true) . '@asd.ru';
+        $providerUserId = 'github-' . $email;
+        $row = $this->registerAccount($email, 'existing');
+
+        $sut = self::$container->get(AuthenticateWithOAuthUseCase::class);
+        \assert($sut instanceof AuthenticateWithOAuthUseCase);
+        $accountId = $sut->handle(
+            'github',
+            new OAuthUserReadModel($providerUserId, $email, 'GitHub User'),
+            'ru',
+        );
+
+        $this->assertSame($row['id'], $accountId);
+
+        $jwtRepository = self::$container->get(JWTUserRepository::class);
+        \assert($jwtRepository instanceof JWTUserRepository);
+        $linked = $jwtRepository->findRowById($accountId);
+
+        $this->assertNotFalse($linked);
+        $this->assertSame(Role::ROLE_USER->value, $linked['roles']);
+        $this->assertTrue((bool) $linked['is_email_verified']);
+
+        $identityRepository = self::$container->get(SocialIdentityRepository::class);
+        \assert($identityRepository instanceof SocialIdentityRepository);
+        $this->assertNotNull($identityRepository->findByProviderAndUserId('github', $providerUserId));
     }
 }

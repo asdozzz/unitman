@@ -32,7 +32,9 @@ final class AuthenticationSuccessListener
             'id' => $user->getId(),
             'email' => $user->getEmail(),
             'roles' => $user->getRoles(),
-            'locale' => $user->getLocale()
+            'locale' => $user->getLocale(),
+            'activationPending' => $user->isPendingActivation(),
+            'emailVerified' => $user->isEmailVerified(),
         );
         $data['refreshToken'] = $this->vipustitRefreshTokenUseCase->handle($user->getId());
 

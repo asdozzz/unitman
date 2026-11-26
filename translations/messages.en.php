@@ -32,8 +32,17 @@ return [
         'old_nickname_equal_new_nickname' => 'The new nickname matches the current one',
         'old_password_equal_new_password' => 'The new password matches the current one',
         'old_role_equal_new_role' => 'The new role matches the current one',
+        'not_pending_activation' => 'The account is not pending activation',
         'email' => [
             'double' => 'An account with this email already exists',
+            'already_verified' => 'The email is already verified',
+            'not_verified' => 'Verify your email first',
+            'send_failed' => 'Failed to send the verification code. Request a new one.',
+            'code_invalid' => 'The verification code is invalid',
+            'code_expired' => 'The verification code has expired',
+            'too_many_attempts' => 'Too many invalid attempts. Request a new code.',
+            'resend_too_often' => 'The code was already sent. Wait before resending.',
+            'too_many_resends' => 'Too many code requests. Try again later.',
         ],
         'nickname' => [
             'double' => 'An account with this nickname already exists',
@@ -79,6 +88,58 @@ return [
             'too_many_models' => 'Too many OpenCode models',
             'unknown_provider' => 'Unknown OpenCode provider',
             'url_too_long' => 'The OpenCode URL is too long',
+        ],
+    ],
+
+    // ─── Storage providers ───────────────────────────────────────────────────
+    'bitbucket' => [
+        'config_not_found' => 'Bitbucket credentials were not found',
+        'project_code_invalid' => 'Invalid Bitbucket project code',
+        'request_failed' => 'Bitbucket request failed',
+    ],
+    'gitea' => [
+        'config_not_found' => 'Gitea credentials were not found',
+        'project_code_invalid' => 'Invalid Gitea project code',
+        'request_failed' => 'Gitea request failed',
+        'url_invalid' => 'Gitea URL is invalid',
+    ],
+    'gitflic' => [
+        'commit_not_found' => 'GitFlic commit was not found',
+        'config_not_found' => 'GitFlic credentials were not found',
+        'project_code_invalid' => 'Invalid GitFlic project code',
+        'request_failed' => 'GitFlic request failed',
+        'url_invalid' => 'GitFlic URL is invalid',
+    ],
+    'gitverse' => [
+        'config_decode_failed' => 'Failed to decode GitVerse credentials',
+        'config_not_found' => 'GitVerse credentials were not found',
+        'project_code_invalid' => 'Invalid GitVerse project code',
+        'request_failed' => 'GitVerse request failed',
+        'url_invalid' => 'GitVerse URL is invalid',
+    ],
+
+    // ─── OAuth ───────────────────────────────────────────────────────────────
+    'oauth' => [
+        'provider' => [
+            'not_configured' => 'Sign-in with this provider is not configured',
+            'error' => 'The provider returned invalid data',
+        ],
+        'email' => [
+            'not_verified' => 'The provider did not verify the email',
+        ],
+        'account' => [
+            'blocked' => 'The account is blocked',
+            'system' => 'Signing in to the system account is not allowed',
+        ],
+        'state' => [
+            'invalid' => 'The OAuth sign-in state is invalid',
+            'expired' => 'The OAuth sign-in session has expired',
+        ],
+        'exchange' => [
+            'failed' => 'Failed to complete OAuth sign-in',
+        ],
+        'code' => [
+            'invalid' => 'The one-time OAuth code is invalid',
         ],
     ],
 
@@ -652,6 +713,33 @@ return [
         'unit_started' => [
             'push_title' => 'Unit started',
             'push_body' => 'Unit %unitName% started successfully.',
+        ],
+        'account_activation_request' => [
+            'push_title' => 'Account activation request',
+            'push_body' => 'User %email% is waiting for activation.',
+        ],
+    ],
+
+    // ─── Email ───────────────────────────────────────────────────────────────
+    'email' => [
+        'invalid' => 'Invalid email address',
+        'is' => [
+            'empty' => 'Email must not be empty',
+        ],
+        'temporary_password' => [
+            'subject' => 'Unitman: sign-in password',
+            'greeting' => 'Hello, %name%!',
+            'intro' => 'An administrator created a Unitman account for you. Use this temporary password to sign in:',
+            'password_label' => 'Temporary password:',
+            'outro' => 'After signing in, please change the password in your account settings.',
+        ],
+        'email_verification' => [
+            'subject' => 'Unitman: email verification code',
+            'greeting' => 'Hello, %name%!',
+            'intro' => 'Enter this code to verify your email:',
+            'code_label' => 'Verification code:',
+            'expires' => 'The code is valid for %minutes% minutes.',
+            'outro' => 'If you did not register with Unitman, you can safely ignore this email.',
         ],
     ],
 

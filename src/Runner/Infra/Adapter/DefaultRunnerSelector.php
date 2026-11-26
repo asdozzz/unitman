@@ -106,10 +106,6 @@ final class DefaultRunnerSelector implements RunnerSelector
         $freeDiskPercent = null;
 
         foreach ($resources->disks as $disk) {
-            if (!is_array($disk)) {
-                continue;
-            }
-
             $usedPercent = $this->diskUsedPercent($disk);
             if ($usedPercent === null) {
                 continue;
@@ -125,7 +121,10 @@ final class DefaultRunnerSelector implements RunnerSelector
 
         $dockerBytes = $resources->docker?->totalBytes ?? 0;
 
-        return max(0.0, 100.0 - ($dockerBytes / self::DOCKER_FREE_BASELINE_BYTES) * 100.0);
+        return max(
+            0.0,
+            100.0 - ((float) $dockerBytes / (float) self::DOCKER_FREE_BASELINE_BYTES) * 100.0,
+        );
     }
 
     /**

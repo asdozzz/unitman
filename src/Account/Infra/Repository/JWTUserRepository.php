@@ -13,6 +13,7 @@ use App\Account\Business\ReadModel\AccountForManaging;
 use App\Account\Business\ReadModel\AccountSettingsReadModel;
 use App\Account\Business\ReadModel\UserList;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -49,7 +50,9 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
                 locale varchar,
                 roles    varchar,
                 is_blocked bit,
-                nickname varchar
+                nickname varchar,
+                is_pending_activation boolean not null default false,
+                is_email_verified boolean not null default true
             );
         ");
     }
@@ -69,7 +72,12 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             'roles' => join(',', $user->getRoles()),
             'is_blocked' => $user->isBlocked()?1:0,
             'locale' => $user->getLocale(),
-            'nickname' => $user->getNickname()
+            'nickname' => $user->getNickname(),
+            'is_pending_activation' => $user->isPendingActivation(),
+            'is_email_verified' => $user->isEmailVerified(),
+        ], [
+            'is_pending_activation' => ParameterType::BOOLEAN,
+            'is_email_verified' => ParameterType::BOOLEAN,
         ]);
     }
 
@@ -82,8 +90,13 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             'roles' => join(',', $user->getRoles()),
             'is_blocked' => $user->isBlocked()?1:0,
             'locale' => $user->getLocale(),
-            'nickname' => $user->getNickname()
-        ], ['id' => $user->getId()]);
+            'nickname' => $user->getNickname(),
+            'is_pending_activation' => $user->isPendingActivation(),
+            'is_email_verified' => $user->isEmailVerified(),
+        ], ['id' => $user->getId()], [
+            'is_pending_activation' => ParameterType::BOOLEAN,
+            'is_email_verified' => ParameterType::BOOLEAN,
+        ]);
     }
 
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
@@ -107,7 +120,17 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
      */
     private function makeUserByDbRow(array $row): JWTUser
     {
-        $JWTUser = new JWTUser($row['id'], $row['email'], $row['password'], explode(',', $row['roles']), (bool)$row['is_blocked'], $row['locale'], $row['nickname']);
+        $JWTUser = new JWTUser(
+            $row['id'],
+            $row['email'],
+            $row['password'],
+            explode(',', $row['roles']),
+            (bool)$row['is_blocked'],
+            $row['locale'],
+            $row['nickname'],
+            (bool) ($row['is_pending_activation'] ?? false),
+            (bool) ($row['is_email_verified'] ?? true),
+        );
         return $JWTUser;
     }
 
@@ -133,6 +156,13 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         $row = $this->findUserByEmail($email);
 
         return !empty($row);
+    }
+
+    public function findIdByEmail(string $email): ?string
+    {
+        $row = $this->findUserByEmail($email);
+
+        return empty($row) ? null : (string) $row['id'];
     }
 
     public function isExistDoubleByNickname(string $id, string $nickname): bool
@@ -201,14 +231,41 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
         return $user;
     }
 
+    public function getByEmail(string $email): JWTUser
+    {
+        $row = $this->findUserByEmail($email);
+
+        if (empty($row)) {
+            throw new \DomainException('account.not_found');
+        }
+
+        return $this->makeUserByDbRow($row);
+    }
+
     private function makeUserListModel(array $row): UserList
     {
-        return new UserList($row['id'], $row['email'], $row['is_blocked'], $row['nickname']);
+        return new UserList(
+            $row['id'],
+            $row['email'],
+            $row['is_blocked'],
+            $row['nickname'],
+            (bool) ($row['is_pending_activation'] ?? false),
+            (bool) ($row['is_email_verified'] ?? true),
+        );
     }
 
     private function makeAccountForManaging(array $row): AccountForManaging
     {
-        return new AccountForManaging($row['id'], $row['email'], $row['is_blocked'], $row['roles'], $row['password'], $row['nickname']);
+        return new AccountForManaging(
+            $row['id'],
+            $row['email'],
+            $row['is_blocked'],
+            $row['roles'],
+            $row['password'],
+            $row['nickname'],
+            (bool) ($row['is_pending_activation'] ?? false),
+            (bool) ($row['is_email_verified'] ?? true),
+        );
     }
 
     function poluchitSpisokVsehPolzovatelei(): array
@@ -253,10 +310,10 @@ final class JWTUserRepository implements UserProviderInterface, CanFindDouble, U
             ['role' => '%' . Role::ROLE_ADMIN->value . '%'],
         );
 
-        return array_values(array_map(
+        return array_map(
             static fn (mixed $id): string => (string) $id,
             $rows,
-        ));
+        );
     }
 
     function findSystemAccountId(): ?string

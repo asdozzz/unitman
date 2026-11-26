@@ -13,6 +13,14 @@ enum AccountEventTypeEnum: string
 
     case AccountWasRegistered = 'AccountWasRegistered';
 
+    case AccountWasRegisteredViaOAuth = 'AccountWasRegisteredViaOAuth';
+
+    case AccountRegistrationRequested = 'AccountRegistrationRequested';
+
+    case AccountEmailVerified = 'AccountEmailVerified';
+
+    case AccountWasActivatedByAdmin = 'AccountWasActivatedByAdmin';
+
     case SystemAccountWasRegistered = 'SystemAccountWasRegistered';
     case AccountWasBlockedByAdmin = 'AccountWasBlockedByAdmin';
     case AccountWasUnblockedByAdmin = 'AccountWasUnblockedByAdmin';

@@ -5,22 +5,46 @@ declare(strict_types=1);
 namespace App\Account;
 
 use App\Account\Business\Model\Account;
+use App\Account\Business\Port\CanGenerateEmailVerificationCode;
 use App\Account\Business\Port\CanGenerateRefreshToken;
+use App\Account\Business\Port\CanGenerateTemporaryPassword;
+use App\Account\Business\Port\CanHashVerificationCode;
 use App\Account\Business\Port\CanIssueAccessToken;
+use App\Account\Business\Port\CanSendEmailVerificationCode;
+use App\Account\Business\Port\CanSignOAuthState;
+use App\Account\Business\Port\EmailVerificationCodeRepository;
+use App\Account\Business\Port\OAuthExchangeCodeRepository;
+use App\Account\Business\Port\OAuthProvayderRegistry as OAuthProvayderRegistryPort;
 use App\Account\Business\Port\OpenCodeCredentialRepository;
 use App\Account\Business\Port\RefreshTokenRepository;
+use App\Account\Business\Port\SocialIdentityRepository;
+use App\Account\Business\Port\UmeetOpoveshatOZaproseAktivacii;
+use App\Account\Business\Port\UmeetOtpravlyatVremenniyParol;
 use App\Account\Business\Port\ZaprositModeliProvaydera;
 use App\Account\Business\Port\UmeetShifrovatSekrety;
 use App\Account\Business\Port\UuidGenerator;
 use App\Account\Business\Utils\EventTypeMapFactory;
+use App\Account\Infra\Adapter\AccountActivationRequestNotifier;
 use App\Account\Infra\Adapter\HttpZaprositModeliProvaydera;
+use App\Account\Infra\Adapter\PasswordEmailVerificationCodeHasher;
+use App\Account\Infra\Adapter\RandomEmailVerificationCodeGenerator;
+use App\Account\Infra\Adapter\SymfonyMailerEmailVerificationCodeSender;
+use App\Account\Infra\OAuth\GithubOAuthProvayder;
+use App\Account\Infra\OAuth\GoogleOAuthProvayder;
+use App\Account\Infra\OAuth\HmacOAuthStateCodec;
+use App\Account\Infra\OAuth\OAuthProvayderRegistry;
 use App\Account\Infra\Adapter\LexikAccessTokenIssuer;
 use App\Account\Infra\Adapter\OpenSslShifr;
 use App\Account\Infra\Adapter\RamseyUuidGenerator;
 use App\Account\Infra\Adapter\RandomRefreshTokenGenerator;
+use App\Account\Infra\Adapter\RandomTemporaryPasswordGenerator;
+use App\Account\Infra\Adapter\SymfonyMailerVremenniyParolOtpravitel;
 use App\Account\Infra\Repository\SqlAccountRepository;
+use App\Account\Infra\Repository\SqlEmailVerificationCodeRepository;
+use App\Account\Infra\Repository\SqlOAuthExchangeCodeRepository;
 use App\Account\Infra\Repository\SqlOpenCodeCredentialRepository;
 use App\Account\Infra\Repository\SqlRefreshTokenRepository;
+use App\Account\Infra\Repository\SqlSocialIdentityRepository;
 use App\App\Infra\EventStore\AuthorMessageDecorator;
 use App\Utils\EventSauce\ProjectionsManager;
 use App\Utils\EventSauce\Repository\DoctrineStreamRepository;
@@ -46,10 +70,32 @@ return function (ContainerConfigurator $configuration) {
         ->bind('$appEnv','%env(APP_ENV)%')
         ->bind('$defaultLocale','%env(ACCOUNT_DEFAULT_LOCALE)%')
         ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%')
-        ->bind('$openCodeCredentialsKey','%env(OPENCODE_CREDENTIALS_KEY)%');
+        ->bind('$openCodeCredentialsKey','%env(OPENCODE_CREDENTIALS_KEY)%')
+        ->bind('$mailerFromAddress','%env(MAILER_FROM_ADDRESS)%')
+        ->bind('$mailerFromName','%env(MAILER_FROM_NAME)%')
+        ->bind('$emailVerificationTtl','%env(int:EMAIL_VERIFICATION_TTL)%')
+        ->bind('$emailVerificationMaxAttempts','%env(int:EMAIL_VERIFICATION_MAX_ATTEMPTS)%')
+        ->bind('$emailVerificationResendCooldown','%env(int:EMAIL_VERIFICATION_RESEND_COOLDOWN)%')
+        ->bind('$oauthGoogleClientId','%env(OAUTH_GOOGLE_CLIENT_ID)%')
+        ->bind('$oauthGoogleClientSecret','%env(OAUTH_GOOGLE_CLIENT_SECRET)%')
+        ->bind('$oauthGithubClientId','%env(OAUTH_GITHUB_CLIENT_ID)%')
+        ->bind('$oauthGithubClientSecret','%env(OAUTH_GITHUB_CLIENT_SECRET)%')
+        ->bind('$oauthRedirectBaseUrl','%env(OAUTH_REDIRECT_BASE_URL)%')
+        ->bind('$oauthFrontendUrl','%env(OAUTH_FRONTEND_URL)%')
+        ->bind('$oauthStateTtl','%env(int:OAUTH_STATE_TTL)%')
+        ->bind('$oauthExchangeCodeTtl','%env(int:OAUTH_EXCHANGE_CODE_TTL)%');
 
     $services->load('App\\Account\\', './{Business,Infra,Acl,Api}')
-        ->exclude(['./{di.php,di_test.php,routing.php,Migrations,Tests}', './Business/Command', './Business/Model', './Business/ReadModel'])
+        ->exclude([
+            './{di.php,di_test.php,routing.php,Migrations,Tests}',
+            './Business/Command',
+            './Business/Model',
+            './Business/ReadModel',
+            // Сервисы ниже собираются explicit-определениями: у них
+            // неавтовайримые аргументы (секрет state, список провайдеров).
+            './Infra/OAuth/HmacOAuthStateCodec.php',
+            './Infra/OAuth/OAuthProvayderRegistry.php',
+        ])
         ->public();
 
     $services->set(UuidGenerator::class, RamseyUuidGenerator::class);
@@ -59,6 +105,22 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UmeetShifrovatSekrety::class, OpenSslShifr::class);
     $services->set(OpenCodeCredentialRepository::class, SqlOpenCodeCredentialRepository::class);
     $services->set(ZaprositModeliProvaydera::class, HttpZaprositModeliProvaydera::class);
+    $services->set(CanGenerateTemporaryPassword::class, RandomTemporaryPasswordGenerator::class);
+    $services->set(UmeetOtpravlyatVremenniyParol::class, SymfonyMailerVremenniyParolOtpravitel::class);
+    $services->set(UmeetOpoveshatOZaproseAktivacii::class, AccountActivationRequestNotifier::class);
+    $services->set(EmailVerificationCodeRepository::class, SqlEmailVerificationCodeRepository::class);
+    $services->set(CanGenerateEmailVerificationCode::class, RandomEmailVerificationCodeGenerator::class);
+    $services->set(CanHashVerificationCode::class, PasswordEmailVerificationCodeHasher::class);
+    $services->set(CanSendEmailVerificationCode::class, SymfonyMailerEmailVerificationCodeSender::class);
+    $services->set(SocialIdentityRepository::class, SqlSocialIdentityRepository::class);
+    $services->set(OAuthExchangeCodeRepository::class, SqlOAuthExchangeCodeRepository::class);
+    $services->set(CanSignOAuthState::class, HmacOAuthStateCodec::class)
+        ->args(['%env(OAUTH_STATE_SECRET)%']);
+    $services->set(OAuthProvayderRegistryPort::class, OAuthProvayderRegistry::class)
+        ->args([[
+            service(GoogleOAuthProvayder::class),
+            service(GithubOAuthProvayder::class),
+        ]]);
 
     $services->set('account.event_type_mapper', ExplicitlyMappedClassNameInflector::class)
         ->factory([service(EventTypeMapFactory::class), 'getMap']);
