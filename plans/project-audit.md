@@ -209,7 +209,7 @@ use App\Unitman\Infra\Projection\ProzesUnitaProjection;
 - openssl genpkey ... -pass pass:asd243815
 ```
 
-При этом [`.env.dist:55`](../.env.dist:55): `JWT_PASSPHRASE=1a0a60af3a1c06431ec9091ca330ae48`. `prepare` копирует `.env.dist` → `.env`, а ключ генерируется с другим паролем. Lexik при подписи JWT не сможет открыть приватный ключ — аутентификация падает. Дефолт для MVP-стенда нерабочий.
+При этом [`.env.dist:55`](../.env.dist:55): `JWT_PASSPHRASE=<redacted>`. `prepare` копирует `.env.dist` → `.env`, а ключ генерируется с другим паролем. Lexik при подписи JWT не сможет открыть приватный ключ — аутентификация падает. Дефолт для MVP-стенда нерабочий.
 
 ### 6.2 Секреты закоммичены в `.env.dist` — 🟡 Medium
 Файл сам предупреждает «DO NOT DEFINE PRODUCTION SECRETS» ([`:11`](../.env.dist:11)), но содержит: `APP_SECRET` ([`:23`](../.env.dist:23)), `JWT_PASSPHRASE` ([`:55`](../.env.dist:55)), `DB_PASS=123` ([`:32`](../.env.dist:32)), `REDIS_PASSWORD`/`REDIS_USER_PASSWORD` ([`:87-89`](../.env.dist:87)), `CENTRIFUGO_API_KEY`/`SECRET` ([`:70-72`](../.env.dist:70)). Плюс `redis:latest` в compose и `MINIO_ROOT_PASSWORD=change-me-in-env-local` ([`:111`](../.env.dist:111)) — плейсхолдер, который легко забыть.

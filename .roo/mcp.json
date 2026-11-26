@@ -4,7 +4,7 @@
 			"command": "python",
       		"args": ["-m", "graphify.serve", "graphify-out/graph.json"],
 			"env": {
-				"OPENAI_API_KEY": "sk-aitunnel-AafERj1sqrYhQ2XoRni39meudzGcstkw",
+				"OPENAI_API_KEY": "",
 				"OPENAI_BASE_URL": "https://api.aitunnel.ru/v1",
         		"OPENAI_MODEL_NAME": "glm-5.3-flash" 
 			},
