@@ -2170,10 +2170,8 @@ nelmio_api_doc:
                 UnitConfig:
                     type: object
                     description: Конфигурация юнита; пустой массив, если конфигурация ещё не задана
-                    required: [build, variables, prepare, reset_prepare, up, down, services, actions, unitman_volumes]
+                    required: [variables, prepare, reset_prepare, up, down, services, actions, unitman_volumes]
                     properties:
-                        build:
-                            $ref: '#/components/schemas/UnitConfigBuild'
                         variables:
                             type: array
                             items:
@@ -2207,22 +2205,10 @@ nelmio_api_doc:
                             description: Тома юнита. `dir` — уникальный ключ тома. Файл тома (zip-архив) загружается в медиатеку, его ид передаётся в `volumes` при создании юнита или в `zapolnitPeremenie`
                             items:
                                 $ref: '#/components/schemas/UnitVolumeConfig'
-                UnitConfigBuild:
-                    type: object
-                    description: Стадия сборки юнита (KonfigStadiiSborki::toArray)
-                    required: [image, commands]
-                    properties:
-                        image:
-                            type: string
-                            example: asdozzz/unitman-unit:latest
-                        commands:
-                            type: array
-                            items:
-                                type: string
                 UnitConfigService:
                     type: object
                     description: Сервис юнита (KonfigServisa::toArray)
-                    required: [name, ports, cache]
+                    required: [name, ports]
                     properties:
                         name:
                             type: string
@@ -2232,14 +2218,6 @@ nelmio_api_doc:
                             type: array
                             items:
                                 $ref: '#/components/schemas/UnitConfigServicePort'
-                        cache:
-                            description: Пустой массив, если кеш не настроен
-                            oneOf:
-                                - $ref: '#/components/schemas/UnitConfigServiceCache'
-                                - type: array
-                                  maxItems: 0
-                                  items:
-                                      type: object
                 UnitConfigServicePort:
                     type: object
                     description: Порт сервиса (PortServisa::toArray)
@@ -2257,19 +2235,6 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             example: /api/health
-                UnitConfigServiceCache:
-                    type: object
-                    description: Настройки кеширования сервиса (CacheServisa::toArray)
-                    required: [files, paths]
-                    properties:
-                        files:
-                            type: array
-                            items:
-                                type: string
-                        paths:
-                            type: array
-                            items:
-                                type: string
                 UnitConfigVariable:
                     type: object
                     description: Переменная конфигурации юнита (AbstractConfigVariable::toArray)

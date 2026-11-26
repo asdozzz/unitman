@@ -2,7 +2,6 @@
 
 namespace App\Unitman\Acl;
 use App\Runner\Api\RunnerApiInterface;
-use App\Runner\Business\Command\ImageConfig;
 use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatDeistvieUnita;
 use App\Runner\Business\Command\NachatObnovlenieUnita;
@@ -152,15 +151,9 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
-        $caches = $this->makeCachesListFromUnit($unit);
         $volumes = $this->makeVolumesListFromUnit($unit, $project);
         $memoryLimit = $unit->poluchitNastroikiContaineraUnita()->memoryLimit ?: 0;
         $containerSettings = new NachatPodgotovkuUnita\ContainerSettings($memoryLimit .'m');
-        $konfigStadiiSborki = $unit->getConfig()?->poluchiKonfigStadiiSbork();
-        if (empty($konfigStadiiSborki)) {
-            throw new \DomainException('Конфиг не найден');
-        }
-        $imageConfig = new ImageConfig($konfigStadiiSborki->obraz, $konfigStadiiSborki->dopolnitelnieKomandi);
         // Режим IDE пересчитывается при подготовке (15.11-а, 15.13-б): если
         // редактирование включено, ветка не защищена и юнит создан не системой,
         // сайдкар поднимается сразу в RW. Старый раннер поле игнорирует.
@@ -178,10 +171,8 @@ final class RunnerAdapter implements RunnerService
             $storageUrl,
             $unit->poluchitKomandiPodgotovki(),
             $variables,
-            $caches,
             $containerSettings,
             $unit->getBranch(),
-            $imageConfig,
             $volumes,
             $rezhimRedaktora,
             RunnerId: $runner?->getId(),
@@ -235,7 +226,6 @@ final class RunnerAdapter implements RunnerService
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
         $variables = $this->makeVariablesListFromUnit($unit, $project);
-        $caches = $this->makeCachesListFromUnit($unit);
         $runner = $this->runnerDlyaUnita($unit->getId());
         $command = new NachatZapuskUnita(
             $unit->getProjectId(),
@@ -245,7 +235,6 @@ final class RunnerAdapter implements RunnerService
             $storageUrl,
             $unit->poluchitKomandiZapuska(),
             $variables,
-            $caches,
             $unit->getBranch(),
             RunnerId: $runner?->getId(),
             TaskQueue: $runner?->getTaskQueue(),
@@ -487,27 +476,6 @@ final class RunnerAdapter implements RunnerService
                 $file['url'],
                 $file['name'],
                 $fileId
-            );
-        }
-
-        return $result;
-    }
-
-    private function makeCachesListFromUnit(Unit $unit): array
-    {
-        $poluchitKonfigServisov = $unit->poluchitKonfigServisov();
-
-        $result = [];
-
-        foreach ($poluchitKonfigServisov as $konfigServisa) {
-            if (empty($konfigServisa->cache)) {
-                continue;
-            }
-
-            $result[] = array(
-                'ServiceName' => $konfigServisa->name,
-                'Keys' => $konfigServisa->cache->files,
-                'Paths' => $konfigServisa->cache->paths
             );
         }
 

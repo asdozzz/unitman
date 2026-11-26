@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Runner\Tests\Business\Command;
 
-use App\Runner\Business\Command\ImageConfig;
 use App\Runner\Business\Command\IzmenitRezhimRedaktoraUnita;
 use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
@@ -172,10 +171,8 @@ final class RedaktorCommandsTest extends TestCase
             'https://storage.example/repo.git',
             [],
             [],
-            [],
             new ContainerSettings(),
             'main',
-            new ImageConfig('image', []),
             [],
             $rezhim,
         );

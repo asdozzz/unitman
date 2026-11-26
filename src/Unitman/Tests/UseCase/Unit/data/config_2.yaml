@@ -25,7 +25,7 @@ actions:
         type: string
         defaultValue: "debug:router"
     commands:
-      - podman-compose exec php php bin/console ${UNITMAN_ACTION_BIN_CONSOLE}
+      - docker compose exec php php bin/console ${UNITMAN_ACTION_BIN_CONSOLE}
     prepare: true
 
 services:

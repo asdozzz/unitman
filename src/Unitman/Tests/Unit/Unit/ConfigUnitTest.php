@@ -67,16 +67,6 @@ final class ConfigUnitTest extends TestCase
                         ['port' => 8081, 'type' => 'http', 'startUri' => '/test']
                     ]
                 ],
-                'php' => [
-                    'cache' => [
-                        'files' => [
-                            'composer.lock'
-                        ],
-                        'paths' => [
-                            'vendor'
-                        ]
-                    ]
-                ]
             ],
             'actions' => [
                 [
@@ -91,12 +81,12 @@ final class ConfigUnitTest extends TestCase
                         ],
                     ],
                     'commands' => [
-                        'podman-compose exec php php bin/console ${UNITMAN_ACTION_BIN_CONSOLE}'
+                        'docker compose exec php php bin/console ${UNITMAN_ACTION_BIN_CONSOLE}'
                     ]
                 ],
                 [
-                    'id' => 'podman-compose-logs',
-                    'name' => "podman-compose logs",
+                    'id' => 'docker-compose-logs',
+                    'name' => "docker compose logs",
                     'variables' => [
                         [
                             'id' => 'SERVICE_NAME',
@@ -118,7 +108,7 @@ final class ConfigUnitTest extends TestCase
                         ]
                     ],
                     'commands' => [
-                        'podman-compose logs ${UNITMAN_ACTION_SERVICE_NAME}'
+                        'docker compose logs ${UNITMAN_ACTION_SERVICE_NAME}'
                     ]
                 ]
             ]

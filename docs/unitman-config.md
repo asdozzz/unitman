@@ -116,7 +116,7 @@ up:
 down:
   - docker compose down
 
-# ─── Сервисы стенда: порты (для proxy/ссылок) и кэш сборки ───
+# ─── Сервисы стенда: порты (для proxy/ссылок) ───
 services:
   web:
     ports:
@@ -127,17 +127,6 @@ services:
         type: http
       - port: 5043
         type: tcp
-  php:
-    cache:
-      files:                   # кэш инвалидируется при изменении файлов
-        - composer.lock
-      paths:                   # эти каталоги сохраняются между сборками
-        - vendor
-
-# ─── Необязательный блок: стадия сборки образа ───
-build:
-  image: asdozzz/unitman-unit:latest   # образ, в котором собирается проект
-  commands: []                         # доп. команды сборки
 
 # ─── Пользовательские действия (кнопки в UI) ───
 actions:
@@ -211,11 +200,6 @@ services:
       - port: 80            # 0–65535
         type: http          # обязателен, приводится к нижнему регистру
         startUri: /         # необязательно, страница «здоровья»
-    cache:                  # необязательно
-      files:                # инвалидируют кэш при изменении
-        - composer.lock
-      paths:                # сохраняются между сборками
-        - vendor
 ```
 
 Пустой блок — ошибка `unit.config.services_is_empty`.
@@ -260,13 +244,6 @@ services:
 
 В командах подставляются значения переменных действия через
 `${UNITMAN_ACTION_<ID_ПЕРЕМЕННОЙ>}`.
-
-### `build` — образ сборки
-
-| Поле | По умолчанию | Описание |
-| --- | --- | --- |
-| `image` | `asdozzz/unitman-unit:latest` | Образ, в котором собирается проект |
-| `commands` | `[]` | Дополнительные команды сборки |
 
 ### `unitman_volumes` — тома юнита
 
@@ -490,7 +467,6 @@ queue и нескольких слияниях в одном push он може�
 | `down` | **да** | непустой список команд |
 | `services` | **да** | имя сервиса обязательно; у порта — `port` (0–65535, кроме зарезервированного `UNITMAN_IDE_PORT`) и `type`; `startUri` необязателен |
 | `actions` | нет | `id`, `name`, `commands` (непустой массив), `variables?`, `prepare?` |
-| `build` | нет | `image` (по умолчанию `asdozzz/unitman-unit:latest`), `commands?` |
 | `unitman_volumes` | нет | `dir` (уникальный), `name`; дубликат `dir` → ошибка `unit.config.volumes.dir_is_not_unique` |
 
 ---

@@ -3,7 +3,6 @@
 namespace App\Unitman\Tests\UseCase\Unit;
 
 use App\Runner\Api\RunnerApiInterface;
-use App\Runner\Business\Command\ImageConfig;
 use App\Runner\Business\Command\NachatPodgotovkuUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatDeistviyaUnita;
 use App\Runner\Business\Model\GolangRunner\Unit\ResultatOstanovkiUnita;
@@ -133,8 +132,6 @@ final class UnitUspeshnoOstanovlenIUdalenTest extends AbstractUnitUseCase
         $unitRepo = self::$container->get(UnitRepository::class);
         /** @var UnitRepository $unitRepo*/
         $unit = $unitRepo->getById($unitId);
-
-        $this->assertEquals('asdozzz/unitman-unit:latest', $unit->getConfig()->poluchiKonfigStadiiSbork()->obraz);
 
         $unitIzOcheredi = $ocheredUnitovRepository->getByUnitId($unitId);
         $this->assertEquals($unitIzOcheredi->lastUpdate, $now);
