@@ -124,9 +124,10 @@ services:
       - "CENTRIFUGO_API_ENDPOINT=http://centrifugo:8000/api"
       - "CENTRIFUGO_API_KEY=${CENTRIFUGO_API_KEY:-}"
       - "PROGRESS_TTL_SECONDS=7200"
-      # Per-runner HMAC-подпись saveSteps (контракт v2). Пустое значение —
-      # fallback на APP_SECRET, как в PHP RunnerSecretGenerator; если и он пуст,
-      # edge-progress отвечает 503 (fail closed).
+      # Per-runner HMAC-подпись saveSteps (контракт v2). Явный ключ обязателен:
+      # пустое значение — ошибка конфигурации, edge-progress не стартует
+      # (fail closed). Fallback на APP_SECRET отключён и включается только
+      # через EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET=true при APP_ENV=dev/local/test.
       - "RUNNER_SECRET_MASTER_KEY=${RUNNER_SECRET_MASTER_KEY:-}"
       - "APP_SECRET=${APP_SECRET:-}"
     depends_on:

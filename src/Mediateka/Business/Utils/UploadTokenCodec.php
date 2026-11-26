@@ -13,8 +13,10 @@ use Throwable;
  * Кодирование и проверка stateless-токена прямой загрузки.
  *
  * Формат: `base64url(json).base64url(HMAC-SHA256(json))`. Подпись считается
- * секретом приложения (`APP_SECRET`), поэтому подделать метаданные между
- * presign и finalize нельзя, а база данных для «ожидающих» загрузок не нужна.
+ * отдельным секретом `MEDIATEKA_UPLOAD_TOKEN_SECRET` (не `APP_SECRET`, чтобы
+ * ротация application secret не инвалидировала upload-токены), поэтому
+ * подделать метаданные между presign и finalize нельзя, а база данных для
+ * «ожидающих» загрузок не нужна.
  */
 final class UploadTokenCodec
 {
@@ -24,7 +26,11 @@ final class UploadTokenCodec
     public function __construct(private readonly string $uploadTokenSecret)
     {
         if ($this->uploadTokenSecret === '') {
-            throw new InvalidArgumentException('Upload token secret must not be empty');
+            // Fail closed and name the variable; never include the value.
+            throw new InvalidArgumentException(
+                'MEDIATEKA_UPLOAD_TOKEN_SECRET must be set to a non-empty value '
+                . '(generate one with: openssl rand -hex 32)'
+            );
         }
     }
 

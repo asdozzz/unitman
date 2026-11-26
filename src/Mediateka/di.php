@@ -26,7 +26,10 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure()
         ->bind('$maxFileSize', '%env(int:MEDIATEKA_MAX_FILE_SIZE)%')
         ->bind('$presignTtl', '%env(int:MEDIATEKA_PRESIGN_TTL)%')
-        ->bind('$uploadTokenSecret', '%env(APP_SECRET)%');
+        // Dedicated HMAC key for upload tokens. Deliberately NOT APP_SECRET:
+        // rotating the application secret must not invalidate upload tokens.
+        // Empty is fail-closed: UploadTokenCodec rejects it at DI time.
+        ->bind('$uploadTokenSecret', '%env(default::MEDIATEKA_UPLOAD_TOKEN_SECRET)%');
 
     $services->load('App\\Mediateka\\', './{Business,Infra,Acl,Api}')
         ->exclude([

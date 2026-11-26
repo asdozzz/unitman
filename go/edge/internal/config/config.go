@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -14,8 +15,9 @@ import (
 type Config struct {
 	ListenAddr string
 
-	// RunnerSecretMasterKey is RUNNER_SECRET_MASTER_KEY with APP_SECRET as
-	// fallback, resolved exactly like the PHP RunnerSecretGenerator.
+	// RunnerSecretMasterKey is the explicit RUNNER_SECRET_MASTER_KEY. The
+	// APP_SECRET fallback is disabled unless the operator opts in with
+	// EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET=true in a dev environment.
 	RunnerSecretMasterKey string
 
 	RedisAddr     string
@@ -34,9 +36,21 @@ type Config struct {
 
 // Load reads configuration from process environment with production defaults.
 func Load() (Config, error) {
+	runnerSecretMasterKey, runnerSecretFromAppSecret, err := resolveRunnerSecretMasterKey()
+	if err != nil {
+		return Config{}, err
+	}
+	if runnerSecretFromAppSecret {
+		// Name-only warning: never log the secret value itself.
+		slog.Default().Warn("runner secret derived from APP_SECRET",
+			"secret", "RUNNER_SECRET_MASTER_KEY",
+			"app_env", os.Getenv("APP_ENV"),
+		)
+	}
+
 	cfg := Config{
 		ListenAddr:            getenv("EDGE_LISTEN_ADDR", "0.0.0.0:8081"),
-		RunnerSecretMasterKey: resolveRunnerSecretMasterKey(),
+		RunnerSecretMasterKey: runnerSecretMasterKey,
 		RedisAddr:             getenv("REDIS_ADDR", "redis:6379"),
 		RedisUser:             os.Getenv("REDIS_USER"),
 		RedisPassword:         os.Getenv("REDIS_PASSWORD"),
@@ -47,8 +61,6 @@ func Load() (Config, error) {
 		MaxStepResponseBytes:  progress.DefaultMaxStepResponseBytes,
 		ProgressTTL:           7200 * time.Second,
 	}
-
-	var err error
 
 	if cfg.RedisDB, err = intEnv("REDIS_DB", 0); err != nil {
 		return Config{}, err
@@ -79,15 +91,56 @@ func Load() (Config, error) {
 	return cfg, nil
 }
 
-// resolveRunnerSecretMasterKey mirrors PHP RunnerSecretGenerator: a blank
-// RUNNER_SECRET_MASTER_KEY falls back to APP_SECRET. The result may be blank;
-// the progress handler then fails closed with 503.
-func resolveRunnerSecretMasterKey() string {
-	if masterKey := strings.TrimSpace(os.Getenv("RUNNER_SECRET_MASTER_KEY")); masterKey != "" {
-		return masterKey
+// resolveRunnerSecretMasterKey returns the dedicated runner secret. There is no
+// implicit APP_SECRET fallback: outside a dev environment a missing key is a
+// hard configuration error (fail closed). In dev/development/local/test the
+// fallback is still opt-in only, via
+// EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET=true, and the caller logs a WARN that
+// names the variable without exposing its value.
+func resolveRunnerSecretMasterKey() (masterKey string, fromAppSecret bool, err error) {
+	if explicit := strings.TrimSpace(os.Getenv("RUNNER_SECRET_MASTER_KEY")); explicit != "" {
+		return explicit, false, nil
 	}
 
-	return strings.TrimSpace(os.Getenv("APP_SECRET"))
+	allowFallback, err := boolEnv("EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET", false)
+	if err != nil {
+		return "", false, err
+	}
+
+	if !allowFallback {
+		return "", false, fmt.Errorf(
+			"RUNNER_SECRET_MASTER_KEY is required; set it explicitly " +
+				"(openssl rand -hex 32). The APP_SECRET fallback is disabled " +
+				"unless EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET=true in a dev environment",
+		)
+	}
+
+	if !isDevLikeEnv(os.Getenv("APP_ENV")) {
+		return "", false, fmt.Errorf(
+			"EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET is only allowed when APP_ENV is dev/local/test (got %q)",
+			os.Getenv("APP_ENV"),
+		)
+	}
+
+	appSecret := strings.TrimSpace(os.Getenv("APP_SECRET"))
+	if appSecret == "" {
+		return "", false, fmt.Errorf(
+			"RUNNER_SECRET_MASTER_KEY and APP_SECRET are both empty: cannot derive the runner secret",
+		)
+	}
+
+	return appSecret, true, nil
+}
+
+// isDevLikeEnv reports whether APP_ENV is one of the explicitly supported
+// development environments. It matches the webhook escape-hatch gating.
+func isDevLikeEnv(appEnv string) bool {
+	switch strings.ToLower(strings.TrimSpace(appEnv)) {
+	case "dev", "development", "local", "test":
+		return true
+	default:
+		return false
+	}
 }
 
 func getenv(name, fallback string) string {

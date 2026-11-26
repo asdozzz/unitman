@@ -55,8 +55,8 @@ Go-сервис `go/edge` собирается в образ `unitman-edge:dev` 
 | `WEBHOOK_RATE_LIMIT_PER_SECOND` | `100` | Лимит на проект/провайдер, `0` отключает. |
 | `PHP_WEBHOOK_BASE_URL` | `http://web:8080` | Куда `edge-webhook` проксирует события. |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | пусто | Если пусто, compose подставляет `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`. |
-| `RUNNER_SECRET_MASTER_KEY` | пусто | Master key для per-runner секрета `edge-progress` (контракт v2). Пусто — fallback на `APP_SECRET`. |
-| `APP_SECRET` | — | Fallback для `RUNNER_SECRET_MASTER_KEY`. Если оба пусты, `edge-progress` отвечает `503` (fail closed). |
+| `RUNNER_SECRET_MASTER_KEY` | пусто | Обязательный master key для per-runner секрета `edge-progress` (контракт v2). Пусто — `edge-progress` не стартует (fail closed). |
+| `APP_SECRET` | — | Устаревший fallback, отключён. Включается только `EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET=true` при `APP_ENV=dev/local/test`. |
 
 Секреты не коммитить: боевые значения — только в `.env.local` или секретах
 окружения.
@@ -113,13 +113,13 @@ printf 'DOCKER_GID=1001\n' >> .env  # или задайте в .env.local
    подписан теми же заголовками, что и на PHP-пути. Подпись считается как
    `hex(HMAC-SHA256(responseId . stepsContent, runnerSecret))`, где
    `runnerSecret = hex(HMAC-SHA256(runnerId, RUNNER_SECRET_MASTER_KEY))`
-   (при пустом master key — `APP_SECRET`):
+   (fallback на `APP_SECRET` только через явный dev-флаг):
 
    ```sh
    tests/load/register-progress-token.sh smoke-edge-progress
 
    RUNNER_ID=runner-test
-   MASTER_KEY="${RUNNER_SECRET_MASTER_KEY:-$APP_SECRET}"
+   MASTER_KEY="$RUNNER_SECRET_MASTER_KEY"
    RESPONSE_ID=smoke-edge-progress
    STEPS='[{"command":"echo ok","response":"ok","success":true,"unixtime":1730000000}]'
    SECRET=$(printf '%s' "$RUNNER_ID" | openssl dgst -sha256 -hmac "$MASTER_KEY" -hex | awk '{print $2}')
@@ -215,11 +215,13 @@ POST http://<host>:8090/api/runner/saveSteps
 
 - обязательные заголовки `X-Runner-Id` и `X-Runner-Signature`;
 - `runnerSecret = hex(HMAC-SHA256(runnerId, masterKey))`,
-  `masterKey = RUNNER_SECRET_MASTER_KEY` (fallback `APP_SECRET`);
+  `masterKey = RUNNER_SECRET_MASTER_KEY` (fallback на `APP_SECRET` только
+  через `EDGE_ALLOW_RUNNER_SECRET_FROM_APP_SECRET=true` в dev);
 - `signature = hex(HMAC-SHA256(responseId . stepsContent, runnerSecret))`,
   сравнение constant-time (`hmac.Equal`);
 - отсутствующий/неверный заголовок — `401 runner.invalid_signature`;
-- пустой master key — `503 runner.signature_not_configured` (fail closed).
+- без явного master key `edge-progress` не стартует (fail closed); пустой
+  ключ на уровне handler — `503 runner.signature_not_configured`.
 
 Подпись проверяется до любой записи в Redis. После неё сохраняется прежняя
 проверка токена `responseId` (`runner.progress.token.*`); секрет и подпись не

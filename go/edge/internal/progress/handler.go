@@ -51,8 +51,8 @@ type Options struct {
 	PublishMarkerTTL time.Duration
 	Now              func() time.Time
 	Logger           *slog.Logger
-	// RunnerSecretMasterKey resolves RUNNER_SECRET_MASTER_KEY with APP_SECRET
-	// as fallback (same rule as the PHP backend). Empty means fail closed.
+	// RunnerSecretMasterKey is the explicit RUNNER_SECRET_MASTER_KEY resolved
+	// by config.Load. Empty means fail closed.
 	RunnerSecretMasterKey string
 }
 
