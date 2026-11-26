@@ -7,7 +7,9 @@ namespace App\Runner\Business\Command\Workspace;
 /**
  * Проект в составе workspace-стенда.
  *
- * `StorageUrl` содержит токен доступа и передаётся только в Go-runner.
+ * `StorageUrl` — чистый remote URL без userinfo. `RepoId` нужен Go-runner
+ * для just-in-time запроса короткоживущего гранта; токен в команде не
+ * передаётся.
  */
 final class ProektWorkspaceCommand
 {
@@ -18,6 +20,7 @@ final class ProektWorkspaceCommand
         public readonly string $StorageUrl,
         public readonly bool $CanPush,
         public readonly string $MainBranch,
+        public readonly string $RepoId = '',
     ) {
     }
 }

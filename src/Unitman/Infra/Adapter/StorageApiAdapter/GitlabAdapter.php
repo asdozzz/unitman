@@ -142,9 +142,10 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
             $scheme = "";
         }
         $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
-        $storageUrl = $scheme.'://oauth2:'.$repo->rasshifrovatToken($this->shifr).'@'.$urlWithoutScheme;
-        $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';
-        return $projectUrl;
+
+        // URL без userinfo: токен не должен попадать в Temporal/read-модели.
+        // Git получает его через broker + askpass.
+        return $scheme.'://'.$urlWithoutScheme.'/'.$project->getCode().'.git';
     }
 
     public function canPush(Repo $repo, Project $project): bool

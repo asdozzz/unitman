@@ -7,8 +7,9 @@ namespace App\Unitman\Business\ReadModel\Project;
 /**
  * Проект, доступный для workspace-сессии OpenCode.
  *
- * `storageUrl` содержит токен и отдаётся только Runner; через HTTP OpenCode
- * это поле не публикуется.
+ * `storageUrl` — чистый remote URL без userinfo. Токен раннер получает
+ * отдельным короткоживущим грантом по `repoId`; через HTTP OpenCode
+ * эти поля не публикуются.
  */
 final class ProektDlyaWorkspaceReadModel
 {
@@ -20,6 +21,7 @@ final class ProektDlyaWorkspaceReadModel
         public readonly bool $canPush,
         public readonly string $storageUrl,
         public readonly int $idePort,
+        public readonly string $repoId = '',
     ) {
     }
 }

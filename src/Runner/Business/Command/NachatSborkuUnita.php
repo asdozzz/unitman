@@ -12,6 +12,7 @@ final class NachatSborkuUnita
         public readonly string $Branch,
         public readonly ?string $RunnerId = null,
         public readonly ?string $TaskQueue = null,
+        public readonly string $RepoId = '',
     )
     {
     }

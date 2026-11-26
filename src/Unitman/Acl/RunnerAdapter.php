@@ -142,6 +142,7 @@ final class RunnerAdapter implements RunnerService
             $unit->getBranch(),
             RunnerId: $runner?->getId(),
             TaskQueue: $runner?->getTaskQueue(),
+            RepoId: $project->getRepoId(),
         );
         $workflowId = $this->runnerApi->nachatSborkuUnita($jobId,$command);
         return new JobId($workflowId);
@@ -177,6 +178,7 @@ final class RunnerAdapter implements RunnerService
             $rezhimRedaktora,
             RunnerId: $runner?->getId(),
             TaskQueue: $runner?->getTaskQueue(),
+            RepoId: $project->getRepoId(),
         );
         $workflowId = $this->runnerApi->nachatPodgotovkuUnita($jobId,$command);
         return new JobId($workflowId);
@@ -195,6 +197,7 @@ final class RunnerAdapter implements RunnerService
             $storageUrl,
             RunnerId: $runner?->getId(),
             TaskQueue: $runner?->getTaskQueue(),
+            RepoId: $project->getRepoId(),
         );
         $workflowId = $this->runnerApi->nachatObnovlenieUnita($jobId, $command);
         return new JobId($workflowId);

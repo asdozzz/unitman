@@ -25,7 +25,7 @@ final class WorkspaceDtoTest extends TestCase
             'project-1',
             'api',
             'services/api',
-            'https://oauth2:token@gitlab.example/services/api.git',
+            'https://gitlab.example/services/api.git',
             true,
             'main',
         );
@@ -110,7 +110,7 @@ final class WorkspaceDtoTest extends TestCase
             'project-1',
             'api',
             'services/api',
-            'https://oauth2:token@gitlab.example/services/api.git',
+            'https://gitlab.example/services/api.git',
             false,
             'master',
         );
@@ -118,7 +118,7 @@ final class WorkspaceDtoTest extends TestCase
         self::assertSame('project-1', $project->ProjectId);
         self::assertSame('api', $project->ProjectName);
         self::assertSame('services/api', $project->ProjectCode);
-        self::assertSame('https://oauth2:token@gitlab.example/services/api.git', $project->StorageUrl);
+        self::assertSame('https://gitlab.example/services/api.git', $project->StorageUrl);
         self::assertFalse($project->CanPush);
         self::assertSame('master', $project->MainBranch);
     }

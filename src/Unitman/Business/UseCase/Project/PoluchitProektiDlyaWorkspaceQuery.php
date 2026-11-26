@@ -78,6 +78,7 @@ final class PoluchitProektiDlyaWorkspaceQuery
                 canPush: $this->proverkaPusha->canPush($repo, $project),
                 storageUrl: $this->urlKlonaProekta->poluchitUrlKlonaProekta($repo, $project),
                 idePort: IdePort::izOkruzheniya(),
+                repoId: $repo->getId(),
             );
         }
 

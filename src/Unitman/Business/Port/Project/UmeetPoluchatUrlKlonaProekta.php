@@ -10,9 +10,9 @@ use App\Unitman\Business\Model\Repo;
 interface UmeetPoluchatUrlKlonaProekta
 {
     /**
-     * URL клонирования проекта вместе с токеном доступа.
+     * Чистый URL клонирования проекта — без userinfo/токена.
      *
-     * URL возвращается только Runner и не должен попадать в HTTP-ответы.
+     * Токен выдаётся отдельным короткоживущим грантом broker-эндпоинта.
      */
     public function poluchitUrlKlonaProekta(Repo $repo, Project $project): string;
 }

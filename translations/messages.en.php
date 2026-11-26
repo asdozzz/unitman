@@ -401,7 +401,10 @@ return [
         'token_upcast_missing_repo_id' => 'Cannot upgrade a legacy repository token: repository ID is missing',
         'url_is_empty' => 'The repository URL must not be empty',
         'credentials' => [
+            'denied' => 'Access to repository credentials is denied',
+            'invalid_request' => 'Invalid repository credentials request',
             'token_is_empty' => 'The access token must not be empty',
+            'unavailable' => 'Repository credentials are temporarily unavailable',
             'url_invalid' => 'The repository URL is invalid',
             'url_is_empty' => 'The repository URL must not be empty',
         ],

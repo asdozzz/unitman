@@ -17,6 +17,7 @@ use App\Runner\Business\Port\UmeetObnovlyatStatistikuPoUnitam;
 use App\Runner\Business\Port\UmeetProveryatPravaAdmina;
 use App\Runner\Business\Port\UmeetSozdavatUvedomlenieOBugroze;
 use App\Runner\Business\Port\UmeetPoluchatRekvizityOpenCode;
+use App\Runner\Business\Port\UmeetPoluchatKredensialyRepozitoriya;
 use App\Runner\Business\Port\UmeetPoluchatUrlKlonaProekta;
 use App\Runner\Acl\NotificationAdapter;
 use App\Runner\Infra\Adapter\DefaultRunnerSelector;
@@ -62,6 +63,7 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UmeetObnovlyatStatistikuPoUnitam::class, UnitmanAdapter::class);
     $services->set(UmeetObnovlyatSostoyanieKonteyneraUnita::class, UnitmanAdapter::class);
     $services->set(UmeetPoluchatUrlKlonaProekta::class, UnitmanAdapter::class);
+    $services->set(UmeetPoluchatKredensialyRepozitoriya::class, UnitmanAdapter::class);
     $services->set(UmeetPoluchatRekvizityOpenCode::class, AccountAdapter::class);
     $services->set(UmeetProveryatPravaAdmina::class, SecurityAdapter::class);
     $services->set(UmeetSozdavatUvedomlenieOBugroze::class, NotificationAdapter::class);

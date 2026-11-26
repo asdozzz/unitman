@@ -12,6 +12,7 @@ final class NachatObnovlenieUnita
         public readonly string $StorageUrl,
         public readonly ?string $RunnerId = null,
         public readonly ?string $TaskQueue = null,
+        public readonly string $RepoId = '',
     )
     {
     }

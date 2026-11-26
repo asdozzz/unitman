@@ -167,7 +167,8 @@ trait GiteaFamilyOperations
         }
 
         $port = parse_url($url, PHP_URL_PORT);
-        $prefix = $scheme.'://'.$repo->rasshifrovatToken($this->shifr).'@'.$host
+        // Без userinfo: токен выдаётся broker-ом и передаётся через askpass.
+        $prefix = $scheme.'://'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
         $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');

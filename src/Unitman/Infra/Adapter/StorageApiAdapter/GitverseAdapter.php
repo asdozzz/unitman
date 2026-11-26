@@ -223,7 +223,8 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
         }
 
         $port = parse_url($url, PHP_URL_PORT);
-        $prefix = $scheme.'://'.$repo->rasshifrovatToken($this->shifr).'@'.$host
+        // Без userinfo: git-креденшелы приходят через broker/askpass.
+        $prefix = $scheme.'://'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
         $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');

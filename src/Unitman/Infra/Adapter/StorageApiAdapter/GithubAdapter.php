@@ -153,9 +153,10 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
             $scheme = "";
         }
         $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
-        $storageUrl = $scheme.'://'.$repo->rasshifrovatToken($this->shifr).'@'.$urlWithoutScheme;
-        $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';
-        return $projectUrl;
+
+        // URL намеренно без userinfo: токен выдаётся отдельным короткоживущим
+        // грантом и передаётся git через askpass, а не в URL.
+        return $scheme.'://'.$urlWithoutScheme.'/'.$project->getCode().'.git';
     }
 
     public function canPush(Repo $repo, Project $project): bool

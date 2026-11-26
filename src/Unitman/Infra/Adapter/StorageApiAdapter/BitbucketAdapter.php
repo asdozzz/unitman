@@ -186,8 +186,8 @@ final class BitbucketAdapter implements \App\Unitman\Infra\Adapter\StorageApiAda
 
     public function getUrlForInitProject(Repo $repo, Project $project): string
     {
-        return 'https://x-token-auth:'.$repo->rasshifrovatToken($this->shifr).'@bitbucket.org/'
-            .ltrim($project->getCode(), '/').'.git';
+        // Без userinfo: токен выдаётся broker-ом и передаётся через askpass.
+        return 'https://bitbucket.org/'.ltrim($project->getCode(), '/').'.git';
     }
 
     public function canPush(Repo $repo, Project $project): bool

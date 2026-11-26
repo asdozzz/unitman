@@ -27,6 +27,7 @@ final class NachatPodgotovkuUnita
         public readonly string $RezhimRedaktora = 'view',
         public readonly ?string $RunnerId = null,
         public readonly ?string $TaskQueue = null,
+        public readonly string $RepoId = '',
     )
     {
     }

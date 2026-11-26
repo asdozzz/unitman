@@ -7,9 +7,8 @@ namespace App\Runner\Business\Command\Workspace;
 /**
  * Запуск workspace-стенда на стороне Go-runner.
  *
- * Проекты приходят от вызывающей стороны уже с токенизированным `StorageUrl`:
- * Runner не обращается к Unitman за проектными данными, а только передаёт
- * подготовленную команду в workflow.
+ * Проекты приходят с чистым `StorageUrl` и `RepoId`. Токен выдаётся
+ * broker-эндпоинтом в активности и не попадает в workflow/state.
  */
 final class ZapustitWorkspace
 {

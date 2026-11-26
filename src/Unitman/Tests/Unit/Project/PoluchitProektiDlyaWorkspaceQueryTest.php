@@ -48,6 +48,8 @@ final class PoluchitProektiDlyaWorkspaceQueryTest extends TestCase
         self::assertTrue($result[1]->canPush);
         self::assertSame('https://clone.example/p2.git', $result[0]->storageUrl);
         self::assertSame('https://clone.example/p1.git', $result[1]->storageUrl);
+        self::assertSame('r2', $result[0]->repoId);
+        self::assertSame('r1', $result[1]->repoId);
         self::assertSame(IdePort::izOkruzheniya(), $result[0]->idePort);
     }
 

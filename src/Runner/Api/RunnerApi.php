@@ -682,8 +682,9 @@ final class RunnerApi implements RunnerApiInterface
 
         $this->proveritResursy($runnerState);
 
-        // Токен не приходит от вызывающей стороны: URL клона дозапрашивается
-        // у Unitman здесь, и только обогащённая команда уходит в workflow.
+        // Токен не приходит от вызывающей стороны: чистый URL и repoId
+        // дозапрашиваются у Unitman здесь, а сам токен runner получает
+        // just-in-time из broker-эндпоинта уже внутри активности.
         $projects = [];
 
         foreach ($command->Projects as $project) {
@@ -694,6 +695,7 @@ final class RunnerApi implements RunnerApiInterface
                 $this->urlKlonaProekta->poluchitUrlKlona($project->ProjectId),
                 $project->CanPush,
                 $project->MainBranch,
+                $this->urlKlonaProekta->poluchitRepoIdKlona($project->ProjectId),
             );
         }
 

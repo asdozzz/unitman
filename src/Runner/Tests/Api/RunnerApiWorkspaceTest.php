@@ -91,7 +91,11 @@ final class RunnerApiWorkspaceTest extends TestCase
         $urlKlona->expects(self::once())
             ->method('poluchitUrlKlona')
             ->with('project-1')
-            ->willReturn('https://oauth2:token@gitlab.example/services/api.git');
+            ->willReturn('https://gitlab.example/services/api.git');
+        $urlKlona->expects(self::once())
+            ->method('poluchitRepoIdKlona')
+            ->with('project-1')
+            ->willReturn('repo-1');
 
         $api = $this->api($client, $storage, null, $urlKlona);
 
@@ -107,12 +111,15 @@ final class RunnerApiWorkspaceTest extends TestCase
         self::assertSame('unitman-mono-queue', $this->optionValue($captured, 'taskQueue'));
         self::assertSame('workspace-wf', $this->optionValue($captured, 'workflowId'));
 
-        // В workflow уходит обогащённая команда с токеном...
+        // В workflow уходит только чистый URL и repoId, без токена.
         self::assertInstanceOf(ZapustitWorkspace::class, $started);
         self::assertSame(
-            'https://oauth2:token@gitlab.example/services/api.git',
+            'https://gitlab.example/services/api.git',
             $started->Projects[0]->StorageUrl,
         );
+        self::assertSame('repo-1', $started->Projects[0]->RepoId);
+        self::assertStringNotContainsString('token@', $started->Projects[0]->StorageUrl);
+        self::assertStringNotContainsString('oauth2:', $started->Projects[0]->StorageUrl);
 
         // ...и базовой веткой проекта из публичного запроса.
         self::assertSame('main', $started->Projects[0]->MainBranch);

@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 final class PoluchitUrlKlonaProektaQueryTest extends TestCase
 {
-    public function testVozvrashchaetUrlKlonaSTokenom(): void
+    public function testVozvrashchaetChistiyUrlKlona(): void
     {
         $project = Project::addProject(
             'p1',
@@ -41,12 +41,12 @@ final class PoluchitUrlKlonaProektaQueryTest extends TestCase
         $urlKlona = $this->createMock(UmeetPoluchatUrlKlonaProekta::class);
         $urlKlona->method('poluchitUrlKlonaProekta')
             ->with($repo, $project)
-            ->willReturn('https://oauth2:secret-token@gitlab.example.test/services/api.git');
+            ->willReturn('https://gitlab.example.test/services/api.git');
 
         $query = new PoluchitUrlKlonaProektaQuery($projectRepository, $repoRepository, $urlKlona);
 
         self::assertSame(
-            'https://oauth2:secret-token@gitlab.example.test/services/api.git',
+            'https://gitlab.example.test/services/api.git',
             $query->handle('p1'),
         );
     }

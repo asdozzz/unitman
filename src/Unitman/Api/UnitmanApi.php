@@ -9,11 +9,13 @@ use App\Unitman\Business\Command\Unit\SozdatUnit;
 use App\Unitman\Business\Command\Unit\SozdatUnitiDlyaProektov;
 use App\Unitman\Business\Model\Unit\TipZanyatosti;
 use App\Unitman\Business\ReadModel\Project\ProektDlyaWorkspaceReadModel;
+use App\Unitman\Business\ReadModel\Repo\RepoCredentialGrantReadModel;
 use App\Unitman\Business\ReadModel\Unit\SozdannieUnitiReadModel;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
 use App\Unitman\Business\UseCase\Project\PoluchitProektiDlyaWorkspaceQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitUrlKlonaProektaQuery;
+use App\Unitman\Business\UseCase\Repo\PoluchitKredensialyRepozitoriyaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitSostoyanieKonteyneraUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitStatistikuPoKonteineruUnitaUseCase;
 use App\Unitman\Business\UseCase\Unit\OsvoboditZanyatostUnitovUseCase;
@@ -47,6 +49,7 @@ final class UnitmanApi
         private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
         private PoluchitProektiDlyaWorkspaceQuery $poluchitProektiDlyaWorkspaceQuery,
         private PoluchitUrlKlonaProektaQuery $poluchitUrlKlonaProektaQuery,
+        private PoluchitKredensialyRepozitoriyaUseCase $kredensialyRepozitoriyaUseCase,
         private UmeetPoluchatTokenRedaktirovaniya $umeetPoluchatTokenRedaktirovaniya,
     )
     {
@@ -157,13 +160,40 @@ final class UnitmanApi
     }
 
     /**
-     * URL клонирования проекта с токеном. Только для Runner.
+     * Чистый URL клонирования проекта (без userinfo/токена). Только для Runner.
      *
      * @throws \DomainException opencode.workspace.project_not_found
      */
     function poluchitUrlKlonaProekta(string $projectId): string
     {
         return $this->poluchitUrlKlonaProektaQuery->handle($projectId);
+    }
+
+    /**
+     * repoId проекта. Нужен раннеру для just-in-time запроса гранта.
+     *
+     * @throws \DomainException opencode.workspace.project_not_found
+     */
+    function poluchitRepoIdProekta(string $projectId): string
+    {
+        return $this->poluchitUrlKlonaProektaQuery->handleRepoId($projectId);
+    }
+
+    /**
+     * Короткоживущий грант доступа раннера к репозиторию проекта.
+     *
+     * Токен возвращается только в этот метод, который вызывается из
+     * аутентифицированного runner-facing endpoint. Не логировать результат.
+     *
+     * @throws \DomainException repo.credentials.denied|repo.credentials.unavailable|repo.credentials.invalid_request
+     */
+    function poluchitKredensialyRepozitoriya(
+        string $runnerId,
+        string $repoId,
+        string $projectId,
+        ?string $unitId = null,
+    ): RepoCredentialGrantReadModel {
+        return $this->kredensialyRepozitoriyaUseCase->handle($runnerId, $repoId, $projectId, $unitId);
     }
 
     /**
