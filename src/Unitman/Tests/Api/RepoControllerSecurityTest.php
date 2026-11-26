@@ -50,7 +50,8 @@ final class RepoControllerSecurityTest extends WebTestCase
         $repo->type = 'gitlab';
         $repo->name = 'ws1-fixture-repo';
         $repo->repoUrl = 'https://example.invalid/ws1-fixture-repo';
-        $repo->token = self::SYNTHETIC_TOKEN;
+        $repo->tokenCipher = 'synthetic-cipher-fixture';
+        $repo->tokenHint = 'ALUE';
         $repo->confirmed = true;
         $repository->insert($repo);
     }

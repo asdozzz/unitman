@@ -31,7 +31,10 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
     private const PAGE_SIZE = 50;
     private const MAX_PAGES = 100;
 
-    public function __construct(private readonly HttpClientInterface $httpClient)
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        private readonly \App\Unitman\Business\Port\UmeetShifrovatSekrety $shifr,
+    )
     {
     }
 
@@ -173,7 +176,7 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
         }
 
         $port = parse_url($url, PHP_URL_PORT);
-        $prefix = $scheme.'://'.$repo->getCredentials()->token.'@'.$host
+        $prefix = $scheme.'://'.$repo->rasshifrovatToken($this->shifr).'@'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
         $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');
@@ -224,7 +227,7 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
             'GET',
             $this->apiBase($repo).$this->repoPath($projectCode).'/blob',
             [
-                'headers' => $this->headers($repo->getCredentials()->token),
+                'headers' => $this->headers($repo->rasshifrovatToken($this->shifr)),
                 'query' => [
                     'commitHash' => $commitHash,
                     'file' => 'unitman.yaml',
@@ -275,7 +278,7 @@ final class GitflicAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapt
         ?string $token = null,
     ): mixed {
         $options = [
-            'headers' => $this->headers($token ?? $repo->getCredentials()->token),
+            'headers' => $this->headers($token ?? $repo->rasshifrovatToken($this->shifr)),
             'query' => $query,
         ];
 

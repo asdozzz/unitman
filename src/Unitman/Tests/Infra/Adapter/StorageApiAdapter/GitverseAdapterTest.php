@@ -8,6 +8,7 @@ use App\Unitman\Business\Command\Repo\AddRepo;
 use App\Unitman\Business\Model\Project\StatusVetki;
 use App\Unitman\Business\Model\Repo;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\GitverseAdapter;
+use App\Unitman\Tests\Support\PlainTextShifr;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -18,7 +19,7 @@ final class GitverseAdapterTest extends TestCase
     #[Test]
     public function saas_url_po_umolchaniyu(): void
     {
-        $adapter = new GitverseAdapter(new MockHttpClient());
+        $adapter = new GitverseAdapter(new MockHttpClient(), new PlainTextShifr());
 
         self::assertSame('https://gitverse.ru', $adapter->poluchitUrlHranilisha(null));
         self::assertTrue($adapter->isSupport(Repo\RepoType::GITVERSE));
@@ -46,7 +47,7 @@ final class GitverseAdapterTest extends TestCase
             return new MockResponse('[]', ['http_code' => 200]);
         });
 
-        $sostoyanie = (new GitverseAdapter($client))->poluchitSostoyanieVetki(
+        $sostoyanie = (new GitverseAdapter($client, new PlainTextShifr()))->poluchitSostoyanieVetki(
             $this->repo(),
             'acme/api',
             'feature/123',
@@ -71,16 +72,12 @@ final class GitverseAdapterTest extends TestCase
 
         self::assertSame(
             'units: []',
-            (new GitverseAdapter($client))->poluchitKonfigIzHranilisha($this->repo(), 'acme/api', 'main'),
+            (new GitverseAdapter($client, new PlainTextShifr()))->poluchitKonfigIzHranilisha($this->repo(), 'acme/api', 'main'),
         );
     }
 
     private function repo(): Repo
     {
-        return Repo::addRepo(
-            'repo-1',
-            new AddRepo('GITVERSE', 'repo', 'token', 'https://gitverse.ru'),
-            'https://gitverse.ru',
-        );
+        return Repo::addRepo('repo-1', 'GITVERSE', 'repo', 'https://gitverse.ru', 'token', '');
     }
 }

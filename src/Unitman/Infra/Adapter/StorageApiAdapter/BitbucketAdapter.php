@@ -27,7 +27,10 @@ final class BitbucketAdapter implements \App\Unitman\Infra\Adapter\StorageApiAda
     private const API_URL = 'https://api.bitbucket.org/2.0';
     private const PAGE_LENGTH = 50;
 
-    public function __construct(private readonly HttpClientInterface $httpClient)
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        private readonly \App\Unitman\Business\Port\UmeetShifrovatSekrety $shifr,
+    )
     {
     }
 
@@ -183,7 +186,7 @@ final class BitbucketAdapter implements \App\Unitman\Infra\Adapter\StorageApiAda
 
     public function getUrlForInitProject(Repo $repo, Project $project): string
     {
-        return 'https://x-token-auth:'.$repo->getCredentials()->token.'@bitbucket.org/'
+        return 'https://x-token-auth:'.$repo->rasshifrovatToken($this->shifr).'@bitbucket.org/'
             .ltrim($project->getCode(), '/').'.git';
     }
 
@@ -218,7 +221,7 @@ final class BitbucketAdapter implements \App\Unitman\Infra\Adapter\StorageApiAda
             .'/src/'.rawurlencode($branchName).'/unitman.yaml';
 
         $response = $this->httpClient->request('GET', $url, [
-            'headers' => ['Authorization' => 'Bearer '.$repo->getCredentials()->token],
+            'headers' => ['Authorization' => 'Bearer '.$repo->rasshifrovatToken($this->shifr)],
         ]);
 
         if ($response->getStatusCode() >= 400) {
@@ -301,7 +304,7 @@ final class BitbucketAdapter implements \App\Unitman\Infra\Adapter\StorageApiAda
     ): array {
         $options = [
             'headers' => [
-                'Authorization' => 'Bearer '.($token ?? $repo->getCredentials()->token),
+                'Authorization' => 'Bearer '.($token ?? $repo->rasshifrovatToken($this->shifr)),
                 'Accept' => 'application/json',
             ],
             'query' => $query,

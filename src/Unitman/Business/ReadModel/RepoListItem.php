@@ -40,7 +40,9 @@ final class RepoListItem
         $item->type = $repo->type;
         $item->name = $repo->name;
         $item->repoUrl = $repo->repoUrl;
-        $item->tokenHint = self::maskToken($repo->token);
+        // Проекция уже хранит необратимый hint; открытый токен не нужен и
+        // не должен попадать в публичный ответ ни при каких условиях.
+        $item->tokenHint = $repo->tokenHint;
         $item->confirmed = $repo->confirmed;
 
         return $item;

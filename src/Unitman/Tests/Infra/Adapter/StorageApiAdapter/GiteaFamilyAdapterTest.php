@@ -10,6 +10,7 @@ use App\Unitman\Business\Model\Repo;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\CodebergAdapter;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\ForgejoAdapter;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\GiteaAdapter;
+use App\Unitman\Tests\Support\PlainTextShifr;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -22,14 +23,14 @@ final class GiteaFamilyAdapterTest extends TestCase
     {
         $client = new MockHttpClient();
 
-        self::assertTrue((new GiteaAdapter($client))->isSupport(Repo\RepoType::GITEA));
-        self::assertFalse((new GiteaAdapter($client))->isSupport(Repo\RepoType::FORGEJO));
+        self::assertTrue((new GiteaAdapter($client, $this->shifr()))->isSupport(Repo\RepoType::GITEA));
+        self::assertFalse((new GiteaAdapter($client, $this->shifr()))->isSupport(Repo\RepoType::FORGEJO));
 
-        self::assertTrue((new ForgejoAdapter($client))->isSupport(Repo\RepoType::FORGEJO));
-        self::assertFalse((new ForgejoAdapter($client))->isSupport(Repo\RepoType::CODEBERG));
+        self::assertTrue((new ForgejoAdapter($client, $this->shifr()))->isSupport(Repo\RepoType::FORGEJO));
+        self::assertFalse((new ForgejoAdapter($client, $this->shifr()))->isSupport(Repo\RepoType::CODEBERG));
 
-        self::assertTrue((new CodebergAdapter($client))->isSupport(Repo\RepoType::CODEBERG));
-        self::assertFalse((new CodebergAdapter($client))->isSupport(Repo\RepoType::GITEA));
+        self::assertTrue((new CodebergAdapter($client, $this->shifr()))->isSupport(Repo\RepoType::CODEBERG));
+        self::assertFalse((new CodebergAdapter($client, $this->shifr()))->isSupport(Repo\RepoType::GITEA));
     }
 
     #[Test]
@@ -39,11 +40,11 @@ final class GiteaFamilyAdapterTest extends TestCase
 
         self::assertSame(
             'https://gitea.example',
-            (new GiteaAdapter($client))->poluchitUrlHranilisha('https://gitea.example/api/v1/'),
+            (new GiteaAdapter($client, $this->shifr()))->poluchitUrlHranilisha('https://gitea.example/api/v1/'),
         );
         self::assertSame(
             'https://codeberg.org',
-            (new CodebergAdapter($client))->poluchitUrlHranilisha(null),
+            (new CodebergAdapter($client, $this->shifr()))->poluchitUrlHranilisha(null),
         );
     }
 
@@ -55,12 +56,12 @@ final class GiteaFamilyAdapterTest extends TestCase
                 str_ends_with($url, '/user') ? '{"login":"tester"}' : '[]',
                 ['http_code' => 200],
             ),
-        ));
+        ), $this->shifr());
         self::assertTrue($ok->proveritToken('token', $this->repo('GITEA')));
 
         $fail = new GiteaAdapter(new MockHttpClient(
             static fn(): MockResponse => new MockResponse('{"message":"unauthorized"}', ['http_code' => 401]),
-        ));
+        ), $this->shifr());
         self::assertFalse($fail->proveritToken('token', $this->repo('GITEA')));
     }
 
@@ -85,7 +86,7 @@ final class GiteaFamilyAdapterTest extends TestCase
             return new MockResponse('[]', ['http_code' => 200]);
         });
 
-        $sostoyanie = (new GiteaAdapter($client))->poluchitSostoyanieVetki(
+        $sostoyanie = (new GiteaAdapter($client, $this->shifr()))->poluchitSostoyanieVetki(
             $this->repo('GITEA'),
             'acme/api',
             'feature/123',
@@ -105,16 +106,17 @@ final class GiteaFamilyAdapterTest extends TestCase
 
         self::assertSame(
             'units: []',
-            (new GiteaAdapter($client))->poluchitKonfigIzHranilisha($this->repo('GITEA'), 'acme/api', 'main'),
+            (new GiteaAdapter($client, $this->shifr()))->poluchitKonfigIzHranilisha($this->repo('GITEA'), 'acme/api', 'main'),
         );
+    }
+
+    private function shifr(): PlainTextShifr
+    {
+        return new PlainTextShifr();
     }
 
     private function repo(string $type): Repo
     {
-        return Repo::addRepo(
-            'repo-1',
-            new AddRepo($type, 'repo', 'token', 'https://gitea.example'),
-            'https://gitea.example',
-        );
+        return Repo::addRepo('repo-1', $type, 'repo', 'https://gitea.example', 'token', '');
     }
 }

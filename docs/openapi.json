@@ -15877,15 +15877,18 @@
             },
             "ChangeCredentialsOfRepo": {
                 "required": [
-                    "repoId",
-                    "token"
+                    "repoId"
                 ],
                 "properties": {
                     "repoId": {
                         "type": "string"
                     },
                     "token": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "default": null
                     },
                     "repoUrl": {
                         "type": [

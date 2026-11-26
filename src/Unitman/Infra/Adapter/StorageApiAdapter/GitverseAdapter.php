@@ -28,7 +28,10 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
     private const PAGE_SIZE = 50;
     private const MAX_PAGES = 100;
 
-    public function __construct(private readonly HttpClientInterface $httpClient)
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        private readonly \App\Unitman\Business\Port\UmeetShifrovatSekrety $shifr,
+    )
     {
     }
 
@@ -220,7 +223,7 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
         }
 
         $port = parse_url($url, PHP_URL_PORT);
-        $prefix = $scheme.'://'.$repo->getCredentials()->token.'@'.$host
+        $prefix = $scheme.'://'.$repo->rasshifrovatToken($this->shifr).'@'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
         $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');
@@ -324,7 +327,7 @@ final class GitverseAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdap
     ): mixed {
         $options = [
             'headers' => [
-                'Authorization' => 'Bearer '.($token ?? $repo->getCredentials()->token),
+                'Authorization' => 'Bearer '.($token ?? $repo->rasshifrovatToken($this->shifr)),
                 'Accept' => self::ACCEPT,
             ],
             'query' => $query,

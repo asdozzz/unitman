@@ -137,8 +137,11 @@ final class SozdatVetkuProektaUseCaseTest extends TestCase
 
         $repo = Repo::addRepo(
             self::REPO_ID,
-            new AddRepo(RepoType::GITLAB->value, 'repo', 'repo-token', 'https://gitlab.local'),
+            RepoType::GITLAB->value,
+            'repo',
             'https://gitlab.local',
+            'repo-token',
+            '',
         );
 
         $repoRepository = new class($repo) implements RepoRepository {

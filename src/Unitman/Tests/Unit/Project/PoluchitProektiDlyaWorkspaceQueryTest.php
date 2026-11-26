@@ -176,8 +176,11 @@ final class PoluchitProektiDlyaWorkspaceQueryTest extends TestCase
     {
         return Repo::addRepo(
             $repoId,
-            new AddRepo($repoType->value, 'repo', 'token', 'https://gitlab.example.test'),
+            $repoType->value,
+            'repo',
             'https://gitlab.example.test',
+            'token',
+            '',
         );
     }
 

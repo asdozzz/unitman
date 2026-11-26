@@ -2,8 +2,6 @@
 
 namespace App\Unitman\Business\Model;
 
-use App\Unitman\Business\Command\Repo\AddRepo;
-use App\Unitman\Business\Command\Repo\ChangeCredentialsOfRepo;
 use App\Unitman\Business\Model\Repo\Event\AccessToRepoConfirmed;
 use App\Unitman\Business\Model\Repo\Event\CredentialsOfRepoWasChanged;
 use App\Unitman\Business\Model\Repo\Event\RepoWasAdded;
@@ -12,10 +10,18 @@ use App\Unitman\Business\Model\Repo\RepoCredentials;
 use App\Unitman\Business\Model\Repo\RepoId;
 use App\Unitman\Business\Model\Repo\RepoName;
 use App\Unitman\Business\Model\Repo\RepoType;
+use App\Unitman\Business\Port\UmeetShifrovatSekrety;
 use EventSauce\EventSourcing\AggregateRoot;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 
 /**
+ * Агрегат репозитория.
+ *
+ * Секрет доступа никогда не хранится в открытом виде: только шифротекст
+ * (`tokenCipher`, AAD = repoId) и необратимый `tokenHint`. Открытый токен
+ * доступен исключительно по запросу через {@see self::rasshifrovatToken()}
+ * для исходящих операций и не участвует в сериализации событий.
+ *
  * @template-implements AggregateRoot<RepoId>
  * */
 final class Repo implements AggregateRoot
@@ -38,11 +44,26 @@ final class Repo implements AggregateRoot
     {
         return $this->aggregateRootId->toString();
     }
-    public static function addRepo(string $id, AddRepo $command, string $url): static
+
+    public static function addRepo(
+        string $id,
+        string $repoType,
+        string $repoName,
+        string $url,
+        string $tokenCipher,
+        string $tokenHint,
+    ): static
     {
         $repoId = RepoId::fromString($id);
         $repo = new static($repoId);
-        $repo->recordThat(new RepoWasAdded($repoId->toString(), $command->repoType, $command->repoName, $url, $command->token));
+        $repo->recordThat(new RepoWasAdded(
+            $repoId->toString(),
+            $repoType,
+            $repoName,
+            $url,
+            $tokenCipher,
+            $tokenHint,
+        ));
         return $repo;
     }
 
@@ -51,27 +72,21 @@ final class Repo implements AggregateRoot
         $this->type = RepoType::from($fact->repoType);
         $this->name = new RepoName($fact->repoName);
 
-        $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->token);
+        $this->credentials = new RepoCredentials($fact->repoUrl, $fact->tokenCipher, $fact->tokenHint);
     }
 
-    public function changeCredentials(ChangeCredentialsOfRepo $command, string $url): void
+    public function changeCredentials(string $url, string $tokenCipher, string $tokenHint): void
     {
         if ($this->isDeleted) {
             throw new \DomainException('repo.deleted');
         }
 
-        $newCredentials = new RepoCredentials($url, $command->token);
-
-        if ($newCredentials->getHash() == $this->credentials->getHash()) {
-            throw new \DomainException('repo.new_credentials_equals_old');
-        }
-
-        $this->recordThat(new CredentialsOfRepoWasChanged($this->getId(), $url, $command->token));
+        $this->recordThat(new CredentialsOfRepoWasChanged($this->getId(), $url, $tokenCipher, $tokenHint));
     }
 
     private function applyCredentialsOfRepoWasChanged(CredentialsOfRepoWasChanged $fact): void
     {
-        $this->credentials  = new RepoCredentials($fact->repoUrl, $fact->token);
+        $this->credentials = new RepoCredentials($fact->repoUrl, $fact->tokenCipher, $fact->tokenHint);
         $this->accessConfirmed = false;
     }
 
@@ -103,9 +118,6 @@ final class Repo implements AggregateRoot
         $this->accessConfirmed = true;
     }
 
-    /**
-     * @return RepoType
-     */
     public function getType(): RepoType
     {
         return $this->type;
@@ -114,5 +126,30 @@ final class Repo implements AggregateRoot
     public function getCredentials(): RepoCredentials
     {
         return $this->credentials;
+    }
+
+    public function getTokenCipher(): string
+    {
+        return $this->credentials->getTokenCipher();
+    }
+
+    public function getTokenHint(): string
+    {
+        return $this->credentials->getTokenHint();
+    }
+
+    /**
+     * Единственный санкционированный путь получения открытого токена.
+     *
+     * Используется только исходящими операциями (API хранилищ, клонирование).
+     * Никогда не передавайте результат в логи, исключения, DTO или события.
+     *
+     * @throws \DomainException если шифротекст повреждён/подменён или ключ не
+     *                          настроен — открытый токен при этом не
+     *                          подставляется (fail closed).
+     */
+    public function rasshifrovatToken(UmeetShifrovatSekrety $shifr): string
+    {
+        return $shifr->rasshifrovat($this->getTokenCipher(), $this->getId());
     }
 }

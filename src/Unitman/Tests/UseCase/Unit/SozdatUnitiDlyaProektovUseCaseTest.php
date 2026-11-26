@@ -189,7 +189,7 @@ YAML;
 
         $repoRepository = $this->createMock(RepoRepository::class);
         $repoRepository->method('getById')->willReturnCallback(
-            static fn(string $id): Repo => Repo::addRepo($id, new AddRepo('GITLAB', 'repo', 'token', null), 'https://gitlab.example'),
+            static fn(string $id): Repo => Repo::addRepo($id, 'GITLAB', 'repo', 'https://gitlab.example', 'token', ''),
         );
 
         $spisok = $this->createMock(UmeetPoluchatSpisokProektovDlyPolzovatelya::class);

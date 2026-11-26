@@ -2,21 +2,33 @@
 
 namespace App\Unitman\Business\Model\Repo;
 
+/**
+ * Учётные данные репозитория.
+ *
+ * Открытый токен здесь не хранится: только шифротекст `tokenCipher`
+ * (AES-256-GCM, AAD = идентификатор агрегата) и необратимый `tokenHint`.
+ * Расшифровка выполняется исключительно по запросу через
+ * {@see \App\Unitman\Business\Model\Repo::rasshifrovatToken()}.
+ */
 final class RepoCredentials
 {
     public readonly string $url;
-    public readonly string $token;
+
+    private readonly string $tokenCipher;
+
+    private readonly string $tokenHint;
 
     public function __construct(
         string $url,
-        string $token,
+        string $tokenCipher,
+        string $tokenHint,
     )
     {
         if (empty($url)) {
             throw new \DomainException('repo.credentials.url_is_empty');
         }
 
-        if (empty($token)) {
+        if ($tokenCipher === '') {
             throw new \DomainException('repo.credentials.token_is_empty');
         }
 
@@ -25,11 +37,17 @@ final class RepoCredentials
         }
 
         $this->url = $url;
-        $this->token = $token;
+        $this->tokenCipher = $tokenCipher;
+        $this->tokenHint = $tokenHint;
     }
 
-    function getHash(): string
+    public function getTokenCipher(): string
     {
-        return md5($this->url.$this->token);
+        return $this->tokenCipher;
+    }
+
+    public function getTokenHint(): string
+    {
+        return $this->tokenHint;
     }
 }

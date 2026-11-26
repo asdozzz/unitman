@@ -398,6 +398,7 @@ return [
         'name_is_empty' => 'The repository name must not be empty',
         'new_credentials_equals_old' => 'The new credentials match the current ones',
         'not_found' => 'The repository was not found',
+        'token_upcast_missing_repo_id' => 'Cannot upgrade a legacy repository token: repository ID is missing',
         'url_is_empty' => 'The repository URL must not be empty',
         'credentials' => [
             'token_is_empty' => 'The access token must not be empty',
@@ -410,6 +411,14 @@ return [
         'name' => [
             'double' => 'A repository with that name already exists',
         ],
+    ],
+
+    // ─── Repository token encryption (WS-2) ──────────────────────────────────
+    'repo_token' => [
+        'key_not_configured' => 'Repository token encryption key is not configured',
+        'invalid_key' => 'Invalid repository token encryption key',
+        'encrypt_failed' => 'Failed to encrypt the repository token',
+        'decrypt_failed' => 'Failed to decrypt the repository token',
     ],
 
     // ─── Runner ──────────────────────────────────────────────────────────────

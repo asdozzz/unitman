@@ -49,7 +49,8 @@ final class RepoListItemTest extends TestCase
         $repo->type = 'gitlab';
         $repo->name = 'repo-name';
         $repo->repoUrl = 'https://example.invalid/repo';
-        $repo->token = 'TESTTOKENEXAMPLEVALUE';
+        $repo->tokenCipher = 'synthetic-cipher-fixture';
+        $repo->tokenHint = 'ALUE';
         $repo->confirmed = true;
 
         $item = RepoListItem::fromRepoList($repo);
@@ -64,6 +65,10 @@ final class RepoListItemTest extends TestCase
         self::assertFalse(
             property_exists($item, 'token'),
             'Публичный read model не должен содержать свойство token.'
+        );
+        self::assertFalse(
+            property_exists($item, 'tokenCipher'),
+            'Публичный read model не должен содержать шифротекст.'
         );
     }
 }

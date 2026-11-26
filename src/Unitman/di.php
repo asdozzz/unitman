@@ -38,6 +38,7 @@ use App\Unitman\Infra\Adapter\HmacRedaktorLinkSigner;
 use App\Unitman\Infra\Adapter\RunnerRepositoryPublicAddressProvider;
 use App\Unitman\Infra\Adapter\PersonalTokenOpenSslShifr;
 use App\Unitman\Infra\Adapter\PersonalTokenResolver;
+use App\Unitman\Infra\EventSauce\RepoTokenUpcastingMessageSerializer;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Adapter\StorageApiAdapterFactory;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\WorkspaceProjectStorageAdapter;
@@ -97,7 +98,15 @@ return function (ContainerConfigurator $configuration) {
         ->bind('$roadRunnerRpcAddress','%env(RR_RPC)%');
 
     $services->load('App\\Unitman\\', './{Business,Infra,Acl,Api}')
-        ->exclude(['./{di.php,di_test.php,routing.php,Migrations,Tests}','./Business/Command','./Business/Model','./Business/ReadModel'])
+        ->exclude([
+            './{di.php,di_test.php,routing.php,Migrations,Tests}',
+            './Business/Command',
+            './Business/Model',
+            './Business/ReadModel',
+            // Не сервисы: подключаются явно либо используются миграцией.
+            './Infra/EventSauce',
+            './Infra/Security',
+        ])
         ->public();
 
     $services->set(CanGenerateGuid::class, RamseyGuidGenerator::class);
@@ -125,10 +134,20 @@ return function (ContainerConfigurator $configuration) {
     $services->set('unitman.event_type_mapper', ExplicitlyMappedClassNameInflector::class)
         ->factory([service(ClassNameMapFactory::class), 'getMap']);
 
-    $services->set('unitman.event_serializer', ConstructingMessageSerializer::class)
+    $services->set('unitman.base_event_serializer', ConstructingMessageSerializer::class)
         ->args([
             service('unitman.event_type_mapper'),
             service(PayloadSerializerSupportingObjectMapperAndSerializablePayload::class)
+        ]);
+
+    // Upcaster legacy-событий репозитория: открытый `token` старых payload'ов
+    // превращается в `token_cipher`/`token_hint` только в памяти при чтении.
+    // Стоит на общем сериализаторе, поэтому действует и для агрегата, и для
+    // проекций; сохранённые строки event store не переписываются.
+    $services->set('unitman.event_serializer', RepoTokenUpcastingMessageSerializer::class)
+        ->args([
+            service('unitman.base_event_serializer'),
+            service(UmeetShifrovatSekrety::class),
         ]);
 
     $services->set('unitman.message_repository', DoctrineMessageRepository::class)

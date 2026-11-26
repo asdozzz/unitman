@@ -9,9 +9,14 @@ use Symfony\Component\HttpClient\HttplugClient;
 
 final class GithubClientFactory
 {
+    public function __construct(
+        private readonly \App\Unitman\Business\Port\UmeetShifrovatSekrety $shifr,
+    ) {
+    }
+
     public function makeClient(Repo $repo): Client
     {
-        return $this->makeClientWithToken($repo, $repo->getCredentials()->token);
+        return $this->makeClientWithToken($repo, $repo->rasshifrovatToken($this->shifr));
     }
 
     public function makeClientWithToken(Repo $repo, string $token): Client

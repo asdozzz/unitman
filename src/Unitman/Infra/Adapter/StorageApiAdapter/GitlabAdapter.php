@@ -10,12 +10,16 @@ use App\Unitman\Business\ReadModel\ProektHranilisha;
 use App\Unitman\Business\ReadModel\RepoTypeList;
 use App\Unitman\Business\ReadModel\SostoyanieVetki;
 use App\Unitman\Business\ReadModel\VetkaProekta;
+use App\Unitman\Business\Port\UmeetShifrovatSekrety;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\GitlabAdapter\GitlabClientFactory;
 use Gitlab\ResultPager;
 
 final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapter
 {
-    public function __construct(private GitlabClientFactory $clientFactory)
+    public function __construct(
+        private GitlabClientFactory $clientFactory,
+        private UmeetShifrovatSekrety $shifr,
+    )
     {
     }
 
@@ -138,7 +142,7 @@ final class GitlabAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
             $scheme = "";
         }
         $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
-        $storageUrl = $scheme.'://oauth2:'.$repo->getCredentials()->token.'@'.$urlWithoutScheme;
+        $storageUrl = $scheme.'://oauth2:'.$repo->rasshifrovatToken($this->shifr).'@'.$urlWithoutScheme;
         $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';
         return $projectUrl;
     }

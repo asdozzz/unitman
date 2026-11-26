@@ -82,7 +82,15 @@ class AbstractUnitUseCase extends AbstractUnitmanUseCase
 
     public function stubRepo(string $repoId, RepoType $repoType, string $repoName, string $repoUrl): Repo
     {
-        $repo = Repo::addRepo($repoId, new AddRepo($repoType->value, $repoName, 'tok', $repoUrl), $repoUrl);
+        $shifr = self::$container->get(\App\Unitman\Business\Port\UmeetShifrovatSekrety::class);
+        $repo = Repo::addRepo(
+            $repoId,
+            $repoType->value,
+            $repoName,
+            (string)$repoUrl,
+            $shifr->zashifrovat('tok', $repoId),
+            \App\Unitman\Business\Model\Repo\RepoTokenHint::fromPlainText('tok'),
+        );
         return $repo;
     }
 

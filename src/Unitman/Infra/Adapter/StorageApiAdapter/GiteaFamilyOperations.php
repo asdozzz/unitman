@@ -24,7 +24,10 @@ trait GiteaFamilyOperations
     private const PAGE_SIZE = 50;
     private const MAX_PAGES = 100;
 
-    public function __construct(private readonly HttpClientInterface $httpClient)
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        private readonly \App\Unitman\Business\Port\UmeetShifrovatSekrety $shifr,
+    )
     {
     }
 
@@ -164,7 +167,7 @@ trait GiteaFamilyOperations
         }
 
         $port = parse_url($url, PHP_URL_PORT);
-        $prefix = $scheme.'://'.$repo->getCredentials()->token.'@'.$host
+        $prefix = $scheme.'://'.$repo->rasshifrovatToken($this->shifr).'@'.$host
             .($port !== null && $port !== false ? ':'.$port : '');
 
         $path = trim(parse_url($url, PHP_URL_PATH) ?: '', '/');
@@ -206,7 +209,7 @@ trait GiteaFamilyOperations
             'GET',
             $this->apiBase($repo).$this->repoPath($projectCode).'/raw/unitman.yaml',
             [
-                'headers' => ['Authorization' => 'token '.$repo->getCredentials()->token],
+                'headers' => ['Authorization' => 'token '.$repo->rasshifrovatToken($this->shifr)],
                 'query' => ['ref' => $branchName],
             ],
         );
@@ -254,7 +257,7 @@ trait GiteaFamilyOperations
     ): mixed {
         $options = [
             'headers' => [
-                'Authorization' => 'token '.($token ?? $repo->getCredentials()->token),
+                'Authorization' => 'token '.($token ?? $repo->rasshifrovatToken($this->shifr)),
                 'Accept' => 'application/json',
             ],
             'query' => $query,

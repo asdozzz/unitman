@@ -16,7 +16,8 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
 {
     const GITHUB_REPO_URL = 'https://github.com';
     public function __construct(
-        private GithubClientFactory $githubClientFactory
+        private GithubClientFactory $githubClientFactory,
+        private \App\Unitman\Business\Port\UmeetShifrovatSekrety $shifr,
     )
     {
     }
@@ -152,7 +153,7 @@ final class GithubAdapter implements \App\Unitman\Infra\Adapter\StorageApiAdapte
             $scheme = "";
         }
         $urlWithoutScheme = preg_replace("/https?:\/\//misu", "", $url);
-        $storageUrl = $scheme.'://'.$repo->getCredentials()->token.'@'.$urlWithoutScheme;
+        $storageUrl = $scheme.'://'.$repo->rasshifrovatToken($this->shifr).'@'.$urlWithoutScheme;
         $projectUrl = $storageUrl . '/' . $project->getCode() . '.git';
         return $projectUrl;
     }

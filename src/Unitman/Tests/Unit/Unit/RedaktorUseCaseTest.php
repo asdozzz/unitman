@@ -232,8 +232,11 @@ final class RedaktorUseCaseTest extends TestCase
     {
         return Repo::addRepo(
             'repo-1',
-            new AddRepo('GITLAB', 'group/repo', 'admin-token', 'https://git.local'),
+            'GITLAB',
+            'group/repo',
             'https://git.local/group/repo.git',
+            'admin-token',
+            '',
         );
     }
 

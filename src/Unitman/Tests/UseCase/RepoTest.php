@@ -64,8 +64,12 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         /** @var RepoListRepository $repoListRepository*/
         $repoList = $repoListRepository->getById($repoId);
 
+        $shifr = self::$container->get(\App\Unitman\Business\Port\UmeetShifrovatSekrety::class);
+
         $this->assertEquals(false, $repoList->confirmed);
-        $this->assertEquals('newToken', $repoList->token);
+        $this->assertNotEquals('newToken', $repoList->tokenCipher);
+        $this->assertEquals('oken', $repoList->tokenHint);
+        $this->assertSame('newToken', $shifr->rasshifrovat($repoList->tokenCipher, $repoId));
         $this->assertEquals('https://org2@gitlab.ru', $repoList->repoUrl);
     }
 
@@ -136,10 +140,15 @@ final class RepoTest extends AbstractTestCaseWithTransactionWrapper
         /** @var \App\Unitman\Infra\Repository\Repo\RepoListRepository $repoListRepository */
         $repoList = $repoListRepository->getById($repoId);
 
+        $shifr = self::$container->get(\App\Unitman\Business\Port\UmeetShifrovatSekrety::class);
+
         $this->assertEquals($repoId, $repoList->id);
         $this->assertEquals($repoType->value, $repoList->type);
         $this->assertEquals($repoName, $repoList->name);
-        $this->assertEquals('token', $repoList->token);
+        $this->assertNotEquals('token', $repoList->tokenCipher);
+        // 'token' короче 8 символов — публичный hint пуст.
+        $this->assertEquals('', $repoList->tokenHint);
+        $this->assertSame('token', $shifr->rasshifrovat($repoList->tokenCipher, $repoId));
         $this->assertEquals($repoUrl, $repoList->repoUrl);
         $this->assertFalse($repoList->confirmed);
     }

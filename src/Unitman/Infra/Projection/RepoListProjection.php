@@ -61,7 +61,8 @@ final class RepoListProjection extends AbstractProjection implements UnitmanProj
         $readModel->name = $event->repoName;
         $readModel->type = $event->repoType;
         $readModel->repoUrl = $event->repoUrl;
-        $readModel->token = $event->token;
+        $readModel->tokenCipher = $event->tokenCipher;
+        $readModel->tokenHint = $event->tokenHint;
         $readModel->confirmed = false;
         $this->repoListRepository->insert($readModel);
     }
@@ -75,7 +76,8 @@ final class RepoListProjection extends AbstractProjection implements UnitmanProj
     {
         $repo = $this->repoListRepository->getById($event->repoId);
         $repo->repoUrl = $event->repoUrl;
-        $repo->token = $event->token;
+        $repo->tokenCipher = $event->tokenCipher;
+        $repo->tokenHint = $event->tokenHint;
         $repo->confirmed = false;
         $this->repoListRepository->update($repo);
     }

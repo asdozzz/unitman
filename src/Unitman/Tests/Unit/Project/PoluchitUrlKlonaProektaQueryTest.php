@@ -25,8 +25,11 @@ final class PoluchitUrlKlonaProektaQueryTest extends TestCase
         );
         $repo = Repo::addRepo(
             'r1',
-            new AddRepo('GITLAB', 'repo', 'secret-token', 'https://gitlab.example.test'),
+            'GITLAB',
+            'repo',
             'https://gitlab.example.test',
+            'secret-token',
+            '',
         );
 
         $projectRepository = $this->createMock(ProjectRepository::class);
