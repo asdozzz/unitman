@@ -33,10 +33,8 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure()
         ->bind('$minFreeMemoryPercent','%env(float:MIN_FREE_MEMORY_PERCENT_FOR_RUN_UNIT)%')
         ->bind('$roadRunnerRpcAddress','%env(RR_RPC)%')
-        // Детерминированный секрет раннера: master key с fallback на APP_SECRET.
-        // `default::` обязателен: переменная может отсутствовать в старых .env.
-        ->bind('$masterKey','%env(default::RUNNER_SECRET_MASTER_KEY)%')
-        ->bind('$appSecret','%env(default::APP_SECRET)%')
+        // Детерминированный секрет раннера берётся из SecretProvider (WS-9):
+        // APP_SECRET-fallback удалён, пустой master key — fail-closed.
         // Порты, которые backend отдаёт раннеру при регистрации v2.
         ->bind('$runnerApiPort','%env(default::UNITMAN_API_PORT)%')
         ->bind('$runnerTemporalPort','%env(default::UNITMAN_TEMPORAL_PUBLIC_PORT)%')

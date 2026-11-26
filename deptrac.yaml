@@ -38,6 +38,10 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Runner/.*
+    - name: Secrets
+      collectors:
+        - type: directory
+          regex: ./src/Secrets/.*
     - name: Unitman
       collectors:
         - type: directory
@@ -49,6 +53,8 @@ deptrac:
   ruleset:
     # Utils — общая библиотека без знания о доменных модулях (лист графа зависимостей).
     Utils: ~
+    # Secrets — абстракция ключевого материала; не зависит от доменных модулей.
+    Secrets: ~
     # App — инфраструктура приложения: использует Utils, но не доменные модули.
     App:
       - Utils
@@ -89,6 +95,7 @@ deptrac:
       - App
       - BackgroundJob
       - Notification
+      - Secrets
       - Unitman
       - Utils
     # Unitman — ядро: оперирует сущностями всех остальных модулей через порты и Acl-адаптеры.
@@ -99,4 +106,5 @@ deptrac:
       - Mediateka
       - Notification
       - Runner
+      - Secrets
       - Utils

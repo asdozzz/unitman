@@ -182,6 +182,6 @@ final class PersonalTokenResolverTest extends TestCase
 
     private function shifr(): PersonalTokenOpenSslShifr
     {
-        return new PersonalTokenOpenSslShifr(base64_encode(self::KEY_PLAIN));
+        return PersonalTokenOpenSslShifr::fromBase64Key(base64_encode(self::KEY_PLAIN));
     }
 }

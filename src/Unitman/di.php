@@ -85,16 +85,11 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return function (ContainerConfigurator $configuration) {
-    // Пустой fallback: если переменная не задана, фича личных токенов просто
-    // выключена (ошибка возникнет лишь при фактическом использовании шифра).
-    $configuration->parameters()->set('lichniy_token_credentials_key', '');
-
     $services = $configuration->services()
         ->defaults()
         ->autowire()
         ->autoconfigure()
         ->bind('$appEnv','%env(APP_ENV)%')
-        ->bind('$lichniyTokenCredentialsKey','%env(default:lichniy_token_credentials_key:LICHNIY_TOKEN_CREDENTIALS_KEY)%')
         ->bind('$roadRunnerRpcAddress','%env(RR_RPC)%');
 
     $services->load('App\\Unitman\\', './{Business,Infra,Acl,Api}')

@@ -494,7 +494,7 @@ final class RunnerControllerSaveStepsTest extends TestCase
         $repository = new InMemoryRunnerRepository();
         $repository->save(RunnerState::sozdatRunner(self::RUNNER_ID, self::RUNNER_ID));
 
-        $checker = new RunnerCallbackSignatureChecker($repository, new RunnerSecretGenerator($secret));
+        $checker = new RunnerCallbackSignatureChecker($repository, RunnerSecretGenerator::fromMasterKey($secret));
         $publisher = new RunnerProgressPublisher(
             $centrifugo ?? $this->createMock(CentrifugoInterface::class),
             $storage,

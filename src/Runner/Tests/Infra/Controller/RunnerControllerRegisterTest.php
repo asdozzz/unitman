@@ -80,7 +80,7 @@ final class RunnerControllerRegisterTest extends TestCase
         return new RegisterRunnerUseCase(
             $repository,
             new RunnerIdGenerator(),
-            new RunnerSecretGenerator(self::MASTER_KEY),
+            RunnerSecretGenerator::fromMasterKey(self::MASTER_KEY),
             self::REGISTRY_HOST,
         );
     }

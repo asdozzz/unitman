@@ -190,7 +190,7 @@ final class RunnerControllerUnitStateTest extends TestCase
         $repository = new InMemoryRunnerRepository();
         $repository->save(RunnerState::sozdatRunner(self::RUNNER_ID, self::RUNNER_ID));
 
-        return new RunnerCallbackSignatureChecker($repository, new RunnerSecretGenerator(self::SECRET));
+        return new RunnerCallbackSignatureChecker($repository, RunnerSecretGenerator::fromMasterKey(self::SECRET));
     }
 
     private function body(ZaregistrirovatUvedomleniyaOSostoyaniiKonteynera $command): string

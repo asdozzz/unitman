@@ -39,13 +39,16 @@ final class RunnerHttpContractTest extends WebTestCase
         $this->connection = $container->get(Connection::class);
         $this->connection->beginTransaction();
 
-        // Секрет вычисляется тем же алгоритмом, что и в DI: master key из
-        // RUNNER_SECRET_MASTER_KEY, иначе fallback на APP_SECRET. Сервис
-        // RunnerSecretGenerator в тестовом контейнере не экспортируется.
-        $this->secretGenerator = new RunnerSecretGenerator(
-            $this->env('RUNNER_SECRET_MASTER_KEY'),
-            $this->env('APP_SECRET'),
-        );
+        // Секрет вычисляется тем же алгоритмом, что и в DI: только
+        // RUNNER_SECRET_MASTER_KEY. Fallback на APP_SECRET удалён в WS-9,
+        // поэтому тесты обязаны задавать master key синтетически.
+        $masterKey = $this->env('RUNNER_SECRET_MASTER_KEY');
+
+        if ($masterKey === null || trim($masterKey) === '') {
+            $masterKey = 'test-runner-master-key-not-for-production';
+        }
+
+        $this->secretGenerator = RunnerSecretGenerator::fromMasterKey($masterKey);
     }
 
     protected function tearDown(): void

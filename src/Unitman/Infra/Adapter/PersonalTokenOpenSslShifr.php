@@ -4,32 +4,45 @@ declare(strict_types=1);
 
 namespace App\Unitman\Infra\Adapter;
 
+use App\Secrets\Business\Exception\InvalidKeyMaterial;
+use App\Secrets\Business\Exception\SecretNotFound;
+use App\Secrets\Business\Model\KeyPurpose;
+use App\Secrets\Business\Port\EncryptionKeyProvider;
+use App\Secrets\Infra\Adapter\ArraySecretProvider;
+use App\Secrets\Infra\Adapter\SecretEncryptionKeyProvider;
 use App\Unitman\Business\Port\UmeetShifrovatSekrety;
 
 /**
- * AES-256-GCM поверх ext-openssl для личных токенов хранилищ.
+ * AES-256-GCM поверх ext-openssl для личных и репозиторных токенов.
  *
  * Формат строки: base64(nonce[12] || tag[16] || ciphertext).
- * AAD привязывает шифротекст к конкретной записи (account_id:token_id).
+ * AAD привязывает шифротекст к конкретной записи (account_id:token_id или repoId).
+ *
+ * Ключевой материал приходит из `EncryptionKeyProvider` (WS-9). Формат
+ * шифротекста и AAD не изменились: данные WS-2 продолжают расшифровываться.
  */
 final class PersonalTokenOpenSslShifr implements UmeetShifrovatSekrety
 {
     private const CIPHER = 'aes-256-gcm';
     private const NONCE_LENGTH = 12;
     private const TAG_LENGTH = 16;
-    private const KEY_LENGTH = 32;
-
-    /**
-     * Сырое значение ключа из окружения. Разбирается лениво, чтобы отсутствие
-     * ключа не ломало компиляцию контейнера и не связанные с фичей команды.
-     */
-    private string $rawKey;
 
     private ?string $key = null;
 
-    public function __construct(string $lichniyTokenCredentialsKey)
+    public function __construct(private readonly EncryptionKeyProvider $keys)
     {
-        $this->rawKey = $lichniyTokenCredentialsKey;
+    }
+
+    /**
+     * Фабрика для тестов и legacy-точек сборки: ключ уже в base64.
+     *
+     * @internal Не использовать в production-DI; там передаётся провайдер.
+     */
+    public static function fromBase64Key(string $base64Key): self
+    {
+        return new self(new SecretEncryptionKeyProvider(
+            new ArraySecretProvider(['LICHNIY_TOKEN_CREDENTIALS_KEY' => $base64Key]),
+        ));
     }
 
     public function zashifrovat(string $secret, string $aad): string
@@ -98,18 +111,14 @@ final class PersonalTokenOpenSslShifr implements UmeetShifrovatSekrety
             return $this->key;
         }
 
-        if ($this->rawKey === '') {
-            // Ключ не задан — фича личных токенов выключена. Падаем громко
-            // именно при использовании, а не при сборке контейнера.
-            throw new \DomainException('lichniy_token.key_not_configured');
+        try {
+            return $this->key = $this->keys->getEncryptionKey(KeyPurpose::REPO_TOKENS);
+        } catch (SecretNotFound $e) {
+            // Ключ не задан — фича выключена. Падаем громко при использовании,
+            // а не при сборке контейнера; код ошибки сохранён для WS-2.
+            throw new \DomainException('lichniy_token.key_not_configured', 0, $e);
+        } catch (InvalidKeyMaterial $e) {
+            throw new \DomainException('lichniy_token.invalid_key', 0, $e);
         }
-
-        $decoded = base64_decode($this->rawKey, true);
-
-        if ($decoded === false || \strlen($decoded) !== self::KEY_LENGTH) {
-            throw new \DomainException('lichniy_token.invalid_key');
-        }
-
-        return $this->key = $decoded;
     }
 }

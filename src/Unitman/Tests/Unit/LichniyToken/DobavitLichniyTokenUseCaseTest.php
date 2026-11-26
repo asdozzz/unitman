@@ -90,7 +90,7 @@ final class DobavitLichniyTokenUseCaseTest extends TestCase
             $guidGenerator,
             $aggregateRepository,
             $listRepository,
-            new PersonalTokenOpenSslShifr(base64_encode('test-only-personal-token-key-32b')),
+            PersonalTokenOpenSslShifr::fromBase64Key(base64_encode('test-only-personal-token-key-32b')),
             new OpredelitelPravTokena(
                 new InMemoryProjectList([$projects[$project1], $projects[$project2]]),
                 new InMemoryProjectsRepository($projects),
@@ -113,7 +113,7 @@ final class DobavitLichniyTokenUseCaseTest extends TestCase
         $stored = $listRepository->getById('token-partial');
         self::assertNotSame('glpat-secret-1234', $stored->tokenCipher);
 
-        $shifr = new PersonalTokenOpenSslShifr(base64_encode('test-only-personal-token-key-32b'));
+        $shifr = PersonalTokenOpenSslShifr::fromBase64Key(base64_encode('test-only-personal-token-key-32b'));
         self::assertSame(
             'glpat-secret-1234',
             $shifr->rasshifrovat($stored->tokenCipher, LichniyToken::makeAad(self::ACCOUNT_ID, 'token-partial')),

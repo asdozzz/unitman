@@ -23,7 +23,7 @@ final class RepoTokenEncryptionTest extends TestCase
     private function shifr(): PersonalTokenOpenSslShifr
     {
         // 32 нулевых байта в base64 — синтетический ключ только для теста.
-        return new PersonalTokenOpenSslShifr(base64_encode(str_repeat("\0", 32)));
+        return PersonalTokenOpenSslShifr::fromBase64Key(base64_encode(str_repeat("\0", 32)));
     }
 
     #[Test]

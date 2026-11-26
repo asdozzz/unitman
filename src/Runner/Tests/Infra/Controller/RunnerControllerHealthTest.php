@@ -148,7 +148,7 @@ final class RunnerControllerHealthTest extends AbstractTestCaseWithTransactionWr
         return (new RunnerController())->health(
             $command,
             $request,
-            new RunnerCallbackSignatureChecker($repository, new RunnerSecretGenerator(self::MASTER_KEY)),
+            new RunnerCallbackSignatureChecker($repository, RunnerSecretGenerator::fromMasterKey(self::MASTER_KEY)),
             $this->useCase(),
         );
     }

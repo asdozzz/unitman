@@ -49,7 +49,7 @@ final class RegisterRunnerUseCaseTest extends TestCase
         $useCase = new RegisterRunnerUseCase(
             new InMemoryRunnerRepository(),
             new RunnerIdGenerator(),
-            new RunnerSecretGenerator(self::MASTER_KEY),
+            RunnerSecretGenerator::fromMasterKey(self::MASTER_KEY),
             self::REGISTRY_HOST,
             '18082',
             '17233',
@@ -103,9 +103,15 @@ final class RegisterRunnerUseCaseTest extends TestCase
         self::assertNull($state->getPublicAddress());
     }
 
-    public function test_master_key_falls_back_to_app_secret_when_empty(): void
+    public function test_missing_master_key_fails_closed_even_when_app_secret_is_set(): void
     {
-        $generator = new RunnerSecretGenerator('', 'app-secret-fallback');
+        // WS-9: APP_SECRET больше не является fallback-ключом раннера.
+        $keys = new \App\Secrets\Infra\Adapter\SecretEncryptionKeyProvider(
+            new \App\Secrets\Infra\Adapter\ArraySecretProvider([
+                'APP_SECRET' => 'test-app-secret-not-for-production',
+            ]),
+        );
+        $generator = new RunnerSecretGenerator($keys);
         $repository = new InMemoryRunnerRepository();
 
         $useCase = new RegisterRunnerUseCase(
@@ -115,9 +121,20 @@ final class RegisterRunnerUseCaseTest extends TestCase
             self::REGISTRY_HOST,
         );
 
-        $result = $useCase->handle('{"hostname":"r1"}');
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('runner_secret.master_key_not_configured');
 
-        self::assertSame(hash_hmac('sha256', $result->runnerId, 'app-secret-fallback'), $result->secret);
+        $useCase->handle('{"hostname":"r1"}');
+    }
+
+    public function test_master_key_derivation_is_identical_to_legacy_hmac(): void
+    {
+        $generator = RunnerSecretGenerator::fromMasterKey(self::MASTER_KEY);
+
+        self::assertSame(
+            hash_hmac('sha256', 'runner-1', self::MASTER_KEY),
+            $generator->generate('runner-1'),
+        );
     }
 
     public function test_invalid_json_is_rejected(): void
@@ -140,7 +157,7 @@ final class RegisterRunnerUseCaseTest extends TestCase
         return new RegisterRunnerUseCase(
             $repository,
             new RunnerIdGenerator(),
-            new RunnerSecretGenerator(self::MASTER_KEY),
+            RunnerSecretGenerator::fromMasterKey(self::MASTER_KEY),
             self::REGISTRY_HOST,
         );
     }

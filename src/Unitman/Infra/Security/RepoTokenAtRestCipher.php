@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Unitman\Infra\Security;
 
+use App\Secrets\Business\Exception\InvalidKeyMaterial;
+use App\Secrets\Business\Exception\SecretNotFound;
+use App\Secrets\Business\Model\KeyPurpose;
+use App\Secrets\Infra\Adapter\EnvSecretProvider;
+use App\Secrets\Infra\Adapter\SecretEncryptionKeyProvider;
 use App\Unitman\Business\Model\Repo\RepoTokenHint;
 
 /**
@@ -49,13 +54,17 @@ final class RepoTokenAtRestCipher
 
     public static function fromEnvironment(): self
     {
-        $raw = getenv('LICHNIY_TOKEN_CREDENTIALS_KEY');
+        // Миграция работает без DI-контейнера, но ключ всё равно идёт через
+        // абстракцию WS-9, а не через прямой getenv в потребителе.
+        $keys = new SecretEncryptionKeyProvider(new EnvSecretProvider());
 
-        if (!is_string($raw) || $raw === '') {
-            throw new \DomainException('repo_token.key_not_configured');
+        try {
+            return new self($keys->getEncryptionKey(KeyPurpose::REPO_TOKENS));
+        } catch (SecretNotFound $e) {
+            throw new \DomainException('repo_token.key_not_configured', 0, $e);
+        } catch (InvalidKeyMaterial $e) {
+            throw new \DomainException('repo_token.invalid_key', 0, $e);
         }
-
-        return self::fromBase64Key($raw);
     }
 
     public function encrypt(string $plain, string $aad): string

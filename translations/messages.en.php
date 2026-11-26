@@ -466,6 +466,12 @@ return [
         ],
     ],
 
+    // ─── Runner secret ───────────────────────────────────────────────────────
+    'runner_secret' => [
+        'invalid_master_key' => 'The runner secret master key has an invalid format',
+        'master_key_not_configured' => 'The runner secret master key is not configured',
+    ],
+
     // ─── Security ────────────────────────────────────────────────────────────
     'security' => [
         'access_denied' => 'Access denied',

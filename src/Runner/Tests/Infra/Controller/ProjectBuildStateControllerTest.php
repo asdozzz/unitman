@@ -225,7 +225,7 @@ final class ProjectBuildStateControllerTest extends TestCase
 
     private function verifier(InMemoryRunnerRepository $runners): ProjectBuildStateSignatureVerifier
     {
-        return new ProjectBuildStateSignatureVerifier($runners, new RunnerSecretGenerator(self::SECRET));
+        return new ProjectBuildStateSignatureVerifier($runners, RunnerSecretGenerator::fromMasterKey(self::SECRET));
     }
 
     private function selectionService(InMemoryRunnerRepository $runners): RunnerSelectionService

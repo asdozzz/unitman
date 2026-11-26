@@ -131,7 +131,7 @@ final class RunnerCallbackSignatureCheckerTest extends TestCase
 
         return new RunnerCallbackSignatureChecker(
             $repository,
-            new RunnerSecretGenerator(self::MASTER_KEY),
+            RunnerSecretGenerator::fromMasterKey(self::MASTER_KEY),
         );
     }
 

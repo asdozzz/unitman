@@ -45,13 +45,11 @@ final class Version20261126170000 extends AbstractMigration
             return;
         }
 
-        $rawKey = getenv('LICHNIY_TOKEN_CREDENTIALS_KEY');
-
-        if (!is_string($rawKey) || $rawKey === '') {
-            throw new \RuntimeException('repo_token.key_not_configured');
+        try {
+            $cipher = RepoTokenAtRestCipher::fromEnvironment();
+        } catch (\DomainException $e) {
+            throw new \RuntimeException($e->getMessage(), 0, $e);
         }
-
-        $cipher = RepoTokenAtRestCipher::fromBase64Key($rawKey);
 
         $this->connection->executeStatement(sprintf(
             'create table if not exists %s as select * from repo_list with no data',
