@@ -5,17 +5,24 @@ declare(strict_types=1);
 namespace App\Mediateka\Api;
 
 use App\Mediateka\Business\Command\PrikrepitFaylyKUnitu;
+use App\Mediateka\Business\Command\PrikrepitFaylyKWorkspace;
 use App\Mediateka\Business\Command\ZagruzitFaylUnita;
+use App\Mediateka\Business\Command\ZagruzitFaylWorkspace;
 use App\Mediateka\Business\Model\FaylUnita;
 use App\Mediateka\Business\Port\FaylUnitaRepository;
 use App\Mediateka\Business\UseCase\PoluchitFaylUnitaQuery;
 use App\Mediateka\Business\UseCase\PoluchitFaylyUnitaQuery;
+use App\Mediateka\Business\UseCase\PoluchitSoderzhimoeFajlaQuery;
 use App\Mediateka\Business\UseCase\PoluchitSsylkuDlyaFaylaQuery;
 use App\Mediateka\Business\UseCase\PrikrepitFaylyKUnituUseCase;
+use App\Mediateka\Business\UseCase\PrikrepitFaylyKWorkspaceUseCase;
 use App\Mediateka\Business\UseCase\ProveritFayliUnitaUseCase;
+use App\Mediateka\Business\UseCase\UdaliFajlyWorkspaceUseCase;
 use App\Mediateka\Business\UseCase\UdaliFayliUnitaUseCase;
 use App\Mediateka\Business\UseCase\UdalitFaylUseCase;
 use App\Mediateka\Business\UseCase\ZagruzitFaylUnitaUseCase;
+use App\Mediateka\Business\UseCase\ZagruzitFaylWorkspaceUseCase;
+use App\Mediateka\Business\UseCase\ZaregistrirovatFajlHodaUseCase;
 
 /**
  * Публичный API модуля Mediateka. Другие модули обращаются только через этот класс.
@@ -31,7 +38,12 @@ final class MediatekaApi
         private readonly UdalitFaylUseCase $udalitFaylUseCase,
         private readonly UdaliFayliUnitaUseCase $udaliFayliUnitaUseCase,
         private readonly ZagruzitFaylUnitaUseCase $zagruzitFaylUnitaUseCase,
-        private readonly PrikrepitFaylyKUnituUseCase $prikrepitFaylyKUnituUseCase
+        private readonly PrikrepitFaylyKUnituUseCase $prikrepitFaylyKUnituUseCase,
+        private readonly ZagruzitFaylWorkspaceUseCase $zagruzitFaylWorkspaceUseCase,
+        private readonly PrikrepitFaylyKWorkspaceUseCase $prikrepitFaylyKWorkspaceUseCase,
+        private readonly ZaregistrirovatFajlHodaUseCase $zaregistrirovatFajlHodaUseCase,
+        private readonly PoluchitSoderzhimoeFajlaQuery $poluchitSoderzhimoeFajlaQuery,
+        private readonly UdaliFajlyWorkspaceUseCase $udaliFajlyWorkspaceUseCase,
     ) {
     }
 
@@ -50,6 +62,23 @@ final class MediatekaApi
     public function prikrepitFaylyKUnitu(string $unitId, array $fileIds): array
     {
         return $this->prikrepitFaylyKUnituUseCase->handle(new PrikrepitFaylyKUnitu($unitId, $fileIds));
+    }
+
+    public function zagruzitFaylWorkspace(ZagruzitFaylWorkspace $command): FaylUnita
+    {
+        return $this->zagruzitFaylWorkspaceUseCase->handle($command);
+    }
+
+    /**
+     * @param string[] $fileIds
+     *
+     * @return FaylUnita[]
+     */
+    public function prikrepitFaylyKWorkspace(string $workspaceId, array $fileIds): array
+    {
+        return $this->prikrepitFaylyKWorkspaceUseCase->handle(
+            new PrikrepitFaylyKWorkspace($workspaceId, $fileIds),
+        );
     }
 
     public function sushchestvuetLiFayl(string $fileId): bool
@@ -95,7 +124,7 @@ final class MediatekaApi
      *
      * @param string[] $fileIds
      *
-     * @return array<string, array{unitId: ?string, projectId: ?string}>
+     * @return array<string, array{unitId: ?string, projectId: ?string, workspaceId: ?string, kind: string, uploadedBy: ?string}>
      */
     public function poluchitVladelcevFaylov(array $fileIds): array
     {
@@ -110,10 +139,61 @@ final class MediatekaApi
             $result[$fileId] = [
                 'unitId' => $file->getUnitId(),
                 'projectId' => $file->getProjectId(),
+                'workspaceId' => $file->getWorkspaceId(),
+                'kind' => $file->getKind(),
+                'uploadedBy' => $file->getUploadedBy(),
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * Файлы workspace (только привязанные).
+     *
+     * @return FaylUnita[]
+     */
+    public function poluchitFaylyWorkspace(string $workspaceId): array
+    {
+        return $this->faylUnitaRepository->najtiPoWorkspace($workspaceId);
+    }
+
+    /**
+     * @param string[] $workspaceIds
+     *
+     * @return array<string, list<FaylUnita>>
+     */
+    public function poluchitFaylyWorkspacePoImId(array $workspaceIds): array
+    {
+        return $this->faylUnitaRepository->najtiPoWorkspaceIds($workspaceIds);
+    }
+
+    /**
+     * @param string[] $fileIds
+     *
+     * @return FaylUnita[]
+     */
+    public function poluchitFaylyPoImId(array $fileIds): array
+    {
+        return $this->faylUnitaRepository->najtiPoImId($fileIds);
+    }
+
+    public function poluchitFaylWorkspacePoImWorkspace(string $fileId, string $workspaceId): ?FaylUnita
+    {
+        $file = $this->faylUnitaRepository->findById($fileId);
+        if ($file === null || $file->getWorkspaceId() !== $workspaceId) {
+            return null;
+        }
+
+        return $file;
+    }
+
+    /**
+     * @param string[] $fileIds
+     */
+    public function otmetitFaylyWorkspacePrimenenimi(array $fileIds, ?int $appliedAt = null): void
+    {
+        $this->faylUnitaRepository->otmetitPrimenenie($fileIds, $appliedAt ?? time());
     }
 
     /**
@@ -163,5 +243,57 @@ final class MediatekaApi
     public function udaliFayliUnita(string $unitId): void
     {
         $this->udaliFayliUnitaUseCase->handle($unitId);
+    }
+
+    public function zaregistrirovatFajlHoda(
+        string $workspaceId,
+        string $accountId,
+        string $turnId,
+        string $name,
+        string $contentType,
+        string $content,
+        int $now,
+    ): FaylUnita {
+        return $this->zaregistrirovatFajlHodaUseCase->handle(
+            $workspaceId,
+            $accountId,
+            $turnId,
+            $name,
+            $contentType,
+            $content,
+            $now,
+        );
+    }
+
+    public function poluchitFajlHoda(string $turnId, string $fileId): ?FaylUnita
+    {
+        return $this->faylUnitaRepository->najtiPoHoduImId($turnId, $fileId);
+    }
+
+    /**
+     * @return array{count: int, totalSize: int}
+     */
+    public function poluchitStatistikuFajlovHoda(string $turnId): array
+    {
+        return $this->faylUnitaRepository->statistikaPoHodu($turnId);
+    }
+
+    public function poluchitSoderzhimoeFajla(string $fileId, int $maxBytes): string
+    {
+        return $this->poluchitSoderzhimoeFajlaQuery->handle($fileId, $maxBytes);
+    }
+
+    public function poluchitSsylkuDlyaFajlaHoda(string $turnId, string $fileId, ?int $ttl = null): ?string
+    {
+        if ($this->faylUnitaRepository->najtiPoHoduImId($turnId, $fileId) === null) {
+            return null;
+        }
+
+        return $this->poluchitSsylkuDlyaFaylaQuery->handle($fileId, $ttl);
+    }
+
+    public function udalitFajlyWorkspace(string $workspaceId): void
+    {
+        $this->udaliFajlyWorkspaceUseCase->handle($workspaceId);
     }
 }

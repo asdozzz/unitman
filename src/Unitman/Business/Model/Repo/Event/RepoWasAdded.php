@@ -7,9 +7,8 @@ namespace App\Unitman\Business\Model\Repo\Event;
  *
  * Секрет хранится только в зашифрованном виде: `tokenCipher` (AES-256-GCM,
  * AAD = repoId) и необратимый `tokenHint`. Открытого `token` в событии нет.
- * Legacy-события с полем `token` поднимаются в новый формат на границе
- * десериализации (см. RepoTokenUpcastingMessageSerializer), сам payload в БД
- * при этом не переписывается.
+ * Legacy-формат не поддерживается: БД создаётся с нуля по актуальным
+ * миграциям, upcaster отсутствует.
  */
 final class RepoWasAdded
 {

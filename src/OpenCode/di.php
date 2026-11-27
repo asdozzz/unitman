@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\OpenCode;
 
 use App\OpenCode\Acl\AccountAdapter;
+use App\OpenCode\Acl\MediatekaFaylyWorkspaceAdapter;
 use App\OpenCode\Acl\RunnerAdapter;
 use App\OpenCode\Acl\UnitmanAdapter;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
@@ -19,6 +20,7 @@ use App\OpenCode\Business\Port\UmeetOpredelyatKanalUvedomleniyOpenCode;
 use App\OpenCode\Business\Port\UmeetPeredavatUvedomleniyaOpenCode;
 use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
@@ -36,6 +38,7 @@ use App\OpenCode\Infra\Repository\Workspace\SqlWorkspaceSessionRepository;
 use App\OpenCode\Infra\Repository\Workspace\SqlWorkspaceTurnRepository;
 use App\OpenCode\Infra\Service\CentrifugoUvedomleniyaOpenCode;
 use App\OpenCode\Infra\Service\KanalUvedomleniyOpenCode;
+use App\OpenCode\Business\Utils\ImyaFajlaHoda;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return function (ContainerConfigurator $configuration) {
@@ -43,7 +46,13 @@ return function (ContainerConfigurator $configuration) {
         ->defaults()
         ->autowire()
         ->autoconfigure()
-        ->bind('$centrifugoSecret', '%env(CENTRIFUGO_SECRET)%');
+        ->bind('$centrifugoSecret', '%env(CENTRIFUGO_SECRET)%')
+        ->bind('$workspaceMaxFiles', '%env(int:MEDIATEKA_WORKSPACE_MAX_FILES)%')
+        ->bind('$artifactMaxBytes', '%env(int:OPENCODE_ARTIFACT_MAX_BYTES)%')
+        ->bind('$artifactMaxFiles', '%env(int:OPENCODE_ARTIFACT_MAX_FILES)%')
+        ->bind('$artifactMaxTotalBytes', '%env(int:OPENCODE_ARTIFACT_MAX_TOTAL_BYTES)%')
+        ->bind('$artifactPreviewMaxBytes', '%env(int:OPENCODE_ARTIFACT_PREVIEW_MAX_BYTES)%')
+        ->bind('$artifactAllowedExtensions', '%env(OPENCODE_ARTIFACT_ALLOWED_EXT)%');
 
     $services->load('App\\OpenCode\\', './{Business,Infra,Acl,Api}')
         ->exclude([
@@ -83,4 +92,9 @@ return function (ContainerConfigurator $configuration) {
     $services->set(UmeetBronirovatUniti::class, UnitmanAdapter::class);
     $services->set(UmeetUpravlyatProektamiWorkspace::class, UnitmanAdapter::class);
     $services->set(UmeetPoluchatTokenRedaktirovaniyaUnita::class, UnitmanAdapter::class);
+    $services->set(UmeetUpravlyatFaylamiWorkspace::class, MediatekaFaylyWorkspaceAdapter::class);
+
+    // Имя артефакта: allowlist из env, лимит длины — дефолт конструктора.
+    $services->set(ImyaFajlaHoda::class)
+        ->arg('$allowedExtensions', '%env(OPENCODE_ARTIFACT_ALLOWED_EXT)%');
 };

@@ -195,7 +195,8 @@ final class ProjectListProjection extends AbstractProjection implements UnitmanP
         $project->variables = [];
         foreach ($variables as $variable) {
             if ($variable->code == $fact->code) {
-                $project->variables[] = new ProjectList\ProjectListVariable($variable->tip, $variable->code, $fact->newValue);
+                $value = $variable->tip === ProjectVariableType::hidden->value ? '' : $fact->newValue;
+                $project->variables[] = new ProjectList\ProjectListVariable($variable->tip, $variable->code, $value);
             } else {
                 $project->variables[] = $variable;
             }

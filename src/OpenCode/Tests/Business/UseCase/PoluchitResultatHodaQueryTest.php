@@ -179,6 +179,52 @@ final class PoluchitResultatHodaQueryTest extends TestCase
     }
 
     #[Test]
+    public function attachments_dokhodyat_do_otveta_resultata(): void
+    {
+        $bronirovanie = $this->createMock(UmeetBronirovatUniti::class);
+        $bronirovanie->expects($this->once())->method('osvobodit');
+
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('getById')->willReturn($this->hod());
+        $turnRepository->expects($this->once())->method('update');
+
+        $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $sessionRepository->method('getById')->willReturn($this->sessiya());
+
+        $attachments = [
+            [
+                'FileId' => 'file-1',
+                'Name' => 'plan.md',
+                'Size' => 12,
+                'ContentType' => 'text/markdown',
+                'Previewable' => true,
+            ],
+        ];
+
+        $query = $this->query(
+            $sessionRepository,
+            $turnRepository,
+            $bronirovanie,
+            new RezultatHodaOpenCode(
+                true,
+                RezultatHodaOpenCode::KIND_ANSWER,
+                [],
+                'Готово',
+                null,
+                null,
+                null,
+                $attachments,
+            ),
+        );
+
+        $readModel = $query->handle(new PoluchitResultatHoda(self::TURN_ID));
+
+        self::assertIsArray($readModel->result);
+        self::assertSame($attachments, $readModel->result['Attachments']);
+        self::assertSame($attachments, $readModel->toArray()['result']['Attachments']);
+    }
+
+    #[Test]
     public function novaya_vneshnyaya_sessiya_zapominaetsya_na_sessii(): void
     {
         $bronirovanie = $this->createMock(UmeetBronirovatUniti::class);

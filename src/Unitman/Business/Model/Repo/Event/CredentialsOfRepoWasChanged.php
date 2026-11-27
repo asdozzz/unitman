@@ -6,8 +6,8 @@ namespace App\Unitman\Business\Model\Repo\Event;
  * Событие изменения учётных данных репозитория.
  *
  * Содержит только шифротекст секрета (`tokenCipher`, AAD = repoId) и
- * необратимый `tokenHint`. Открытого `token` в событии нет; legacy-события
- * поднимаются на границе десериализации без переписывания payload в БД.
+ * необратимый `tokenHint`. Открытого `token` в событии нет; legacy-формат
+ * не поддерживается, upcaster отсутствует.
  */
 final class CredentialsOfRepoWasChanged
 {

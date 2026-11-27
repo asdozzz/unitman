@@ -24,7 +24,8 @@ final class ZagruzkaFaylaToken
         public readonly string $contentType,
         public readonly string $storageKey,
         public readonly ?string $uploadedBy,
-        public readonly int $expiresAt
+        public readonly int $expiresAt,
+        public readonly ?string $kind = null,
     ) {
         if (trim($this->fileId) === '') {
             throw new InvalidArgumentException('token.file_id_is_empty');
@@ -82,6 +83,7 @@ final class ZagruzkaFaylaToken
             'storageKey' => $this->storageKey,
             'uploadedBy' => $this->uploadedBy,
             'expiresAt' => $this->expiresAt,
+            'kind' => $this->kind,
         ];
     }
 
@@ -99,7 +101,8 @@ final class ZagruzkaFaylaToken
             self::stroka($data, 'contentType'),
             self::stroka($data, 'storageKey'),
             self::strokaIliNull($data, 'uploadedBy'),
-            self::celoe($data, 'expiresAt')
+            self::celoe($data, 'expiresAt'),
+            self::strokaIliNull($data, 'kind'),
         );
     }
 

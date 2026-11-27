@@ -11,6 +11,7 @@ use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
 use App\OpenCode\Business\Model\TipSessiiOpenCode;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Port\UuidGenerator;
@@ -32,6 +33,8 @@ final class SozdatWorkspaceUseCase
         private UmeetUpravlyatProektamiWorkspace $projectami,
         private UmeetUpravlyatWorkspace $workspaceManager,
         private UuidGenerator $uuidGenerator,
+        private ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
+        private int $workspaceMaxFiles = 20,
     ) {
     }
 
@@ -48,9 +51,18 @@ final class SozdatWorkspaceUseCase
         $branch = trim($command->branch);
         $projectIds = $this->normalizeProjectIds($command->projectIds);
         $projectBranches = $this->normalizeProjectBranches($command->projectBranches, $projectIds);
+        $fileIds = $this->normalizeFileIds($command->fileIds);
 
         if (count($projectIds) > SessiyaOpenCode::MAX_WORKSPACE_PROJECTS) {
             throw new \DomainException('opencode.workspace.too_many_projects');
+        }
+
+        if (count($fileIds) > $this->workspaceMaxFiles) {
+            throw new \DomainException('opencode.workspace.file_limit_exceeded');
+        }
+
+        if ($fileIds !== [] && ($this->fayly === null || !$this->fayly->dostupniDlyaPrivyazki($fileIds, $accountId))) {
+            throw new \DomainException('opencode.workspace.file_not_found');
         }
 
         $this->proveritUnikalnostImeni($accountId, $name);
@@ -75,6 +87,10 @@ final class SozdatWorkspaceUseCase
 
         $this->sessionRepository->save($session);
 
+        if ($fileIds !== [] && $this->fayly !== null) {
+            $this->fayly->prikrepit($session->getId(), $fileIds);
+        }
+
         try {
             $this->workspaceManager->zapustit($session);
         } catch (\Throwable) {
@@ -97,6 +113,36 @@ final class SozdatWorkspaceUseCase
      *
      * @return list<string>
      */
+    /**
+     * Убирает пустые идентификаторы и дубликаты файлов.
+     *
+     * @param list<string> $fileIds
+     *
+     * @return list<string>
+     */
+    private function normalizeFileIds(array $fileIds): array
+    {
+        $result = [];
+        $seen = [];
+
+        foreach ($fileIds as $fileId) {
+            if (!is_string($fileId)) {
+                continue;
+            }
+
+            $normalized = trim($fileId);
+
+            if ($normalized === '' || isset($seen[$normalized])) {
+                continue;
+            }
+
+            $seen[$normalized] = true;
+            $result[] = $normalized;
+        }
+
+        return $result;
+    }
+
     private function normalizeProjectIds(array $projectIds): array
     {
         $result = [];

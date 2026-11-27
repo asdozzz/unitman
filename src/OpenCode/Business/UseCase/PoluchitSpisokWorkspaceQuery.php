@@ -11,6 +11,7 @@ use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
 use App\OpenCode\Business\Model\TipSessiiOpenCode;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\ReadModel\WorkspaceReadModel;
 use App\OpenCode\Business\Utils\SlugWorkspace;
@@ -24,6 +25,7 @@ final class PoluchitSpisokWorkspaceQuery
         private SessiyaOpenCodeRepository $sessionRepository,
         private UmeetProveryatRekvizityOpenCode $credentials,
         private UmeetUpravlyatProektamiWorkspace $projectami,
+        private ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
     ) {
     }
 
@@ -39,16 +41,25 @@ final class PoluchitSpisokWorkspaceQuery
             TipSessiiOpenCode::WORKSPACE,
         );
 
-        $result = [];
+        $sessions = [];
 
         foreach ($this->sessionRepository->findByAccountId($accountId, $filter) as $session) {
             if (!$session->estWorkspace()) {
                 continue;
             }
 
+            $sessions[$session->getId()] = $session;
+        }
+
+        $files = $this->fayly?->poluchitFaylyPoImId(array_keys($sessions)) ?? [];
+        $result = [];
+
+        foreach ($sessions as $session) {
             $result[] = WorkspaceReadModel::izModela(
                 $session,
                 $this->ideLink($session, $accountId),
+                $files[$session->getId()] ?? [],
+                $this->sessionRepository->findWorkspaceUpdate($session->getId()) !== null,
             );
         }
 

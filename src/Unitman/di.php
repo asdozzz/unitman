@@ -38,7 +38,6 @@ use App\Unitman\Infra\Adapter\HmacRedaktorLinkSigner;
 use App\Unitman\Infra\Adapter\RunnerRepositoryPublicAddressProvider;
 use App\Unitman\Infra\Adapter\PersonalTokenOpenSslShifr;
 use App\Unitman\Infra\Adapter\PersonalTokenResolver;
-use App\Unitman\Infra\EventSauce\RepoTokenUpcastingMessageSerializer;
 use App\Unitman\Infra\Adapter\RamseyGuidGenerator;
 use App\Unitman\Infra\Adapter\StorageApiAdapterFactory;
 use App\Unitman\Infra\Adapter\StorageApiAdapter\WorkspaceProjectStorageAdapter;
@@ -46,6 +45,7 @@ use App\Unitman\Infra\Adapter\ZadachaVOcheredAdapter;
 use App\Unitman\Infra\Repository\LichniyToken\SqlLichniyTokenListRepository;
 use App\Unitman\Infra\Repository\LichniyToken\SqlLichniyTokenRepository;
 use App\Unitman\Infra\Repository\Project\ProjectRunnerJobRepository;
+use App\Unitman\Infra\Security\UnitVariableCipher;
 use App\Unitman\Infra\Repository\Unit\SpisokUnitovRepository;
 use App\Unitman\Infra\Repository\Unit\SqlOtlozhennieDeistviyaRepository;
 use App\Unitman\Infra\Repository\Unit\SqlUnitRunnerRepository;
@@ -105,6 +105,8 @@ return function (ContainerConfigurator $configuration) {
         ->public();
 
     $services->set(CanGenerateGuid::class, RamseyGuidGenerator::class);
+    // Infra/Security исключён из автолоада: сервис регистрируется явно.
+    $services->set(UnitVariableCipher::class);
     $services->set(MediatekaService::class, MediatekaAdapter::class);
     $services->set(VolumeTypeRepository::class, SqlVolumeTypeRepository::class);
     $services->set(VolumeTypeFileRepository::class, SqlVolumeTypeFileRepository::class);
@@ -135,15 +137,9 @@ return function (ContainerConfigurator $configuration) {
             service(PayloadSerializerSupportingObjectMapperAndSerializablePayload::class)
         ]);
 
-    // Upcaster legacy-событий репозитория: открытый `token` старых payload'ов
-    // превращается в `token_cipher`/`token_hint` только в памяти при чтении.
-    // Стоит на общем сериализаторе, поэтому действует и для агрегата, и для
-    // проекций; сохранённые строки event store не переписываются.
-    $services->set('unitman.event_serializer', RepoTokenUpcastingMessageSerializer::class)
-        ->args([
-            service('unitman.base_event_serializer'),
-            service(UmeetShifrovatSekrety::class),
-        ]);
+    // Legacy-формат событий репозитория удалён: БД создаётся с нуля, а события
+    // сразу содержат только `token_cipher`/`token_hint`. Upcaster не нужен.
+    $services->alias('unitman.event_serializer', 'unitman.base_event_serializer');
 
     $services->set('unitman.message_repository', DoctrineMessageRepository::class)
         ->args([

@@ -59,6 +59,29 @@ final class RunnerCallbackSignatureChecker
     }
 
     /**
+     * Подпись артефакта хода: `workflowId "\n" name "\n" rawBody`.
+     *
+     * Тело — сырые байты файла, имя — ровно то, что пришло в query (до
+     * нормализации). Отдельного timestamp/nonce нет: повторная доставка при
+     * retry Temporal идемпотентна по паре `(turnId, name)`.
+     *
+     * @throws \DomainException `runner.not_found`, если раннер неизвестен
+     */
+    public function estPodpisFajlaValidna(
+        ?string $runnerId,
+        string $workflowId,
+        string $name,
+        string $body,
+        ?string $signature,
+    ): bool {
+        return $this->compare(
+            $this->resolveSecret($runnerId),
+            $workflowId . "\n" . $name . "\n" . $body,
+            $signature,
+        );
+    }
+
+    /**
      * Подпись GET build-state: HMAC от пустого тела.
      *
      * @throws \DomainException `runner.not_found`, если раннер неизвестен

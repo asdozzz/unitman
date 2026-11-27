@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\OpenCode\Business\Port;
 
 use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\ReadModel\RezultatProverkiIzmeneniyWorkspace;
 
 /**
@@ -27,6 +28,13 @@ interface UmeetUpravlyatWorkspace
     public function ostanovit(SessiyaOpenCode $session): void;
 
     public function vosstanovit(SessiyaOpenCode $session): void;
+
+    /**
+     * Запускает обновление workspace: новые проекты и/или файлы.
+     *
+     * @return string id workflow обновления
+     */
+    public function obnovit(SessiyaOpenCode $session, WorkspacePendingUpdate $update): string;
 
     public function udalit(SessiyaOpenCode $session): void;
 

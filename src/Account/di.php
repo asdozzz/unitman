@@ -76,7 +76,6 @@ return function (ContainerConfigurator $configuration) {
         ->bind('$refreshTokenTtl','%env(int:REFRESH_TOKEN_TTL)%')
         ->bind('$refreshTokenCookieSecure','%env(default:refresh_token_cookie_secure:bool:COOKIE_SECURE)%')
         ->bind('$allowedOrigins','%env(csv:CORS_ALLOW_ORIGIN)%')
-        ->bind('$openCodeCredentialsKey','%env(OPENCODE_CREDENTIALS_KEY)%')
         ->bind('$mailerFromAddress','%env(MAILER_FROM_ADDRESS)%')
         ->bind('$mailerFromName','%env(MAILER_FROM_NAME)%')
         ->bind('$emailVerificationTtl','%env(int:EMAIL_VERIFICATION_TTL)%')

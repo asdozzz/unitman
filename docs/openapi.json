@@ -2160,6 +2160,98 @@
                 }
             }
         },
+        "/api/mediateka/workspace/upload": {
+            "post": {
+                "tags": [
+                    "Mediateka"
+                ],
+                "summary": "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0444\u0430\u0439\u043b workspace (\u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a)",
+                "description": "\u041f\u0440\u0438\u043d\u0438\u043c\u0430\u0435\u0442 multipart/form-data \u0441 \u043e\u0434\u043d\u0438\u043c \u0444\u0430\u0439\u043b\u043e\u043c. \u0420\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u044b \u0442\u043e\u043b\u044c\u043a\u043e \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f \u0438 \u0442\u0435\u043a\u0441\u0442\u043e\u0432\u044b\u0435 \u0444\u0430\u0439\u043b\u044b \u043f\u043e allowlist MEDIATEKA_WORKSPACE_ALLOWED_EXT. \u0418\u0441\u043f\u043e\u043b\u043d\u044f\u0435\u043c\u044b\u0435 \u0438 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u0442\u0438\u043f\u044b \u0437\u0430\u043f\u0440\u0435\u0449\u0435\u043d\u044b \u0432\u0441\u0435\u0433\u0434\u0430. \u0424\u0430\u0439\u043b \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442\u0441\u044f \u043a\u0430\u043a \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a \u0438 \u043f\u0440\u0438\u0432\u044f\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u043a workspace \u0447\u0435\u0440\u0435\u0437 OpenCode.",
+                "operationId": "post_app_mediateka_infra_mediateka_workspaceupload",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0424\u0430\u0439\u043b \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d \u043b\u0438\u0431\u043e ErrorEnvelope"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    }
+                }
+            }
+        },
+        "/api/mediateka/workspace/presign": {
+            "post": {
+                "tags": [
+                    "Mediateka"
+                ],
+                "summary": "\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u0438\u0442\u044c \u043f\u0440\u044f\u043c\u0443\u044e \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0443 \u0444\u0430\u0439\u043b\u0430 workspace \u0432 MinIO",
+                "operationId": "post_app_mediateka_infra_mediateka_workspacepresign",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "size"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "size": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "minimum": 1
+                                    },
+                                    "contentType": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u043b\u0438\u0431\u043e ErrorEnvelope"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    }
+                }
+            }
+        },
         "/api/mediateka/presign": {
             "post": {
                 "tags": [
@@ -3699,6 +3791,271 @@
                 }
             }
         },
+        "/api/opencode/fajl/ssylka": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u043f\u043e\u0434\u043f\u0438\u0441\u0430\u043d\u043d\u0443\u044e \u0441\u0441\u044b\u043b\u043a\u0443 \u043d\u0430 \u0444\u0430\u0439\u043b-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442 \u0445\u043e\u0434\u0430",
+                "operationId": "post_app_opencode_infra_opencodefile_ssylka",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "turnId",
+                                    "fileId"
+                                ],
+                                "properties": {
+                                    "turnId": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "fileId": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0421\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0441\u043a\u0430\u0447\u0438\u0432\u0430\u043d\u0438\u0435 \u0444\u0430\u0439\u043b\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FajlHodaSsilka"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "404": {
+                        "description": "\u0425\u043e\u0434, \u0441\u0435\u0441\u0441\u0438\u044f \u0438\u043b\u0438 \u0444\u0430\u0439\u043b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b \u043b\u0438\u0431\u043e \u0447\u0443\u0436\u0438\u0435"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/fajl/tekst": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0442\u0435\u043a\u0441\u0442 \u0444\u0430\u0439\u043b\u0430-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442\u0430 \u0445\u043e\u0434\u0430 \u0434\u043b\u044f preview",
+                "operationId": "post_app_opencode_infra_opencodefile_tekst",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "turnId",
+                                    "fileId"
+                                ],
+                                "properties": {
+                                    "turnId": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "fileId": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0422\u0435\u043a\u0441\u0442 \u0444\u0430\u0439\u043b\u0430",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FajlHodaTekst"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "404": {
+                        "description": "\u0425\u043e\u0434, \u0441\u0435\u0441\u0441\u0438\u044f \u0438\u043b\u0438 \u0444\u0430\u0439\u043b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b \u043b\u0438\u0431\u043e \u0447\u0443\u0436\u0438\u0435"
+                    },
+                    "422": {
+                        "description": "\u0422\u0438\u043f \u043d\u0435 previewable, \u0444\u0430\u0439\u043b \u0441\u043b\u0438\u0448\u043a\u043e\u043c \u0431\u043e\u043b\u044c\u0448\u043e\u0439 \u0438\u043b\u0438 \u043d\u0435 UTF-8"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/runner/opencode/artifact": {
+            "post": {
+                "tags": [
+                    "Runner"
+                ],
+                "summary": "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0444\u0430\u0439\u043b-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442 \u0445\u043e\u0434\u0430 OpenCode",
+                "description": "\u0412\u044b\u0437\u044b\u0432\u0430\u0435\u0442\u0441\u044f Golang-\u0440\u0430\u043d\u043d\u0435\u0440\u043e\u043c, \u043f\u0443\u0431\u043b\u0438\u0447\u043d\u044b\u0439 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442 \u0431\u0435\u0437 JWT. \u0410\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f \u2014 `X-Runner-Id` \u0438 `X-Runner-Signature`: hex(HMAC-SHA256(workflowId + \"\\n\" + name + \"\\n\" + rawBody, secret)). \u0422\u0435\u043b\u043e \u2014 \u0441\u044b\u0440\u044b\u0435 \u0431\u0430\u0439\u0442\u044b \u0444\u0430\u0439\u043b\u0430.",
+                "operationId": "post_app_opencode_infra_runnerartifact_artifact",
+                "parameters": [
+                    {
+                        "name": "workflowId",
+                        "in": "query",
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 workflow \u0445\u043e\u0434\u0430",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "workspaceId",
+                        "in": "query",
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 workspace-\u0441\u0435\u0441\u0441\u0438\u0438 \u0445\u043e\u0434\u0430",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "\u0418\u0441\u0445\u043e\u0434\u043d\u043e\u0435 \u0438\u043c\u044f \u0444\u0430\u0439\u043b\u0430; \u043d\u043e\u0440\u043c\u0430\u043b\u0438\u0437\u0443\u0435\u0442\u0441\u044f \u043f\u043e\u0441\u043b\u0435 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438 \u043f\u043e\u0434\u043f\u0438\u0441\u0438",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "contentType",
+                        "in": "query",
+                        "description": "MIME-\u0442\u0438\u043f \u0444\u0430\u0439\u043b\u0430",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "application/octet-stream"
+                        }
+                    },
+                    {
+                        "name": "X-Runner-Id",
+                        "in": "header",
+                        "description": "\u0418\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0433\u043e \u0440\u0430\u043d\u043d\u0435\u0440\u0430",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Runner-Signature",
+                        "in": "header",
+                        "description": "hex(HMAC-SHA256(workflowId + \"\\n\" + name + \"\\n\" + body, secret))",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/octet-stream": {
+                            "schema": {
+                                "type": "string",
+                                "format": "binary"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u0424\u0430\u0439\u043b \u0437\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d (\u043f\u043e\u0432\u0442\u043e\u0440\u043d\u0430\u044f \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0438\u0434\u0435\u043c\u043f\u043e\u0442\u0435\u043d\u0442\u043d\u0430)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "status",
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "success"
+                                            ],
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FajlHoda"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\u041d\u0435\u0432\u0435\u0440\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c \u0440\u0430\u043d\u043d\u0435\u0440\u0430 (runner.invalid_signature)"
+                    },
+                    "404": {
+                        "description": "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 \u0440\u0430\u043d\u043d\u0435\u0440 (runner.not_found) \u043b\u0438\u0431\u043e \u0445\u043e\u0434 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d"
+                    },
+                    "409": {
+                        "description": "\u0425\u043e\u0434 \u0443\u0436\u0435 \u043d\u0435 \u0432\u044b\u043f\u043e\u043b\u043d\u044f\u0435\u0442\u0441\u044f (opencode.artifact.turn_not_running)"
+                    },
+                    "413": {
+                        "description": "\u0422\u0435\u043b\u043e \u0431\u043e\u043b\u044c\u0448\u0435 \u043b\u0438\u043c\u0438\u0442\u0430 (opencode.artifact.file_is_too_large)"
+                    },
+                    "422": {
+                        "description": "\u041d\u0430\u0440\u0443\u0448\u0435\u043d\u044b \u0438\u043c\u044f, \u0442\u0438\u043f, \u043a\u043e\u0434\u0438\u0440\u043e\u0432\u043a\u0430, \u0432\u043b\u0430\u0434\u0435\u043b\u0435\u0446 \u0438\u043b\u0438 \u043b\u0438\u043c\u0438\u0442\u044b"
+                    }
+                },
+                "security": []
+            }
+        },
         "/api/opencode/unit-session/spisok": {
             "get": {
                 "tags": [
@@ -4154,6 +4511,96 @@
                     },
                     "500": {
                         "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438 (FailEnvelope \u043b\u0438\u0431\u043e ErrorEnvelope)"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/dobavitProekt": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u0440\u043e\u0435\u043a\u0442 \u0432 \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0449\u0438\u0439 workspace",
+                "operationId": "post_app_opencode_infra_workspace_dobavitproekt",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DobavitProektyVWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u043f\u0443\u0449\u0435\u043d\u043e"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/fayly/prikrepit": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u041f\u0440\u0438\u043a\u0440\u0435\u043f\u0438\u0442\u044c \u0444\u0430\u0439\u043b\u044b \u043a \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0449\u0435\u043c\u0443 workspace",
+                "operationId": "post_app_opencode_infra_workspace_prikrepitfayly",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PrikrepitFaylyKWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u043f\u0443\u0449\u0435\u043d\u043e"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
+                    }
+                }
+            }
+        },
+        "/api/opencode/workspace/fayly/udalit": {
+            "post": {
+                "tags": [
+                    "OpenCode"
+                ],
+                "summary": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0444\u0430\u0439\u043b workspace",
+                "operationId": "post_app_opencode_infra_workspace_udalitfayl",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UdalitFaylWorkspace"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u043f\u0443\u0449\u0435\u043d\u043e"
+                    },
+                    "401": {
+                        "description": "\u041d\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u043e\u0432\u0430\u043d"
+                    },
+                    "500": {
+                        "description": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438"
                     }
                 }
             }
@@ -11081,6 +11528,91 @@
                         ],
                         "maxLength": 128,
                         "example": "gpt-4o"
+                    },
+                    "fileIds": {
+                        "description": "\u0427\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u0438 \u0444\u0430\u0439\u043b\u043e\u0432 workspace, \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u044b\u0435 \u0442\u0435\u043a\u0443\u0449\u0438\u043c \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0435\u043c; \u043f\u0440\u0438\u0432\u044f\u0437\u044b\u0432\u0430\u044e\u0442\u0441\u044f \u0434\u043e \u0437\u0430\u043f\u0443\u0441\u043a\u0430 \u043a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440\u0430",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "DobavitProektyVWorkspace": {
+                "description": "\u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0435\u043a\u0442\u043e\u0432 \u0432 \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0449\u0438\u0439 workspace; \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0435 \u0432\u0435\u0442\u043a\u0438 \u0441\u043e\u0437\u0434\u0430\u044e\u0442\u0441\u044f \u043a\u043b\u0438\u0435\u043d\u0442\u043e\u043c \u0434\u043e \u0437\u0430\u043f\u0440\u043e\u0441\u0430",
+                "required": [
+                    "workspaceId",
+                    "projects"
+                ],
+                "properties": {
+                    "workspaceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "projects": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "projectId",
+                                "branch"
+                            ],
+                            "properties": {
+                                "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                "branch": {
+                                    "type": "string",
+                                    "maxLength": 256,
+                                    "example": "feature/added"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "maxItems": 20,
+                        "minItems": 1
+                    }
+                },
+                "type": "object"
+            },
+            "PrikrepitFaylyKWorkspace": {
+                "description": "\u041f\u0440\u0438\u043a\u0440\u0435\u043f\u043b\u0435\u043d\u0438\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043d\u044b\u0445 \u0447\u0435\u0440\u043d\u043e\u0432\u0438\u043a\u043e\u0432 \u0444\u0430\u0439\u043b\u043e\u0432 \u043a \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0449\u0435\u043c\u0443 workspace",
+                "required": [
+                    "workspaceId",
+                    "fileIds"
+                ],
+                "properties": {
+                    "workspaceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "fileIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "minItems": 1
+                    }
+                },
+                "type": "object"
+            },
+            "UdalitFaylWorkspace": {
+                "description": "\u0423\u0434\u0430\u043b\u0435\u043d\u0438\u0435 \u0444\u0430\u0439\u043b\u0430 \u0438\u0437 \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0449\u0435\u0433\u043e workspace",
+                "required": [
+                    "workspaceId",
+                    "fileId"
+                ],
+                "properties": {
+                    "workspaceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "fileId": {
+                        "type": "string",
+                        "format": "uuid"
                     }
                 },
                 "type": "object"
@@ -11684,6 +12216,13 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "Attachments": {
+                        "description": "\u041c\u0435\u0442\u0430\u0434\u0430\u043d\u043d\u044b\u0435 \u0444\u0430\u0439\u043b\u043e\u0432-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442\u043e\u0432, \u0441\u043e\u0437\u0434\u0430\u043d\u043d\u044b\u0445 \u0445\u043e\u0434\u043e\u043c; \u0443 \u043b\u0435\u0433\u0430\u0441\u0438-\u0445\u043e\u0434\u043e\u0432 \u043f\u043e\u043b\u044f \u043c\u043e\u0436\u0435\u0442 \u043d\u0435 \u0431\u044b\u0442\u044c",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VlozhenieHoda"
+                        }
                     }
                 },
                 "type": [
@@ -14663,6 +15202,144 @@
                     "link": {
                         "type": "string",
                         "format": "uri"
+                    }
+                },
+                "type": "object"
+            },
+            "FajlHoda": {
+                "description": "\u041c\u0435\u0442\u0430\u0434\u0430\u043d\u043d\u044b\u0435 \u0444\u0430\u0439\u043b\u0430-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442\u0430 \u0445\u043e\u0434\u0430",
+                "required": [
+                    "fileId",
+                    "name",
+                    "size",
+                    "contentType",
+                    "createdAt",
+                    "workspaceId",
+                    "turnId"
+                ],
+                "properties": {
+                    "fileId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "feature-plan.md"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "example": 4096
+                    },
+                    "contentType": {
+                        "type": "string",
+                        "example": "text/markdown"
+                    },
+                    "createdAt": {
+                        "type": "integer",
+                        "example": 1762000000
+                    },
+                    "workspaceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "turnId": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "type": "object"
+            },
+            "FajlHodaSsilka": {
+                "description": "\u041f\u043e\u0434\u043f\u0438\u0441\u0430\u043d\u043d\u0430\u044f \u0441\u0441\u044b\u043b\u043a\u0430 \u043d\u0430 \u0444\u0430\u0439\u043b-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442 \u0445\u043e\u0434\u0430",
+                "required": [
+                    "fileId",
+                    "name",
+                    "contentType",
+                    "size",
+                    "url"
+                ],
+                "properties": {
+                    "fileId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "feature-plan.md"
+                    },
+                    "contentType": {
+                        "type": "string",
+                        "example": "text/markdown"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "example": 4096
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "type": "object"
+            },
+            "VlozhenieHoda": {
+                "description": "\u041c\u0435\u0442\u0430\u0434\u0430\u043d\u043d\u044b\u0435 \u0444\u0430\u0439\u043b\u0430-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442\u0430 \u0432 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u0435 \u0445\u043e\u0434\u0430 (RezultatHodaOpenCode::$Attachments)",
+                "required": [
+                    "FileId",
+                    "Name",
+                    "Size",
+                    "ContentType",
+                    "Previewable"
+                ],
+                "properties": {
+                    "FileId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "Name": {
+                        "type": "string",
+                        "example": "feature-plan.md"
+                    },
+                    "Size": {
+                        "description": "\u0420\u0430\u0437\u043c\u0435\u0440 \u0444\u0430\u0439\u043b\u0430 \u0432 \u0431\u0430\u0439\u0442\u0430\u0445",
+                        "type": "integer",
+                        "example": 4096
+                    },
+                    "ContentType": {
+                        "type": "string",
+                        "example": "text/markdown"
+                    },
+                    "Previewable": {
+                        "description": "\u0412\u044b\u0447\u0438\u0441\u043b\u044f\u0435\u0442\u0441\u044f \u0431\u044d\u043a\u0435\u043d\u0434\u043e\u043c \u043f\u043e \u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u0438\u044e (md/txt/json/yaml/yml/csv/log)",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "FajlHodaTekst": {
+                "description": "\u0422\u0435\u043a\u0441\u0442 \u0444\u0430\u0439\u043b\u0430-\u0430\u0440\u0442\u0435\u0444\u0430\u043a\u0442\u0430 \u0445\u043e\u0434\u0430 \u0434\u043b\u044f preview",
+                "required": [
+                    "fileId",
+                    "name",
+                    "contentType",
+                    "content"
+                ],
+                "properties": {
+                    "fileId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "feature-plan.md"
+                    },
+                    "contentType": {
+                        "type": "string",
+                        "example": "text/markdown"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "# \u041f\u043b\u0430\u043d \u0444\u0438\u0447\u0438..."
                     }
                 },
                 "type": "object"

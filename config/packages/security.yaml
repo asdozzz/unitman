@@ -43,6 +43,8 @@ security:
         - { path: ^/api/runner/saveSteps$, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/health$, roles: PUBLIC_ACCESS }
         - { path: ^/api/runner/unitStateNotifications$, roles: PUBLIC_ACCESS }
+        # Артефакты хода: аутентификация — подпись раннера, не JWT.
+        - { path: ^/api/runner/opencode/artifact$, roles: PUBLIC_ACCESS }
         - { path: ^/api/account/refreshToken$, roles: PUBLIC_ACCESS }
         # Logout аутентифицируется HttpOnly cookie, а не JWT; CSRF проверяется
         # в контроллере (Origin allowlist + X-Requested-With).

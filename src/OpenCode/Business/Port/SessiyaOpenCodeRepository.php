@@ -7,6 +7,7 @@ namespace App\OpenCode\Business\Port;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
 use App\OpenCode\Business\Model\StatusWorkspace;
+use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 
 interface SessiyaOpenCodeRepository
 {
@@ -59,6 +60,19 @@ interface SessiyaOpenCodeRepository
         array $from,
         StatusWorkspace $to,
     ): bool;
+
+    public function saveWorkspaceUpdate(
+        string $sessionId,
+        string $workflowId,
+        WorkspacePendingUpdate $update,
+    ): void;
+
+    /**
+     * @return array{workflowId: string, update: WorkspacePendingUpdate}|null
+     */
+    public function findWorkspaceUpdate(string $sessionId): ?array;
+
+    public function deleteWorkspaceUpdate(string $sessionId): void;
 
     /**
      * Полное удаление workspace: проекты, workspace, ходы, уведомления, сессия.

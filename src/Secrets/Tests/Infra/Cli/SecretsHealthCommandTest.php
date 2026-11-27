@@ -27,6 +27,7 @@ final class SecretsHealthCommandTest extends TestCase
     public function all_required_secrets_present_exits_zero(): void
     {
         $tester = $this->tester([
+            'OPENCODE_CREDENTIALS_KEY' => self::AES_KEY,
             'LICHNIY_TOKEN_CREDENTIALS_KEY' => self::AES_KEY,
             'MEDIATEKA_UPLOAD_TOKEN_SECRET' => self::UPLOAD_KEY,
             'RUNNER_SECRET_MASTER_KEY' => self::RUNNER_KEY,
@@ -42,6 +43,7 @@ final class SecretsHealthCommandTest extends TestCase
     public function missing_runner_key_exits_non_zero_and_reports_name_only(): void
     {
         $tester = $this->tester([
+            'OPENCODE_CREDENTIALS_KEY' => self::AES_KEY,
             'LICHNIY_TOKEN_CREDENTIALS_KEY' => self::AES_KEY,
             'MEDIATEKA_UPLOAD_TOKEN_SECRET' => self::UPLOAD_KEY,
         ]);
@@ -55,6 +57,7 @@ final class SecretsHealthCommandTest extends TestCase
     public function invalid_aes_key_reports_invalid_without_value(): void
     {
         $tester = $this->tester([
+            'OPENCODE_CREDENTIALS_KEY' => self::AES_KEY,
             'LICHNIY_TOKEN_CREDENTIALS_KEY' => 'dGVzdC1vbmx5LWtleS0xNg==',
             'MEDIATEKA_UPLOAD_TOKEN_SECRET' => self::UPLOAD_KEY,
             'RUNNER_SECRET_MASTER_KEY' => self::RUNNER_KEY,

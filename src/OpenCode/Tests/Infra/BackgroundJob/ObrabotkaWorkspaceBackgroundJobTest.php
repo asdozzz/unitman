@@ -9,15 +9,18 @@ use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\WorkspaceKontekst;
+use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
+use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
 use App\OpenCode\Infra\BackgroundJob\ObrabotkaWorkspace\ObrabotkaWorkspaceBackgroundJob;
 use App\OpenCode\Tests\Support\FabrikaWorkspace;
+use App\OpenCode\Tests\Support\ImitaciyaUpravleniyaFaylamiWorkspace;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -167,6 +170,94 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
     }
 
     #[Test]
+    public function udalenie_workspace_snachala_udalyayet_artefakty(): void
+    {
+        $deleting = FabrikaWorkspace::vStatuse(StatusWorkspace::DELETING);
+        $porjadok = [];
+
+        $fayly = $this->createMock(UmeetUpravlyatFaylamiWorkspace::class);
+        $fayly->expects($this->once())
+            ->method('udalitFajlyWorkspace')
+            ->with('workspace-1')
+            ->willReturnCallback(static function () use (&$porjadok): void {
+                $porjadok[] = 'artifacts';
+            });
+
+        $repository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $repository->method('findAktivnieWorkspace')->willReturn([$deleting]);
+        $repository->expects($this->once())
+            ->method('deleteWorkspace')
+            ->with('workspace-1')
+            ->willReturnCallback(static function () use (&$porjadok): void {
+                $porjadok[] = 'session';
+            });
+
+        $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
+        $manager->method('poluchitRezultatOperacii')
+            ->willReturn(UmeetUpravlyatWorkspace::RESULT_SUCCESS);
+
+        $job = $this->job(
+            $repository,
+            $manager,
+            $this->launcher(
+                $this->createMock(HodOpenCodeRepository::class),
+                $repository,
+                $this->createMock(UmeetVypolnyatHodOpenCode::class),
+                $this->createMock(UmeetBronirovatUniti::class),
+            ),
+            $this->createMock(LoggerInterface::class),
+            $fayly,
+        );
+
+        self::assertTrue($job->run());
+        self::assertSame(['artifacts', 'session'], $porjadok);
+    }
+
+    #[Test]
+    public function oshibka_udaleniya_artefaktov_ne_blokiruet_udalenie_sessii(): void
+    {
+        $deleting = FabrikaWorkspace::vStatuse(StatusWorkspace::DELETING);
+
+        $fayly = $this->createMock(UmeetUpravlyatFaylamiWorkspace::class);
+        $fayly->expects($this->once())
+            ->method('udalitFajlyWorkspace')
+            ->with('workspace-1')
+            ->willThrowException(new \RuntimeException('storage down'));
+
+        $repository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $repository->method('findAktivnieWorkspace')->willReturn([$deleting]);
+        $repository->expects($this->once())->method('deleteWorkspace')->with('workspace-1');
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with(
+                'opencode.workspace.files_delete_failed',
+                $this->callback(static fn (array $context): bool => $context['workspaceId'] === 'workspace-1'
+                    && $context['exception'] instanceof \RuntimeException),
+            );
+
+        $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
+        $manager->method('poluchitRezultatOperacii')
+            ->willReturn(UmeetUpravlyatWorkspace::RESULT_SUCCESS);
+
+        $job = $this->job(
+            $repository,
+            $manager,
+            $this->launcher(
+                $this->createMock(HodOpenCodeRepository::class),
+                $repository,
+                $this->createMock(UmeetVypolnyatHodOpenCode::class),
+                $this->createMock(UmeetBronirovatUniti::class),
+            ),
+            $logger,
+            $fayly,
+        );
+
+        self::assertTrue($job->run());
+    }
+
+    #[Test]
     public function oshibka_operacii_perevodit_v_error(): void
     {
         $creating = FabrikaWorkspace::vStatuse(StatusWorkspace::CREATING);
@@ -201,13 +292,120 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
         self::assertSame('opencode.workspace.operation_failed', $error->getWorkspace()?->getErrorKey());
     }
 
+    #[Test]
+    public function uspeshnoe_obnovlenie_dobavlyaet_proekty_i_otmechaet_fayly(): void
+    {
+        $running = FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING);
+        $running->getWorkspace()?->otmetitStartPervogoPrompta(time());
+
+        $pending = new WorkspacePendingUpdate(
+            WorkspacePendingUpdate::KIND_PROJECT_AND_FILES,
+            [FabrikaWorkspace::proekt('project-2', 'web', 'apps/web', true, 1, 'develop')],
+            [['fileId' => 'file-1', 'name' => 'notes.txt']],
+            [],
+            false,
+        );
+
+        $repository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $repository->method('findAktivnieWorkspace')->willReturn([$running]);
+        $repository->method('findWorkspaceUpdate')
+            ->with('workspace-1')
+            ->willReturn(['workflowId' => 'wf-update', 'update' => $pending]);
+        $repository->expects($this->once())->method('update');
+        $repository->expects($this->once())->method('deleteWorkspaceUpdate')->with('workspace-1');
+
+        $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
+        $manager->method('poluchitRezultatOperacii')
+            ->willReturn(UmeetUpravlyatWorkspace::RESULT_SUCCESS);
+
+        $fayly = new ImitaciyaUpravleniyaFaylamiWorkspace();
+
+        $job = $this->job(
+            $repository,
+            $manager,
+            $this->launcher(
+                $this->createMock(HodOpenCodeRepository::class),
+                $repository,
+                $this->createMock(UmeetVypolnyatHodOpenCode::class),
+                $this->createMock(UmeetBronirovatUniti::class),
+            ),
+            $this->createMock(LoggerInterface::class),
+            $fayly,
+        );
+
+        self::assertTrue($job->run());
+
+        $workspace = $running->getWorkspace();
+        self::assertNotNull($workspace);
+        self::assertSame(
+            ['project-1', 'project-2'],
+            array_map(static fn (ProektWorkspace $project): string => $project->projectId, $workspace->getProjects()),
+        );
+        self::assertSame('', $workspace->getOperation());
+        self::assertNull($workspace->getErrorKey());
+        self::assertSame(['file-1'], $fayly->primenennye());
+    }
+
+    #[Test]
+    public function oshibka_obnovleniya_otkatyvaet_fayly_i_ostavlyaet_running(): void
+    {
+        $running = FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING);
+        $running->getWorkspace()?->otmetitStartPervogoPrompta(time());
+
+        $pending = new WorkspacePendingUpdate(
+            WorkspacePendingUpdate::KIND_FILES,
+            [],
+            [['fileId' => 'file-1', 'name' => 'notes.txt']],
+            [],
+            false,
+        );
+
+        $repository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $repository->method('findAktivnieWorkspace')->willReturn([$running]);
+        $repository->method('findWorkspaceUpdate')
+            ->with('workspace-1')
+            ->willReturn(['workflowId' => 'wf-update', 'update' => $pending]);
+        $repository->expects($this->once())->method('update');
+        $repository->expects($this->once())->method('deleteWorkspaceUpdate')->with('workspace-1');
+
+        $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
+        $manager->method('poluchitRezultatOperacii')
+            ->willReturn(UmeetUpravlyatWorkspace::RESULT_FAILURE);
+
+        $fayly = new ImitaciyaUpravleniyaFaylamiWorkspace();
+
+        $job = $this->job(
+            $repository,
+            $manager,
+            $this->launcher(
+                $this->createMock(HodOpenCodeRepository::class),
+                $repository,
+                $this->createMock(UmeetVypolnyatHodOpenCode::class),
+                $this->createMock(UmeetBronirovatUniti::class),
+            ),
+            $this->createMock(LoggerInterface::class),
+            $fayly,
+        );
+
+        self::assertTrue($job->run());
+
+        $workspace = $running->getWorkspace();
+        self::assertNotNull($workspace);
+        self::assertSame(StatusWorkspace::RUNNING, $workspace->getStatus());
+        self::assertSame('opencode.workspace.update_failed', $workspace->getErrorKey());
+        self::assertSame('', $workspace->getOperation());
+        self::assertSame(['file-1'], $fayly->udalennye());
+        self::assertSame([], $fayly->primenennye());
+    }
+
     private function job(
         SessiyaOpenCodeRepository $repository,
         UmeetUpravlyatWorkspace $manager,
         ZapuskatelHodaOpenCode $launcher,
         LoggerInterface $logger,
+        ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
     ): ObrabotkaWorkspaceBackgroundJob {
-        return new ObrabotkaWorkspaceBackgroundJob($repository, $manager, $launcher, $logger);
+        return new ObrabotkaWorkspaceBackgroundJob($repository, $manager, $launcher, $logger, $fayly);
     }
 
     private function launcher(

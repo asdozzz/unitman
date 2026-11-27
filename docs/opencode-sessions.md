@@ -447,6 +447,7 @@ stateDiagram-v2
   "result": {
     "Success": true,
     "Kind": "QUESTION",
+    "Attachments": [],
     "Questions": [
       {
         "Id": "q1",
@@ -637,6 +638,7 @@ Success            bool
 Kind               ANSWER | QUESTION | ERROR
 Answer             ?string      — при Kind = ANSWER
 Questions          []{ Id, Text, AllowFreeText, Options[]{ Id, Label, Description? } }
+Attachments        []{ FileId, Name, Size, ContentType, Previewable }
 ErrorKey           ?string      — ключ перевода при Kind = ERROR
 ErrorMessage       ?string      — фактический текст ошибки раннера/OpenCode при Kind = ERROR
 ExternalSessionId  ?string      — id сессии на стороне OpenCode
@@ -652,6 +654,35 @@ ExternalSessionId  ?string      — id сессии на стороне OpenCode
 
 API-ключа в результате нет принципиально: результат уходит в `result_json` и
 отдаётся клиенту.
+
+#### 4.3.1 Вложения хода
+
+Поле `Attachments` появляется у workspace-ходов, где агент может сложить
+готовые документы в outbox. Элемент массива — только метаданные, содержимого
+файла в Temporal нет:
+
+```json
+"Attachments": [
+  {
+    "FileId": "f1c2...",
+    "Name": "plan.md",
+    "Size": 1234,
+    "ContentType": "text/markdown",
+    "Previewable": true
+  }
+]
+```
+
+- ключи в PascalCase — так их читает [`RezultatHodaOpenCode`](src/OpenCode/Business/Model/RezultatHodaOpenCode.php:1);
+- `Previewable` вычисляется по расширению (`md`, `txt`, `json`, `yaml`, `yml`,
+  `csv`, `log`) и управляет кнопкой предпросмотра в интерфейсе;
+- у легаси-ходов и у ходов без вложений поле читается как `[]`, а `toArray()`
+  всегда отдаёт массив, не `null`;
+- байты файлов не попадают ни в `result_json`, ни в историю: UI получает их
+  отдельными JWT-эндпоинтами.
+
+Полный конвейер — outbox в контейнере, HMAC-загрузка, хранение и preview —
+описан в [`docs/workspaces.md`](workspaces.md#15-вложения-хода-агента).
 
 ### 4.4 Ошибки раннера
 

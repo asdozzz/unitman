@@ -25,7 +25,7 @@ final class OpenSslShifrTest extends TestCase
     #[Test]
     public function zashifrovannyi_tekst_rasshifrovyvaetsya_obratno(): void
     {
-        $shifr = new OpenSslShifr(self::VALID_KEY);
+        $shifr = OpenSslShifr::fromBase64Key(self::VALID_KEY);
         $secret = 'sk-live-abcdef123456';
 
         $cipher = $shifr->zashifrovat($secret, self::AAD);
@@ -39,7 +39,7 @@ final class OpenSslShifrTest extends TestCase
     #[Test]
     public function odin_i_tot_zhe_tekst_shifruetsya_po_raznomu(): void
     {
-        $shifr = new OpenSslShifr(self::VALID_KEY);
+        $shifr = OpenSslShifr::fromBase64Key(self::VALID_KEY);
 
         $first = $shifr->zashifrovat('same-secret', self::AAD);
         $second = $shifr->zashifrovat('same-secret', self::AAD);
@@ -53,7 +53,7 @@ final class OpenSslShifrTest extends TestCase
     #[Test]
     public function pustoi_tekst_shifruetsya_i_rasshifrovyvaetsya(): void
     {
-        $shifr = new OpenSslShifr(self::VALID_KEY);
+        $shifr = OpenSslShifr::fromBase64Key(self::VALID_KEY);
 
         $cipher = $shifr->zashifrovat('', self::AAD);
 
@@ -65,7 +65,7 @@ final class OpenSslShifrTest extends TestCase
     #[Test]
     public function chuzhoi_aad_ne_rasshifrovyvaetsya(): void
     {
-        $shifr = new OpenSslShifr(self::VALID_KEY);
+        $shifr = OpenSslShifr::fromBase64Key(self::VALID_KEY);
         $cipher = $shifr->zashifrovat('secret', self::AAD);
 
         $this->expectException(\DomainException::class);
@@ -78,7 +78,7 @@ final class OpenSslShifrTest extends TestCase
     #[Test]
     public function isporchennyi_shifrotekst_ne_rasshifrovyvaetsya(): void
     {
-        $shifr = new OpenSslShifr(self::VALID_KEY);
+        $shifr = OpenSslShifr::fromBase64Key(self::VALID_KEY);
         $cipher = $shifr->zashifrovat('secret', self::AAD);
 
         $raw = base64_decode($cipher, true);
@@ -96,7 +96,7 @@ final class OpenSslShifrTest extends TestCase
     #[Test]
     public function slishkom_korotkii_shifrotekst_ne_rasshifrovyvaetsya(): void
     {
-        $shifr = new OpenSslShifr(self::VALID_KEY);
+        $shifr = OpenSslShifr::fromBase64Key(self::VALID_KEY);
 
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('account.opencode_credential.decrypt_failed');
@@ -108,7 +108,7 @@ final class OpenSslShifrTest extends TestCase
     #[Test]
     public function ne_validnyi_base64_ne_rasshifrovyvaetsya(): void
     {
-        $shifr = new OpenSslShifr(self::VALID_KEY);
+        $shifr = OpenSslShifr::fromBase64Key(self::VALID_KEY);
 
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('account.opencode_credential.decrypt_failed');
@@ -124,7 +124,7 @@ final class OpenSslShifrTest extends TestCase
 
         // Пустой ключ = фича выключена. Падать нужно на конструкторе,
         // иначе секрет мог бы уехать в БД незашифрованным.
-        new OpenSslShifr('');
+        OpenSslShifr::fromBase64Key('');
     }
 
     #[Test]
@@ -133,7 +133,7 @@ final class OpenSslShifrTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('account.opencode_credential.invalid_key');
 
-        new OpenSslShifr('not-a-base64-key');
+        OpenSslShifr::fromBase64Key('not-a-base64-key');
     }
 
     #[Test]
@@ -143,6 +143,6 @@ final class OpenSslShifrTest extends TestCase
         $this->expectExceptionMessage('account.opencode_credential.invalid_key');
 
         // 16 байт вместо 32.
-        new OpenSslShifr(base64_encode(str_repeat('k', 16)));
+        OpenSslShifr::fromBase64Key(base64_encode(str_repeat('k', 16)));
     }
 }

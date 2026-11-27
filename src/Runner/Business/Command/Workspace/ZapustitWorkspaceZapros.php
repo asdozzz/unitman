@@ -15,6 +15,7 @@ final class ZapustitWorkspaceZapros
 {
     /**
      * @param list<ProektWorkspaceZapros> $Projects
+     * @param list<WorkspaceFileCommand>  $Files
      */
     public function __construct(
         public readonly string $WorkspaceId,
@@ -27,6 +28,7 @@ final class ZapustitWorkspaceZapros
         // Явный раннер операции (multi-runner). `null` — выбрать автоматически.
         public readonly ?string $RunnerId = null,
         public readonly ?string $TaskQueue = null,
+        public readonly array $Files = [],
     ) {
     }
 }

@@ -9,6 +9,7 @@ use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Port\UuidGenerator;
 use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\NachatHodOpenCode;
+use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode as ResultatHodaRannera;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -49,6 +50,40 @@ final class RunnerAdapterHodTest extends TestCase
         $zapros = $this->zapros(readOnly: true, token: null);
 
         self::assertFalse($zapros->WorkspaceReadOnly, 'Workspace-режим передаётся отдельным полем');
+    }
+
+    #[Test]
+    public function attachments_ranнера_prokhodyat_v_rezultat_hoda(): void
+    {
+        $attachments = [
+            [
+                'FileId' => 'file-1',
+                'Name' => 'plan.md',
+                'Size' => 42,
+                'ContentType' => 'text/markdown',
+            ],
+        ];
+
+        $runnerApi = $this->createMock(RunnerApiInterface::class);
+        $runnerApi->method('poluchitResultatHodaOpenCode')->willReturn(
+            new ResultatHodaRannera(
+                true,
+                ResultatHodaRannera::KIND_ANSWER,
+                [],
+                'Готово',
+                null,
+                null,
+                null,
+                $attachments,
+            ),
+        );
+
+        $adapter = new RunnerAdapter($runnerApi, $this->createMock(UuidGenerator::class));
+
+        $rezultat = $adapter->poluchitResultatHoda('wf-turn');
+
+        self::assertSame($attachments, $rezultat?->attachments);
+        self::assertSame($attachments, $rezultat?->toArray()['Attachments']);
     }
 
     private function zapros(bool $readOnly, ?string $token): NachatHodOpenCode

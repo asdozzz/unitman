@@ -44,4 +44,12 @@ interface FileStorage
      * @return array{size: int, contentType: ?string}|null
      */
     public function stat(string $key): ?array;
+
+    /**
+     * Скачивает объект во временный файл для проверки содержимого
+     * (сигнатуры, кодировки). Возвращает путь; вызывающий удаляет файл.
+     *
+     * @param int $maxBytes 0 — без ограничения; иначе при превышении исключение
+     */
+    public function downloadToTemp(string $key, int $maxBytes = 0): string;
 }

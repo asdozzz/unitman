@@ -16,9 +16,12 @@ use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Command\Workspace\ObnovitWorkspace;
+use App\Runner\Business\Command\Workspace\ObnovitWorkspaceZapros;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
 use App\Runner\Business\Command\Workspace\ProektWorkspaceCommand;
 use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatObnovleniyaWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatOstanovkiWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatProverkiIzmeneniyWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatUdaleniyaWorkspace;
@@ -52,6 +55,7 @@ use App\Runner\Infra\Service\RedisService;
 use App\Runner\Infra\Service\RunnerProgressPublisher;
 use App\Runner\Infra\Workflow\IzmenitRezhimRedaktoraUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatDeistvieUnitaWorkflow;
+use App\Runner\Infra\Workflow\ObnovitWorkspaceWorkflow;
 use App\Runner\Infra\Workflow\OpenCodeTurnWorkflow;
 use App\Runner\Infra\Workflow\NachatObnovlenieUnitaWorkflow;
 use App\Runner\Infra\Workflow\NachatOstanovkuUnitaWorkflow;
@@ -709,6 +713,7 @@ final class RunnerApi implements RunnerApiInterface
             $projects,
             RunnerId: $runnerState->getId(),
             TaskQueue: $taskQueue,
+            Files: $command->Files,
         );
 
         $this->zaregistrirovatProgressToken($workflowId);
@@ -729,6 +734,59 @@ final class RunnerApi implements RunnerApiInterface
     {
         $workflow = $this->getWorkflowById($workflowId);
         return $this->makeResult($workflow, ResultatZapuskaWorkspace::class);
+    }
+
+    public function obnovitWorkspace(string $workflowId, ObnovitWorkspaceZapros $command): string
+    {
+        $runnerState = $this->resolveRunnerState($command->TaskQueue, $command->RunnerId);
+        $taskQueue = $runnerState->getTaskQueue();
+
+        $this->proveritResursy($runnerState);
+
+        $newProjects = [];
+        foreach ($command->NewProjects as $project) {
+            $newProjects[] = new ProektWorkspaceCommand(
+                $project->ProjectId,
+                $project->ProjectName,
+                $project->ProjectCode,
+                $this->urlKlonaProekta->poluchitUrlKlona($project->ProjectId),
+                $project->CanPush,
+                $project->MainBranch,
+                $this->urlKlonaProekta->poluchitRepoIdKlona($project->ProjectId),
+            );
+        }
+
+        $activityCommand = new ObnovitWorkspace(
+            $command->WorkspaceId,
+            $command->WorkspaceSlug,
+            $command->Branch,
+            $command->ReadOnly,
+            $newProjects,
+            $command->AllProjects,
+            $command->Files,
+            $command->FilesToDelete,
+            RunnerId: $runnerState->getId(),
+            TaskQueue: $taskQueue,
+        );
+
+        $this->zaregistrirovatProgressToken($workflowId);
+
+        $workflow = $this->workflowClient->newWorkflowStub(
+            ObnovitWorkspaceWorkflow::class,
+            WorkflowOptions::new()
+                ->withWorkflowId($workflowId)
+                ->withTaskQueue(\App\App\Infra\Workflow\WorkflowClientFactory::monoQueueName)
+                ->withWorkflowExecutionTimeout(CarbonInterval::minute(30))
+        );
+
+        $run = $this->workflowClient->start($workflow, $activityCommand, $taskQueue);
+        return $run->getExecution()->getID();
+    }
+
+    public function poluchitRezultatObnovleniyaWorkspace(string $workflowId): ?ResultatObnovleniyaWorkspace
+    {
+        $workflow = $this->getWorkflowById($workflowId);
+        return $this->makeResult($workflow, ResultatObnovleniyaWorkspace::class);
     }
 
     public function ostanovitWorkspace(string $workflowId, OstanovitWorkspace $command): string

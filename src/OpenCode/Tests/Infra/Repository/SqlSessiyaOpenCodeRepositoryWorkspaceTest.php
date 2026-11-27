@@ -263,7 +263,7 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
 
                 return $callback();
             });
-        $connection->expects($this->exactly(6))
+        $connection->expects($this->exactly(7))
             ->method('executeStatement')
             ->willReturnCallback(
                 static function (string $sql, array $params, array $types) use (&$statements): int {
@@ -277,9 +277,10 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
         $repository->deleteWorkspace('s-1');
 
         $this->assertSame(1, $transakcii);
-        $this->assertCount(6, $statements);
+        $this->assertCount(7, $statements);
 
         $expectedTables = [
+            'opencode_workspace_update',
             'opencode_workspace_unit',
             'opencode_workspace_project',
             'opencode_workspace',
@@ -292,8 +293,8 @@ final class SqlSessiyaOpenCodeRepositoryWorkspaceTest extends TestCase
             $this->assertSame('s-1', $statements[$index]['params']['id']);
         }
 
-        $this->assertStringContainsString('delete from opencode_session where id = :id', $statements[5]['sql']);
-        $this->assertSame('s-1', $statements[5]['params']['id']);
+        $this->assertStringContainsString('delete from opencode_session where id = :id', $statements[6]['sql']);
+        $this->assertSame('s-1', $statements[6]['params']['id']);
     }
 
     #[Test]

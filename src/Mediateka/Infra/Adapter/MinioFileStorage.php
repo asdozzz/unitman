@@ -173,6 +173,43 @@ final class MinioFileStorage implements FileStorage
         ];
     }
 
+    public function downloadToTemp(string $key, int $maxBytes = 0): string
+    {
+        [$host, $rawPath] = $this->hostAndPath($key);
+
+        $signedHeaders = $this->signer->signRequest('GET', $rawPath, '', ['host' => $host]);
+
+        $response = $this->httpClient->request('GET', $this->url($rawPath), [
+            'headers' => $this->headersForRequest($signedHeaders),
+            'timeout' => 300,
+        ]);
+
+        $status = $response->getStatusCode();
+        if ($status === 404) {
+            throw new \RuntimeException('Файл отсутствует в хранилище');
+        }
+        if ($status < 200 || $status >= 300) {
+            throw new \RuntimeException(sprintf('Не удалось скачать файл из хранилища (HTTP %d)', $status));
+        }
+
+        $content = $response->getContent();
+        if ($maxBytes > 0 && strlen($content) > $maxBytes) {
+            throw new \RuntimeException('Размер файла в хранилище превышает допустимый');
+        }
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'mediateka_check_');
+        if ($tempPath === false) {
+            throw new \RuntimeException('Не удалось создать временный файл для проверки');
+        }
+
+        if (file_put_contents($tempPath, $content) === false) {
+            @unlink($tempPath);
+            throw new \RuntimeException('Не удалось сохранить временный файл для проверки');
+        }
+
+        return $tempPath;
+    }
+
     /**
      * @return array{0: string, 1: string} [host, rawPath]
      */

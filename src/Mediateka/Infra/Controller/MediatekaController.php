@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace App\Mediateka\Infra\Controller;
 
 use App\Mediateka\Business\Command\PodgotovitZagruzkuFayla;
+use App\Mediateka\Business\Command\PodgotovitZagruzkuFaylaWorkspace;
 use App\Mediateka\Business\Command\PrikrepitFaylyKUnitu;
 use App\Mediateka\Business\Command\ZagruzitFaylUnita;
+use App\Mediateka\Business\Command\ZagruzitFaylWorkspace;
 use App\Mediateka\Business\Command\ZavershitZagruzkuFayla;
 use App\Mediateka\Business\Model\FaylUnita;
 use App\Mediateka\Business\Port\CurrentUserProvider;
 use App\Mediateka\Business\UseCase\PodgotovitZagruzkuFaylaUseCase;
+use App\Mediateka\Business\UseCase\PodgotovitZagruzkuFaylaWorkspaceUseCase;
 use App\Mediateka\Business\UseCase\PoluchitFaylUnitaQuery;
 use App\Mediateka\Business\UseCase\PoluchitFaylyUnitaQuery;
 use App\Mediateka\Business\UseCase\PoluchitSsylkuDlyaFaylaQuery;
 use App\Mediateka\Business\UseCase\PrikrepitFaylyKUnituUseCase;
 use App\Mediateka\Business\UseCase\UdalitFaylUseCase;
 use App\Mediateka\Business\UseCase\ZagruzitFaylUnitaUseCase;
+use App\Mediateka\Business\UseCase\ZagruzitFaylWorkspaceUseCase;
 use App\Mediateka\Business\UseCase\ZavershitZagruzkuFaylaUseCase;
 use App\Utils\Model\Reponse\ErrorResponse\ErrorCodeEnum;
 use App\Utils\Model\Reponse\Response;
@@ -137,6 +141,121 @@ final class MediatekaController extends AbstractController
             }
 
             return $this->json(Response::success($this->fileToArray($file)));
+        } catch (Throwable $e) {
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/mediateka/workspace/upload',
+        summary: 'Загрузить файл workspace (черновик)',
+        description: 'Принимает multipart/form-data с одним файлом. Разрешены только изображения и текстовые файлы по allowlist MEDIATEKA_WORKSPACE_ALLOWED_EXT. Исполняемые и активные типы запрещены всегда. Файл сохраняется как черновик и привязывается к workspace через OpenCode.',
+        tags: ['Mediateka'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary'),
+                        new OA\Property(property: 'name', type: 'string', maxLength: 255, nullable: true),
+                    ],
+                    type: 'object'
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Файл загружен либо ErrorEnvelope'),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
+    #[Route('/workspace/upload', methods: ['POST'])]
+    public function workspaceUpload(
+        Request $request,
+        ZagruzitFaylWorkspaceUseCase $useCase,
+        CurrentUserProvider $currentUserProvider,
+    ): HttpResponse {
+        try {
+            $uploadedFile = $request->files->get('file');
+            if ($uploadedFile === null) {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.upload.file_is_missing'), ErrorCodeEnum::DEFAULT));
+            }
+
+            $name = (string) $request->request->get('name', $uploadedFile->getClientOriginalName());
+
+            $stream = fopen($uploadedFile->getPathname(), 'rb');
+            if ($stream === false) {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.upload.file_is_unreadable')));
+            }
+
+            try {
+                $file = $useCase->handle(new ZagruzitFaylWorkspace(
+                    $name,
+                    (int) $uploadedFile->getSize(),
+                    $this->poluchitContentLength($request),
+                    $currentUserProvider->getCurrentUserId(),
+                    $stream,
+                ));
+            } finally {
+                fclose($stream);
+            }
+
+            return $this->json(Response::success($this->fileToArray($file)));
+        } catch (Throwable $e) {
+            return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/mediateka/workspace/presign',
+        summary: 'Подготовить прямую загрузку файла workspace в MinIO',
+        tags: ['Mediateka'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'application/json',
+                schema: new OA\Schema(
+                    required: ['name', 'size'],
+                    properties: [
+                        new OA\Property(property: 'name', type: 'string', maxLength: 255),
+                        new OA\Property(property: 'size', type: 'integer', format: 'int64', minimum: 1),
+                        new OA\Property(property: 'contentType', type: 'string', nullable: true),
+                    ],
+                    type: 'object'
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Параметры загрузки либо ErrorEnvelope'),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+        ]
+    )]
+    #[Route('/workspace/presign', methods: ['POST'])]
+    public function workspacePresign(
+        Request $request,
+        PodgotovitZagruzkuFaylaWorkspaceUseCase $useCase,
+        CurrentUserProvider $currentUserProvider,
+    ): HttpResponse {
+        try {
+            $body = json_decode($request->getContent(), true);
+            if (!is_array($body)) {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.body_format_invalid')));
+            }
+
+            $size = $this->celoeIzTela($body, 'size');
+            if ($size === null) {
+                return new JsonResponse(Response::error($this->exceptionTranslator->translate('mediateka.bind.body_format_invalid')));
+            }
+
+            $preparation = $useCase->handle(new PodgotovitZagruzkuFaylaWorkspace(
+                $this->strokaIzTela($body, 'name'),
+                $size,
+                $this->strokaIzTela($body, 'contentType'),
+                $currentUserProvider->getCurrentUserId(),
+            ));
+
+            return $this->json(Response::success($preparation->toArray()));
         } catch (Throwable $e) {
             return new JsonResponse(Response::error($this->exceptionTranslator->translateThrowable($e)));
         }

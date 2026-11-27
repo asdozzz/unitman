@@ -16,8 +16,10 @@ use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Command\Workspace\ObnovitWorkspaceZapros;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
 use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatObnovleniyaWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatOstanovkiWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatProverkiIzmeneniyWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatUdaleniyaWorkspace;
@@ -74,6 +76,8 @@ final class MemoryRunnerService implements RunnerApiInterface
 
     const ZAPUSK_WORKSPACE = 'ZAPUSK_WORKSPACE';
     const RESULTAT_ZAPUSKA_WORKSPACE = 'RESULTAT_ZAPUSKA_WORKSPACE';
+    const OBNOVLENIE_WORKSPACE = 'OBNOVLENIE_WORKSPACE';
+    const RESULTAT_OBNOVLENIYA_WORKSPACE = 'RESULTAT_OBNOVLENIYA_WORKSPACE';
     const OSTANOVKA_WORKSPACE = 'OSTANOVKA_WORKSPACE';
     const RESULTAT_OSTANOVKI_WORKSPACE = 'RESULTAT_OSTANOVKI_WORKSPACE';
     const UDALENIE_WORKSPACE = 'UDALENIE_WORKSPACE';
@@ -419,6 +423,41 @@ final class MemoryRunnerService implements RunnerApiInterface
         }
 
         return new ResultatZapuskaWorkspace(1, [], $workflowId, $projects);
+    }
+
+    public function obnovitWorkspace(string $workflowId, ObnovitWorkspaceZapros $command): string
+    {
+        $this->calls[] = ['method' => 'obnovitWorkspace', 'args' => [$workflowId, $command]];
+
+        if (empty($this->responses[self::OBNOVLENIE_WORKSPACE])) {
+            return $workflowId;
+        }
+
+        $response = $this->getNextResponse(self::OBNOVLENIE_WORKSPACE);
+        if (!empty($response['expectedParams'])) {
+            $response['expectedParams'](func_get_args());
+        }
+
+        return $response['response'];
+    }
+
+    public function poluchitRezultatObnovleniyaWorkspace(string $workflowId): ?ResultatObnovleniyaWorkspace
+    {
+        $this->calls[] = ['method' => 'poluchitRezultatObnovleniyaWorkspace', 'args' => [$workflowId]];
+
+        if (!empty($this->responses[self::RESULTAT_OBNOVLENIYA_WORKSPACE])) {
+            $response = $this->getNextResponse(self::RESULTAT_OBNOVLENIYA_WORKSPACE);
+            if (!empty($response['expectedParams'])) {
+                $response['expectedParams'](func_get_args());
+            }
+
+            /** @var ResultatObnovleniyaWorkspace $result */
+            $result = $response['response'];
+
+            return $result;
+        }
+
+        return new ResultatObnovleniyaWorkspace(1, [], $workflowId, [], []);
     }
 
     public function ostanovitWorkspace(string $workflowId, OstanovitWorkspace $command): string

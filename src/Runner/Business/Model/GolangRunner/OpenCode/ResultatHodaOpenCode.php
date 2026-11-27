@@ -34,6 +34,8 @@ final class ResultatHodaOpenCode
      * @param string|null $ExternalSessionId идентификатор сессии на стороне OpenCode
      * @param string|null $ErrorMessage фактический текст ошибки раннера/OpenCode
      *        (не переводится; нужен, чтобы показать реальную причину)
+     * @param list<array{FileId: string, Name: string, Size: int, ContentType: string}> $Attachments
+     *        метаданные артефактов хода; содержимого файлов здесь нет никогда
      */
     public function __construct(
         public readonly bool $Success,
@@ -43,6 +45,7 @@ final class ResultatHodaOpenCode
         public readonly ?string $ErrorKey = null,
         public readonly ?string $ExternalSessionId = null,
         public readonly ?string $ErrorMessage = null,
+        public readonly array $Attachments = [],
     ) {
     }
 

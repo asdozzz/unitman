@@ -16,6 +16,7 @@ final class Workspace
     public const OPERATION_START = 'start';
     public const OPERATION_STOP = 'stop';
     public const OPERATION_DELETE = 'delete';
+    public const OPERATION_UPDATE = 'update';
 
     /** Максимум проектов в одном workspace. */
     public const MAX_PROJECTS = 20;
@@ -221,6 +222,60 @@ final class Workspace
         $this->updatedAt = $now;
     }
 
+    public function sbrositOperaciyu(int $now): void
+    {
+        $this->operation = '';
+        $this->operationWorkflowId = '';
+        $this->operationAttempts = 0;
+        $this->nextAttemptAt = 0;
+        $this->updatedAt = $now;
+    }
+
+    /**
+     * Добавляет проекты в уже существующий workspace.
+     *
+     * Позиции пересчитываются от текущего количества. Если хотя бы один
+     * новый проект не имеет права push, workspace становится read-only.
+     *
+     * @param list<ProektWorkspace> $projects
+     */
+    public function dobavitProekty(array $projects, int $now): void
+    {
+        if ($projects === []) {
+            return;
+        }
+
+        $offset = count($this->projects);
+        $dopolnenie = [];
+
+        foreach ($projects as $project) {
+            if (!$project instanceof ProektWorkspace) {
+                throw new \DomainException('opencode.workspace.project_invalid');
+            }
+
+            $dopolnenie[] = new ProektWorkspace(
+                $project->projectId,
+                $project->projectName,
+                $project->projectCode,
+                $project->canPush,
+                $offset + count($dopolnenie),
+                $project->mainBranch,
+                $project->branch,
+            );
+        }
+
+        $this->projects = self::normalizeProjects(
+            array_merge($this->projects, $dopolnenie),
+            $this->branch,
+        );
+
+        if (self::readOnlyDlyaProektov($dopolnenie)) {
+            $this->readOnly = true;
+        }
+
+        $this->updatedAt = $now;
+    }
+
     public function otmetitOshibku(string $errorKey, int $now): void
     {
         $this->errorKey = $errorKey;
@@ -229,6 +284,12 @@ final class Workspace
             $this->status = StatusWorkspace::ERROR;
         }
 
+        $this->updatedAt = $now;
+    }
+
+    public function ochistitOshibku(int $now): void
+    {
+        $this->errorKey = null;
         $this->updatedAt = $now;
     }
 

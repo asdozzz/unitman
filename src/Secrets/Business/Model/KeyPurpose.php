@@ -11,6 +11,12 @@ namespace App\Secrets\Business\Model;
  */
 final class KeyPurpose
 {
+    /** Реквизиты OpenCode (API-ключи), AES-256-GCM, AAD = accountId:credentialId. */
+    public const OPENCODE_CREDENTIALS = 'opencode_credentials';
+
+    /** Hidden-переменные юнита в Temporal payload, AES-256-GCM per runner. */
+    public const UNIT_VARIABLES = 'unit_variables';
+
     /** Токены репозиториев at rest (WS-2), AES-256-GCM, AAD = repoId. */
     public const REPO_TOKENS = 'repo_tokens';
 

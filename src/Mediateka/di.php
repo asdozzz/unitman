@@ -11,6 +11,7 @@ use App\Mediateka\Business\Port\FaylUnitaRepository;
 use App\Mediateka\Business\Port\FileLinkChecker;
 use App\Mediateka\Business\Port\FileStorage;
 use App\Mediateka\Business\UseCase\UdalitFaylUseCase;
+use App\Mediateka\Business\Utils\DopuskaemyeFajlyHoda;
 use App\Mediateka\Infra\Adapter\MinioFileStorage;
 use App\Mediateka\Infra\Adapter\RamseyGuidGenerator;
 use App\Mediateka\Infra\Repository\SqlFaylUnitaRepository;
@@ -26,6 +27,9 @@ return function (ContainerConfigurator $configuration) {
         ->autoconfigure()
         ->bind('$maxFileSize', '%env(int:MEDIATEKA_MAX_FILE_SIZE)%')
         ->bind('$presignTtl', '%env(int:MEDIATEKA_PRESIGN_TTL)%')
+        ->bind('$allowedExtensions', '%env(MEDIATEKA_WORKSPACE_ALLOWED_EXT)%')
+        ->bind('$workspaceMaxFileSize', '%env(int:MEDIATEKA_WORKSPACE_MAX_FILE_SIZE)%')
+        ->bind('$workspaceMaxFiles', '%env(int:MEDIATEKA_WORKSPACE_MAX_FILES)%')
         // Dedicated HMAC key for upload tokens. Deliberately NOT APP_SECRET:
         // rotating the application secret must not invalidate upload tokens.
         // Empty is fail-closed: UploadTokenCodec rejects it at DI time.
@@ -58,6 +62,10 @@ return function (ContainerConfigurator $configuration) {
     // Связи «файл ↔ внешняя сущность» регистрируют другие модули под этим тегом.
     $services->set(UdalitFaylUseCase::class)
         ->arg('$linkCheckers', tagged_iterator(FileLinkChecker::TAG));
+
+    // Общий предохранительный лимит файла хода — тот же, что у файлов workspace.
+    $services->set(DopuskaemyeFajlyHoda::class)
+        ->arg('$maxFileSize', '%env(int:MEDIATEKA_WORKSPACE_MAX_FILE_SIZE)%');
 
     $services->set(FileStorage::class, MinioFileStorage::class);
     $services->set(FaylUnitaRepository::class, SqlFaylUnitaRepository::class);

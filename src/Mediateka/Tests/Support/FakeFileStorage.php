@@ -29,6 +29,27 @@ final class FakeFileStorage implements FileStorage
     public array $deleted = [];
 
     /**
+     * Ключи, удаление которых должно закончиться ошибкой.
+     *
+     * @var array<string, true>
+     */
+    public array $failDelete = [];
+
+    /**
+     * Содержимое для скачивания по ключу объекта.
+     *
+     * @var array<string, string>
+     */
+    public array $downloadContent = [];
+
+    /**
+     * Последний запрос на скачивание: ключ и лимит байт.
+     *
+     * @var array{key: string, maxBytes: int}|null
+     */
+    public ?array $lastDownload = null;
+
+    /**
      * @var array<int, array{key: string, size: int, contentType: string, ttl: int}>
      */
     public array $presignedPutCalls = [];
@@ -40,6 +61,10 @@ final class FakeFileStorage implements FileStorage
 
     public function delete(string $key): void
     {
+        if (isset($this->failDelete[$key])) {
+            throw new \RuntimeException('storage delete failed');
+        }
+
         $this->deleted[] = $key;
     }
 
@@ -71,5 +96,25 @@ final class FakeFileStorage implements FileStorage
     public function stat(string $key): ?array
     {
         return $this->statObjects[$key] ?? null;
+    }
+
+    public function downloadToTemp(string $key, int $maxBytes = 0): string
+    {
+        $this->lastDownload = ['key' => $key, 'maxBytes' => $maxBytes];
+
+        $content = $this->downloadContent[$key] ?? '';
+
+        if ($maxBytes > 0 && strlen($content) > $maxBytes) {
+            throw new \RuntimeException('mediateka.file.too_large');
+        }
+
+        $path = tempnam(sys_get_temp_dir(), 'fake_storage_');
+        if ($path === false) {
+            throw new \RuntimeException('cannot create temp file');
+        }
+
+        file_put_contents($path, $content);
+
+        return $path;
     }
 }

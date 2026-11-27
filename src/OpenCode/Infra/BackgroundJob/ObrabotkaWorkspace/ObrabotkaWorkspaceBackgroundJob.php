@@ -10,6 +10,7 @@ use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\Workspace;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
 use Psr\Log\LoggerInterface;
@@ -36,6 +37,7 @@ final class ObrabotkaWorkspaceBackgroundJob extends AbstractBackgroundJob
         private UmeetUpravlyatWorkspace $workspaceManager,
         private ZapuskatelHodaOpenCode $launcher,
         private LoggerInterface $logger,
+        private ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
     ) {
     }
 
@@ -92,7 +94,7 @@ final class ObrabotkaWorkspaceBackgroundJob extends AbstractBackgroundJob
                 StatusWorkspace::STARTING => $this->obrabotatZapusk($session),
                 StatusWorkspace::ARCHIVING => $this->obrabotatArhivaciyu($session),
                 StatusWorkspace::DELETING => $this->obrabotatUdalenie($session),
-                StatusWorkspace::RUNNING => $this->zapustitPervyiPrompt($session),
+                StatusWorkspace::RUNNING => $this->obrabotatObnovlenieIliPrompt($session),
                 default => null,
             };
         } catch (\Throwable $error) {
@@ -198,7 +200,93 @@ final class ObrabotkaWorkspaceBackgroundJob extends AbstractBackgroundJob
             return;
         }
 
+        // Артефакты workspace удаляем до строк БД: сбой Mediateka не должен
+        // блокировать финальное удаление сессии (best-effort).
+        try {
+            $this->fayly?->udalitFajlyWorkspace($session->getId());
+        } catch (\Throwable $error) {
+            $this->logger->error('opencode.workspace.files_delete_failed', [
+                'workspaceId' => $session->getId(),
+                'exception' => $error,
+            ]);
+        }
+
         $this->sessionRepository->deleteWorkspace($session->getId());
+    }
+
+    private function obrabotatObnovlenieIliPrompt(SessiyaOpenCode $session): void
+    {
+        $pending = $this->sessionRepository->findWorkspaceUpdate($session->getId());
+
+        if ($pending === null) {
+            $this->zapustitPervyiPrompt($session);
+
+            return;
+        }
+
+        $result = $this->workspaceManager->poluchitRezultatOperacii($session);
+
+        if ($result === null) {
+            return;
+        }
+
+        $workspace = $session->getWorkspace();
+        if ($workspace === null) {
+            return;
+        }
+
+        if ($result === UmeetUpravlyatWorkspace::RESULT_FAILURE) {
+            $this->otkatitObnovlenie($pending['update']->files);
+            $this->sessionRepository->deleteWorkspaceUpdate($session->getId());
+            $workspace->sbrositOperaciyu(time());
+            $workspace->otmetitOshibku('opencode.workspace.update_failed', time());
+            $this->sessionRepository->update($session);
+
+            return;
+        }
+
+        $now = time();
+
+        if ($pending['update']->projects !== []) {
+            $workspace->dobavitProekty($pending['update']->projects, $now);
+        }
+
+        if ($pending['update']->files !== []) {
+            $this->fayly->otmetitPrimenenimi(array_map(
+                static fn (array $file): string => $file['fileId'],
+                $pending['update']->files,
+            ));
+        }
+
+        foreach ($pending['update']->filesToDelete as $file) {
+            $this->fayly->udalitFayl($file['fileId']);
+        }
+
+        $workspace->sbrositOperaciyu($now);
+        $workspace->ochistitOshibku($now);
+        $this->sessionRepository->update($session);
+        $this->sessionRepository->deleteWorkspaceUpdate($session->getId());
+
+        $this->zapustitPervyiPrompt($session);
+    }
+
+    /**
+     * Откатывает только что прикреплённые файлы, если обновление не удалось.
+     *
+     * @param list<array{fileId: string, name: string}> $files
+     */
+    private function otkatitObnovlenie(array $files): void
+    {
+        foreach ($files as $file) {
+            try {
+                $this->fayly->udalitFayl($file['fileId']);
+            } catch (\Throwable $error) {
+                $this->logger->error('opencode.workspace_reconcile.rollback_file_failed', [
+                    'fileId' => $file['fileId'],
+                    'exception' => $error,
+                ]);
+            }
+        }
     }
 
     private function zapustitPervyiPrompt(SessiyaOpenCode $session): void

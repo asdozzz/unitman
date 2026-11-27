@@ -17,6 +17,8 @@ final class RezultatHodaOpenCode
     public const KIND_QUESTION = 'QUESTION';
     public const KIND_ERROR = 'ERROR';
 
+    private const PROSMOTR_EXT = ['md', 'txt', 'json', 'yaml', 'yml', 'csv', 'log'];
+
     /**
      * @param list<array{
      *     Id: string,
@@ -26,6 +28,7 @@ final class RezultatHodaOpenCode
      * }> $questions
      * @param string|null $errorMessage фактический текст ошибки раннера/OpenCode;
      *        не переводится и нужен, чтобы показать реальную причину сбоя
+     * @param list<array{FileId: string, Name: string, Size: int, ContentType: string, Previewable: bool}> $attachments
      */
     public function __construct(
         public readonly bool $success,
@@ -35,6 +38,7 @@ final class RezultatHodaOpenCode
         public readonly ?string $errorKey,
         public readonly ?string $externalSessionId,
         public readonly ?string $errorMessage = null,
+        public readonly array $attachments = [],
     ) {
     }
 
@@ -51,6 +55,7 @@ final class RezultatHodaOpenCode
             self::strokaIliNull($data['ErrorKey'] ?? null),
             self::strokaIliNull($data['ExternalSessionId'] ?? null),
             self::strokaIliNull($data['ErrorMessage'] ?? null),
+            self::vlozheniya($data['Attachments'] ?? null),
         );
     }
 
@@ -67,7 +72,14 @@ final class RezultatHodaOpenCode
      *     Answer: string|null,
      *     ErrorKey: string|null,
      *     ExternalSessionId: string|null,
-     *     ErrorMessage: string|null
+     *     ErrorMessage: string|null,
+     *     Attachments: list<array{
+     *         FileId: string,
+     *         Name: string,
+     *         Size: int,
+     *         ContentType: string,
+     *         Previewable: bool
+     *     }>
      * }
      */
     public function toArray(): array
@@ -80,6 +92,7 @@ final class RezultatHodaOpenCode
             'ErrorKey' => $this->errorKey,
             'ExternalSessionId' => $this->externalSessionId,
             'ErrorMessage' => $this->errorMessage,
+            'Attachments' => $this->attachments,
         ];
     }
 
@@ -159,6 +172,46 @@ final class RezultatHodaOpenCode
         }
 
         return $options;
+    }
+
+    /**
+     * @return list<array{FileId: string, Name: string, Size: int, ContentType: string, Previewable: bool}>
+     */
+    private static function vlozheniya(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach ($raw as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $fileId = self::stroka($item['FileId'] ?? null, '');
+            $name = self::stroka($item['Name'] ?? null, '');
+            $size = $item['Size'] ?? null;
+
+            if ($fileId === '' || $name === '' || !is_int($size) || $size <= 0) {
+                continue;
+            }
+
+            $result[] = [
+                'FileId' => $fileId,
+                'Name' => $name,
+                'Size' => $size,
+                'ContentType' => self::stroka($item['ContentType'] ?? null, 'application/octet-stream'),
+                'Previewable' => in_array(
+                    strtolower((string) pathinfo($name, PATHINFO_EXTENSION)),
+                    self::PROSMOTR_EXT,
+                    true,
+                ),
+            ];
+        }
+
+        return $result;
     }
 
     private static function stroka(mixed $value, string $default): string

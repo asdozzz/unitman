@@ -11,6 +11,7 @@ use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\TipSessiiOpenCode;
 use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\Model\WorkspaceUnit;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use Doctrine\DBAL\ArrayParameterType;
@@ -28,6 +29,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
     private const WORKSPACE_PROJECT_TABLE = 'opencode_workspace_project';
 
     private const WORKSPACE_UNIT_TABLE = 'opencode_workspace_unit';
+
+    private const WORKSPACE_UPDATE_TABLE = 'opencode_workspace_update';
 
     private const TURN_TABLE = 'opencode_turn';
 
@@ -261,10 +264,77 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
         return $updated > 0;
     }
 
+    public function saveWorkspaceUpdate(
+        string $sessionId,
+        string $workflowId,
+        WorkspacePendingUpdate $update,
+    ): void {
+        $table = self::WORKSPACE_UPDATE_TABLE;
+
+        $this->connection->executeStatement(
+            "insert into $table (session_id, workflow_id, payload, created_at)
+             values (:session_id, :workflow_id, :payload, :created_at)
+             on conflict (session_id) do update set
+                workflow_id = excluded.workflow_id,
+                payload = excluded.payload,
+                created_at = excluded.created_at",
+            [
+                'session_id' => $sessionId,
+                'workflow_id' => $workflowId,
+                'payload' => json_encode($update->toArray(), JSON_THROW_ON_ERROR),
+                'created_at' => time(),
+            ],
+            [
+                'session_id' => ParameterType::STRING,
+                'workflow_id' => ParameterType::STRING,
+                'payload' => ParameterType::STRING,
+                'created_at' => ParameterType::INTEGER,
+            ]
+        );
+    }
+
+    /**
+     * @return array{workflowId: string, update: WorkspacePendingUpdate}|null
+     */
+    public function findWorkspaceUpdate(string $sessionId): ?array
+    {
+        $table = self::WORKSPACE_UPDATE_TABLE;
+
+        $row = $this->connection->fetchAssociative(
+            "select workflow_id, payload from $table where session_id = :session_id",
+            ['session_id' => $sessionId],
+            ['session_id' => ParameterType::STRING]
+        );
+
+        if ($row === false) {
+            return null;
+        }
+
+        $payload = json_decode((string) $row['payload'], true);
+        if (!is_array($payload)) {
+            return null;
+        }
+
+        return [
+            'workflowId' => (string) $row['workflow_id'],
+            'update' => WorkspacePendingUpdate::fromArray($payload),
+        ];
+    }
+
+    public function deleteWorkspaceUpdate(string $sessionId): void
+    {
+        $this->connection->delete(
+            self::WORKSPACE_UPDATE_TABLE,
+            ['session_id' => $sessionId],
+            ['session_id' => ParameterType::STRING]
+        );
+    }
+
     public function deleteWorkspace(string $sessionId): void
     {
         $this->connection->transactional(function () use ($sessionId): void {
             foreach ([
+                self::WORKSPACE_UPDATE_TABLE,
                 self::WORKSPACE_UNIT_TABLE,
                 self::WORKSPACE_PROJECT_TABLE,
                 self::WORKSPACE_TABLE,

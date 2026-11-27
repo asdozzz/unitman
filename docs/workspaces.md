@@ -419,3 +419,229 @@ project_branch_not_found, project_clone_failed, read_only_push_forbidden
    `pre-push` блокирует push), архив (`docker compose stop`, тома на месте),
    restore (`docker compose start`), удаление (каталог, тома и записи БД
    исчезли).
+
+## 13. Файлы workspace
+
+Файлы нужны агенту для чтения и не являются скриптами. Они попадают в
+зарезервированный каталог `/workspace/unitman_files` (рядом с каталогами
+проектов) и монтируются в контейнер **только для чтения** (`chmod 0444`).
+
+```text
+MEDIATEKA_WORKSPACE_ALLOWED_EXT=png,jpg,jpeg,gif,webp,txt,md,csv,tsv,json,yaml,yml,xml,log
+MEDIATEKA_WORKSPACE_MAX_FILE_SIZE=52428800
+MEDIATEKA_WORKSPACE_MAX_FILES=20
+```
+
+- allowlist расширений настраивается через ENV, но исполняемые и активные
+  типы (`sh`, `py`, `js`, `php`, `html`, `svg`, `sql`, `exe` и т.п.) запрещены
+  жёстким denylist независимо от конфига;
+- изображения проверяются по сигнатуре (`getimagesize`), текст — по UTF-8 и
+  отсутствию NUL-байтов;
+- имена нормализуются, защищены от path traversal и не могут совпадать с
+  `workspace.code-workspace` и `unitman_files`;
+- загрузка идёт как черновик Mediateka: `POST /api/mediateka/workspace/upload`
+  либо presign (`/api/mediateka/workspace/presign` + `finalize`). После
+  загрузки файл валидируется по содержимому, невалидный объект удаляется;
+- при запуске контейнера `ZapustitWorkspaceActivity` скачивает файлы на хост,
+  копирует через `docker compose cp` и выставляет `0444`;
+- `workspace.code-workspace` всегда содержит папку `unitman_files`, если файлы
+  есть.
+
+Пользовательские файлы учитываются в лимите `MEDIATEKA_WORKSPACE_MAX_FILES` и
+отдаются в UI через `files` read-модели workspace.
+
+## 14. Добавление проектов и файлов после создания
+
+Обновлять можно только `RUNNING` workspace. Новый проект добавляется в
+существующий контейнер без пересоздания:
+
+1. клиент создаёт локальную ветку в хранилище тем же API, что и форма
+   создания;
+2. `POST /api/opencode/workspace/dobavitProekt` проверяет доступ, конфликты,
+   лимит проектов и запускает `ObnovitWorkspaceActivity`;
+3. `POST /api/opencode/workspace/fayly/prikrepit` привязывает черновики
+   Mediateka и запускает то же обновление;
+4. `POST /api/opencode/workspace/fayly/udalit` удаляет файл из контейнера.
+
+Состояние обновления хранится в `opencode_workspace_update` и не переводит
+workspace в отдельный статус: остаётся `RUNNING`, но `canAcceptMessages=false`
+и в read-модели выставляется `updating=true`. Фоновая задача
+`opencode_workspace_reconcile` опрашивает результат workflow:
+
+- успех: новые проекты добавляются в снимок, файлы отмечаются применёнными,
+  удалённые файлы убираются из реестра, операция и ошибка сбрасываются;
+- ошибка: только что привязанные файлы откатываются, операция сбрасывается,
+  выставляется `opencode.workspace.update_failed`; workspace остаётся
+  `RUNNING`, пользователь может повторить попытку.
+
+Go-раннер в `ObnovitWorkspaceActivity` клонирует **только новые** проекты,
+перегенерирует `workspace.code-workspace`, применяет и удаляет файлы. Вход
+содержит `NewProjects[]`, `AllProjects[]`, `Files[]` и `FilesToDelete[]`.
+
+## 15. Вложения хода агента
+
+Агент может вернуть вместе с ответом готовые документы: план, отчёт,
+спецификацию. Содержимое файлов **не проходит через Temporal**: раннер забирает
+их из контейнера и загружает на бэкенд отдельным HMAC-запросом, а в результате
+хода остаются только метаданные.
+
+### 15.1 Outbox и инструкция агенту
+
+Для workspace-хода раннер создаёт в контейнере каталог
+`/workspace/unitman_artifacts/<workflowId>/` и добавляет в промпт инструкцию:
+
+```text
+Если пользователь просит подготовить план, отчёт, спецификацию или другой документ,
+сохрани итоговый файл в /workspace/unitman_artifacts/<workflowId>/<краткое-имя>.md.
+Файлы из этого каталога автоматически прикрепляются к твоему ответу.
+Если пользователь указал конкретный путь, сохрани файл туда и продублируй его в этот каталог.
+Не помещай в каталог секреты, ключи, бинарные файлы и больше 5 файлов.
+```
+
+`/workspace/unitman_files` — входные файлы workspace, смонтированные только для
+чтения; как outbox он не используется. Каталоги проектов
+`/workspace/<ProjectId>` не сканируются. Вложения собираются только из каталога
+текущего хода на глубине 1: подкаталоги не поддерживаются.
+
+### 15.2 Загрузка на бэкенд
+
+```http
+POST <backend>/api/runner/opencode/artifact?workflowId=<id>&workspaceId=<id>&name=<raw name>&contentType=<mime>
+X-Runner-Id: <runner id>
+X-Runner-Signature: hex(HMAC-SHA256(secret, workflowId + "\n" + rawName + "\n" + rawBody))
+Content-Type: application/octet-stream
+
+<сырые байты файла>
+```
+
+- тело — raw bytes, без base64 и multipart; подпись считается по тем же байтам;
+- имя в подписи — ровно то, что пришло в query; нормализация выполняется после
+  проверки подписи;
+- маршрут публичный по JWT и защищён подписью раннера
+  ([`RunnerArtifactController`](src/OpenCode/Infra/Controller/RunnerArtifactController.php:1));
+- повторная загрузка идемпотентна по паре `(turnId, name)`: уникальный
+  частичный индекс возвращает существующий файл, а не создаёт дубль;
+- порядок проверок: ход существует и `RUNNING` → сессия workspace → совпадение
+  `workspaceId` → не архив → имя, содержимое и лимиты
+  ([`PrinyatFajlHodaUseCase`](src/OpenCode/Business/UseCase/PrinyatFajlHodaUseCase.php:1)).
+
+### 15.3 Лимиты и допустимые типы
+
+| Лимит | Значение | Где проверяется |
+|---|---|---|
+| файлов на ход | 5 | раннер и use case |
+| размер файла | 2 МиБ (`2097152`) | раннер, контроллер (413), use case |
+| суммарный размер хода | 8 МиБ (`8388608`) | раннер и use case |
+| размер для preview | 512 КиБ (`524288`) | эндпоинт текста |
+| длина имени | 128 символов | раннер и нормализация имени |
+| допустимые расширения | `md`, `txt`, `json`, `yaml`, `yml`, `csv`, `log` | allowlist |
+
+Расширения настраиваются через `OPENCODE_ARTIFACT_ALLOWED_EXT`, но активные и
+исполняемые типы запрещены жёстким denylist независимо от конфига: `html`,
+`htm`, `xhtml`, `svg`, `js`, `mjs`, `ts`, `php`, `sh`, `py`, `exe`, `bin`, `so`,
+`dll`, `bat`, `cmd`, `ps1`, `sql`.
+
+Дополнительно отклоняются пустое содержимое, NUL-байты и невалидный UTF-8.
+
+### 15.4 Модель хранения
+
+Артефакт — обычный workspace-файл Mediateka (`kind = workspace`) с привязкой к
+ходу:
+
+```sql
+alter table mediateka_file
+    add column if not exists opencode_turn_id varchar(64) default null;
+
+create index if not exists mediateka_file_opencode_turn_id_idx
+    on mediateka_file (opencode_turn_id);
+
+create unique index if not exists mediateka_file_turn_name_uniq
+    on mediateka_file (opencode_turn_id, name)
+    where opencode_turn_id is not null;
+```
+
+`NULL` в `opencode_turn_id` — обычные файлы workspace, частичный индекс их не
+касается. Файл принадлежит workspace хода (`workspace_id`) и владельцу сессии
+(`uploaded_by`); `applied_at` равен времени регистрации, потому что объект уже
+лежит в хранилище.
+
+Байты файла **никогда** не возвращаются через Temporal. Результат хода несёт
+только метаданные:
+
+```json
+"Attachments": [
+  {
+    "FileId": "f1c2...",
+    "Name": "plan.md",
+    "Size": 1234,
+    "ContentType": "text/markdown",
+    "Previewable": true
+  }
+]
+```
+
+`Previewable` вычисляется по расширению (`md`, `txt`, `json`, `yaml`, `yml`,
+`csv`, `log`). Легаси-ходы без поля читаются как `[]`.
+
+### 15.5 Удаление
+
+При удалении workspace артефакты удаляются best effort вместе с остальными
+файлами workspace: [`ObrabotkaWorkspaceBackgroundJob`](src/OpenCode/Infra/BackgroundJob/ObrabotkaWorkspace/ObrabotkaWorkspaceBackgroundJob.php:1)
+вызывает `udalitFajlyWorkspace()`, а ошибка логируется ключом
+`opencode.workspace.files_delete_failed`. Сбой очистки файлов **не блокирует**
+переход состояния workspace: запись сессии удаляется штатно, «осиротевшие»
+объекты остаются в MinIO до ручной очистки.
+
+### 15.6 Эндпоинты для интерфейса
+
+Оба маршрута закрыты JWT и принимают JSON `{turnId, fileId}`. Владелец берётся
+из токена; чужой ход, чужая сессия и чужой файл дают одинаковый 404, чтобы не
+раскрывать существование данных.
+
+| Метод | Путь | Ответ |
+|---|---|---|
+| `POST` | `/api/opencode/fajl/ssylka` | `{fileId, name, contentType, size, url}` — presigned-ссылка |
+| `POST` | `/api/opencode/fajl/tekst` | `{fileId, name, contentType, content}` — текст для preview |
+
+`/tekst` дополнительно требует previewable-расширение, размер не больше
+`OPENCODE_ARTIFACT_PREVIEW_MAX_BYTES` и валидный UTF-8. Реализация —
+[`OpenCodeFileController`](src/OpenCode/Infra/Controller/OpenCodeFileController.php:1)
+и [`PoluchitTekstFajlaHodaQuery`](src/OpenCode/Business/UseCase/PoluchitTekstFajlaHodaQuery.php:1).
+
+В чате workspace под ответом агента показываются имя, размер, предпросмотр
+(глаз) и скачивание. Preview рендерит Markdown через `marked` и `DOMPurify`:
+запрещены `script`, `style`, `iframe`, `object`, `embed`, `form`, `img`,
+`video`, `audio`, `link`, `meta`, обработчики событий, `style` и `data-*`;
+ссылки открываются в новой вкладке с `rel="noopener noreferrer"`. Для остальных
+текстовых расширений содержимое выводится в `<pre>` без интерпретации разметки.
+
+### 15.7 Ошибки
+
+Ошибки загрузки от раннера:
+
+| Ключ | HTTP |
+|---|---|
+| `runner.invalid_signature` | 401 |
+| `runner.not_found` | 404 |
+| `opencode.artifact.turn_not_found` | 404 |
+| `opencode.artifact.turn_not_running` | 409 |
+| `opencode.artifact.file_is_too_large` | 413 |
+| `opencode.artifact.workspace_required` | 422 |
+| `opencode.artifact.workspace_mismatch` | 422 |
+| `opencode.artifact.workspace_archived` | 422 |
+| `opencode.artifact.name_is_invalid` | 422 |
+| `opencode.artifact.file_type_forbidden` | 422 |
+| `opencode.artifact.content_invalid` | 422 |
+| `opencode.artifact.too_many_files` | 422 |
+| `opencode.artifact.total_is_too_large` | 422 |
+
+Ошибки эндпоинтов интерфейса:
+
+| Ключ | HTTP |
+|---|---|
+| `opencode.turn.not_found` | 404 |
+| `opencode.session.not_found` | 404 |
+| `opencode.artifact.not_found` | 404 |
+| `opencode.artifact.preview_unsupported` | 422 |
+| `opencode.artifact.preview_too_large` | 422 |
+| `opencode.artifact.content_invalid` | 422 |

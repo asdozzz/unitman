@@ -100,6 +100,7 @@ final class SecretEncryptionKeyProviderTest extends TestCase
         $names = $provider->requiredSecretNames();
 
         self::assertSame([
+            'OPENCODE_CREDENTIALS_KEY',
             'LICHNIY_TOKEN_CREDENTIALS_KEY',
             'MEDIATEKA_UPLOAD_TOKEN_SECRET',
             'RUNNER_SECRET_MASTER_KEY',

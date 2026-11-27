@@ -81,6 +81,7 @@ deptrac:
       - Account
       - App
       - BackgroundJob
+      - Mediateka
       - Runner
       - Unitman
       - Utils

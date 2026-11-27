@@ -14,6 +14,7 @@ final class ZapustitWorkspace
 {
     /**
      * @param list<ProektWorkspaceCommand> $Projects
+     * @param list<WorkspaceFileCommand>   $Files
      */
     public function __construct(
         public readonly string $WorkspaceId,
@@ -25,6 +26,7 @@ final class ZapustitWorkspace
         public readonly array $Projects,
         public readonly ?string $RunnerId = null,
         public readonly ?string $TaskQueue = null,
+        public readonly array $Files = [],
     ) {
     }
 }

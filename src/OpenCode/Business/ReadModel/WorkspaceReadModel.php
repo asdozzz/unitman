@@ -21,6 +21,7 @@ final class WorkspaceReadModel
     /**
      * @param list<ProektWorkspaceReadModel> $projects
      * @param list<WorkspaceUnitReadModel> $units
+     * @param list<WorkspaceFileReadModel> $files
      */
     public function __construct(
         public readonly string $id,
@@ -37,11 +38,20 @@ final class WorkspaceReadModel
         public readonly int $updatedAt,
         public readonly array $units = [],
         public readonly ?string $model = null,
+        public readonly array $files = [],
+        public readonly bool $updating = false,
     ) {
     }
 
-    public static function izModela(SessiyaOpenCode $session, ?string $ideLink = null): self
-    {
+    /**
+     * @param list<WorkspaceFileReadModel> $files
+     */
+    public static function izModela(
+        SessiyaOpenCode $session,
+        ?string $ideLink = null,
+        array $files = [],
+        bool $updating = false,
+    ): self {
         $workspace = $session->getWorkspace();
 
         return new self(
@@ -65,6 +75,8 @@ final class WorkspaceReadModel
                 $workspace?->getUnits() ?? [],
             ),
             $session->getModel(),
+            $files,
+            $updating,
         );
     }
 
@@ -109,6 +121,11 @@ final class WorkspaceReadModel
                 $this->units,
             ),
             'model' => $this->model,
+            'files' => array_map(
+                static fn (WorkspaceFileReadModel $file): array => $file->toArray(),
+                $this->files,
+            ),
+            'updating' => $this->updating,
         ];
     }
 }

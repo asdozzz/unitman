@@ -11,6 +11,8 @@ use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\Workspace;
 use App\OpenCode\Business\Model\WorkspaceKontekst;
+use App\OpenCode\Business\Model\WorkspacePendingUpdate;
+use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
@@ -21,10 +23,12 @@ use App\Runner\Api\RunnerApiInterface;
 use App\Runner\Business\Command\NachatHodOpenCode;
 use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\UseCase\RunnerSelectionService;
+use App\Runner\Business\Command\Workspace\ObnovitWorkspaceZapros;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
 use App\Runner\Business\Command\Workspace\ProektWorkspaceZapros;
 use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
 use App\Runner\Business\Command\Workspace\UdalitWorkspace;
+use App\Runner\Business\Command\Workspace\WorkspaceFileCommand;
 use App\Runner\Business\Command\Workspace\ZapustitWorkspaceZapros;
 use App\Runner\Business\Model\GolangRunner\OpenCode\ResultatHodaOpenCode;
 
@@ -46,6 +50,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         // тестах; DI подставляет реальные сервисы multi-runner.
         private readonly ?WorkspaceRunnerRepository $workspaceRunnerRepository = null,
         private readonly ?RunnerSelectionService $runnerSelectionService = null,
+        private readonly ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
     ) {
     }
 
@@ -282,6 +287,81 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         );
     }
 
+    public function obnovit(SessiyaOpenCode $session, WorkspacePendingUpdate $update): string
+    {
+        $workspace = $this->trebovatWorkspace($session);
+        $workflowId = $this->uuidGenerator->makeGuid();
+        $runner = $this->runnerDlyaWorkspace($session->getId());
+
+        $newProjects = [];
+        foreach ($update->projects as $project) {
+            $newProjects[] = new ProektWorkspaceZapros(
+                $project->projectId,
+                $project->projectName,
+                $project->projectCode,
+                $project->canPush,
+                $project->mainBranch,
+            );
+        }
+
+        $allProjects = [];
+        $seen = [];
+
+        foreach (array_merge($workspace->getProjects(), $update->projects) as $project) {
+            if (isset($seen[$project->projectId])) {
+                continue;
+            }
+
+            $seen[$project->projectId] = true;
+            $allProjects[] = new ProektWorkspaceZapros(
+                $project->projectId,
+                $project->projectName,
+                $project->projectCode,
+                $project->canPush,
+                $project->mainBranch,
+            );
+        }
+
+        $fileIds = array_map(
+            static fn (array $file): string => $file['fileId'],
+            $update->files,
+        );
+
+        $links = $this->fayly?->poluchitSsylkiDlyaFaylov($fileIds) ?? [];
+        $files = [];
+        foreach ($update->files as $file) {
+            $url = $links[$file['fileId']]['url'] ?? '';
+            if ($url === '') {
+                continue;
+            }
+
+            $files[] = new WorkspaceFileCommand($file['fileId'], $file['name'], $url);
+        }
+
+        $filesToDelete = array_map(
+            static fn (array $file): string => $file['name'],
+            $update->filesToDelete,
+        );
+
+        $registered = $this->runnerApi->obnovitWorkspace(
+            $workflowId,
+            new ObnovitWorkspaceZapros(
+                $session->getId(),
+                SlugWorkspace::dlya($session->getTitle(), $session->getId()),
+                $workspace->getBranch(),
+                $update->readOnly,
+                $newProjects,
+                $allProjects,
+                $files,
+                $filesToDelete,
+                RunnerId: $runner?->getId(),
+                TaskQueue: $runner?->getTaskQueue(),
+            ),
+        );
+
+        return $registered !== '' ? $registered : $workflowId;
+    }
+
     public function poluchitIzmeneniya(SessiyaOpenCode $session): RezultatProverkiIzmeneniyWorkspace
     {
         $workspace = $this->trebovatWorkspace($session);
@@ -339,6 +419,9 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
                 Workspace::OPERATION_DELETE => $this->rezultat(
                     $this->runnerApi->poluchitResultatUdaleniyaWorkspace($workflowId),
                 ),
+                Workspace::OPERATION_UPDATE => $this->rezultat(
+                    $this->runnerApi->poluchitRezultatObnovleniyaWorkspace($workflowId),
+                ),
                 default => null,
             };
         } catch (\Throwable $error) {
@@ -382,7 +465,34 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
             $projects,
             RunnerId: $runner?->getId(),
             TaskQueue: $runner?->getTaskQueue(),
+            Files: $this->sobratFayly($session),
         );
+    }
+
+    /**
+     * @return list<WorkspaceFileCommand>
+     */
+    private function sobratFayly(SessiyaOpenCode $session): array
+    {
+        if ($this->fayly === null) {
+            return [];
+        }
+
+        $models = $this->fayly->poluchitFayly($session->getId());
+        $fileIds = array_map(static fn ($file): string => $file->fileId, $models);
+        $links = $this->fayly->poluchitSsylkiDlyaFaylov($fileIds);
+
+        $result = [];
+        foreach ($models as $file) {
+            $url = $links[$file->fileId]['url'] ?? '';
+            if ($url === '') {
+                continue;
+            }
+
+            $result[] = new WorkspaceFileCommand($file->fileId, $file->name, $url);
+        }
+
+        return $result;
     }
 
     private function trebovatWorkspace(SessiyaOpenCode $session): Workspace
@@ -418,6 +528,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
             $result->ErrorKey,
             $result->ExternalSessionId,
             $result->ErrorMessage,
+            $result->Attachments,
         );
     }
 

@@ -5,21 +5,27 @@ declare(strict_types=1);
 namespace App\OpenCode\Infra\Controller;
 
 use App\OpenCode\Business\Command\ArhivirovatWorkspace;
+use App\OpenCode\Business\Command\DobavitProektyVWorkspace;
 use App\OpenCode\Business\Command\PoluchitSostoyanieWorkspace;
 use App\OpenCode\Business\Command\PoluchitSpisokWorkspace;
 use App\OpenCode\Business\Command\PoluchitSsylkuWorkspace;
+use App\OpenCode\Business\Command\PrikrepitFaylyKWorkspace;
 use App\OpenCode\Business\Command\SozdatUnitiWorkspace;
 use App\OpenCode\Business\Command\SozdatWorkspace;
+use App\OpenCode\Business\Command\UdalitFaylWorkspace;
 use App\OpenCode\Business\Command\UdalitWorkspace;
 use App\OpenCode\Business\Command\VosstanovitWorkspace;
 use App\OpenCode\Business\ReadModel\WorkspaceReadModel;
 use App\OpenCode\Business\ReadModel\WorkspaceUnitReadModel;
 use App\OpenCode\Business\UseCase\ArhivirovatWorkspaceUseCase;
+use App\OpenCode\Business\UseCase\DobavitProektyVWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\PoluchitSostoyanieWorkspaceQuery;
 use App\OpenCode\Business\UseCase\PoluchitSpisokWorkspaceQuery;
 use App\OpenCode\Business\UseCase\PoluchitSsylkuWorkspaceQuery;
+use App\OpenCode\Business\UseCase\PrikrepitFaylyKWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\SozdatUnitiWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\SozdatWorkspaceUseCase;
+use App\OpenCode\Business\UseCase\UdalitFaylWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\UdalitWorkspaceUseCase;
 use App\OpenCode\Business\UseCase\VosstanovitWorkspaceUseCase;
 use App\Utils\Model\Reponse\Response;
@@ -137,6 +143,78 @@ final class WorkspaceController extends AbstractController
                 $units,
             ),
         ]));
+    }
+
+    #[OA\Post(
+        path: '/api/opencode/workspace/dobavitProekt',
+        summary: 'Добавить проект в работающий workspace',
+        tags: ['OpenCode'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/DobavitProektyVWorkspace')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Обновление запущено'),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки'),
+        ]
+    )]
+    #[Route('/dobavitProekt', methods: ['POST'])]
+    function dobavitProekt(
+        DobavitProektyVWorkspace $command,
+        DobavitProektyVWorkspaceUseCase $useCase,
+    ): HttpResponse {
+        $useCase->handle($command);
+
+        return $this->json(Response::success(['updating' => true]));
+    }
+
+    #[OA\Post(
+        path: '/api/opencode/workspace/fayly/prikrepit',
+        summary: 'Прикрепить файлы к работающему workspace',
+        tags: ['OpenCode'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PrikrepitFaylyKWorkspace')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Обновление запущено'),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки'),
+        ]
+    )]
+    #[Route('/fayly/prikrepit', methods: ['POST'])]
+    function prikrepitFayly(
+        PrikrepitFaylyKWorkspace $command,
+        PrikrepitFaylyKWorkspaceUseCase $useCase,
+    ): HttpResponse {
+        $useCase->handle($command);
+
+        return $this->json(Response::success(['updating' => true]));
+    }
+
+    #[OA\Post(
+        path: '/api/opencode/workspace/fayly/udalit',
+        summary: 'Удалить файл workspace',
+        tags: ['OpenCode'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UdalitFaylWorkspace')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Обновление запущено'),
+            new OA\Response(response: 401, description: 'Не авторизован'),
+            new OA\Response(response: 500, description: 'Ошибка обработки'),
+        ]
+    )]
+    #[Route('/fayly/udalit', methods: ['POST'])]
+    function udalitFayl(
+        UdalitFaylWorkspace $command,
+        UdalitFaylWorkspaceUseCase $useCase,
+    ): HttpResponse {
+        $useCase->handle($command);
+
+        return $this->json(Response::success(['updating' => true]));
     }
 
     #[OA\Get(

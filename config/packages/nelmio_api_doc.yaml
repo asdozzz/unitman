@@ -827,6 +827,60 @@ nelmio_api_doc:
                             nullable: true
                             description: 'Модель из набора реквизитов; пустое значение — дефолтная модель реквизитов'
                             example: gpt-4o
+                        fileIds:
+                            type: array
+                            description: 'Черновики файлов workspace, загруженные текущим пользователем; привязываются до запуска контейнера'
+                            items:
+                                type: string
+                                format: uuid
+                DobavitProektyVWorkspace:
+                    type: object
+                    description: 'Добавление проектов в работающий workspace; локальные ветки создаются клиентом до запроса'
+                    required: [workspaceId, projects]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                        projects:
+                            type: array
+                            minItems: 1
+                            maxItems: 20
+                            items:
+                                type: object
+                                required: [projectId, branch]
+                                properties:
+                                    projectId:
+                                        type: string
+                                        format: uuid
+                                    branch:
+                                        type: string
+                                        maxLength: 256
+                                        example: feature/added
+                PrikrepitFaylyKWorkspace:
+                    type: object
+                    description: 'Прикрепление загруженных черновиков файлов к работающему workspace'
+                    required: [workspaceId, fileIds]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                        fileIds:
+                            type: array
+                            minItems: 1
+                            items:
+                                type: string
+                                format: uuid
+                UdalitFaylWorkspace:
+                    type: object
+                    description: 'Удаление файла из работающего workspace'
+                    required: [workspaceId, fileId]
+                    properties:
+                        workspaceId:
+                            type: string
+                            format: uuid
+                        fileId:
+                            type: string
+                            format: uuid
                 SozdatUnitiWorkspace:
                     type: object
                     description: 'Создание юнитов для всех проектов workspace'
@@ -1160,6 +1214,11 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             description: 'Идентификатор сессии на стороне OpenCode'
+                        Attachments:
+                            type: array
+                            description: 'Метаданные файлов-артефактов, созданных ходом; у легаси-ходов поля может не быть'
+                            items:
+                                $ref: '#/components/schemas/VlozhenieHoda'
                 OpenCodeQuestion:
                     type: object
                     required: [Id, Text, AllowFreeText, Options]
@@ -2874,6 +2933,91 @@ nelmio_api_doc:
                         link:
                             type: string
                             format: uri
+                # --- OpenCode: файлы-артефакты хода ---
+                FajlHoda:
+                    type: object
+                    description: Метаданные файла-артефакта хода
+                    required: [fileId, name, size, contentType, createdAt, workspaceId, turnId]
+                    properties:
+                        fileId:
+                            type: string
+                            format: uuid
+                        name:
+                            type: string
+                            example: feature-plan.md
+                        size:
+                            type: integer
+                            example: 4096
+                        contentType:
+                            type: string
+                            example: text/markdown
+                        createdAt:
+                            type: integer
+                            example: 1762000000
+                        workspaceId:
+                            type: string
+                            format: uuid
+                        turnId:
+                            type: string
+                            format: uuid
+                FajlHodaSsilka:
+                    type: object
+                    description: Подписанная ссылка на файл-артефакт хода
+                    required: [fileId, name, contentType, size, url]
+                    properties:
+                        fileId:
+                            type: string
+                            format: uuid
+                        name:
+                            type: string
+                            example: feature-plan.md
+                        contentType:
+                            type: string
+                            example: text/markdown
+                        size:
+                            type: integer
+                            example: 4096
+                        url:
+                            type: string
+                            format: uri
+                VlozhenieHoda:
+                    type: object
+                    description: Метаданные файла-артефакта в результате хода (RezultatHodaOpenCode::$Attachments)
+                    required: [FileId, Name, Size, ContentType, Previewable]
+                    properties:
+                        FileId:
+                            type: string
+                            format: uuid
+                        Name:
+                            type: string
+                            example: feature-plan.md
+                        Size:
+                            type: integer
+                            description: Размер файла в байтах
+                            example: 4096
+                        ContentType:
+                            type: string
+                            example: text/markdown
+                        Previewable:
+                            type: boolean
+                            description: 'Вычисляется бэкендом по расширению (md/txt/json/yaml/yml/csv/log)'
+                FajlHodaTekst:
+                    type: object
+                    description: Текст файла-артефакта хода для preview
+                    required: [fileId, name, contentType, content]
+                    properties:
+                        fileId:
+                            type: string
+                            format: uuid
+                        name:
+                            type: string
+                            example: feature-plan.md
+                        contentType:
+                            type: string
+                            example: text/markdown
+                        content:
+                            type: string
+                            example: '# План фичи...'
                 # --- Runner: диагностическое состояние ---
                 RunnerState:
                     type: object

@@ -13,6 +13,7 @@ use App\OpenCode\Business\Model\WorkspaceUnit;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\ReadModel\ProektWorkspaceReadModel;
 use App\OpenCode\Business\ReadModel\SostoyanieWorkspaceReadModel;
@@ -32,6 +33,7 @@ final class PoluchitSostoyanieWorkspaceQuery
         private HodOpenCodeRepository $turnRepository,
         private UmeetProveryatRekvizityOpenCode $credentials,
         private UmeetUpravlyatProektamiWorkspace $projectami,
+        private ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
     ) {
     }
 
@@ -57,8 +59,10 @@ final class PoluchitSostoyanieWorkspaceQuery
         }
 
         $lastTurn = $this->turnRepository->findPosledniiPoSessii($workspaceId);
+        $updating = $this->sessionRepository->findWorkspaceUpdate($workspaceId) !== null;
         $canAcceptMessages = $workspace->getStatus() === StatusWorkspace::RUNNING
             && !$session->estArhiv()
+            && !$updating
             && !($lastTurn instanceof HodOpenCode && $lastTurn->estVProzesse());
 
         return new SostoyanieWorkspaceReadModel(
@@ -82,6 +86,8 @@ final class PoluchitSostoyanieWorkspaceQuery
                 static fn (WorkspaceUnit $unit): WorkspaceUnitReadModel => WorkspaceUnitReadModel::izModela($unit),
                 $workspace->getUnits(),
             ),
+            $this->fayly?->poluchitFayly($workspaceId) ?? [],
+            $updating,
         );
     }
 

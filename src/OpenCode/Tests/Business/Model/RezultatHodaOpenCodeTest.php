@@ -217,7 +217,7 @@ final class RezultatHodaOpenCodeTest extends TestCase
         $array = $rezultat->toArray();
 
         $this->assertSame(
-            ['Success', 'Kind', 'Questions', 'Answer', 'ErrorKey', 'ExternalSessionId', 'ErrorMessage'],
+            ['Success', 'Kind', 'Questions', 'Answer', 'ErrorKey', 'ExternalSessionId', 'ErrorMessage', 'Attachments'],
             array_keys($array),
         );
         $this->assertTrue($array['Success']);
@@ -225,6 +225,117 @@ final class RezultatHodaOpenCodeTest extends TestCase
         $this->assertNull($array['Answer']);
         $this->assertSame('ext-1', $array['ExternalSessionId']);
         $this->assertNull($array['ErrorMessage']);
+        $this->assertSame([], $array['Attachments']);
+    }
+
+    #[Test]
+    public function staryj_payload_bez_attachments_daet_pustoj_spisok(): void
+    {
+        $rezultat = RezultatHodaOpenCode::fromArray([
+            'Success' => true,
+            'Kind' => 'ANSWER',
+            'Answer' => 'Готово',
+        ]);
+
+        $this->assertSame([], $rezultat->attachments);
+    }
+
+    #[Test]
+    public function attachments_ravnye_null_daut_pustoj_spisok(): void
+    {
+        $rezultat = RezultatHodaOpenCode::fromArray([
+            'Success' => true,
+            'Kind' => 'ANSWER',
+            'Answer' => 'Готово',
+            'Attachments' => null,
+        ]);
+
+        $this->assertSame([], $rezultat->attachments);
+    }
+
+    #[Test]
+    public function nekorrektnye_attachments_otbrasyvayutsya(): void
+    {
+        $rezultat = RezultatHodaOpenCode::fromArray([
+            'Success' => true,
+            'Kind' => 'ANSWER',
+            'Answer' => 'Готово',
+            'Attachments' => [
+                'мусор',
+                ['Name' => 'без-id.md', 'Size' => 10],
+                ['FileId' => 'f-1', 'Name' => 'без-размера.md'],
+                ['FileId' => 'f-2', 'Name' => 'нулевой.md', 'Size' => 0],
+                ['FileId' => 'f-3', 'Name' => 'дробный.md', 'Size' => 1.5],
+                ['FileId' => 'f-4', 'Name' => 'ok.md', 'Size' => 12],
+            ],
+        ]);
+
+        $this->assertCount(1, $rezultat->attachments);
+        $this->assertSame('f-4', $rezultat->attachments[0]['FileId']);
+    }
+
+    #[Test]
+    public function previewable_zavisit_ot_rasshireniya(): void
+    {
+        $rezultat = RezultatHodaOpenCode::fromArray([
+            'Success' => true,
+            'Kind' => 'ANSWER',
+            'Answer' => 'Готово',
+            'Attachments' => [
+                ['FileId' => 'f-md', 'Name' => 'plan.MD', 'Size' => 5],
+                ['FileId' => 'f-yml', 'Name' => 'config.yml', 'Size' => 5],
+                ['FileId' => 'f-png', 'Name' => 'screen.png', 'Size' => 5],
+                ['FileId' => 'f-none', 'Name' => 'Makefile', 'Size' => 5],
+            ],
+        ]);
+
+        $poImId = [];
+
+        foreach ($rezultat->attachments as $attachment) {
+            $poImId[$attachment['FileId']] = $attachment;
+        }
+
+        $this->assertTrue($poImId['f-md']['Previewable']);
+        $this->assertTrue($poImId['f-yml']['Previewable']);
+        $this->assertFalse($poImId['f-png']['Previewable']);
+        $this->assertFalse($poImId['f-none']['Previewable']);
+    }
+
+    #[Test]
+    public function to_array_vsegda_otdayot_attachments_spiskom(): void
+    {
+        $pustoj = RezultatHodaOpenCode::fromArray([]);
+        $this->assertSame([], $pustoj->toArray()['Attachments']);
+
+        $sVlozheniem = RezultatHodaOpenCode::fromArray([
+            'Success' => true,
+            'Kind' => 'ANSWER',
+            'Answer' => 'Готово',
+            'Attachments' => [
+                [
+                    'FileId' => 'f-1',
+                    'Name' => 'plan.md',
+                    'Size' => 10,
+                    'ContentType' => 'text/markdown',
+                ],
+            ],
+        ]);
+
+        $array = $sVlozheniem->toArray();
+
+        $this->assertIsList($array['Attachments']);
+        $this->assertSame(
+            [
+                [
+                    'FileId' => 'f-1',
+                    'Name' => 'plan.md',
+                    'Size' => 10,
+                    'ContentType' => 'text/markdown',
+                    'Previewable' => true,
+                ],
+            ],
+            $array['Attachments'],
+        );
     }
 
     #[Test]

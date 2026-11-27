@@ -17,6 +17,7 @@ use App\Runner\Business\Command\RemoveProjectCommand;
 use App\Runner\Business\Model\RunnerState;
 use App\Runner\Business\UseCase\RunnerSelectionService;
 use App\Unitman\Business\Model\Project;
+use App\Unitman\Business\Model\Project\ProjectVariableType;
 use App\Unitman\Business\Model\Runner\JobId;
 use App\Unitman\Business\Model\Runner\ResultatDeistviyaiUnita;
 use App\Unitman\Business\Model\Runner\ResultatObnovleniyaUnita;
@@ -35,6 +36,7 @@ use App\Unitman\Business\Port\Repo\RepoRepository;
 use App\Unitman\Business\Port\RunnerService;
 use App\Unitman\Business\Port\Unit\UnitRunnerRepository;
 use App\Unitman\Infra\Adapter\StorageApiAdapterFactory;
+use App\Unitman\Infra\Security\UnitVariableCipher;
 use App\Unitman\Infra\Repository\Project\SqlProjectEventsRepository;
 
 final class RunnerAdapter implements RunnerService
@@ -49,6 +51,7 @@ final class RunnerAdapter implements RunnerService
         // тестах; DI подставляет реальные сервисы multi-runner.
         private readonly ?RunnerSelectionService $runnerSelectionService = null,
         private readonly ?UnitRunnerRepository $unitRunnerRepository = null,
+        private readonly ?UnitVariableCipher $unitVariableCipher = null,
     )
     {
     }
@@ -151,7 +154,8 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit, $project);
+        $runner = $this->runnerDlyaUnita($unit->getId());
+        $variables = $this->makeVariablesListFromUnit($unit, $project, $runner?->getId());
         $volumes = $this->makeVolumesListFromUnit($unit, $project);
         $memoryLimit = $unit->poluchitNastroikiContaineraUnita()->memoryLimit ?: 0;
         $containerSettings = new NachatPodgotovkuUnita\ContainerSettings($memoryLimit .'m');
@@ -163,7 +167,6 @@ final class RunnerAdapter implements RunnerService
             && !$project->soderzhitZashishennuyuVetku($unit->getBranch())
                 ? 'edit'
                 : 'view';
-        $runner = $this->runnerDlyaUnita($unit->getId());
         $command = new NachatPodgotovkuUnita(
             $unit->getProjectId(),
             $project->getName(),
@@ -207,8 +210,8 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit, $project);
         $runner = $this->runnerDlyaUnita($unit->getId());
+        $variables = $this->makeVariablesListFromUnit($unit, $project, $runner?->getId());
         $command = new NachatSbrosPodgotovkiUnita(
             $unit->getId(),
             $unit->getProjectId(),
@@ -228,8 +231,8 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit, $project);
         $runner = $this->runnerDlyaUnita($unit->getId());
+        $variables = $this->makeVariablesListFromUnit($unit, $project, $runner?->getId());
         $command = new NachatZapuskUnita(
             $unit->getProjectId(),
             $project->getName(),
@@ -277,8 +280,8 @@ final class RunnerAdapter implements RunnerService
     {
         $project = $this->projectEventsRepository->getById($unit->getProjectId());
         $storageUrl = $this->getProjectUrl($project);
-        $variables = $this->makeVariablesListFromUnit($unit, $project);
         $runner = $this->runnerDlyaUnita($unit->getId());
+        $variables = $this->makeVariablesListFromUnit($unit, $project, $runner?->getId());
         $command = new NachatOstanovkuUnita(
             $unit->getProjectId(),
             $project->getName(),
@@ -431,19 +434,71 @@ final class RunnerAdapter implements RunnerService
     }
 
     /**
-     * @param Unit $unit
-     * @return array|array[]
+     * @return array<int, array<string, mixed>>
      */
-    private function makeVariablesListFromUnit(Unit $unit, Project $project): array
+    private function makeVariablesListFromUnit(Unit $unit, Project $project, ?string $runnerId = null): array
     {
-        $closure = fn(Unit\VariableValue $variableValue): array => array('Id' => $variableValue->getId(), 'Value' => $variableValue->getValue(), 'Type' => $variableValue->getType());
-        $variables = array_map($closure, $unit->poluchitZnacheniyaPeremenih());
+        $unitId = $unit->getId();
+        $variables = [];
+
+        foreach ($unit->poluchitZnacheniyaPeremenih() as $variableValue) {
+            $type = $variableValue->getType();
+            $hidden = strtolower($type) === 'hidden';
+            $item = [
+                'Id' => $variableValue->getId(),
+                'Type' => $type,
+                'Hidden' => $hidden,
+                'Value' => '',
+            ];
+
+            if ($hidden) {
+                $item['ValueCipher'] = $this->encryptHiddenVariable(
+                    $variableValue->getValue(),
+                    $unitId,
+                    $variableValue->getId(),
+                    $runnerId,
+                );
+            } else {
+                $item['Value'] = $variableValue->getValue();
+            }
+
+            $variables[] = $item;
+        }
 
         foreach ($project->poluchitPeremenieProekta() as $projectVariable) {
-            $variables[] = array('Id' => 'PV_'.$projectVariable->code, 'Value' => $projectVariable->value, 'Type' => 'string');
+            $id = 'PV_' . $projectVariable->code;
+            $hidden = $projectVariable->tip === ProjectVariableType::hidden;
+            $item = [
+                'Id' => $id,
+                'Type' => $projectVariable->tip->value,
+                'Hidden' => $hidden,
+                'Value' => '',
+            ];
+
+            if ($hidden) {
+                $item['ValueCipher'] = $this->encryptHiddenVariable(
+                    $projectVariable->value,
+                    $unitId,
+                    $id,
+                    $runnerId,
+                );
+            } else {
+                $item['Value'] = $projectVariable->value;
+            }
+
+            $variables[] = $item;
         }
 
         return $variables;
+    }
+
+    private function encryptHiddenVariable(string $plain, string $unitId, string $variableId, ?string $runnerId): string
+    {
+        if ($this->unitVariableCipher === null || $runnerId === null || $runnerId === '') {
+            throw new \DomainException('unit.variables.hidden_requires_runner');
+        }
+
+        return $this->unitVariableCipher->encrypt($plain, $unitId, $variableId, $runnerId);
     }
 
     /**

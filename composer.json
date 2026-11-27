@@ -109,6 +109,7 @@
             "@php bin/console nelmio:apidoc:dump --format=json > docs/openapi.json"
         ],
         "check-openapi": "php vendor/bin/phpunit --filter=OpenApiDocumentationTest",
+        "check-openapi-snapshot": "php scripts/check-openapi-snapshot.php",
         "check-contracts": "php scripts/check-no-credentials-in-contracts.php --openapi=docs/openapi.json --ai-manifest=../unitman-front/src/modules/ai-chat/generated/openapi.tools.json",
         "check-contracts-self-test": "php scripts/check-no-credentials-in-contracts.php --self-test --openapi=docs/openapi.json --ai-manifest=../unitman-front/src/modules/ai-chat/generated/openapi.tools.json",
         "check-translations": "php bin/console app:translations:audit",
@@ -123,6 +124,7 @@
             "@check-psalm",
             "@check-phpunit",
             "@check-openapi",
+            "@check-openapi-snapshot",
             "@check-contracts",
             "@check-translations",
             "@check-deptrac",

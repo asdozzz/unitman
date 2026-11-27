@@ -13,6 +13,7 @@ use App\Secrets\Business\Port\SecretProvider;
  * Ключевой материал из абстракции `SecretProvider`.
  *
  * Физические имена и типы:
+ * - OPENCODE_CREDENTIALS_KEY — AES-256-GCM (base64 32 байта), реквизиты OpenCode;
  * - LICHNIY_TOKEN_CREDENTIALS_KEY — AES-256-GCM (base64 32 байта), обслуживает
  *   repo_tokens (WS-2) и personal_tokens; формат и AAD не меняются;
  * - MEDIATEKA_UPLOAD_TOKEN_SECRET — HMAC-ключ upload-токенов;
@@ -27,14 +28,19 @@ final class SecretEncryptionKeyProvider implements EncryptionKeyProvider
 
     /** @var array<string, string> */
     private const PURPOSE_TO_NAME = [
+        KeyPurpose::OPENCODE_CREDENTIALS => 'OPENCODE_CREDENTIALS_KEY',
         KeyPurpose::REPO_TOKENS => 'LICHNIY_TOKEN_CREDENTIALS_KEY',
         KeyPurpose::PERSONAL_TOKENS => 'LICHNIY_TOKEN_CREDENTIALS_KEY',
         KeyPurpose::UPLOAD_TOKENS => 'MEDIATEKA_UPLOAD_TOKEN_SECRET',
+        // Тот же физический ключ, что и runner_secrets; в requiredSecretNames
+        // попадает один раз благодаря array_unique.
+        KeyPurpose::UNIT_VARIABLES => 'RUNNER_SECRET_MASTER_KEY',
         KeyPurpose::RUNNER_SECRETS => 'RUNNER_SECRET_MASTER_KEY',
     ];
 
     /** @var array<string, true> */
     private const AES_256_NAMES = [
+        'OPENCODE_CREDENTIALS_KEY' => true,
         'LICHNIY_TOKEN_CREDENTIALS_KEY' => true,
     ];
 

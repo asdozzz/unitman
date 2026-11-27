@@ -15,8 +15,10 @@ use App\Runner\Business\Command\NachatZapuskUnita;
 use App\Runner\Business\Command\ProveritKonteinerUnita;
 use App\Runner\Business\Command\PodgotovitSessiyuRedaktora;
 use App\Runner\Business\Command\RemoveProjectCommand;
+use App\Runner\Business\Command\Workspace\ObnovitWorkspaceZapros;
 use App\Runner\Business\Command\Workspace\OstanovitWorkspace;
 use App\Runner\Business\Command\Workspace\ProveritIzmeneniyaWorkspace;
+use App\Runner\Business\Command\Workspace\ResultatObnovleniyaWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatOstanovkiWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatProverkiIzmeneniyWorkspace;
 use App\Runner\Business\Command\Workspace\ResultatUdaleniyaWorkspace;
@@ -112,6 +114,18 @@ interface RunnerApiInterface
      * Результат запуска workspace; null — workflow ещё не завершён.
      */
     public function poluchitResultatZapuskaWorkspace(string $workflowId): ?ResultatZapuskaWorkspace;
+
+    /**
+     * Обновление работающего workspace: новые проекты и/или файлы.
+     *
+     * @return string id workflow обновления
+     */
+    public function obnovitWorkspace(string $workflowId, ObnovitWorkspaceZapros $command): string;
+
+    /**
+     * Результат обновления workspace; null — workflow ещё не завершён.
+     */
+    public function poluchitRezultatObnovleniyaWorkspace(string $workflowId): ?ResultatObnovleniyaWorkspace;
 
     /**
      * Остановка workspace-стенда.

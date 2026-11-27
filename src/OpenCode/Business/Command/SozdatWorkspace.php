@@ -22,6 +22,7 @@ readonly class SozdatWorkspace implements JsonBodySerializableInterface
     /**
      * @param list<string> $projectIds
      * @param list<array{projectId?: mixed, branch?: mixed}> $projectBranches
+     * @param list<string> $fileIds
      */
     public function __construct(
         public string $name = '',
@@ -31,6 +32,7 @@ readonly class SozdatWorkspace implements JsonBodySerializableInterface
         public string $credentialId = '',
         public array $projectBranches = [],
         public ?string $model = null,
+        public array $fileIds = [],
     ) {
     }
 }

@@ -15,6 +15,7 @@ final class SostoyanieWorkspaceReadModel
     /**
      * @param list<ProektWorkspaceReadModel> $projects
      * @param list<WorkspaceUnitReadModel> $units
+     * @param list<WorkspaceFileReadModel> $files
      */
     public function __construct(
         public readonly string $id,
@@ -31,6 +32,8 @@ final class SostoyanieWorkspaceReadModel
         public readonly ?string $lastTurnId,
         public readonly ?string $lastTurnStatus,
         public readonly array $units = [],
+        public readonly array $files = [],
+        public readonly bool $updating = false,
     ) {
     }
 
@@ -60,6 +63,11 @@ final class SostoyanieWorkspaceReadModel
                 static fn (WorkspaceUnitReadModel $unit): array => $unit->toArray(),
                 $this->units,
             ),
+            'files' => array_map(
+                static fn (WorkspaceFileReadModel $file): array => $file->toArray(),
+                $this->files,
+            ),
+            'updating' => $this->updating,
         ];
     }
 }

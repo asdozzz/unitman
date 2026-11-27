@@ -67,6 +67,7 @@ interface SecretProvider
 | `VAULT_ADDR` | адрес Vault KV v2 для `vault`-бэкенда |
 | `VAULT_TOKEN` | токен Vault (никогда не коммитится) |
 | `KMS_KEY_ID` | id ключа для `kms`-stub |
+| `OPENCODE_CREDENTIALS_KEY` | AES-256-GCM, base64 32 байта: реквизиты OpenCode |
 | `LICHNIY_TOKEN_CREDENTIALS_KEY` | AES-256-GCM, base64 32 байта: repo- и personal-токены |
 | `MEDIATEKA_UPLOAD_TOKEN_SECRET` | HMAC-ключ upload-токенов |
 | `RUNNER_SECRET_MASTER_KEY` | HMAC-SHA256 корень секретов раннеров |
@@ -78,9 +79,11 @@ interface SecretProvider
 
 | Назначение (`KeyPurpose`) | Физическое имя | Тип |
 |---|---|---|
+| `opencode_credentials` | `OPENCODE_CREDENTIALS_KEY` | AES-256-GCM, base64 32 байта |
 | `repo_tokens` | `LICHNIY_TOKEN_CREDENTIALS_KEY` | AES-256-GCM, base64 32 байта |
 | `personal_tokens` | `LICHNIY_TOKEN_CREDENTIALS_KEY` | AES-256-GCM, base64 32 байта |
 | `upload_tokens` | `MEDIATEKA_UPLOAD_TOKEN_SECRET` | непустой HMAC-ключ |
+| `unit_variables` | `RUNNER_SECRET_MASTER_KEY` | per-runner HKDF → AES-256-GCM |
 | `runner_secrets` | `RUNNER_SECRET_MASTER_KEY` | непустой HMAC-ключ |
 
 Валидация строгая: base64 декодируется в ровно 32 байта для AES-256;
@@ -99,13 +102,20 @@ interface SecretProvider
 `hash_hmac('sha256', runnerId, masterKey)`, поэтому уже выданные секреты
 раннеров продолжают проверяться.
 
+`UnitVariableCipher` использует тот же master key: из per-runner секрета через
+HKDF (`unitman-unit-variables-v1`) выводится AES-256-GCM ключ для hidden-
+переменных юнита. В Temporal payload попадает только `ValueCipher`; plaintext
+появляется лишь в памяти раннера.
+
 ## Health-check
 
 ```bash
 php bin/console app:secrets:health
 ```
 
-- проверяет три физических имени для выбранного бэкенда;
+- проверяет четыре физических имени для выбранного бэкенда
+  (`OPENCODE_CREDENTIALS_KEY`, `LICHNIY_TOKEN_CREDENTIALS_KEY`,
+  `MEDIATEKA_UPLOAD_TOKEN_SECRET`, `RUNNER_SECRET_MASTER_KEY`);
 - печатает только `MISSING: NAME` / `INVALID: NAME` и итоговый статус;
 - exit code `0` — всё есть и форматы валидны, `1` — есть пропуски/ошибки;
 - значения никогда не выводятся и не логируются.
@@ -120,9 +130,10 @@ php bin/console app:secrets:health
    сохранив старое значение доступным для rollback.
 3. Перезапустить PHP workers/контейнеры. Проверить
    `php bin/console app:secrets:health`.
-4. Перешифровать данные: `php bin/console app:security:encrypt-repo-tokens`
-   (dry-run), затем `--apply`; для read-модели — соответствующая
-   re-encrypt миграция WS-2. Команда идемпотентна и делает backup-таблицы.
+4. Для repo/personal токенов online re-encrypt не реализован: после смены
+   ключа токены нужно добавить заново через UI (репозитории и личные токены).
+   Legacy-команда `app:security:encrypt-repo-tokens` удалена вместе с
+   upcaster'ом; БД создаётся с нуля по актуальным миграциям.
 5. Проверить чтение репозиториев/личных токенов и снять старое значение
    только после успешной проверки.
 
@@ -133,13 +144,31 @@ php bin/console app:secrets:health
 Ротация выполняется по одному секрету: сначала deploy нового значения,
 затем проверка, затем вывод старого из эксплуатации.
 
+## Провайдеры: плюсы и минусы
+
+| Критерий | `env` | `file` | `vault` |
+|---|---|---|---|
+| Инфраструктура | не нужна | только каталог/volume | отдельный Vault, HA, unseal |
+| Где ключ | переменные процесса | файл `0600` | централизованно |
+| Риск утечки | `docker inspect`, `/proc`, дампы, дочерние процессы | доступ к ФС, бэкапы, снапшоты, ошибочный `COPY` в образ | утечка Vault-токена/политик |
+| Ротация | рестарт процесса | новый файл + рестарт | централизованно, но адаптер read-only |
+| Аудит | нет | нет | audit log/ACL |
+| Зависимость | нет | нет | сеть, доступность, auth |
+| Когда выбирать | dev/test, single-tenant | single-host prod, Docker/K8s secrets | multi-service prod, compliance |
+
+Рекомендация: dev/test — `env`; текущий release — `file`; при росте и
+требованиях аудита — `vault`. KMS не является хранилищем секретов: это
+отдельный envelope-сценарий, текущий адаптер — fail-closed stub.
+
 ## Blast radius и риски
 
 - Потеря `LICHNIY_TOKEN_CREDENTIALS_KEY` = необратимая потеря
   repo/personal токенов: ciphertext без ключа не восстановить. Резервная
   копия ключа обязательна.
 - Смена `RUNNER_SECRET_MASTER_KEY` инвалидирует все per-runner секреты:
-  каждый раннер должен пройти `runner init` заново.
+  каждый раннер должен пройти `runner init` заново. Этот же ключ через HKDF
+  выводит per-runner AES-ключ для hidden-переменных юнита; незавершённые
+  workflow с такими payload'ами нужно перезапустить.
 - Смена `MEDIATEKA_UPLOAD_TOKEN_SECRET` инвалидирует незавершённые
   upload-токены; JWT/логины не затрагиваются.
 - `APP_SECRET` больше не влияет на секреты раннеров и upload-токены.

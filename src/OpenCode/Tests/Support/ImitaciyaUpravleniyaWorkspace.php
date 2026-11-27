@@ -6,6 +6,7 @@ namespace App\OpenCode\Tests\Support;
 
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\ReadModel\RezultatProverkiIzmeneniyWorkspace;
 
@@ -22,7 +23,40 @@ final class ImitaciyaUpravleniyaWorkspace implements UmeetUpravlyatWorkspace
      */
     private array $operacii = [];
 
+    /**
+     * @var list<array{workspaceId: string, update: WorkspacePendingUpdate}>
+     */
+    private array $obnovleniya = [];
+
+    private string $workflowObnovleniya = 'wf-update';
+
+    private ?\Throwable $oshibkaObnovleniya = null;
+
     private ?string $rezultatOperacii = null;
+
+    /**
+     * Задаёт workflow id, который вернёт obnovit().
+     */
+    public function zadatWorkflowObnovleniya(string $workflowId): void
+    {
+        $this->workflowObnovleniya = $workflowId;
+    }
+
+    /**
+     * Заставляет obnovit() выбросить исключение.
+     */
+    public function zadatOshibkuObnovleniya(?\Throwable $error): void
+    {
+        $this->oshibkaObnovleniya = $error;
+    }
+
+    /**
+     * @return list<array{workspaceId: string, update: WorkspacePendingUpdate}>
+     */
+    public function obnovleniya(): array
+    {
+        return $this->obnovleniya;
+    }
 
     private bool $uspehProverki = true;
 
@@ -45,6 +79,18 @@ final class ImitaciyaUpravleniyaWorkspace implements UmeetUpravlyatWorkspace
     public function zapustit(SessiyaOpenCode $session): void
     {
         $this->zapisat(Workspace::OPERATION_CREATE, $session, 'wf-create');
+    }
+
+    public function obnovit(SessiyaOpenCode $session, WorkspacePendingUpdate $update): string
+    {
+        if ($this->oshibkaObnovleniya !== null) {
+            throw $this->oshibkaObnovleniya;
+        }
+
+        $this->obnovleniya[] = ['workspaceId' => $session->getId(), 'update' => $update];
+        $this->zapisat(Workspace::OPERATION_UPDATE, $session, $this->workflowObnovleniya);
+
+        return $this->workflowObnovleniya;
     }
 
     public function ostanovit(SessiyaOpenCode $session): void
