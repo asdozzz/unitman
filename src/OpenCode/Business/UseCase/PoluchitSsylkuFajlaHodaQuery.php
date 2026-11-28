@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace App\OpenCode\Business\UseCase;
 
 use App\OpenCode\Business\Command\PoluchitSsylkuFajlaHoda;
+use App\OpenCode\Business\Model\RolUchastnikaSessii;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
+use App\OpenCode\Business\Utils\ProverkaDostupaKSessii;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\PoluchitSsylkuFajlaHodaWorkspaceQuery;
 
 /**
  * Подписанная ссылка на файл-артефакт хода.
  *
- * Владелец проверяется по текущему аккаунту, файл — по паре `(turnId, fileId)`
- * и по совпадению workspace хода. Чужой/несуществующий ход и файл дают
- * одинаковый `opencode.artifact.not_found`: не раскрываем существование.
+ * Доступ проверяется по участию в сессии (viewer и выше), файл — по паре
+ * `(turnId, fileId)` и по совпадению workspace хода. Чужой/несуществующий ход
+ * и файл дают одинаковый `opencode.artifact.not_found`: не раскрываем
+ * существование.
  */
 final class PoluchitSsylkuFajlaHodaQuery
 {
@@ -24,6 +29,9 @@ final class PoluchitSsylkuFajlaHodaQuery
         private readonly SessiyaOpenCodeRepository $sessions,
         private readonly UmeetProveryatRekvizityOpenCode $credentials,
         private readonly UmeetUpravlyatFaylamiWorkspace $files,
+        private readonly ProverkaDostupaKSessii $dostup,
+        private readonly ?WorkspaceFeatureFlags $flags = null,
+        private readonly ?PoluchitSsylkuFajlaHodaWorkspaceQuery $workspaceQuery = null,
     ) {
     }
 
@@ -35,6 +43,17 @@ final class PoluchitSsylkuFajlaHodaQuery
      */
     public function handle(PoluchitSsylkuFajlaHoda $command): array
     {
+        if ($this->flags?->chitatIzNovogoAgregata() === true && $this->workspaceQuery !== null) {
+            $legacyTurn = $this->turns->findById(trim($command->turnId));
+            $legacySession = $legacyTurn !== null
+                ? $this->sessions->findById($legacyTurn->getSessionId())
+                : null;
+
+            if ($legacyTurn === null || $legacySession?->estWorkspace() === true) {
+                return $this->workspaceQuery->handle($command);
+            }
+        }
+
         $file = $this->trebovatFajl($command->turnId, $command->fileId);
 
         $url = $this->files->poluchitSsylkuDlyaFajlaHoda($file->turnId, $file->fileId);
@@ -53,7 +72,7 @@ final class PoluchitSsylkuFajlaHodaQuery
     }
 
     /**
-     * Общая последовательность владельца для ссылки и текста.
+     * Общая последовательность доступа для ссылки и текста.
      *
      * @throws \DomainException
      */
@@ -73,8 +92,8 @@ final class PoluchitSsylkuFajlaHodaQuery
             throw new \DomainException('opencode.session.not_found');
         }
 
-        // Чужой владелец -> opencode.session.not_found (не раскрываем сессию).
-        $session->trebovatVladelca($accountId);
+        // Не-участник -> opencode.session.not_found (не раскрываем сессию).
+        $this->dostup->trebovat($session, $accountId, RolUchastnikaSessii::VIEWER);
 
         if (!$session->estWorkspace()) {
             throw new \DomainException('opencode.artifact.not_found');

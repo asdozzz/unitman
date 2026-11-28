@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\OpenCode\Business\Workspace\Model;
 
 use App\OpenCode\Business\Model\ProektWorkspace;
+use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Model\WorkspaceUnit;
 
 /**
  * Workspace-сессия OpenCode: самостоятельный агрегат.
@@ -224,6 +226,72 @@ final class WorkspaceSession
 
     public function otmetitIzmenenie(int $now): void
     {
+        $this->updatedAt = $now;
+    }
+
+    /**
+     * Идентификаторы проектов в порядке снимка.
+     *
+     * @return list<string>
+     */
+    public function getProjectIds(): array
+    {
+        return array_map(
+            static fn (ProektWorkspace $project): string => $project->projectId,
+            $this->workspace->getProjects(),
+        );
+    }
+
+    public function estVladelec(string $accountId): bool
+    {
+        return $this->accountId === $accountId;
+    }
+
+    public function perevestiV(StatusWorkspace $status, int $now): void
+    {
+        $this->workspace->perevestiV($status, $now);
+        $this->updatedAt = $now;
+    }
+
+    public function zapomnitOperaciyu(string $operation, string $workflowId, int $now): void
+    {
+        $this->workspace->zapomnitOperaciyu($operation, $workflowId, $now);
+        $this->updatedAt = $now;
+    }
+
+    public function sbrositOperaciyu(int $now): void
+    {
+        $this->workspace->sbrositOperaciyu($now);
+        $this->updatedAt = $now;
+    }
+
+    /**
+     * @param list<ProektWorkspace> $projects
+     */
+    public function dobavitProekty(array $projects, int $now): void
+    {
+        $this->workspace->dobavitProekty($projects, $now);
+        $this->updatedAt = $now;
+    }
+
+    /**
+     * @param list<WorkspaceUnit> $units
+     */
+    public function zapomnitUniti(array $units, int $now): void
+    {
+        $this->workspace->zapomnitUniti($units, $now);
+        $this->updatedAt = $now;
+    }
+
+    public function otmetitOshibku(string $errorKey, int $now): void
+    {
+        $this->workspace->otmetitOshibku($errorKey, $now);
+        $this->updatedAt = $now;
+    }
+
+    public function ochistitOshibku(int $now): void
+    {
+        $this->workspace->ochistitOshibku($now);
         $this->updatedAt = $now;
     }
 }

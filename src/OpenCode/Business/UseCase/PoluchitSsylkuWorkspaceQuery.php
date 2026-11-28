@@ -6,18 +6,24 @@ namespace App\OpenCode\Business\UseCase;
 
 use App\OpenCode\Business\Command\PoluchitSsylkuWorkspace;
 use App\OpenCode\Business\Model\ProektWorkspace;
+use App\OpenCode\Business\Model\RolUchastnikaSessii;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\ReadModel\WorkspaceLinkHolder;
+use App\OpenCode\Business\Utils\ProverkaDostupaKSessii;
 use App\OpenCode\Business\Utils\SlugWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\PoluchitSsylkuWorkspaceSessiiQuery;
 
 /**
  * Ссылка на произвольный порт workspace-контейнера.
  *
- * Повторяет паттерн `PoluchitSsylkuPoPomoschniku`: владелец workspace
- * проверяется по текущему аккаунту, ссылка строится по общему правилу
+ * Доступна любому участнику сессии (owner, writer, viewer): ссылка строится
+ * от имени текущего пользователя, поэтому ACL Unitman сам проверяет его доступ
+ * к проекту и выдаёт read-only адрес, если прав на редактирование нет.
+ * Адрес собирается по общему правилу
  * `{scheme}://{port}.{workspaceSlug}.workspaces.{host}`.
  */
 final class PoluchitSsylkuWorkspaceQuery
@@ -26,18 +32,26 @@ final class PoluchitSsylkuWorkspaceQuery
         private SessiyaOpenCodeRepository $sessionRepository,
         private UmeetProveryatRekvizityOpenCode $credentials,
         private UmeetUpravlyatProektamiWorkspace $projectami,
+        private ProverkaDostupaKSessii $dostup,
+        private ?WorkspaceFeatureFlags $flags = null,
+        private ?PoluchitSsylkuWorkspaceSessiiQuery $workspaceQuery = null,
     ) {
     }
 
     /**
      * @throws \DomainException
-     *   `opencode.workspace.not_found` — workspace не найден или чужой,
+     *   `opencode.session.not_found` — не участник или workspace не найден,
+     *   `opencode.workspace.not_found` — у сессии нет workspace,
      *   `opencode.workspace.not_running` — статус не RUNNING,
      *   `opencode.workspace.invalid_port` — порт вне 1–65535,
      *   `opencode.workspace.link_unavailable` — публичный адрес раннера не задан
      */
     public function handle(PoluchitSsylkuWorkspace $command): WorkspaceLinkHolder
     {
+        if ($this->flags?->chitatIzNovogoAgregata() === true && $this->workspaceQuery !== null) {
+            return $this->workspaceQuery->handle($command);
+        }
+
         $accountId = $this->credentials->tekuschiiAccountId();
         $workspaceId = trim($command->workspaceId);
 
@@ -46,7 +60,9 @@ final class PoluchitSsylkuWorkspaceQuery
         }
 
         $session = $this->sessionRepository->getById($workspaceId);
-        $session->trebovatVladelca($accountId);
+
+        // Read-only ссылку IDE получают все участники, включая viewer.
+        $this->dostup->trebovat($session, $accountId, RolUchastnikaSessii::VIEWER);
 
         $workspace = $session->getWorkspace();
 

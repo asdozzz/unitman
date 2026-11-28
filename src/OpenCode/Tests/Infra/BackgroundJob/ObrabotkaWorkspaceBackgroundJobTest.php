@@ -398,6 +398,106 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
         self::assertSame([], $fayly->primenennye());
     }
 
+    #[Test]
+    public function flagi_off_ispolzuyut_legasi_repozitorii(): void
+    {
+        $repository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $repository->expects($this->once())->method('findAktivnieWorkspace')->with(50)->willReturn([]);
+
+        $workspaces = $this->createMock(\App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository::class);
+        $workspaces->expects($this->never())->method('findAktivnieVTranzite');
+
+        $job = new ObrabotkaWorkspaceBackgroundJob(
+            $repository,
+            $this->createMock(UmeetUpravlyatWorkspace::class),
+            $this->launcher(
+                $this->createMock(HodOpenCodeRepository::class),
+                $repository,
+                $this->createMock(UmeetVypolnyatHodOpenCode::class),
+                $this->createMock(UmeetBronirovatUniti::class),
+            ),
+            $this->createMock(LoggerInterface::class),
+            null,
+            $workspaces,
+            new \App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags(read: false, write: false, mirror: false),
+        );
+
+        self::assertTrue($job->run());
+    }
+
+    #[Test]
+    public function pri_write_bez_zerkala_tranzitnye_statusy_dovodyatsya_na_novom_agregate(): void
+    {
+        $creating = FabrikaWorkspace::workspaceSessionVStatuse(StatusWorkspace::CREATING);
+        $running = FabrikaWorkspace::workspaceSessionVStatuse(StatusWorkspace::RUNNING);
+
+        $legacyRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $legacyRepository->expects($this->never())->method('findAktivnieWorkspace');
+
+        $workspaces = $this->createMock(\App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository::class);
+        $workspaces->expects($this->once())->method('findAktivnieVTranzite')->with(50)->willReturn([$creating]);
+        $workspaces->expects($this->once())
+            ->method('perevestiStatus')
+            ->with('workspace-1', [StatusWorkspace::CREATING], StatusWorkspace::RUNNING)
+            ->willReturn(true);
+        $workspaces->expects($this->once())->method('getById')->with('workspace-1')->willReturn($running);
+
+        $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
+        $manager->method('poluchitRezultatOperacii')
+            ->willReturn(UmeetUpravlyatWorkspace::RESULT_SUCCESS);
+
+        $job = new ObrabotkaWorkspaceBackgroundJob(
+            $legacyRepository,
+            $manager,
+            $this->launcher(
+                $this->createMock(HodOpenCodeRepository::class),
+                $legacyRepository,
+                $this->createMock(UmeetVypolnyatHodOpenCode::class),
+                $this->createMock(UmeetBronirovatUniti::class),
+            ),
+            $this->createMock(LoggerInterface::class),
+            null,
+            $workspaces,
+            new \App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags(read: true, write: true, mirror: false),
+        );
+
+        self::assertTrue($job->run());
+    }
+
+    #[Test]
+    public function pri_write_bez_zerkala_udalenie_udalyayet_noviy_agregat(): void
+    {
+        $deleting = FabrikaWorkspace::workspaceSessionVStatuse(StatusWorkspace::DELETING);
+
+        $legacyRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $legacyRepository->expects($this->never())->method('findAktivnieWorkspace');
+
+        $workspaces = $this->createMock(\App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository::class);
+        $workspaces->method('findAktivnieVTranzite')->willReturn([$deleting]);
+        $workspaces->expects($this->once())->method('delete')->with('workspace-1');
+
+        $manager = $this->createMock(UmeetUpravlyatWorkspace::class);
+        $manager->method('poluchitRezultatOperacii')
+            ->willReturn(UmeetUpravlyatWorkspace::RESULT_SUCCESS);
+
+        $job = new ObrabotkaWorkspaceBackgroundJob(
+            $legacyRepository,
+            $manager,
+            $this->launcher(
+                $this->createMock(HodOpenCodeRepository::class),
+                $legacyRepository,
+                $this->createMock(UmeetVypolnyatHodOpenCode::class),
+                $this->createMock(UmeetBronirovatUniti::class),
+            ),
+            $this->createMock(LoggerInterface::class),
+            null,
+            $workspaces,
+            new \App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags(read: true, write: true, mirror: false),
+        );
+
+        self::assertTrue($job->run());
+    }
+
     private function job(
         SessiyaOpenCodeRepository $repository,
         UmeetUpravlyatWorkspace $manager,
@@ -420,6 +520,9 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
         $credentials = $this->createMock(\App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode::class);
         $credentials->method('razreshitModel')->willReturn('default-model');
 
+        $projectami = $this->createMock(\App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace::class);
+        $projectami->method('estDostupKProektam')->willReturn(true);
+
         return new ZapuskatelHodaOpenCode(
             $turnRepository,
             $sessionRepository,
@@ -430,6 +533,7 @@ final class ObrabotkaWorkspaceBackgroundJobTest extends TestCase
             $this->createMock(\App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita::class),
             new \App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode(),
             new \App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode($credentials),
+            $projectami,
         );
     }
 }

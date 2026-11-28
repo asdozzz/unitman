@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Business\Utils;
 
+use App\OpenCode\Business\AgentMode\ReadModel\RezhimAgentaHoda;
 use App\OpenCode\Business\Model\HodOpenCode;
+use App\OpenCode\Business\Model\IstochnikRekvizitovOpenCode;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\WorkspaceKontekst;
@@ -12,6 +14,7 @@ use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
+use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
@@ -30,6 +33,11 @@ use App\OpenCode\Business\Port\UuidGenerator;
  * Юниты захватываются ДО старта workflow: пока ход выполняется, активити
  * Unitman над юнитами не запускаются. Если раннер не принял ход, захват
  * освобождается — иначе юнит остался бы занятым до истечения TTL.
+ *
+ * Сессия резервируется тем же способом и до старта раннера. Резервация — это
+ * единственный атомарный барьер против двух параллельных ходов: проверка
+ * «последний ход не выполняется» в use case не защищена от гонки. После
+ * успешного старта резервация остаётся до терминального статуса хода.
  */
 final class ZapuskatelHodaOpenCode
 {
@@ -43,6 +51,7 @@ final class ZapuskatelHodaOpenCode
         private UmeetPoluchatTokenRedaktirovaniyaUnita $tokeny,
         private OpredelitelRezhimaHodaOpenCode $rezhimHoda,
         private OpredelitelModeliHodaOpenCode $modeli,
+        private UmeetUpravlyatProektamiWorkspace $projectami,
     ) {
     }
 
@@ -56,14 +65,31 @@ final class ZapuskatelHodaOpenCode
         array $answers,
         array $units,
         ?string $model = null,
+        ?IstochnikRekvizitovOpenCode $istochnik = null,
+        ?RezhimAgentaHoda $rezhimAgenta = null,
     ): HodOpenCode {
         $now = time();
 
+        // Без явного источника — легаси-поведение: реквизиты владельца сессии.
+        $accountId = $istochnik?->accountId ?? $session->getAccountId();
+        $credentialId = $istochnik?->credentialId
+            ?? $rezhimAgenta?->credentialId
+            ?? $session->getCredentialId();
+        $modelPoUmolchaniyu = $model
+            ?? $rezhimAgenta?->model
+            ?? $istochnik?->modelPoUmolchaniyu
+            ?? $session->getModel();
+
+        // Доступ к проектам проверяется на каждом ходе, а не только при
+        // приглашении: права в Unitman могли отозвать после добавления в
+        // workspace. Для unit-сессий проверка не нужна — юнит уже ограничен.
+        $this->trebovatDostupKProektam($session, $accountId);
+
         $razreshennayaModel = $this->modeli->opredelit(
-            $session->getAccountId(),
-            $session->getCredentialId(),
+            $accountId,
+            $credentialId,
             $model,
-            $session->getModel(),
+            $modelPoUmolchaniyu,
         );
 
         $turn = HodOpenCode::create(
@@ -75,6 +101,10 @@ final class ZapuskatelHodaOpenCode
             $answers,
             $now,
             $razreshennayaModel,
+            authorAccountId: $accountId,
+            credentialId: $credentialId,
+            agentModeId: $rezhimAgenta?->modeId,
+            agentModeName: $rezhimAgenta?->modeName,
         );
 
         $history = IstoriyaDialogaOpenCode::sobrat(
@@ -100,14 +130,25 @@ final class ZapuskatelHodaOpenCode
         $token = null;
 
         if ($units !== []) {
-            [$readOnly, $token] = $this->opredelitRezhim($units, $session->getAccountId());
+            [$readOnly, $token] = $this->opredelitRezhim($units, $accountId);
         }
 
         $vladelec = VladelecZanyatostiOpenCode::dlyaHoda($turn->getId());
         $unitIds = $this->sobratIdUnitov($units);
         $zahvacheno = false;
+        $sessiyaZanyata = false;
 
         try {
+            // Сначала резервация сессии: она не даёт двум промптам создать два
+            // параллельных хода, даже если оба прошли проверку в use case.
+            $this->turnRepository->zanyatSessiyu(
+                $session->getId(),
+                $turn->getId(),
+                $now,
+                HodOpenCodeRepository::TTL_ZANYATOSTI_SEKUND,
+            );
+            $sessiyaZanyata = true;
+
             if ($unitIds !== []) {
                 $this->bronirovanie->zahvatit($unitIds, $vladelec);
                 $zahvacheno = true;
@@ -115,8 +156,8 @@ final class ZapuskatelHodaOpenCode
 
             $this->runner->nachatHod(
                 $turn->getWorkflowId(),
-                $session->getAccountId(),
-                $session->getCredentialId(),
+                $accountId,
+                $credentialId,
                 $session->getExternalSessionId(),
                 $units,
                 $prompt,
@@ -126,10 +167,17 @@ final class ZapuskatelHodaOpenCode
                 $readOnly,
                 $token,
                 model: $razreshennayaModel,
+                rezhimAgenta: $rezhimAgenta,
             );
         } catch (\Throwable $e) {
             if ($zahvacheno) {
                 $this->bronirovanie->osvobodit($unitIds, $vladelec);
+            }
+
+            // Отказ захвата юнитов или раннера не должен оставлять сессию
+            // занятой до истечения TTL: снимаем только собственную аренду.
+            if ($sessiyaZanyata) {
+                $this->otpusitSessiyu($session->getId(), $turn->getId());
             }
 
             throw $e;
@@ -147,6 +195,50 @@ final class ZapuskatelHodaOpenCode
         $this->sessionRepository->update($session);
 
         return $turn;
+    }
+
+    /**
+     * Проверка доступа автора хода ко всем проектам workspace.
+     *
+     * Владелец проверяется так же, как участник: если он потерял доступ к
+     * проекту, ход блокируется. Unit-сессии не проверяются — их доступ уже
+     * ограничен привязкой к юниту.
+     *
+     * @throws \DomainException `opencode.workspace.project_access_revoked`
+     */
+    private function trebovatDostupKProektam(SessiyaOpenCode $session, string $accountId): void
+    {
+        if (!$session->estWorkspace()) {
+            return;
+        }
+
+        $workspace = $session->getWorkspace();
+
+        if ($workspace === null) {
+            return;
+        }
+
+        $projectIds = array_map(
+            static fn ($project): string => $project->projectId,
+            $workspace->getProjects(),
+        );
+
+        if (!$this->projectami->estDostupKProektam($projectIds, $accountId)) {
+            throw new \DomainException('opencode.workspace.project_access_revoked');
+        }
+    }
+
+    /**
+     * Освобождение резервации не должно маскировать исходную ошибку: ход всё
+     * равно не стартовал, а аренда истечёт по TTL.
+     */
+    private function otpusitSessiyu(string $sessionId, string $turnId): void
+    {
+        try {
+            $this->turnRepository->osvoboditSessiyu($sessionId, $turnId);
+        } catch (\Throwable) {
+            // Основная ошибка важнее: TTL перехватит аренду при следующем старте.
+        }
     }
 
     /**

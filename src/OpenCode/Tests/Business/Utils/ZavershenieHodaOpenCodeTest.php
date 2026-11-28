@@ -7,10 +7,14 @@ namespace App\OpenCode\Tests\Business\Utils;
 use App\OpenCode\Business\Model\HodOpenCode;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
+use App\OpenCode\Business\Model\RolUchastnikaSessii;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\StatusHoda;
+use App\OpenCode\Business\Model\StatusWorkspace;
+use App\OpenCode\Business\Model\UchastnikSessii;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\Port\UchastnikiSessiiRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetPeredavatUvedomleniyaOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
@@ -19,6 +23,8 @@ use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Business\ReadModel\UvedomlenieONovomSoobsheniiOpenCode;
 use App\OpenCode\Business\Utils\VladelecZanyatostiOpenCode;
 use App\OpenCode\Business\Utils\ZavershenieHodaOpenCode;
+use App\OpenCode\Tests\Support\FabrikaWorkspace;
+use App\OpenCode\Tests\Support\InMemoryUchastnikiSessiiRepository;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -165,6 +171,7 @@ final class ZavershenieHodaOpenCodeTest extends TestCase
             $publisher,
             $this->createMock(UuidGenerator::class),
             $this->createMock(LoggerInterface::class),
+            $this->createMock(UchastnikiSessiiRepository::class),
         );
 
         self::assertSame($turn, $zavershenie->zavershit($turn));
@@ -250,6 +257,129 @@ final class ZavershenieHodaOpenCodeTest extends TestCase
         self::assertSame(StatusHoda::RUNNING, $result->getStatus());
     }
 
+    #[Test]
+    public function workspace_osvedomlyaet_vseh_krome_avtora_hoda(): void
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->expects($this->once())->method('update');
+        $turnRepository->expects($this->once())->method('osvoboditSessiyu');
+
+        $session = FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING);
+        $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $sessionRepository->method('getById')->willReturn($session);
+
+        $uchastniki = new InMemoryUchastnikiSessiiRepository();
+        $uchastniki->save($this->uchastnik($session, 'account-1', RolUchastnikaSessii::OWNER));
+        $uchastniki->save($this->uchastnik($session, 'acc-author', RolUchastnikaSessii::WRITER));
+        $uchastniki->save($this->uchastnik($session, 'acc-viewer', RolUchastnikaSessii::VIEWER));
+
+        $poluchateli = [];
+
+        $notifications = $this->createMock(UvedomleniyaOpenCodeRepository::class);
+        $notifications->method('save')
+            ->willReturnCallback(
+                static function (UvedomlenieONovomSoobsheniiOpenCode $notification) use (&$poluchateli): bool {
+                    $poluchateli[] = $notification->accountId;
+
+                    return true;
+                }
+            );
+
+        $publisher = $this->createMock(UmeetPeredavatUvedomleniyaOpenCode::class);
+        $publisher->expects($this->exactly(2))->method('publish');
+
+        $uuid = $this->createMock(UuidGenerator::class);
+        $uuid->method('makeGuid')->willReturnOnConsecutiveCalls('n-1', 'n-2');
+
+        $turn = HodOpenCode::create(
+            self::TURN_ID,
+            'workspace-1',
+            1,
+            self::WORKFLOW_ID,
+            'Привет',
+            [],
+            1000,
+            authorAccountId: 'acc-author',
+        );
+
+        $result = $this->zavershit(
+            $turn,
+            new RezultatHodaOpenCode(true, RezultatHodaOpenCode::KIND_ANSWER, [], 'Готово', null, null),
+            $turnRepository,
+            $sessionRepository,
+            $this->createMock(UmeetBronirovatUniti::class),
+            $notifications,
+            $publisher,
+            $uuid,
+            $this->createMock(LoggerInterface::class),
+            $uchastniki,
+        );
+
+        self::assertSame(StatusHoda::ANSWERED, $result->getStatus());
+        sort($poluchateli);
+        self::assertSame(['acc-viewer', 'account-1'], $poluchateli);
+    }
+
+    #[Test]
+    public function avtor_hoda_ne_poluchaet_svoego_uvedomleniya_dazhe_buduchi_vladelcem(): void
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+
+        $session = FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING);
+        $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $sessionRepository->method('getById')->willReturn($session);
+
+        $uchastniki = new InMemoryUchastnikiSessiiRepository();
+        $uchastniki->save($this->uchastnik($session, 'account-1', RolUchastnikaSessii::OWNER));
+        $uchastniki->save($this->uchastnik($session, 'acc-writer', RolUchastnikaSessii::WRITER));
+
+        $poluchateli = [];
+
+        $notifications = $this->createMock(UvedomleniyaOpenCodeRepository::class);
+        $notifications->method('save')
+            ->willReturnCallback(
+                static function (UvedomlenieONovomSoobsheniiOpenCode $notification) use (&$poluchateli): bool {
+                    $poluchateli[] = $notification->accountId;
+
+                    return true;
+                }
+            );
+
+        $turn = HodOpenCode::create(
+            self::TURN_ID,
+            'workspace-1',
+            1,
+            self::WORKFLOW_ID,
+            'Привет',
+            [],
+            1000,
+            authorAccountId: 'account-1',
+        );
+
+        $this->zavershit(
+            $turn,
+            new RezultatHodaOpenCode(true, RezultatHodaOpenCode::KIND_ANSWER, [], 'Готово', null, null),
+            $turnRepository,
+            $sessionRepository,
+            $this->createMock(UmeetBronirovatUniti::class),
+            $notifications,
+            $this->createMock(UmeetPeredavatUvedomleniyaOpenCode::class),
+            $this->createMock(UuidGenerator::class),
+            $this->createMock(LoggerInterface::class),
+            $uchastniki,
+        );
+
+        self::assertSame(['acc-writer'], $poluchateli);
+    }
+
+    private function uchastnik(
+        SessiyaOpenCode $session,
+        string $accountId,
+        RolUchastnikaSessii $rol,
+    ): UchastnikSessii {
+        return UchastnikSessii::create($session->getId(), $accountId, $rol, null, null, null, 1000);
+    }
+
     private function zavershit(
         HodOpenCode $turn,
         ?RezultatHodaOpenCode $rezultat,
@@ -260,6 +390,7 @@ final class ZavershenieHodaOpenCodeTest extends TestCase
         UmeetPeredavatUvedomleniyaOpenCode $publisher,
         UuidGenerator $uuid,
         LoggerInterface $logger,
+        ?UchastnikiSessiiRepository $uchastniki = null,
     ): HodOpenCode {
         $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
         $runner->method('poluchitResultatHoda')->willReturn($rezultat);
@@ -273,6 +404,7 @@ final class ZavershenieHodaOpenCodeTest extends TestCase
             $publisher,
             $uuid,
             $logger,
+            $uchastniki ?? $this->createMock(UchastnikiSessiiRepository::class),
         );
 
         return $zavershenie->zavershit($turn);

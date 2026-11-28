@@ -8,6 +8,7 @@ use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 use App\OpenCode\Business\Model\WorkspaceKontekst;
+use App\OpenCode\Business\AgentMode\ReadModel\RezhimAgentaHoda;
 
 /**
  * Исполнение хода диалога на стороне Runner.
@@ -46,6 +47,7 @@ interface UmeetVypolnyatHodOpenCode
         bool $readOnly = false,
         ?string $token = null,
         ?string $model = null,
+        ?RezhimAgentaHoda $rezhimAgenta = null,
     ): string;
 
     /**

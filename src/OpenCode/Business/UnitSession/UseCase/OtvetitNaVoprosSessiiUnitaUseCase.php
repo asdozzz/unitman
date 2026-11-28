@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Business\UnitSession\UseCase;
 
+use App\OpenCode\Business\AgentMode\Utils\OpredelitelRezhimaAgentaHoda;
+
 use App\OpenCode\Business\Command\OtvetNaVopros;
 use App\OpenCode\Business\Model\HodOpenCode;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
@@ -35,13 +37,20 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
         private ProverkaDostupaKSessiiUnita $dostup,
         private UuidGenerator $uuidGenerator,
         private OpredelitelModeliHodaOpenCode $modeli,
+        private OpredelitelRezhimaAgentaHoda $rezhimyAgentov,
     ) {
     }
 
     /**
      * @param list<mixed> $answers сырые ответы из тела запроса, валидируются ниже
      */
-    public function handle(string $turnId, array $answers, ?string $model = null): RezultatZapuskaHoda
+    public function handle(
+        string $turnId,
+        array $answers,
+        ?string $model = null,
+        ?string $credentialId = null,
+        ?string $agentModeId = null,
+    ): RezultatZapuskaHoda
     {
         $accountId = $this->credentials->tekuschiiAccountId();
         $turn = $this->turns->getById($turnId);
@@ -96,11 +105,21 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
             }
         }
 
+        $rezhimAgenta = $this->rezhimyAgentov->opredelit(
+            $accountId,
+            OpredelitelRezhimaAgentaHoda::CHAT_UNIT,
+            $agentModeId,
+        );
+
+        $credentialId = $credentialId !== null && trim($credentialId) !== ''
+            ? trim($credentialId)
+            : ($rezhimAgenta->credentialId ?? $session->getCredentialId());
+
         $razreshennayaModel = $this->modeli->opredelit(
             $accountId,
-            $session->getCredentialId(),
+            $credentialId,
             $model,
-            $session->getModel(),
+            $rezhimAgenta->model ?? $session->getModel(),
         );
 
         $now = time();
@@ -113,6 +132,9 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
             $normalizovannie,
             $now,
             $razreshennayaModel,
+            credentialId: $credentialId,
+            agentModeId: $rezhimAgenta->modeId,
+            agentModeName: $rezhimAgenta->modeName,
         );
 
         $history = IstoriyaDialogaOpenCode::sobrat(
@@ -122,7 +144,7 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
         $this->runner->nachatHod(
             $novyiHod->getWorkflowId(),
             $accountId,
-            $session->getCredentialId(),
+            $credentialId,
             $session->getExternalSessionId(),
             [PrivyazkaKUnitu::izZnacheniy($session->getUnitId(), $session->getUnitProjectId())],
             $prompt,
@@ -132,6 +154,7 @@ final class OtvetitNaVoprosSessiiUnitaUseCase
             $readOnly,
             $token,
             model: $razreshennayaModel,
+            rezhimAgenta: $rezhimAgenta,
         );
 
         $this->turns->save($novyiHod);

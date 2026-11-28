@@ -14,6 +14,8 @@ use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\DobavitProektyVWorkspaceSessiiUseCase;
 
 /**
  * Добавление проектов к работающему workspace.
@@ -30,11 +32,19 @@ final class DobavitProektyVWorkspaceUseCase
         private readonly UmeetProveryatRekvizityOpenCode $credentials,
         private readonly UmeetUpravlyatProektamiWorkspace $projectami,
         private readonly UmeetUpravlyatWorkspace $workspaceManager,
+        private readonly ?WorkspaceFeatureFlags $flags = null,
+        private readonly ?DobavitProektyVWorkspaceSessiiUseCase $workspaceUseCase = null,
     ) {
     }
 
     public function handle(DobavitProektyVWorkspace $command): void
     {
+        if ($this->flags?->pisatVNoviyAgregat() === true && $this->workspaceUseCase !== null) {
+            $this->workspaceUseCase->handle($command);
+
+            return;
+        }
+
         $accountId = $this->credentials->tekuschiiAccountId();
         $session = $this->sessionRepository->getById(trim($command->workspaceId));
         $workspace = $this->trebovatWorkspace($session);

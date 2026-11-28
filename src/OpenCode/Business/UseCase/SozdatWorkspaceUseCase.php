@@ -6,15 +6,20 @@ namespace App\OpenCode\Business\UseCase;
 
 use App\OpenCode\Business\Command\SozdatWorkspace;
 use App\OpenCode\Business\Model\ProektWorkspace;
+use App\OpenCode\Business\Model\RolUchastnikaSessii;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
+use App\OpenCode\Business\Model\UchastnikSessii;
 use App\OpenCode\Business\Model\SessiyaOpenCodeFilter;
 use App\OpenCode\Business\Model\TipSessiiOpenCode;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UchastnikiSessiiRepository;
 use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Port\UuidGenerator;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\SozdatWorkspaceSessiiUseCase;
 
 /**
  * Создание workspace-сессии.
@@ -35,11 +40,18 @@ final class SozdatWorkspaceUseCase
         private UuidGenerator $uuidGenerator,
         private ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
         private int $workspaceMaxFiles = 20,
+        private ?UchastnikiSessiiRepository $uchastniki = null,
+        private ?WorkspaceFeatureFlags $flags = null,
+        private ?SozdatWorkspaceSessiiUseCase $workspaceUseCase = null,
     ) {
     }
 
     public function handle(SozdatWorkspace $command): string
     {
+        if ($this->flags?->pisatVNoviyAgregat() === true && $this->workspaceUseCase !== null) {
+            return $this->workspaceUseCase->handle($command);
+        }
+
         $accountId = $this->credentials->tekuschiiAccountId();
         $credentialId = trim($command->credentialId);
 
@@ -86,6 +98,7 @@ final class SozdatWorkspaceUseCase
         );
 
         $this->sessionRepository->save($session);
+        $this->zaregistrirovatVladelca($session);
 
         if ($fileIds !== [] && $this->fayly !== null) {
             $this->fayly->prikrepit($session->getId(), $fileIds);
@@ -103,6 +116,30 @@ final class SozdatWorkspaceUseCase
         $this->sessionRepository->update($session);
 
         return $session->getId();
+    }
+
+    /**
+     * Владелец — обязательный участник: без строки в таблице участников он
+     * остался бы «неявным» и не попал бы в списки и уведомления соавторов.
+     *
+     * Пропуск допустим только для ручной сборки в тестах, где репозиторий не
+     * подключён; DI всегда передаёт реализацию.
+     */
+    private function zaregistrirovatVladelca(SessiyaOpenCode $session): void
+    {
+        if ($this->uchastniki === null) {
+            return;
+        }
+
+        $this->uchastniki->save(UchastnikSessii::create(
+            $session->getId(),
+            $session->getAccountId(),
+            RolUchastnikaSessii::OWNER,
+            $session->getCredentialId(),
+            $session->getModel(),
+            null,
+            $session->getCreatedAt(),
+        ));
     }
 
     /**

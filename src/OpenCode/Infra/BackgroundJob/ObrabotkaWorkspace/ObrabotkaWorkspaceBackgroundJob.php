@@ -6,13 +6,19 @@ namespace App\OpenCode\Infra\BackgroundJob\ObrabotkaWorkspace;
 
 use App\BackgroundJob\Infra\Service\AbstractBackgroundJob;
 use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
+use App\OpenCode\Business\Model\IstochnikRekvizitovOpenCode;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\Model\WorkspaceSession;
+use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
+use App\OpenCode\Business\Workspace\Utils\ZapuskatelHodaWorkspace;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,6 +44,9 @@ final class ObrabotkaWorkspaceBackgroundJob extends AbstractBackgroundJob
         private ZapuskatelHodaOpenCode $launcher,
         private LoggerInterface $logger,
         private ?UmeetUpravlyatFaylamiWorkspace $fayly = null,
+        private ?WorkspaceSessionRepository $workspaces = null,
+        private ?WorkspaceFeatureFlags $flags = null,
+        private ?ZapuskatelHodaWorkspace $workspaceLauncher = null,
     ) {
     }
 
@@ -63,6 +72,16 @@ final class ObrabotkaWorkspaceBackgroundJob extends AbstractBackgroundJob
 
     public function run(): bool
     {
+        // При WRITE=1 без зеркала источник истины — новый агрегат: легаси-строки
+        // больше не обновляются, поэтому транзитные статусы нужно доводить
+        // именно на нём. Пока флаги выключены (или включено зеркало), работает
+        // прежний легаси-проход.
+        if ($this->nuzhenNoviyAgregat()) {
+            $this->runNew();
+
+            return true;
+        }
+
         try {
             $sessions = $this->sessionRepository->findAktivnieWorkspace(self::BATCH_LIMIT);
         } catch (\Throwable $error) {
@@ -78,6 +97,259 @@ final class ObrabotkaWorkspaceBackgroundJob extends AbstractBackgroundJob
         }
 
         return true;
+    }
+
+    private function nuzhenNoviyAgregat(): bool
+    {
+        return $this->flags?->pisatVNoviyAgregat() === true
+            && $this->flags->zerkaloVklyucheno() === false
+            && $this->workspaces !== null;
+    }
+
+    private function runNew(): void
+    {
+        try {
+            $workspaces = $this->workspaces->findAktivnieVTranzite(self::BATCH_LIMIT);
+        } catch (\Throwable $error) {
+            $this->logger->error('opencode.workspace_reconcile.batch_load_failed', [
+                'exception' => $error,
+            ]);
+
+            return;
+        }
+
+        foreach ($workspaces as $workspace) {
+            $this->obrabotatWorkspace($workspace);
+        }
+    }
+
+    private function obrabotatWorkspace(WorkspaceSession $workspace): void
+    {
+        try {
+            match ($workspace->getWorkspace()->getStatus()) {
+                StatusWorkspace::CREATING => $this->obrabotatSozdanieNoviy($workspace),
+                StatusWorkspace::STARTING => $this->obrabotatZapuskNoviy($workspace),
+                StatusWorkspace::ARCHIVING => $this->obrabotatArhivaciyuNoviy($workspace),
+                StatusWorkspace::DELETING => $this->obrabotatUdalenieNoviy($workspace),
+                StatusWorkspace::RUNNING => $this->obrabotatObnovlenieIliPromptNoviy($workspace),
+                default => null,
+            };
+        } catch (\Throwable $error) {
+            $this->logger->error('opencode.workspace_reconcile.workspace_failed', [
+                'workspaceId' => $workspace->getId(),
+                'status' => $workspace->getWorkspace()->getStatus()->value,
+                'exception' => $error,
+            ]);
+        }
+    }
+
+    private function obrabotatSozdanieNoviy(WorkspaceSession $workspace): void
+    {
+        $result = $this->workspaceManager->poluchitRezultatOperacii($workspace);
+
+        if ($result === null) {
+            return;
+        }
+
+        if ($result === UmeetUpravlyatWorkspace::RESULT_FAILURE) {
+            $this->otmetitOshibkuNoviy($workspace, StatusWorkspace::CREATING);
+
+            return;
+        }
+
+        if (!$this->workspaces->perevestiStatus(
+            $workspace->getId(),
+            [StatusWorkspace::CREATING],
+            StatusWorkspace::RUNNING,
+        )) {
+            return;
+        }
+
+        $this->zapustitPervyiPromptNoviy($this->workspaces->getById($workspace->getId()));
+    }
+
+    private function obrabotatZapuskNoviy(WorkspaceSession $workspace): void
+    {
+        $result = $this->workspaceManager->poluchitRezultatOperacii($workspace);
+
+        if ($result === null) {
+            return;
+        }
+
+        if ($result === UmeetUpravlyatWorkspace::RESULT_FAILURE) {
+            $this->otmetitOshibkuNoviy($workspace, StatusWorkspace::STARTING);
+
+            return;
+        }
+
+        if (!$this->workspaces->perevestiStatus(
+            $workspace->getId(),
+            [StatusWorkspace::STARTING],
+            StatusWorkspace::RUNNING,
+        )) {
+            return;
+        }
+
+        $fresh = $this->workspaces->getById($workspace->getId());
+        $fresh->snovaAktivna(time());
+        $this->workspaces->update($fresh);
+    }
+
+    private function obrabotatArhivaciyuNoviy(WorkspaceSession $workspace): void
+    {
+        $result = $this->workspaceManager->poluchitRezultatOperacii($workspace);
+
+        if ($result === null) {
+            return;
+        }
+
+        if ($result === UmeetUpravlyatWorkspace::RESULT_FAILURE) {
+            $this->otmetitOshibkuNoviy($workspace, StatusWorkspace::ARCHIVING);
+
+            return;
+        }
+
+        if (!$this->workspaces->perevestiStatus(
+            $workspace->getId(),
+            [StatusWorkspace::ARCHIVING],
+            StatusWorkspace::ARCHIVED,
+        )) {
+            return;
+        }
+
+        $fresh = $this->workspaces->getById($workspace->getId());
+        $fresh->arhivirovat(SessiyaOpenCode::ARCHIVE_REASON_MANUAL, time());
+        $this->workspaces->update($fresh);
+    }
+
+    private function obrabotatUdalenieNoviy(WorkspaceSession $workspace): void
+    {
+        $result = $this->workspaceManager->poluchitRezultatOperacii($workspace);
+
+        if ($result === null) {
+            return;
+        }
+
+        if ($result === UmeetUpravlyatWorkspace::RESULT_FAILURE) {
+            $this->otmetitOshibkuNoviy($workspace, StatusWorkspace::DELETING);
+
+            return;
+        }
+
+        // Артефакты удаляем до строк БД: сбой Mediateka не должен блокировать
+        // финальное удаление сессии (best-effort).
+        try {
+            $this->fayly?->udalitFajlyWorkspace($workspace->getId());
+        } catch (\Throwable $error) {
+            $this->logger->error('opencode.workspace.files_delete_failed', [
+                'workspaceId' => $workspace->getId(),
+                'exception' => $error,
+            ]);
+        }
+
+        $this->workspaces->delete($workspace->getId());
+    }
+
+    private function obrabotatObnovlenieIliPromptNoviy(WorkspaceSession $workspace): void
+    {
+        $pending = $this->workspaces->findPendingUpdate($workspace->getId());
+
+        if ($pending === null) {
+            $this->zapustitPervyiPromptNoviy($workspace);
+
+            return;
+        }
+
+        $result = $this->workspaceManager->poluchitRezultatOperacii($workspace);
+
+        if ($result === null) {
+            return;
+        }
+
+        $update = WorkspacePendingUpdate::fromArray($pending['payload']);
+        $state = $workspace->getWorkspace();
+
+        if ($result === UmeetUpravlyatWorkspace::RESULT_FAILURE) {
+            $this->otkatitObnovlenie($update->files);
+            $this->workspaces->deletePendingUpdate($workspace->getId());
+            $workspace->sbrositOperaciyu(time());
+            $workspace->otmetitOshibku('opencode.workspace.update_failed', time());
+            $this->workspaces->update($workspace);
+
+            return;
+        }
+
+        $now = time();
+
+        if ($update->projects !== []) {
+            $workspace->dobavitProekty($update->projects, $now);
+        }
+
+        if ($update->files !== []) {
+            $this->fayly?->otmetitPrimenenimi(array_map(
+                static fn (array $file): string => $file['fileId'],
+                $update->files,
+            ));
+        }
+
+        foreach ($update->filesToDelete as $file) {
+            $this->fayly?->udalitFayl($file['fileId']);
+        }
+
+        $workspace->sbrositOperaciyu($now);
+        $workspace->ochistitOshibku($now);
+        $this->workspaces->update($workspace);
+        $this->workspaces->deletePendingUpdate($workspace->getId());
+
+        $this->zapustitPervyiPromptNoviy($workspace);
+    }
+
+    private function zapustitPervyiPromptNoviy(WorkspaceSession $workspace): void
+    {
+        if ($this->workspaceLauncher === null) {
+            return;
+        }
+
+        $state = $workspace->getWorkspace();
+
+        if ($state->getInitialPromptStartedAt() !== null) {
+            return;
+        }
+
+        try {
+            $this->workspaceLauncher->zapustit(
+                $workspace,
+                $state->getInitialPrompt(),
+                [],
+                null,
+                new IstochnikRekvizitovOpenCode(
+                    $workspace->getAccountId(),
+                    $workspace->getCredentialId(),
+                    $workspace->getModel(),
+                ),
+            );
+        } catch (\Throwable $error) {
+            $this->logger->error('opencode.workspace_reconcile.initial_prompt_failed', [
+                'workspaceId' => $workspace->getId(),
+                'exception' => $error,
+            ]);
+
+            return;
+        }
+
+        $state->otmetitStartPervogoPrompta(time());
+        $this->workspaces->update($workspace);
+    }
+
+    private function otmetitOshibkuNoviy(WorkspaceSession $workspace, StatusWorkspace $from): void
+    {
+        if (!$this->workspaces->perevestiStatus($workspace->getId(), [$from], StatusWorkspace::ERROR)) {
+            return;
+        }
+
+        $fresh = $this->workspaces->getById($workspace->getId());
+        $fresh->getWorkspace()->otmetitOshibku(self::ERROR_KEY, time());
+        $this->workspaces->update($fresh);
     }
 
     private function obrabotat(SessiyaOpenCode $session): void

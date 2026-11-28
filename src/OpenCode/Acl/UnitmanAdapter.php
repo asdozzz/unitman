@@ -163,6 +163,28 @@ final class UnitmanAdapter implements
         return $result;
     }
 
+    /**
+     * Проверка доступа кандидата ко всем проектам workspace.
+     *
+     * Unitman отдаёт только доступные проекты и бросает
+     * `opencode.workspace.project_not_found` на первый недоступный — этого
+     * достаточно, чтобы отклонить приглашение.
+     *
+     * @param list<string> $projectIds
+     */
+    public function estDostupKProektam(array $projectIds, string $accountId): bool
+    {
+        if ($projectIds === []) {
+            return true;
+        }
+
+        try {
+            return count($this->unitmanApi->poluchitProektiDlyaWorkspace($projectIds, $accountId)) === count($projectIds);
+        } catch (\DomainException) {
+            return false;
+        }
+    }
+
     public function poluchitSsylkuRedaktora(
         string $projectId,
         string $accountId,

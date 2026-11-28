@@ -18,7 +18,7 @@ final class SqlUvedomleniyaOpenCodeRepositoryTest extends TestCase
     private const NOW = 1_700_000_000;
 
     #[Test]
-    public function dubl_po_turn_id_ne_sozdaet_vtoruyu_zapis(): void
+    public function dubl_po_turn_id_i_poluchatelyu_ne_sozdaet_vtoruyu_zapis(): void
     {
         $vyzovy = [];
 
@@ -41,7 +41,7 @@ final class SqlUvedomleniyaOpenCodeRepositoryTest extends TestCase
         $this->assertFalse($repository->save($notification));
 
         $this->assertStringContainsString('insert into opencode_notification', $vyzovy[0]['sql']);
-        $this->assertStringContainsString('on conflict (turn_id) do nothing', $vyzovy[0]['sql']);
+        $this->assertStringContainsString('on conflict (turn_id, account_id) do nothing', $vyzovy[0]['sql']);
         $this->assertSame($vyzovy[0]['params'], $vyzovy[1]['params']);
         $this->assertSame('t-1', $vyzovy[1]['params']['turn_id']);
         $this->assertSame('acc-1', $vyzovy[1]['params']['account_id']);

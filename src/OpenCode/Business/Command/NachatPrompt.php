@@ -18,6 +18,12 @@ readonly class NachatPrompt implements JsonBodySerializableInterface
         public string $sessionId = '',
         public string $text = '',
         public ?string $model = null,
+        /**
+         * Реквизиты автора хода. Пусто — личные реквизиты участника или
+         * первые реквизиты аккаунта; чужие реквизиты отклоняются.
+         */
+        public ?string $credentialId = null,
+        public ?string $agentModeId = null,
     ) {
     }
 }

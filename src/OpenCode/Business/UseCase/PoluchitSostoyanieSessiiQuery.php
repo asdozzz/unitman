@@ -35,7 +35,7 @@ final class PoluchitSostoyanieSessiiQuery
     }
 
     /**
-     * @throws \DomainException если сессия не найдена или принадлежит другому пользователю
+     * @throws \DomainException если сессия не найдена или пользователь не участник
      */
     public function handle(PoluchitSostoyanieSessii $command): SostoyanieSessiiReadModel
     {

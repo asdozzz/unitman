@@ -25,6 +25,14 @@ interface UmeetProveryatRekvizityOpenCode
     public function trebovatVladelca(string $accountId, string $credentialId): void;
 
     /**
+     * Идентификатор первых реквизитов автора хода. Секрет не возвращается.
+     *
+     * Дефолт для участника, который ещё не выбрал ключ. `null` — у аккаунта
+     * нет реквизитов, и ход запускать нечем.
+     */
+    public function poluchitPervieRekvizityAvtora(string $accountId): ?string;
+
+    /**
      * Дефолтная модель и список моделей реквизитов.
      *
      * @throws \DomainException если реквизиты не найдены или принадлежат другому аккаунту

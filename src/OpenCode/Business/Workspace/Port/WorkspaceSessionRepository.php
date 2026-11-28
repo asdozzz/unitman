@@ -27,9 +27,24 @@ interface WorkspaceSessionRepository
     public function findByAccountId(string $accountId, WorkspaceFilter $filter): array;
 
     /**
+     * Список «мои + где я участник» без N+1: участие учитывается join-ом.
+     *
+     * @return list<WorkspaceSession>
+     */
+    public function findByAccountIdWithParticipation(string $accountId, WorkspaceFilter $filter): array;
+
+    /**
      * @return list<WorkspaceSession>
      */
     public function findAktivnie(int $limit): array;
+
+    /**
+     * Активные и архивные в транзитных статусах — как легаси
+     * `findAktivnieWorkspace()`. Нужно фоновой сверке операций.
+     *
+     * @return list<WorkspaceSession>
+     */
+    public function findAktivnieVTranzite(int $limit): array;
 
     /**
      * @param list<StatusWorkspace> $from
@@ -41,4 +56,27 @@ interface WorkspaceSessionRepository
     ): bool;
 
     public function delete(string $workspaceId): void;
+
+    /**
+     * Идемпотентно сохраняет pending-обновление workspace.
+     *
+     * @param array<string, mixed> $payload `WorkspacePendingUpdate::toArray()`
+     */
+    public function savePendingUpdate(string $workspaceId, string $workflowId, array $payload, int $createdAt): void;
+
+    /**
+     * @return array{workflowId: string, payload: array<string, mixed>, createdAt: int}|null
+     */
+    public function findPendingUpdate(string $workspaceId): ?array;
+
+    public function deletePendingUpdate(string $workspaceId): void;
+
+    /**
+     * Батч-признак «есть pending-обновление» без N+1.
+     *
+     * @param list<string> $workspaceIds
+     *
+     * @return array<string, true> ключ — идентификатор workspace
+     */
+    public function findPendingWorkspaceIds(array $workspaceIds): array;
 }

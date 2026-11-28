@@ -9,6 +9,7 @@ use App\OpenCode\Business\Model\Workspace;
 use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\ReadModel\RezultatProverkiIzmeneniyWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceSession;
 
 /**
  * Подмена жизненного цикла workspace на стороне Runner.
@@ -76,12 +77,12 @@ final class ImitaciyaUpravleniyaWorkspace implements UmeetUpravlyatWorkspace
         $this->izmeneniya = $izmeneniya;
     }
 
-    public function zapustit(SessiyaOpenCode $session): void
+    public function zapustit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $this->zapisat(Workspace::OPERATION_CREATE, $session, 'wf-create');
     }
 
-    public function obnovit(SessiyaOpenCode $session, WorkspacePendingUpdate $update): string
+    public function obnovit(SessiyaOpenCode|WorkspaceSession $session, WorkspacePendingUpdate $update): string
     {
         if ($this->oshibkaObnovleniya !== null) {
             throw $this->oshibkaObnovleniya;
@@ -93,27 +94,27 @@ final class ImitaciyaUpravleniyaWorkspace implements UmeetUpravlyatWorkspace
         return $this->workflowObnovleniya;
     }
 
-    public function ostanovit(SessiyaOpenCode $session): void
+    public function ostanovit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $this->zapisat(Workspace::OPERATION_STOP, $session, 'wf-stop');
     }
 
-    public function vosstanovit(SessiyaOpenCode $session): void
+    public function vosstanovit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $this->zapisat(Workspace::OPERATION_START, $session, 'wf-start');
     }
 
-    public function udalit(SessiyaOpenCode $session): void
+    public function udalit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $this->zapisat(Workspace::OPERATION_DELETE, $session, 'wf-delete');
     }
 
-    public function poluchitIzmeneniya(SessiyaOpenCode $session): RezultatProverkiIzmeneniyWorkspace
+    public function poluchitIzmeneniya(SessiyaOpenCode|WorkspaceSession $session): RezultatProverkiIzmeneniyWorkspace
     {
         return new RezultatProverkiIzmeneniyWorkspace($this->uspehProverki, $this->izmeneniya);
     }
 
-    public function poluchitRezultatOperacii(SessiyaOpenCode $session): ?string
+    public function poluchitRezultatOperacii(SessiyaOpenCode|WorkspaceSession $session): ?string
     {
         return $this->rezultatOperacii;
     }
@@ -126,7 +127,7 @@ final class ImitaciyaUpravleniyaWorkspace implements UmeetUpravlyatWorkspace
         return $this->operacii;
     }
 
-    private function zapisat(string $operation, SessiyaOpenCode $session, string $workflowId): void
+    private function zapisat(string $operation, SessiyaOpenCode|WorkspaceSession $session, string $workflowId): void
     {
         $this->operacii[] = ['operation' => $operation, 'workspaceId' => $session->getId()];
         $session->getWorkspace()?->zapomnitOperaciyu($operation, $workflowId, time());

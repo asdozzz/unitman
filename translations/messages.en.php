@@ -470,6 +470,52 @@ return [
         'decrypt_failed' => 'Failed to decrypt the repository token',
     ],
 
+    // ─── Skills ──────────────────────────────────────────────────────────────
+    'skill' => [
+        'id' => [
+            'empty' => 'Skill ID must not be empty',
+            'too_long' => 'Skill ID is too long',
+        ],
+        'slug' => [
+            'invalid' => 'Invalid skill slug',
+            'taken' => 'A global skill with this slug already exists',
+        ],
+        'name' => [
+            'empty' => 'Skill name must not be empty',
+            'invalid_utf8' => 'Skill name is not valid UTF-8',
+            'contains_nul' => 'Skill name must not contain NUL bytes',
+            'too_long' => 'Skill name is too long',
+        ],
+        'description' => [
+            'invalid_utf8' => 'Skill description is not valid UTF-8',
+            'contains_nul' => 'Skill description must not contain NUL bytes',
+            'too_long' => 'Skill description is too long',
+        ],
+        'content' => [
+            'invalid_utf8' => 'Skill content is not valid UTF-8',
+            'contains_nul' => 'Skill content must not contain NUL bytes',
+            'too_long' => 'Skill content is too long',
+        ],
+        'project' => [
+            'required' => 'A project skill must have at least one project',
+            'invalid' => 'Invalid project ID',
+            'too_long' => 'Project ID is too long',
+            'not_attached' => 'The skill is not attached to this project',
+        ],
+        'scope' => [
+            'invalid' => 'Invalid skill scope',
+            'projects_forbidden' => 'A global skill cannot be attached to projects',
+            'global_cannot_attach' => 'A global skill is already available in all projects',
+            'global_cannot_detach' => 'A global skill cannot be detached from a project',
+        ],
+        'forbidden' => 'Insufficient permissions for this skill',
+        'not_found' => 'The skill was not found',
+        'resolve' => [
+            'invalid_request' => 'Invalid skill resolve request',
+            'unsupported_format' => 'Unsupported skill manifest format version',
+        ],
+    ],
+
     // ─── Runner ──────────────────────────────────────────────────────────────
     'runner' => [
         'deistvie_ne_zakonchena' => 'The action has not finished yet',

@@ -21,6 +21,12 @@ readonly class OtvetitNaVopros implements JsonBodySerializableInterface
         public string $turnId = '',
         public array $answers = [],
         public ?string $model = null,
+        /**
+         * Реквизиты автора хода. Ответ создаёт новый ход, поэтому бюджет
+         * списывается с ответившего, а не с автора вопроса.
+         */
+        public ?string $credentialId = null,
+        public ?string $agentModeId = null,
     ) {
     }
 }

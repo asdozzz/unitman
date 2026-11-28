@@ -59,6 +59,10 @@ security:
         # Неактивированный пользователь видит только статус активации.
         - { path: ^/api/account/myStatus$, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/project/(.*)/hook$, roles: PUBLIC_ACCESS }
+        # Внутренние runner-facing endpoint'ы аутентифицируются per-runner
+        # HMAC-подписью в контроллере (X-Runner-Id + X-Runner-Signature), а не
+        # JWT. Это относится к broker-креденшелам и разрешению навыков.
+        - { path: ^/api/internal/, roles: PUBLIC_ACCESS }
         # Логин по определению выполняется до аутентификации: требование
         # ROLE_USER/ROLE_ADMIN здесь делает вход невозможным (ролей ещё нет).
         - { path: ^/api/login, roles: PUBLIC_ACCESS }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Tests\Support;
 
+use App\OpenCode\Business\AgentMode\ReadModel\RezhimAgentaHoda;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
@@ -42,7 +43,9 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
      *     workspace: WorkspaceKontekst|null,
      *     readOnly: bool,
      *     token: string|null,
-     *     model: string|null
+     *     model: string|null,
+     *     agentModeId: string|null,
+     *     agentModeName: string|null
      * }>
      */
     private array $vyzovy = [];
@@ -70,6 +73,7 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
         bool $readOnly = false,
         ?string $token = null,
         ?string $model = null,
+        ?RezhimAgentaHoda $rezhimAgenta = null,
     ): string {
         /** @var list<PrivyazkaKUnitu> $units */
         /** @var list<array{QuestionId: string, OptionId: string|null, Text: string|null}> $answers */
@@ -99,6 +103,8 @@ final class ImitaciyaVypolneniyaHoda implements UmeetVypolnyatHodOpenCode
             'readOnly' => $readOnly,
             'token' => $token,
             'model' => $model,
+            'agentModeId' => $rezhimAgenta?->modeId,
+            'agentModeName' => $rezhimAgenta?->modeName,
         ];
 
         return $workflowId;

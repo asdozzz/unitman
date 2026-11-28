@@ -7,6 +7,7 @@ namespace App\OpenCode\Business\Port;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\ReadModel\RezultatProverkiIzmeneniyWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceSession;
 
 /**
  * Жизненный цикл workspace на стороне Runner.
@@ -23,26 +24,26 @@ interface UmeetUpravlyatWorkspace
     /** Результат операции: завершена с ошибкой. */
     public const RESULT_FAILURE = 'failure';
 
-    public function zapustit(SessiyaOpenCode $session): void;
+    public function zapustit(SessiyaOpenCode|WorkspaceSession $session): void;
 
-    public function ostanovit(SessiyaOpenCode $session): void;
+    public function ostanovit(SessiyaOpenCode|WorkspaceSession $session): void;
 
-    public function vosstanovit(SessiyaOpenCode $session): void;
+    public function vosstanovit(SessiyaOpenCode|WorkspaceSession $session): void;
 
     /**
      * Запускает обновление workspace: новые проекты и/или файлы.
      *
      * @return string id workflow обновления
      */
-    public function obnovit(SessiyaOpenCode $session, WorkspacePendingUpdate $update): string;
+    public function obnovit(SessiyaOpenCode|WorkspaceSession $session, WorkspacePendingUpdate $update): string;
 
-    public function udalit(SessiyaOpenCode $session): void;
+    public function udalit(SessiyaOpenCode|WorkspaceSession $session): void;
 
-    public function poluchitIzmeneniya(SessiyaOpenCode $session): RezultatProverkiIzmeneniyWorkspace;
+    public function poluchitIzmeneniya(SessiyaOpenCode|WorkspaceSession $session): RezultatProverkiIzmeneniyWorkspace;
 
     /**
      * Результат текущей операции: `success`, `failure` или null, пока workflow
      * ещё выполняется.
      */
-    public function poluchitRezultatOperacii(SessiyaOpenCode $session): ?string;
+    public function poluchitRezultatOperacii(SessiyaOpenCode|WorkspaceSession $session): ?string;
 }

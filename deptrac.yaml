@@ -42,6 +42,10 @@ deptrac:
       collectors:
         - type: directory
           regex: ./src/Secrets/.*
+    - name: Skill
+      collectors:
+        - type: directory
+          regex: ./src/Skill/.*
     - name: Unitman
       collectors:
         - type: directory
@@ -55,6 +59,12 @@ deptrac:
     Utils: ~
     # Secrets — абстракция ключевого материала; не зависит от доменных модулей.
     Secrets: ~
+    # Skill — пользовательские навыки OpenCode: автор/владелец из Account,
+    # проверка доступности проектов — из Unitman, общие утилиты — из Utils.
+    Skill:
+      - Account
+      - Unitman
+      - Utils
     # App — инфраструктура приложения: использует Utils, но не доменные модули.
     App:
       - Utils
@@ -83,6 +93,7 @@ deptrac:
       - BackgroundJob
       - Mediateka
       - Runner
+      - Skill
       - Unitman
       - Utils
     # Notification — общий модуль уведомлений: знает только Account, BackgroundJob и Utils.
@@ -97,6 +108,7 @@ deptrac:
       - BackgroundJob
       - Notification
       - Secrets
+      - Skill
       - Unitman
       - Utils
     # Unitman — ядро: оперирует сущностями всех остальных модулей через порты и Acl-адаптеры.

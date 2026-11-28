@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace App\OpenCode\Business\UseCase;
 
 use App\OpenCode\Business\Command\PoluchitTekstFajlaHoda;
+use App\OpenCode\Business\Model\RolUchastnikaSessii;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\ReadModel\FajlHodaReadModel;
+use App\OpenCode\Business\Utils\ProverkaDostupaKSessii;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\PoluchitTekstFajlaHodaWorkspaceQuery;
 
 /**
  * Текст файла-артефакта хода для preview.
  *
- * Владелец и принадлежность файла проверяются так же, как для ссылки. Затем
+ * Доступ и принадлежность файла проверяются так же, как для ссылки. Затем
  * тип обязан быть previewable, размер — не больше `OPENCODE_ARTIFACT_PREVIEW_MAX_BYTES`,
  * а содержимое — валидный UTF-8 (проверяется Mediateka при чтении).
  */
@@ -25,7 +29,10 @@ final class PoluchitTekstFajlaHodaQuery
         private readonly SessiyaOpenCodeRepository $sessions,
         private readonly UmeetProveryatRekvizityOpenCode $credentials,
         private readonly UmeetUpravlyatFaylamiWorkspace $files,
+        private readonly ProverkaDostupaKSessii $dostup,
         private readonly int $artifactPreviewMaxBytes,
+        private readonly ?WorkspaceFeatureFlags $flags = null,
+        private readonly ?PoluchitTekstFajlaHodaWorkspaceQuery $workspaceQuery = null,
     ) {
     }
 
@@ -38,6 +45,17 @@ final class PoluchitTekstFajlaHodaQuery
      */
     public function handle(PoluchitTekstFajlaHoda $command): array
     {
+        if ($this->flags?->chitatIzNovogoAgregata() === true && $this->workspaceQuery !== null) {
+            $legacyTurn = $this->turns->findById(trim($command->turnId));
+            $legacySession = $legacyTurn !== null
+                ? $this->sessions->findById($legacyTurn->getSessionId())
+                : null;
+
+            if ($legacyTurn === null || $legacySession?->estWorkspace() === true) {
+                return $this->workspaceQuery->handle($command);
+            }
+        }
+
         $file = $this->trebovatFajl($command->turnId, $command->fileId);
 
         if (!$file->podderzhivaetProsmotr()) {
@@ -85,7 +103,7 @@ final class PoluchitTekstFajlaHodaQuery
             throw new \DomainException('opencode.session.not_found');
         }
 
-        $session->trebovatVladelca($accountId);
+        $this->dostup->trebovat($session, $accountId, RolUchastnikaSessii::VIEWER);
 
         if (!$session->estWorkspace()) {
             throw new \DomainException('opencode.artifact.not_found');

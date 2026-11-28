@@ -13,6 +13,8 @@ use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\PrikrepitFaylyKWorkspaceSessiiUseCase;
 
 /**
  * Прикрепление загруженных файлов к работающему workspace.
@@ -25,11 +27,19 @@ final class PrikrepitFaylyKWorkspaceUseCase
         private readonly UmeetUpravlyatFaylamiWorkspace $fayly,
         private readonly UmeetUpravlyatWorkspace $workspaceManager,
         private readonly int $workspaceMaxFiles = 20,
+        private readonly ?WorkspaceFeatureFlags $flags = null,
+        private readonly ?PrikrepitFaylyKWorkspaceSessiiUseCase $workspaceUseCase = null,
     ) {
     }
 
     public function handle(PrikrepitFaylyKWorkspace $command): void
     {
+        if ($this->flags?->pisatVNoviyAgregat() === true && $this->workspaceUseCase !== null) {
+            $this->workspaceUseCase->handle($command);
+
+            return;
+        }
+
         $accountId = $this->credentials->tekuschiiAccountId();
         $session = $this->sessionRepository->getById(trim($command->workspaceId));
         $workspace = $this->trebovatWorkspace($session);

@@ -10,6 +10,7 @@ use App\OpenCode\Business\ReadModel\HodOpenCodeReadModel;
 use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
 use App\OpenCode\Business\Workspace\Port\WorkspaceTurnRepository;
 use App\OpenCode\Business\Workspace\Utils\ProverkaDostupaWorkspaceSessii;
+use App\OpenCode\Business\Workspace\Utils\ZavershenieHodaWorkspace;
 
 final class PoluchitResultatHodaWorkspaceQuery
 {
@@ -19,6 +20,7 @@ final class PoluchitResultatHodaWorkspaceQuery
         private UmeetProveryatRekvizityOpenCode $credentials,
         private UmeetVypolnyatHodOpenCode $runner,
         private ProverkaDostupaWorkspaceSessii $dostup,
+        private ZavershenieHodaWorkspace $zavershenie,
     ) {
     }
 
@@ -29,14 +31,7 @@ final class PoluchitResultatHodaWorkspaceQuery
         $workspace = $this->workspaces->getById($turn->getSessionId());
         $this->dostup->proverit($workspace, $accountId);
 
-        if ($turn->estVProzesse()) {
-            $result = $this->runner->poluchitResultatHoda($turn->getWorkflowId());
-
-            if ($result !== null) {
-                $turn->primenitRezultat($result, time());
-                $this->turns->update($turn);
-            }
-        }
+        $turn = $this->zavershenie->zavershit($turn);
 
         return HodOpenCodeReadModel::izModela(
             $turn,

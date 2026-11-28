@@ -210,6 +210,23 @@ final class AccountApi
     }
 
     /**
+     * Идентификатор первых реквизитов аккаунта. Ключ не расшифровывается:
+     * метод нужен как дефолт для хода, который ещё не выбрал реквизиты.
+     */
+    public function poluchitPervieRekvizityOpenCodeDlyaVladelca(string $accountId): ?string
+    {
+        $accountId = trim($accountId);
+
+        if ($accountId === '') {
+            return null;
+        }
+
+        $credentials = $this->openCodeCredentialRepository->findByAccountId($accountId);
+
+        return $credentials === [] ? null : $credentials[0]->getId();
+    }
+
+    /**
      * @throws \DomainException `account.opencode_credential.model_not_available`
      */
     private function razreshitModel(OpenCodeCredential $credential, ?string $model): string

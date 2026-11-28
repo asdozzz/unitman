@@ -144,6 +144,10 @@ final class WorkspaceControllerTest extends WebTestCase
             'https://47000.payments-refactor-workspac.workspaces.example.test',
             $nashli['ideLink'],
         );
+        $this->assertSame('owner', $nashli['myRole']);
+        $this->assertSame($this->accountId, $nashli['ownerAccountId']);
+        $this->assertSame(1, $nashli['participantsCount']);
+        $this->assertFalse($nashli['shared']);
     }
 
     #[Test]
@@ -159,6 +163,12 @@ final class WorkspaceControllerTest extends WebTestCase
         $this->assertFalse($state['canAcceptMessages']);
         $this->assertNull($state['lastTurnId']);
         $this->assertSame('project-1', $state['projects'][0]['projectId']);
+        $this->assertSame('owner', $state['myRole']);
+        $this->assertTrue($state['canManage']);
+        $this->assertCount(1, $state['participants']);
+        $this->assertSame($this->accountId, $state['participants'][0]['accountId']);
+        $this->assertSame($this->credentialId, $state['myDefaultCredentialId']);
+        $this->assertSame('gpt-4o', $state['myDefaultModel']);
     }
 
     #[Test]

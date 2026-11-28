@@ -37,6 +37,8 @@ final class SqlUnitSessionTurnRepository implements UnitSessionTurnRepository
                     : null,
                 'error_key' => $turn->getErrorKey(),
                 'model' => $turn->getModel(),
+                'agent_mode_id' => $turn->getAgentModeId(),
+                'agent_mode_name' => $turn->getAgentModeName() ?? '',
                 'created_at' => $turn->getCreatedAt(),
                 'finished_at' => $turn->getFinishedAt(),
             ],
@@ -51,6 +53,8 @@ final class SqlUnitSessionTurnRepository implements UnitSessionTurnRepository
                 'result_json' => ParameterType::STRING,
                 'error_key' => ParameterType::STRING,
                 'model' => ParameterType::STRING,
+                'agent_mode_id' => ParameterType::STRING,
+                'agent_mode_name' => ParameterType::STRING,
                 'created_at' => ParameterType::INTEGER,
                 'finished_at' => ParameterType::INTEGER,
             ]
@@ -185,6 +189,12 @@ final class SqlUnitSessionTurnRepository implements UnitSessionTurnRepository
             (int) $row['created_at'],
             isset($row['finished_at']) ? (int) $row['finished_at'] : null,
             is_string($row['model'] ?? null) && $row['model'] !== '' ? (string) $row['model'] : null,
+            is_string($row['agent_mode_id'] ?? null) && $row['agent_mode_id'] !== ''
+                ? (string) $row['agent_mode_id']
+                : null,
+            is_string($row['agent_mode_name'] ?? null) && $row['agent_mode_name'] !== ''
+                ? (string) $row['agent_mode_name']
+                : null,
         );
     }
 

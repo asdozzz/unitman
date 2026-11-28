@@ -4,43 +4,53 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Business\Workspace\UseCase;
 
+use App\OpenCode\Business\AgentMode\Utils\OpredelitelRezhimaAgentaHoda;
 use App\OpenCode\Business\Command\OtvetNaVopros;
-use App\OpenCode\Business\Model\HodOpenCode;
+use App\OpenCode\Business\Model\RolUchastnikaSessii;
 use App\OpenCode\Business\Model\StatusWorkspace;
-use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
-use App\OpenCode\Business\Port\UuidGenerator;
 use App\OpenCode\Business\ReadModel\RezultatZapuskaHoda;
 use App\OpenCode\Business\Utils\IstoriyaDialogaOpenCode;
-use App\OpenCode\Business\Utils\OpredelitelModeliHodaOpenCode;
+use App\OpenCode\Business\Utils\OpredelitelRekvizitovHodaOpenCode;
 use App\OpenCode\Business\Utils\OtvetyNaVoprosyOpenCode;
 use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
 use App\OpenCode\Business\Workspace\Port\WorkspaceTurnRepository;
 use App\OpenCode\Business\Workspace\Utils\ProverkaDostupaWorkspaceSessii;
+use App\OpenCode\Business\Workspace\Utils\ZapuskatelHodaWorkspace;
 
+/**
+ * Ответ на вопрос прошлого хода workspace на самостоятельном агрегате.
+ */
 final class OtvetitNaVoprosWorkspaceUseCase
 {
     public function __construct(
-        private WorkspaceSessionRepository $workspaces,
-        private WorkspaceTurnRepository $turns,
-        private UmeetProveryatRekvizityOpenCode $credentials,
-        private UmeetVypolnyatHodOpenCode $runner,
-        private ProverkaDostupaWorkspaceSessii $dostup,
-        private UuidGenerator $uuidGenerator,
-        private OpredelitelModeliHodaOpenCode $modeli,
+        private readonly WorkspaceSessionRepository $workspaces,
+        private readonly WorkspaceTurnRepository $turns,
+        private readonly UmeetProveryatRekvizityOpenCode $credentials,
+        private readonly UmeetVypolnyatHodOpenCode $runner,
+        private readonly ProverkaDostupaWorkspaceSessii $dostup,
+        private readonly OpredelitelRekvizitovHodaOpenCode $rekvizity,
+        private readonly ZapuskatelHodaWorkspace $launcher,
+        private readonly OpredelitelRezhimaAgentaHoda $rezhimyAgentov,
     ) {
     }
 
     /**
      * @param list<mixed> $answers сырые ответы из тела запроса, валидируются ниже
      */
-    public function handle(string $turnId, array $answers, ?string $model = null): RezultatZapuskaHoda
-    {
+    public function handle(
+        string $turnId,
+        array $answers,
+        ?string $model = null,
+        ?string $credentialId = null,
+        ?string $agentModeId = null,
+    ): RezultatZapuskaHoda {
         $accountId = $this->credentials->tekuschiiAccountId();
         $turn = $this->turns->getById($turnId);
         $workspace = $this->workspaces->getById($turn->getSessionId());
-        $this->dostup->proverit($workspace, $accountId);
+
+        $uchastnik = $this->dostup->trebovat($workspace, $accountId, RolUchastnikaSessii::WRITER);
 
         if ($workspace->estArhiv()) {
             throw new \DomainException('opencode.session.archived');
@@ -76,54 +86,27 @@ final class OtvetitNaVoprosWorkspaceUseCase
             throw new \DomainException('opencode.turn.answers_required');
         }
 
-        $razreshennayaModel = $this->modeli->opredelit(
+        $rezhimAgenta = $this->rezhimyAgentov->opredelit(
             $accountId,
-            $workspace->getCredentialId(),
+            OpredelitelRezhimaAgentaHoda::CHAT_WORKSPACE,
+            $agentModeId,
+        );
+
+        $istochnik = $this->rekvizity->opredelitDlyaWorkspace(
+            $workspace,
+            $accountId,
+            $uchastnik,
+            $credentialId ?? $rezhimAgenta->credentialId,
+        );
+
+        $novyiHod = $this->launcher->zapustit(
+            $workspace,
+            $prompt,
+            $normalizovannie,
             $model,
-            $workspace->getModel(),
+            $istochnik,
+            $rezhimAgenta,
         );
-
-        $readOnly = $workspace->getWorkspace()->isReadOnly();
-        $now = time();
-        $novyiHod = HodOpenCode::create(
-            $this->uuidGenerator->makeGuid(),
-            $workspace->getId(),
-            $this->turns->sleduyushiiSeq($workspace->getId()),
-            $this->uuidGenerator->makeGuid(),
-            $prompt,
-            $normalizovannie,
-            $now,
-            $razreshennayaModel,
-        );
-
-        $history = IstoriyaDialogaOpenCode::sobrat(
-            $this->turns->findBySessionId($workspace->getId()),
-        );
-
-        $kontekst = new WorkspaceKontekst(
-            $workspace->getId(),
-            $readOnly,
-            $workspace->getWorkspace()->getProjects(),
-        );
-
-        $this->runner->nachatHod(
-            $novyiHod->getWorkflowId(),
-            $accountId,
-            $workspace->getCredentialId(),
-            $workspace->getExternalSessionId(),
-            [],
-            $prompt,
-            $normalizovannie,
-            $history,
-            $kontekst,
-            $readOnly,
-            null,
-            model: $razreshennayaModel,
-        );
-
-        $this->turns->save($novyiHod);
-        $workspace->otmetitIzmenenie($now);
-        $this->workspaces->update($workspace);
 
         return new RezultatZapuskaHoda(
             $novyiHod->getId(),

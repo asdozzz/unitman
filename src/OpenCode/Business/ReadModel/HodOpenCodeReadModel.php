@@ -34,6 +34,10 @@ final class HodOpenCodeReadModel
         public readonly ?int $finishedAt,
         public readonly string $progressChannel,
         public readonly ?string $model = null,
+        public readonly ?string $authorAccountId = null,
+        public readonly ?string $authorDisplayName = null,
+        public readonly ?string $agentModeId = null,
+        public readonly ?string $agentModeName = null,
     ) {
     }
 
@@ -52,6 +56,10 @@ final class HodOpenCodeReadModel
             $turn->getFinishedAt(),
             $progressChannel,
             $turn->getModel(),
+            $turn->getAuthorAccountId(),
+            $turn->getAuthorDisplayName(),
+            $turn->getAgentModeId(),
+            $turn->getAgentModeName(),
         );
     }
 
@@ -73,6 +81,10 @@ final class HodOpenCodeReadModel
             'finishedAt' => $this->finishedAt,
             'progressChannel' => $this->progressChannel,
             'model' => $this->model,
+            'authorAccountId' => $this->authorAccountId,
+            'authorDisplayName' => $this->authorDisplayName,
+            'agentModeId' => $this->agentModeId,
+            'agentModeName' => $this->agentModeName,
         ];
     }
 }

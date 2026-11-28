@@ -619,6 +619,10 @@ final class RunnerApi implements RunnerApiInterface
             $command->WorkspaceProjects,
             $command->ReadOnly,
             $command->Token,
+            $command->AgentModeId,
+            $command->AgentName,
+            $command->AgentPrompt,
+            $command->AgentDenyEdits,
             RunnerId: $runnerState->getId(),
             TaskQueue: $taskQueue,
         );

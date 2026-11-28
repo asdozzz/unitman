@@ -29,6 +29,11 @@ final class HodOpenCode
         private int $createdAt,
         private ?int $finishedAt,
         private ?string $model = null,
+        private ?string $authorAccountId = null,
+        private ?string $credentialId = null,
+        private ?string $authorDisplayName = null,
+        private ?string $agentModeId = null,
+        private ?string $agentModeName = null,
     ) {
     }
 
@@ -44,6 +49,11 @@ final class HodOpenCode
         array $answers,
         int $now,
         ?string $model = null,
+        ?string $authorAccountId = null,
+        ?string $credentialId = null,
+        ?string $authorDisplayName = null,
+        ?string $agentModeId = null,
+        ?string $agentModeName = null,
     ): self {
         if (trim($requestText) === '') {
             throw new \DomainException('opencode.turn.request_required');
@@ -62,6 +72,11 @@ final class HodOpenCode
             $now,
             null,
             $model,
+            $authorAccountId,
+            $credentialId,
+            $authorDisplayName,
+            $agentModeId,
+            $agentModeName,
         );
     }
 
@@ -81,6 +96,11 @@ final class HodOpenCode
         int $createdAt,
         ?int $finishedAt,
         ?string $model = null,
+        ?string $authorAccountId = null,
+        ?string $credentialId = null,
+        ?string $authorDisplayName = null,
+        ?string $agentModeId = null,
+        ?string $agentModeName = null,
     ): self {
         return new self(
             $id,
@@ -95,6 +115,11 @@ final class HodOpenCode
             $createdAt,
             $finishedAt,
             $model,
+            $authorAccountId,
+            $credentialId,
+            $authorDisplayName,
+            $agentModeId,
+            $agentModeName,
         );
     }
 
@@ -162,6 +187,38 @@ final class HodOpenCode
     public function getModel(): ?string
     {
         return $this->model;
+    }
+
+    /**
+     * Аккаунт, который запустил ход. `null` — исторические ходы до появления
+     * соавторства: они принадлежали владельцу сессии.
+     */
+    public function getAuthorAccountId(): ?string
+    {
+        return $this->authorAccountId;
+    }
+
+    /**
+     * Реквизиты, с которых списан ход. Ключ здесь не хранится.
+     */
+    public function getCredentialId(): ?string
+    {
+        return $this->credentialId;
+    }
+
+    public function getAuthorDisplayName(): ?string
+    {
+        return $this->authorDisplayName;
+    }
+
+    public function getAgentModeId(): ?string
+    {
+        return $this->agentModeId;
+    }
+
+    public function getAgentModeName(): ?string
+    {
+        return $this->agentModeName;
     }
 
     /**
@@ -264,6 +321,8 @@ final class HodOpenCode
             'createdAt' => $this->createdAt,
             'finishedAt' => $this->finishedAt,
             'model' => $this->model,
+            'agentModeId' => $this->agentModeId,
+            'agentModeName' => $this->agentModeName,
         ];
     }
 }

@@ -7,8 +7,10 @@ namespace App\OpenCode\Business\ReadModel;
 /**
  * Состояние workspace для интерфейса.
  *
- * `canAcceptMessages` — status RUNNING, сессия не в архиве и последний ход
- * не выполняется. Это то же правило, что и у гейта `PropuskHodaOpenCode`.
+ * `canAcceptMessages` — status RUNNING, сессия не в архиве, нет обновления и
+ * последний ход не выполняется; дополнительно роль должна позволять писать
+ * (owner или writer). Это то же правило, что и у гейта `PropuskHodaOpenCode`,
+ * плюс ролевая проверка.
  */
 final class SostoyanieWorkspaceReadModel
 {
@@ -16,6 +18,7 @@ final class SostoyanieWorkspaceReadModel
      * @param list<ProektWorkspaceReadModel> $projects
      * @param list<WorkspaceUnitReadModel> $units
      * @param list<WorkspaceFileReadModel> $files
+     * @param list<UchastnikSessiiReadModel> $participants
      */
     public function __construct(
         public readonly string $id,
@@ -34,6 +37,11 @@ final class SostoyanieWorkspaceReadModel
         public readonly array $units = [],
         public readonly array $files = [],
         public readonly bool $updating = false,
+        public readonly string $myRole = 'viewer',
+        public readonly bool $canManage = false,
+        public readonly array $participants = [],
+        public readonly ?string $myDefaultCredentialId = null,
+        public readonly ?string $myDefaultModel = null,
     ) {
     }
 
@@ -68,6 +76,14 @@ final class SostoyanieWorkspaceReadModel
                 $this->files,
             ),
             'updating' => $this->updating,
+            'myRole' => $this->myRole,
+            'canManage' => $this->canManage,
+            'participants' => array_map(
+                static fn (UchastnikSessiiReadModel $uchastnik): array => $uchastnik->vMassiv(),
+                $this->participants,
+            ),
+            'myDefaultCredentialId' => $this->myDefaultCredentialId,
+            'myDefaultModel' => $this->myDefaultModel,
         ];
     }
 }

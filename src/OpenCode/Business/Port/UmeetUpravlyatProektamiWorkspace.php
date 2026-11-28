@@ -32,6 +32,16 @@ interface UmeetUpravlyatProektamiWorkspace
     ): array;
 
     /**
+     * Есть ли у аккаунта доступ ко всем перечисленным проектам.
+     *
+     * Нужна для приглашения в workspace: общий чат и read-only IDE нельзя
+     * открывать участнику без прав на проекты, иначе он увидит чужой код.
+     *
+     * @param list<string> $projectIds
+     */
+    public function estDostupKProektam(array $projectIds, string $accountId): bool;
+
+    /**
      * Ссылка на редактор workspace (VS Code) или null, если её нельзя построить.
      *
      * Формула использует публичный адрес (`publicAddress`) раннера, к которому

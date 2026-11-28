@@ -9,8 +9,8 @@ use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 /**
  * Выбор модели хода OpenCode.
  *
- * Приоритет: модель из запроса -> модель, выбранная при создании сессии ->
- * дефолтная модель реквизитов. Любая выбранная модель проверяется через порт
+ * Приоритет: модель из запроса -> модель по умолчанию (участника или сессии)
+ * -> дефолтная модель реквизитов. Любая выбранная модель проверяется через порт
  * реквизитов: недопустимая модель отклоняется кодом
  * `account.opencode_credential.model_not_available`.
  */
@@ -24,9 +24,9 @@ final class OpredelitelModeliHodaOpenCode
         string $accountId,
         string $credentialId,
         ?string $modelIzZaprosa,
-        ?string $modelSessii,
+        ?string $modelPoUmolchaniyu,
     ): string {
-        $preferred = $this->normalize($modelIzZaprosa) ?? $this->normalize($modelSessii);
+        $preferred = $this->normalize($modelIzZaprosa) ?? $this->normalize($modelPoUmolchaniyu);
 
         return $this->credentials->razreshitModel($accountId, $credentialId, $preferred);
     }

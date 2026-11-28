@@ -120,6 +120,7 @@
         "check-mediateka-deptrac": "php deptrac.phar analyze --config-file=./src/Mediateka/deptrac.yaml",
         "check-opencode-deptrac": "php deptrac.phar analyze --config-file=./src/OpenCode/deptrac.yaml",
         "check-notification-deptrac": "php deptrac.phar analyze --config-file=./src/Notification/deptrac.yaml",
+        "check-skill-deptrac": "php deptrac.phar analyze --config-file=./src/Skill/deptrac.yaml",
         "all-checks": [
             "@check-psalm",
             "@check-phpunit",
@@ -134,7 +135,8 @@
             "@check-unitman-deptrac",
             "@check-mediateka-deptrac",
             "@check-opencode-deptrac",
-            "@check-notification-deptrac"
+            "@check-notification-deptrac",
+            "@check-skill-deptrac"
         ]
     },
     "conflict": {

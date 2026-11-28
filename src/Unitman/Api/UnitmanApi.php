@@ -14,6 +14,7 @@ use App\Unitman\Business\ReadModel\Unit\SozdannieUnitiReadModel;
 use App\Unitman\Business\ReadModel\Unit\SostoyanieUnitaReadModel;
 use App\Unitman\Business\ReadModel\Unit\ZanyatostUnitaReadModel;
 use App\Unitman\Business\UseCase\Project\PoluchitProektiDlyaWorkspaceQuery;
+use App\Unitman\Business\UseCase\Project\PoluchitRolVProekteQuery;
 use App\Unitman\Business\UseCase\Project\PoluchitUrlKlonaProektaQuery;
 use App\Unitman\Business\UseCase\Repo\PoluchitKredensialyRepozitoriyaUseCase;
 use App\Unitman\Business\UseCase\Unit\ObnovitSostoyanieKonteyneraUnitaUseCase;
@@ -49,6 +50,7 @@ final class UnitmanApi
         private PoluchitZanyatostUnitaQuery $poluchitZanyatostUnitaQuery,
         private PoluchitProektiDlyaWorkspaceQuery $poluchitProektiDlyaWorkspaceQuery,
         private PoluchitUrlKlonaProektaQuery $poluchitUrlKlonaProektaQuery,
+        private PoluchitRolVProekteQuery $poluchitRolVProekteQuery,
         private PoluchitKredensialyRepozitoriyaUseCase $kredensialyRepozitoriyaUseCase,
         private UmeetPoluchatTokenRedaktirovaniya $umeetPoluchatTokenRedaktirovaniya,
     )
@@ -206,6 +208,17 @@ final class UnitmanApi
     function poluchitTokenDlyRedaktirovaniyaUnita(string $unitId, string $accountId): string
     {
         return $this->umeetPoluchatTokenRedaktirovaniya->poluchitToken($unitId, $accountId);
+    }
+
+    /**
+     * Роль пользователя в проекте без раскрытия агрегата `Project`.
+     *
+     * @return 'ADMIN'|'USER'|null `null` — проект не найден или пользователь
+     *                              не является участником проекта
+     */
+    function poluchitRolVProekte(string $projectId, string $accountId): ?string
+    {
+        return $this->poluchitRolVProekteQuery->handle($projectId, $accountId);
     }
 
     /**

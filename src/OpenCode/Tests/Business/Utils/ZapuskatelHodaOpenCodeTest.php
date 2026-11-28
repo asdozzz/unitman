@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Tests\Business\Utils;
 
+use App\OpenCode\Business\Model\HodOpenCode;
+use App\OpenCode\Business\Model\IstochnikRekvizitovOpenCode;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\SostoyanieUnita;
@@ -14,6 +16,7 @@ use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetPoluchatTokenRedaktirovaniyaUnita;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
+use App\OpenCode\Business\Port\UmeetUpravlyatProektamiWorkspace;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
 use App\OpenCode\Business\Port\UuidGenerator;
@@ -22,6 +25,7 @@ use App\OpenCode\Business\Utils\OpredelitelRezhimaHodaOpenCode;
 use App\OpenCode\Business\Utils\VladelecZanyatostiOpenCode;
 use App\OpenCode\Business\Utils\ZapuskatelHodaOpenCode;
 use App\OpenCode\Tests\Support\FabrikaWorkspace;
+use App\OpenCode\Tests\Support\ImitaciyaUpravleniyaProektamiWorkspace;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -465,6 +469,203 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         self::assertNull($poluchenToken);
     }
 
+    /**
+     * Главный инвариант бюджета: ход уходит в раннер с реквизитами автора, а
+     * не владельца сессии, и это же фиксируется в сохранённом ходе.
+     */
+    #[Test]
+    public function hod_spisyvaet_rekvizity_avtora_a_ne_vladelca(): void
+    {
+        $poluchenAccountId = null;
+        $poluchenCredentialId = null;
+        $sohranennyiHod = null;
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->once())
+            ->method('nachatHod')
+            ->willReturnCallback(
+                static function (
+                    string $workflowId,
+                    string $accountId,
+                    string $credentialId,
+                ) use (&$poluchenAccountId, &$poluchenCredentialId): string {
+                    $poluchenAccountId = $accountId;
+                    $poluchenCredentialId = $credentialId;
+
+                    return $workflowId;
+                }
+            );
+
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->once())
+            ->method('save')
+            ->willReturnCallback(
+                static function (HodOpenCode $turn) use (&$sohranennyiHod): void {
+                    $sohranennyiHod = $turn;
+                }
+            );
+
+        $sessionRepository = $this->createMock(SessiyaOpenCodeRepository::class);
+        $sessionRepository->expects($this->once())->method('update');
+
+        $zapuskatel = $this->zapuskatel(
+            $turnRepository,
+            $sessionRepository,
+            $runner,
+            $this->createMock(UmeetBronirovatUniti::class),
+        );
+
+        $zapuskatel->zapustit(
+            $this->sessiya(),
+            'Привет',
+            [],
+            [],
+            null,
+            new IstochnikRekvizitovOpenCode('author-2', 'cred-author', 'model-author'),
+        );
+
+        self::assertSame('author-2', $poluchenAccountId);
+        self::assertSame('cred-author', $poluchenCredentialId);
+        self::assertInstanceOf(HodOpenCode::class, $sohranennyiHod);
+        self::assertSame('author-2', $sohranennyiHod->getAuthorAccountId());
+        self::assertSame('cred-author', $sohranennyiHod->getCredentialId());
+    }
+
+    #[Test]
+    public function zanyataya_sessiya_otklonyaet_vtoroi_hod(): void
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->once())
+            ->method('zanyatSessiyu')
+            ->willThrowException(new \DomainException('opencode.session.busy'));
+        $turnRepository->expects($this->never())->method('save');
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->never())->method('nachatHod');
+
+        $zapuskatel = $this->zapuskatel(
+            $turnRepository,
+            $this->createMock(SessiyaOpenCodeRepository::class),
+            $runner,
+            $this->createMock(UmeetBronirovatUniti::class),
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('opencode.session.busy');
+
+        $zapuskatel->zapustit($this->sessiya(), 'Привет', [], $this->privyazki());
+    }
+
+    #[Test]
+    public function otkaz_zahvata_unitov_osvobozhdaet_rezervaciyu_sessii(): void
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->once())->method('zanyatSessiyu');
+        $turnRepository->expects($this->once())
+            ->method('osvoboditSessiyu')
+            ->with('session-1', self::TURN_ID);
+        $turnRepository->expects($this->never())->method('save');
+
+        $bronirovanie = $this->createMock(UmeetBronirovatUniti::class);
+        $bronirovanie->expects($this->once())
+            ->method('zahvatit')
+            ->willThrowException(new \DomainException('unit.zanyat'));
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->never())->method('nachatHod');
+
+        $zapuskatel = $this->zapuskatel(
+            $turnRepository,
+            $this->createMock(SessiyaOpenCodeRepository::class),
+            $runner,
+            $bronirovanie,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('unit.zanyat');
+
+        $zapuskatel->zapustit($this->sessiya(), 'Привет', [], $this->privyazki());
+    }
+
+    #[Test]
+    public function uspeshnyi_start_ostavlyaet_rezervaciyu_do_zaversheniya(): void
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->once())->method('save');
+        $turnRepository->expects($this->once())->method('zanyatSessiyu');
+        $turnRepository->expects($this->never())->method('osvoboditSessiyu');
+
+        $zapuskatel = $this->zapuskatel(
+            $turnRepository,
+            $this->saveSessionRepository(),
+            $this->createMock(UmeetVypolnyatHodOpenCode::class),
+            $this->createMock(UmeetBronirovatUniti::class),
+        );
+
+        $zapuskatel->zapustit($this->sessiya(), 'Привет', [], $this->privyazki());
+    }
+
+    #[Test]
+    public function otzyv_dostupa_k_proektu_blokiruet_hod_workspace(): void
+    {
+        $turnRepository = $this->createMock(HodOpenCodeRepository::class);
+        $turnRepository->method('sleduyushiiSeq')->willReturn(1);
+        $turnRepository->method('findBySessionId')->willReturn([]);
+        $turnRepository->expects($this->never())->method('zanyatSessiyu');
+        $turnRepository->expects($this->never())->method('save');
+
+        $runner = $this->createMock(UmeetVypolnyatHodOpenCode::class);
+        $runner->expects($this->never())->method('nachatHod');
+
+        $zapuskatel = $this->zapuskatel(
+            $turnRepository,
+            $this->createMock(SessiyaOpenCodeRepository::class),
+            $runner,
+            $this->createMock(UmeetBronirovatUniti::class),
+            projectami: $this->projectamiBezDostupa(self::ACCOUNT_ID),
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('opencode.workspace.project_access_revoked');
+
+        $zapuskatel->zapustit(
+            FabrikaWorkspace::vStatuse(StatusWorkspace::RUNNING),
+            'Привет',
+            [],
+            [],
+        );
+    }
+
+    #[Test]
+    public function proverka_proektov_ne_zatraivaet_unit_sessii(): void
+    {
+        $zapuskatel = $this->zapuskatel(
+            $this->turnRepository(),
+            $this->saveSessionRepository(),
+            $this->createMock(UmeetVypolnyatHodOpenCode::class),
+            $this->createMock(UmeetBronirovatUniti::class),
+            projectami: $this->projectamiBezDostupa(self::ACCOUNT_ID),
+        );
+
+        $zapuskatel->zapustit($this->sessiya(), 'Привет', [], $this->privyazki());
+    }
+
+    private function projectamiBezDostupa(string $accountId): ImitaciyaUpravleniyaProektamiWorkspace
+    {
+        $projectami = $this->projectami();
+        $projectami->zapretitDostup($accountId);
+
+        return $projectami;
+    }
+
     private function zapuskatel(
         HodOpenCodeRepository $turnRepository,
         SessiyaOpenCodeRepository $sessionRepository,
@@ -472,9 +673,12 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
         UmeetBronirovatUniti $bronirovanie,
         ?UmeetUpravlyatUnitami $unitami = null,
         ?UmeetPoluchatTokenRedaktirovaniyaUnita $tokeny = null,
+        ?UmeetUpravlyatProektamiWorkspace $projectami = null,
     ): ZapuskatelHodaOpenCode {
         $credentials = $this->createMock(UmeetProveryatRekvizityOpenCode::class);
         $credentials->method('razreshitModel')->willReturn('default-model');
+
+        $projectami ??= $this->projectami();
 
         return new ZapuskatelHodaOpenCode(
             $turnRepository,
@@ -486,7 +690,16 @@ final class ZapuskatelHodaOpenCodeTest extends TestCase
             $tokeny ?? $this->tokeny(),
             new OpredelitelRezhimaHodaOpenCode(),
             new OpredelitelModeliHodaOpenCode($credentials),
+            $projectami,
         );
+    }
+
+    private function projectami(): ImitaciyaUpravleniyaProektamiWorkspace
+    {
+        $projectami = new ImitaciyaUpravleniyaProektamiWorkspace();
+        $projectami->zadatProekty([FabrikaWorkspace::proekt()]);
+
+        return $projectami;
     }
 
     /**

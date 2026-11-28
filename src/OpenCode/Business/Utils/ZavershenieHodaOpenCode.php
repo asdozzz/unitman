@@ -9,6 +9,7 @@ use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\Port\UchastnikiSessiiRepository;
 use App\OpenCode\Business\Port\UmeetBronirovatUniti;
 use App\OpenCode\Business\Port\UmeetPeredavatUvedomleniyaOpenCode;
 use App\OpenCode\Business\Port\UmeetVypolnyatHodOpenCode;
@@ -29,6 +30,10 @@ use Psr\Log\LoggerInterface;
  * действительно произошла: повторное завершение того же хода не создаёт дубль
  * и не публикует старое уведомление второй раз. Ошибка публикации не отменяет
  * завершение: непрочитанное уведомление останется в БД и будет отдано через API.
+ *
+ * В workspace уведомления рассылаются всем участникам, кроме автора хода:
+ * автор видит ответ в открытом чате, а остальным нужен сигнал о новом
+ * сообщении. Для unit-сессий поведение прежнее — один владелец.
  */
 final class ZavershenieHodaOpenCode
 {
@@ -41,6 +46,7 @@ final class ZavershenieHodaOpenCode
         private UmeetPeredavatUvedomleniyaOpenCode $publisher,
         private UuidGenerator $uuidGenerator,
         private LoggerInterface $logger,
+        private UchastnikiSessiiRepository $uchastniki,
     ) {
     }
 
@@ -69,9 +75,24 @@ final class ZavershenieHodaOpenCode
         }
 
         $this->osvoboditUniti($session, $turn);
+        $this->osvoboditSessiyu($turn);
         $this->sozdatUvedomlenie($turn, $session, $now);
 
         return $turn;
+    }
+
+    /**
+     * Резервация снимается, как только ход перестал выполняться: для
+     * ANSWERED/FAILED — сразу, для AWAITING_INPUT — тоже, иначе ответ
+     * пользователя создал бы новый ход и упёрся в собственный захват.
+     */
+    private function osvoboditSessiyu(HodOpenCode $turn): void
+    {
+        try {
+            $this->turnRepository->osvoboditSessiyu($turn->getSessionId(), $turn->getId());
+        } catch (\Throwable) {
+            // Аренда истечёт по TTL; результат хода важнее.
+        }
     }
 
     /**
@@ -124,9 +145,53 @@ final class ZavershenieHodaOpenCode
 
     private function sozdatUvedomlenie(HodOpenCode $turn, SessiyaOpenCode $session, int $now): void
     {
+        foreach ($this->poluchateli($turn, $session) as $accountId) {
+            $this->sozdatUvedomlenieDlya($turn, $session, $accountId, $now);
+        }
+    }
+
+    /**
+     * Получатели уведомления.
+     *
+     * Workspace: все участники, включая неявного владельца до backfill, за
+     * вычетом автора хода. Unit: прежний единственный владелец — автор для
+     * unit-сессии и есть владелец, поэтому исключение не применяется.
+     *
+     * @return list<string>
+     */
+    private function poluchateli(HodOpenCode $turn, SessiyaOpenCode $session): array
+    {
+        if (!$session->estWorkspace()) {
+            return [$session->getAccountId()];
+        }
+
+        $recipients = [];
+
+        foreach ($this->uchastniki->findBySessionId($session->getId()) as $uchastnik) {
+            $recipients[$uchastnik->getAccountId()] = true;
+        }
+
+        // Старые workspace до backfill: владельца может не быть в таблице.
+        $recipients[$session->getAccountId()] = true;
+
+        $authorId = $turn->getAuthorAccountId();
+
+        if ($authorId !== null) {
+            unset($recipients[$authorId]);
+        }
+
+        return array_keys($recipients);
+    }
+
+    private function sozdatUvedomlenieDlya(
+        HodOpenCode $turn,
+        SessiyaOpenCode $session,
+        string $accountId,
+        int $now,
+    ): void {
         $notification = new UvedomlenieONovomSoobsheniiOpenCode(
             $this->uuidGenerator->makeGuid(),
-            $session->getAccountId(),
+            $accountId,
             $turn->getSessionId(),
             $turn->getId(),
             $session->getTitle(),
@@ -141,6 +206,7 @@ final class ZavershenieHodaOpenCode
         } catch (\Throwable $error) {
             $this->logger->error('opencode.turn.notification_save_failed', [
                 'turnId' => $turn->getId(),
+                'accountId' => $accountId,
                 'exception' => $error,
             ]);
 
@@ -158,6 +224,7 @@ final class ZavershenieHodaOpenCode
             // отдано при следующем старте приложения или reconnect.
             $this->logger->error('opencode.turn.notification_publish_failed', [
                 'notificationId' => $notification->id,
+                'accountId' => $accountId,
                 'turnId' => $turn->getId(),
                 'exception' => $error,
             ]);

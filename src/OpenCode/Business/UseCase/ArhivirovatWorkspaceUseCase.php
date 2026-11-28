@@ -11,6 +11,8 @@ use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
 use App\OpenCode\Business\ReadModel\RezultatArhivaciiWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\ArhivirovatWorkspaceSessiiUseCase;
 
 /**
  * Архивация workspace.
@@ -29,6 +31,8 @@ final class ArhivirovatWorkspaceUseCase
         private SessiyaOpenCodeRepository $sessionRepository,
         private UmeetProveryatRekvizityOpenCode $credentials,
         private UmeetUpravlyatWorkspace $workspaceManager,
+        private ?WorkspaceFeatureFlags $flags = null,
+        private ?ArhivirovatWorkspaceSessiiUseCase $workspaceUseCase = null,
     ) {
     }
 
@@ -37,6 +41,10 @@ final class ArhivirovatWorkspaceUseCase
      */
     public function handle(ArhivirovatWorkspace $command): RezultatArhivaciiWorkspace
     {
+        if ($this->flags?->pisatVNoviyAgregat() === true && $this->workspaceUseCase !== null) {
+            return $this->workspaceUseCase->handle($command);
+        }
+
         $accountId = $this->credentials->tekuschiiAccountId();
         $workspaceId = trim($command->workspaceId);
 

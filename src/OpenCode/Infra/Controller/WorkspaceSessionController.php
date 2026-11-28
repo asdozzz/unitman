@@ -40,6 +40,8 @@ final class WorkspaceSessionController extends AbstractController
                     new OA\Property(property: 'workspaceId', type: 'string', format: 'uuid'),
                     new OA\Property(property: 'text', type: 'string'),
                     new OA\Property(property: 'model', type: 'string', nullable: true, description: 'Переопределение модели перед ходом'),
+                    new OA\Property(property: 'credentialId', type: 'string', nullable: true, description: 'Переопределение реквизитов перед ходом'),
+                    new OA\Property(property: 'agentModeId', type: 'string', nullable: true, description: 'Мод агента для хода'),
                 ]
             )
         ),
@@ -53,6 +55,8 @@ final class WorkspaceSessionController extends AbstractController
             (string) ($data['workspaceId'] ?? ''),
             (string) ($data['text'] ?? ''),
             is_string($data['model'] ?? null) ? $data['model'] : null,
+            is_string($data['credentialId'] ?? null) ? $data['credentialId'] : null,
+            is_string($data['agentModeId'] ?? null) ? $data['agentModeId'] : null,
         );
 
         return $this->json(Response::success([
@@ -75,6 +79,8 @@ final class WorkspaceSessionController extends AbstractController
                     new OA\Property(property: 'turnId', type: 'string', format: 'uuid'),
                     new OA\Property(property: 'answers', type: 'array', items: new OA\Items(type: 'object')),
                     new OA\Property(property: 'model', type: 'string', nullable: true, description: 'Переопределение модели перед ходом'),
+                    new OA\Property(property: 'credentialId', type: 'string', nullable: true, description: 'Переопределение реквизитов перед ходом'),
+                    new OA\Property(property: 'agentModeId', type: 'string', nullable: true, description: 'Мод агента для хода'),
                 ]
             )
         ),
@@ -90,6 +96,8 @@ final class WorkspaceSessionController extends AbstractController
             (string) ($data['turnId'] ?? ''),
             $answers,
             is_string($data['model'] ?? null) ? $data['model'] : null,
+            is_string($data['credentialId'] ?? null) ? $data['credentialId'] : null,
+            is_string($data['agentModeId'] ?? null) ? $data['agentModeId'] : null,
         );
 
         return $this->json(Response::success([

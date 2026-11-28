@@ -25,6 +25,13 @@ final class ImitaciyaUpravleniyaProektamiWorkspace implements UmeetUpravlyatProe
     private array $ssylki = [];
 
     /**
+     * Аккаунты, которым доступ к проектам запрещён.
+     *
+     * @var array<string, true>
+     */
+    private array $zapreshennye = [];
+
+    /**
      * @param list<ProektWorkspace> $projects
      */
     public function zadatProekty(array $projects): void
@@ -37,6 +44,26 @@ final class ImitaciyaUpravleniyaProektamiWorkspace implements UmeetUpravlyatProe
     public function zadatSsylkuRedaktora(string $projectId, ?string $link): void
     {
         $this->ssylki[$projectId] = $link;
+    }
+
+    public function zapretitDostup(string $accountId): void
+    {
+        $this->zapreshennye[$accountId] = true;
+    }
+
+    public function estDostupKProektam(array $projectIds, string $accountId): bool
+    {
+        if (isset($this->zapreshennye[$accountId])) {
+            return false;
+        }
+
+        foreach ($projectIds as $projectId) {
+            if (!isset($this->proekty[$projectId])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

@@ -7,6 +7,7 @@ namespace App\OpenCode\Infra\Repository\Workspace;
 use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Model\WorkspaceUnit;
 use App\OpenCode\Business\Workspace\Model\WorkspaceFilter;
 use App\OpenCode\Business\Workspace\Model\WorkspaceSession;
 use App\OpenCode\Business\Workspace\Port\WorkspaceSessionRepository;
@@ -18,6 +19,12 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
     private const TABLE = 'opencode_workspace_session';
 
     private const PROJECT_TABLE = 'opencode_workspace_session_project';
+
+    private const PARTICIPANT_TABLE = 'opencode_workspace_participant';
+
+    private const PENDING_TABLE = 'opencode_workspace_pending_update';
+
+    private const UNIT_TABLE = 'opencode_workspace_unit';
 
     private const TURN_TABLE = 'opencode_workspace_turn';
 
@@ -34,6 +41,7 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
         $this->connection->transactional(function () use ($workspace): void {
             $this->insertOrUpdate($workspace);
             $this->synchronizirovatProekty($workspace);
+            $this->synchronizirovatUniti($workspace);
         });
     }
 
@@ -42,6 +50,7 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
         $this->connection->transactional(function () use ($workspace): void {
             $this->insertOrUpdate($workspace);
             $this->synchronizirovatProekty($workspace);
+            $this->synchronizirovatUniti($workspace);
         });
     }
 
@@ -73,23 +82,56 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
 
     public function findByAccountId(string $accountId, WorkspaceFilter $filter): array
     {
-        $conditions = ['account_id = :account_id'];
+        $conditions = ['s.account_id = :account_id'];
         $params = ['account_id' => $accountId];
         $types = ['account_id' => ParameterType::STRING];
 
         if ($filter->onlyActive) {
-            $conditions[] = 'archived_at is null';
+            $conditions[] = 's.archived_at is null';
         }
 
         if ($filter->estPoisk()) {
-            $conditions[] = 'name like :search escape ' . self::quoteEscapeChar();
+            $conditions[] = 's.name like :search escape ' . self::quoteEscapeChar();
             $params['search'] = '%' . self::escapeLike(trim((string) $filter->search)) . '%';
             $types['search'] = ParameterType::STRING;
         }
 
         $table = self::TABLE;
         $rows = $this->connection->fetchAllAssociative(
-            "select * from $table where " . implode(' and ', $conditions) . ' order by updated_at desc, id',
+            "select s.* from $table s where " . implode(' and ', $conditions) . ' order by s.updated_at desc, s.id',
+            $params,
+            $types
+        );
+
+        return $this->makeWorkspaces($rows);
+    }
+
+    public function findByAccountIdWithParticipation(string $accountId, WorkspaceFilter $filter): array
+    {
+        $conditions = [
+            '(s.account_id = :account_id
+              or exists (
+                  select 1 from ' . self::PARTICIPANT_TABLE . ' p
+                  where p.workspace_id = s.id and p.account_id = :account_id
+              ))',
+        ];
+        $params = ['account_id' => $accountId];
+        $types = ['account_id' => ParameterType::STRING];
+
+        if ($filter->onlyActive) {
+            $conditions[] = 's.archived_at is null';
+        }
+
+        if ($filter->estPoisk()) {
+            $conditions[] = 's.name like :search escape ' . self::quoteEscapeChar();
+            $params['search'] = '%' . self::escapeLike(trim((string) $filter->search)) . '%';
+            $types['search'] = ParameterType::STRING;
+        }
+
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative(
+            "select s.* from $table s where " . implode(' and ', $conditions)
+            . ' order by s.updated_at desc, s.id',
             $params,
             $types
         );
@@ -102,6 +144,21 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
         $table = self::TABLE;
         $rows = $this->connection->fetchAllAssociative(
             "select * from $table where archived_at is null order by updated_at desc, id limit :limit",
+            ['limit' => $limit],
+            ['limit' => ParameterType::INTEGER]
+        );
+
+        return $this->makeWorkspaces($rows);
+    }
+
+    public function findAktivnieVTranzite(int $limit): array
+    {
+        $table = self::TABLE;
+        $rows = $this->connection->fetchAllAssociative(
+            "select * from $table
+             where archived_at is null
+                or status in ('CREATING', 'STARTING', 'ARCHIVING', 'DELETING')
+             order by updated_at desc, id limit :limit",
             ['limit' => $limit],
             ['limit' => ParameterType::INTEGER]
         );
@@ -141,12 +198,87 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
     public function delete(string $workspaceId): void
     {
         $this->connection->transactional(function () use ($workspaceId): void {
-            foreach ([self::NOTIFICATION_TABLE, self::TURN_TABLE, self::PROJECT_TABLE] as $table) {
+            foreach ([
+                self::NOTIFICATION_TABLE,
+                self::PARTICIPANT_TABLE,
+                self::PENDING_TABLE,
+                self::UNIT_TABLE,
+                self::TURN_TABLE,
+                self::PROJECT_TABLE,
+            ] as $table) {
                 $this->connection->delete($table, ['workspace_id' => $workspaceId]);
             }
 
             $this->connection->delete(self::TABLE, ['id' => $workspaceId]);
         });
+    }
+
+    public function savePendingUpdate(string $workspaceId, string $workflowId, array $payload, int $createdAt): void
+    {
+        $this->connection->executeStatement(
+            'insert into ' . self::PENDING_TABLE . ' (workspace_id, workflow_id, payload, created_at) '
+            . 'values (:workspace_id, :workflow_id, :payload, :created_at) '
+            . 'on conflict (workspace_id) do update set '
+            . 'workflow_id = excluded.workflow_id, payload = excluded.payload, created_at = excluded.created_at',
+            [
+                'workspace_id' => $workspaceId,
+                'workflow_id' => $workflowId,
+                'payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'created_at' => $createdAt,
+            ],
+            [
+                'workspace_id' => ParameterType::STRING,
+                'workflow_id' => ParameterType::STRING,
+                'payload' => ParameterType::STRING,
+                'created_at' => ParameterType::INTEGER,
+            ]
+        );
+    }
+
+    public function findPendingUpdate(string $workspaceId): ?array
+    {
+        $row = $this->connection->fetchAssociative(
+            'select workflow_id, payload, created_at from ' . self::PENDING_TABLE . ' where workspace_id = :id',
+            ['id' => $workspaceId]
+        );
+
+        if (empty($row)) {
+            return null;
+        }
+
+        $payload = json_decode((string) $row['payload'], true);
+
+        return [
+            'workflowId' => (string) $row['workflow_id'],
+            'payload' => is_array($payload) ? $payload : [],
+            'createdAt' => (int) $row['created_at'],
+        ];
+    }
+
+    public function deletePendingUpdate(string $workspaceId): void
+    {
+        $this->connection->delete(self::PENDING_TABLE, ['workspace_id' => $workspaceId]);
+    }
+
+    public function findPendingWorkspaceIds(array $workspaceIds): array
+    {
+        if ($workspaceIds === []) {
+            return [];
+        }
+
+        $rows = $this->connection->fetchFirstColumn(
+            'select workspace_id from ' . self::PENDING_TABLE . ' where workspace_id in (:ids)',
+            ['ids' => $workspaceIds],
+            ['ids' => \Doctrine\DBAL\ArrayParameterType::STRING]
+        );
+
+        $result = [];
+
+        foreach ($rows as $id) {
+            $result[(string) $id] = true;
+        }
+
+        return $result;
     }
 
     private function insertOrUpdate(WorkspaceSession $workspace): void
@@ -229,6 +361,35 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
         );
     }
 
+    private function synchronizirovatUniti(WorkspaceSession $workspace): void
+    {
+        $workspaceId = $workspace->getId();
+
+        $this->connection->delete(self::UNIT_TABLE, ['workspace_id' => $workspaceId]);
+
+        foreach ($workspace->getWorkspace()->getUnits() as $unit) {
+            $this->connection->insert(
+                self::UNIT_TABLE,
+                [
+                    'workspace_id' => $workspaceId,
+                    'unit_id' => $unit->unitId,
+                    'project_id' => $unit->projectId,
+                    'unit_name' => $unit->unitName,
+                    'branch' => $unit->branch,
+                    'created_at' => $workspace->getUpdatedAt(),
+                ],
+                [
+                    'workspace_id' => ParameterType::STRING,
+                    'unit_id' => ParameterType::STRING,
+                    'project_id' => ParameterType::STRING,
+                    'unit_name' => ParameterType::STRING,
+                    'branch' => ParameterType::STRING,
+                    'created_at' => ParameterType::INTEGER,
+                ]
+            );
+        }
+    }
+
     private function synchronizirovatProekty(WorkspaceSession $workspace): void
     {
         $workspaceId = $workspace->getId();
@@ -297,10 +458,30 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
             );
         }
 
+        $unitRows = $this->connection->fetchAllAssociative(
+            'select * from ' . self::UNIT_TABLE . ' where workspace_id in (:ids) order by workspace_id, created_at, unit_id',
+            ['ids' => $ids],
+            ['ids' => \Doctrine\DBAL\ArrayParameterType::STRING]
+        );
+
+        $units = [];
+
+        foreach ($unitRows as $unitRow) {
+            $workspaceId = (string) $unitRow['workspace_id'];
+            $units[$workspaceId] ??= [];
+            $units[$workspaceId][] = new WorkspaceUnit(
+                (string) $unitRow['unit_id'],
+                (string) $unitRow['project_id'],
+                (string) $unitRow['unit_name'],
+                (string) ($unitRow['branch'] ?? ''),
+            );
+        }
+
         $result = [];
 
         foreach ($rows as $row) {
             $row['_projects'] = $projects[(string) $row['id']] ?? [];
+            $row['_units'] = $units[(string) $row['id']] ?? [];
             $result[] = $this->makeWorkspace($row);
         }
 
@@ -336,6 +517,27 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
             }
         }
 
+        $units = $row['_units'] ?? null;
+
+        if (!is_array($units)) {
+            $workspaceId = (string) $row['id'];
+            $unitRows = $this->connection->fetchAllAssociative(
+                'select * from ' . self::UNIT_TABLE . ' where workspace_id = :id order by created_at, unit_id',
+                ['id' => $workspaceId]
+            );
+
+            $units = [];
+
+            foreach ($unitRows as $unitRow) {
+                $units[] = new WorkspaceUnit(
+                    (string) $unitRow['unit_id'],
+                    (string) $unitRow['project_id'],
+                    (string) $unitRow['unit_name'],
+                    (string) ($unitRow['branch'] ?? ''),
+                );
+            }
+        }
+
         return WorkspaceSession::restore(
             (string) $row['id'],
             (string) $row['account_id'],
@@ -358,6 +560,7 @@ final class SqlWorkspaceSessionRepository implements WorkspaceSessionRepository
                 self::nullableInt($row['initial_prompt_started_at'] ?? null),
                 (int) $row['created_at'],
                 (int) $row['updated_at'],
+                $units,
             ),
             (int) $row['created_at'],
             (int) $row['updated_at'],

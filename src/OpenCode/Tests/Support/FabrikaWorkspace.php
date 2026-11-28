@@ -7,6 +7,7 @@ namespace App\OpenCode\Tests\Support;
 use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\StatusWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceSession;
 
 /**
  * Фикстуры workspace для доменных тестов.
@@ -24,6 +25,30 @@ final class FabrikaWorkspace
         string $mainBranch = 'main',
     ): ProektWorkspace {
         return new ProektWorkspace($projectId, $name, $code, $canPush, $position, $mainBranch);
+    }
+
+    /**
+     * Workspace-сессия нового агрегата с тем же идентификатором и именем, что
+     * и легаси-фикстура `sozdanie()`.
+     *
+     * @param list<ProektWorkspace>|null $projects
+     */
+    public static function workspaceSession(
+        string $id = 'workspace-1',
+        string $name = 'payments-refactor',
+        ?array $projects = null,
+        bool $canPush = true,
+    ): WorkspaceSession {
+        return WorkspaceSession::create(
+            $id,
+            'account-1',
+            'credential-1',
+            $name,
+            'feature/payments',
+            $projects ?? [self::proekt(canPush: $canPush)],
+            'Первый промпт',
+            self::NOW,
+        );
     }
 
     /**
@@ -45,6 +70,30 @@ final class FabrikaWorkspace
             'Первый промпт',
             self::NOW,
         );
+    }
+
+    public static function workspaceSessionVStatuse(
+        StatusWorkspace $status,
+        string $id = 'workspace-1',
+        string $name = 'payments-refactor',
+        bool $canPush = true,
+    ): WorkspaceSession {
+        $workspace = self::workspaceSession($id, $name, canPush: $canPush);
+
+        $guard = 0;
+
+        while ($workspace->getWorkspace()->getStatus() !== $status) {
+            if (++$guard > 10) {
+                throw new \LogicException('Не удалось привести workspace к статусу ' . $status->value);
+            }
+
+            $workspace->perevestiV(
+                self::sleduyushchii($workspace->getWorkspace()->getStatus(), $status),
+                self::NOW,
+            );
+        }
+
+        return $workspace;
     }
 
     public static function vStatuse(

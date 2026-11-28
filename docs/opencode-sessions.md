@@ -108,8 +108,16 @@ php -r "echo base64_encode(random_bytes(32));"
 Модель хода разрешается по приоритету:
 
 1. `model` из запроса (`prompt` / `otvetit`);
-2. модель, сохранённая в сессии при создании;
-3. `defaultModel` реквизитов.
+2. `default_model` участника workspace (заменяет модель сессии для не-владельца);
+3. модель, сохранённая в сессии при создании (только для владельца);
+4. `defaultModel` реквизитов автора хода.
+
+Реквизиты хода всегда принадлежат его автору: `credentialId` из запроса →
+личные реквизиты участника → реквизиты сессии только владельцу → первые
+реквизиты автора. Владение `credentialId` проверяется до старта хода, поэтому
+чужой ключ неотличим от несуществующего. Модель сессии к не-владельцам не
+применяется: иначе выбранная при создании модель могла отсутствовать в их
+реквизитах и ход падал бы с `model_not_available`.
 
 Недопустимая модель (не входит в `models` реквизитов) отклоняется ключом
 `account.opencode_credential.model_not_available`. Фактическая модель хода
@@ -132,9 +140,19 @@ php -r "echo base64_encode(random_bytes(32));"
 | `POST` | `/api/opencode/arhivirovatSessiyu` | `sessionId` | `data: null` — сессия в архиве |
 | `POST` | `/api/opencode/udalitSessiyu` | `sessionId` | **устаревший алиас** `arhivirovatSessiyu` |
 
-Все маршруты закрыты JWT. Владелец берётся из токена и проверяется **внутри
+Все маршруты закрыты JWT. Аккаунт берётся из токена и проверяется **внутри
 UseCase**, поэтому чужой `sessionId`/`turnId` даёт тот же ответ, что и
 несуществующий: `opencode.session.not_found` / `opencode.turn.not_found`.
+
+Доступ к workspace определяется участием ([`ProverkaDostupaKSessii`](src/OpenCode/Business/Utils/ProverkaDostupaKSessii.php:1)):
+чтение (история, состояние, результат, прогресс, артефакты, ссылка IDE) — от
+`viewer`, промпты и ответы — от `writer`, управление и состав участников —
+`owner`. Владелец остаётся неявным `owner`, если строки участника ещё нет, —
+unit-сессии и workspace до backfill работают как раньше. Не-участник получает
+`opencode.session.not_found`, участник без нужной роли — `opencode.session.forbidden`.
+Пока ход выполняется, второй промпт отклоняется с `opencode.session.busy`
+(резервация сессии, TTL 900 секунд; снимается на терминальном статусе).
+Правила соавторства — в [`docs/workspaces.md`](workspaces.md#3-http-api).
 
 Полноценного удаления сессии нет: `arhivirovatSessiyu` помечает сессию
 архивной, история ходов (`opencode_turn`) и диалог остаются доступными для
@@ -513,6 +531,15 @@ Go-раннера — `docs/workspaces.md` в репозитории `unitman-ru
 | `POST` | `/api/opencode/workspace/arhivirovat` | `workspaceId, force?` | `{requiresConfirmation, dirtyProjects, status}` |
 | `POST` | `/api/opencode/workspace/vosstanovit` | `workspaceId` | `{status}` |
 | `POST` | `/api/opencode/workspace/udalit` | `workspaceId` | `data: null` |
+| `POST` | `/api/opencode/workspace/uchastniki/spisok` | `workspaceId` | `{items: Participant[]}` |
+| `POST` | `/api/opencode/workspace/uchastniki/dobavit` | `workspaceId, accountId, role, credentialId?, model?` | `{added: true}` |
+| `POST` | `/api/opencode/workspace/uchastniki/izmenit` | `workspaceId, accountId, role, credentialId?, model?` | `{updated: true}` |
+| `POST` | `/api/opencode/workspace/uchastniki/udalit` | `workspaceId, accountId` | `{removed: true}` |
+
+Составом управляет только `owner`; список видят все участники. Приглашать можно
+лишь аккаунт с доступом ко всем проектам workspace и не более 20 участников;
+владельца нельзя удалить или понизить. Доступ автора к проектам перепроверяется
+на каждом ходе (`opencode.workspace.project_access_revoked`).
 
 Промпты и ответы для workspace идут через существующие маршруты
 `/api/opencode/prompt`, `/otvetit`, `/poluchitResultatHoda`,
@@ -756,10 +783,16 @@ Payload прогресса:
 `provider_empty_response`.
 
 Сессия (`opencode.session.*`): `account_required`, `archive_reason_required`,
-`archived`, `credential_required`, `id_required`, `not_found`,
-`too_many_units`, `unit_not_found`, `unit_not_ready`,
+`archived`, `busy`, `credential_required`, `forbidden`, `id_required`,
+`not_found`, `too_many_units`, `unit_not_found`, `unit_not_ready`,
 `unit_project_conflict`, `unit_project_required`, `unit_required`,
 `unit_source_conflict`.
+
+Участники (`opencode.participant.*`): `account_required`, `account_too_long`,
+`already_exists`, `already_owner`, `credential_too_long`, `invalid_role`,
+`limit_exceeded`, `model_too_long`, `not_found`, `owner_cannot_be_removed`,
+`owner_conflict`, `owner_role_immutable`, `project_access_denied`,
+`session_required`.
 
 Ход (`opencode.turn.*`): `request_required`, `answers_required`,
 `awaiting_answer`, `not_awaiting_answer`, `not_found`, `option_required`,
@@ -915,3 +948,54 @@ visibility Temporal. Ограничения:
    юнитами выполняет [`SinhronizaciyaSessiySUnitomBackgroundJob`](src/OpenCode/Infra/BackgroundJob/SinhronizaciyaSessiySUnitom/SinhronizaciyaSessiySUnitomBackgroundJob.php:29)
    с интервалом 5 секунд. Без него архивные сессии и сессии, застрявшие в
    `blocked`, не обновляются, пока пользователь сам не откроет страницу юнита.
+
+## 10. Workspace-агрегат: флаги, contract и откат
+
+Workspace-чат OpenCode переехал на `opencode_workspace_session*`. Для новых
+установок флаги включены по умолчанию (`OPENCODE_WORKSPACE_READ=1`,
+`OPENCODE_WORKSPACE_WRITE=1`); в `.env.test` они остаются `0`.
+
+- Флаги можно выключить для отката: `WRITE=0` возвращает запись в легаси,
+  `READ=0` — чтение. После выключения выполните
+  `app:opencode:workspace-migration:rollback-sync --since=<cutover_ts>` и
+  проверьте `app:opencode:workspace-migration:check` (exit `0`).
+- `app:opencode:workspace-migration:contract` по умолчанию dry-run. С `--force`
+  удаляет только workspace-строки легаси (`opencode_session` с `tip='workspace'`,
+  `opencode_workspace*`, workspace-ходы/уведомления/участников) и не трогает
+  unit-сессии и `opencode_unit_session*`. Перед удалением обязателен чистый
+  `check` и rollback-sync-совместимость.
+- Unit-сессии по-прежнему работают через легаси-таблицы; их переезд в этот
+  объём не входит.
+
+## 11. Моды агентов OpenCode
+
+Мод агента — именованный системный промпт с режимом доступа. Общие моды
+(`build`, `plan`) создаёт администратор; пользователь может создавать личные
+моды, задавать для каждого мода свои реквизиты и модель, скрывать/включать
+общие моды и задавать порядок. Дефолтный мод выбирается отдельно для unit- и
+workspace-чатов.
+
+Поток хода:
+
+1. `prompt`/`otvetit` принимает `agentModeId`, `credentialId` и `model`.
+2. `OpredelitelRezhimaAgentaHoda` выбирает мод по цепочке: запрос → мод
+   сессии → дефолт типа чата → первый включённый мод.
+3. `RezhimAgentaHoda` содержит `modeId`, `agentName` (`unitman-<slug>`),
+   `prompt` и `denyEdits` (`plan`).
+4. `NachatHodOpenCode` и Temporal-активность передают эти поля в раннер.
+5. Раннер добавляет в `OPENCODE_CONFIG_CONTENT` секцию `agent` с промптом и
+   `permission.edit=deny` для `plan`, а в команду — `--agent unitman-<slug>`.
+6. Каждый ход сохраняет `agent_mode_id` и снимок `agent_mode_name`.
+
+Ограничения:
+
+- `plan` запрещает правку файлов в обоих типах чата; `build` не отменяет
+  существующий read-only.
+- Промпт мода передаётся как есть (`agent.system`), поэтому placeholder
+  `${OPENCODE_TOOL_GUIDANCE}` в seed раскрыт статически.
+- Полный промпт в ходе не дублируется: история хранит id и имя мода.
+- Редактирование общего мода администратором меняет будущие ходы; история
+  остаётся читаемой по снимку имени.
+- API управления: `/api/opencode/agent-modes/{spisok,read,sozdat,izmenit,udalit,nastroit,poUmolchaniyu}`.
+- Ошибки: `opencode.agent_mode.not_found`, `forbidden`, `slug_taken`,
+  `access_mode_invalid`, `prompt_too_long`, `credential_required`.

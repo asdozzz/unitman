@@ -90,9 +90,38 @@ alter table opencode_notification
 проекта в Unitman не ломает уже созданный workspace. `can_push` — снимок прав
 токена Repo.
 
+Соавторство живёт в отдельных таблицах и не меняет `opencode_workspace`:
+
+```sql
+-- Version20261127130000: роли и личные реквизиты участников
+create table opencode_session_participant (
+    session_id            varchar(64)  not null,
+    account_id            varchar(128) not null,
+    role                  varchar(16)  not null,  -- owner|writer|viewer
+    default_credential_id varchar(64)  null,
+    default_model         varchar(128) null,
+    invited_by            varchar(128) null,
+    ...
+    primary key (session_id, account_id)
+);
+
+-- Version20261127140000: резервация сессии под активный ход, TTL 900 секунд
+create table opencode_session_running_turn (...);
+
+alter table opencode_turn
+    add column author_account_id   varchar(128) not null default '',
+    add column credential_id       varchar(64)  not null default '',
+    add column author_display_name varchar(256) not null default '';
+```
+
+Владелец остаётся в `opencode_session.account_id` и дублируется строкой с ролью
+`owner`; частичный уникальный индекс допускает ровно одного владельца на
+сессию. Если строки участника ещё нет, владелец считается неявным `owner`.
+
 ## 3. HTTP API
 
-Все маршруты закрыты JWT; владелец проверяется внутри UseCase.
+Все маршруты закрыты JWT; доступ проверяется внутри UseCase по участию в
+workspace (см. §3.3).
 
 | Метод | Путь | Тело | Ответ |
 |---|---|---|---|
@@ -103,6 +132,10 @@ alter table opencode_notification
 | `POST` | `/api/opencode/workspace/arhivirovat` | `workspaceId, force?` | `{requiresConfirmation, dirtyProjects, status}` |
 | `POST` | `/api/opencode/workspace/vosstanovit` | `workspaceId` | `{status}` |
 | `POST` | `/api/opencode/workspace/udalit` | `workspaceId` | `data: null` |
+| `POST` | `/api/opencode/workspace/uchastniki/spisok` | `workspaceId` | `{items: Participant[]}` |
+| `POST` | `/api/opencode/workspace/uchastniki/dobavit` | `workspaceId, accountId, role, credentialId?, model?` | `{added: true}` |
+| `POST` | `/api/opencode/workspace/uchastniki/izmenit` | `workspaceId, accountId, role, credentialId?, model?` | `{updated: true}` |
+| `POST` | `/api/opencode/workspace/uchastniki/udalit` | `workspaceId, accountId` | `{removed: true}` |
 
 Промпты и ответы используют существующие маршруты с `sessionId = workspaceId`:
 `/api/opencode/prompt`, `/api/opencode/otvetit`,
@@ -145,12 +178,40 @@ alter table opencode_notification
   "ideLink": "https://47000.payments-refactor-1a2b3c4d.workspaces.example.com",
   "canAcceptMessages": true,
   "lastTurnId": "a71c...",
-  "lastTurnStatus": "ANSWERED"
+  "lastTurnStatus": "ANSWERED",
+  "myRole": "owner",
+  "canManage": true,
+  "participants": [
+    { "accountId": "8f1e...", "role": "owner", "owner": true, "displayName": "Алиса" },
+    { "accountId": "2c9a...", "role": "writer", "owner": false, "displayName": "Борис" }
+  ],
+  "myDefaultCredentialId": "b1c2...",
+  "myDefaultModel": "gpt-4o"
 }
 ```
 
-`canAcceptMessages = status === RUNNING && !archived &&` последний ход не
-`RUNNING`.
+`canAcceptMessages` учитывает роль и занятость: `myRole ∈ {owner, writer}`,
+`status === RUNNING`, сессия не в архиве, нет обновления проектов/файлов,
+последний ход не `RUNNING` и нет свежей резервации хода. `myDefaultCredentialId`
+и `myDefaultModel` — личные реквизиты текущего пользователя, которые UI
+предвыбирает для промпта.
+
+### 3.3 Участники и роли
+
+| Роль | Права |
+|---|---|
+| `owner` | управление workspace, состав участников, промпты и ответы |
+| `writer` | промпты и ответы, чтение |
+| `viewer` | только чтение: история, состояние, прогресс, артефакты, ссылка IDE |
+
+Владелец — неявный `owner`, если строки участника ещё нет. Приглашение
+доступно только владельцу, только аккаунту с доступом ко всем проектам и не
+более 20 участников; владельца нельзя удалить или понизить. Каждый ход
+списывает реквизиты своего автора (см. §9). Пока ход активен, сессия
+зарезервирована с TTL 900 секунд: второй промпт получает
+`opencode.session.busy`, резервация снимается на терминальном статусе, включая
+`AWAITING_INPUT`. Доступ автора ко всем проектам перепроверяется на каждом
+ходе — потеря доступа даёт `opencode.workspace.project_access_revoked`.
 
 ## 4. Жизненный цикл
 
@@ -332,6 +393,12 @@ Workspace привязан к раннеру через `workspace_runner`; в �
 привязки к активному раннеру или раннер без `publicAddress` не может быть
 выбран — это явная доменная ошибка, а не подстановка чужого адреса.
 
+Ссылку может получить любой участник (`viewer` и выше): адрес строится от имени
+текущего пользователя, а ACL Unitman сам проверяет его доступ к проектам. IDE
+остаётся read-only (том `workspace_app:/home/coder/workspace:ro`,
+`--auth none`), поэтому ссылка — bearer-capability: аутентифицированный прокси и
+режим совместного редактирования — следующая фаза.
+
 ## 9. Ходы и уведомления
 
 Для workspace `ZapuskatelHodaOpenCode` не захватывает юниты, не перезаписывает
@@ -341,8 +408,17 @@ Workspace привязан к раннеру через `workspace_runner`; в �
 workspace отклоняется существующим `opencode.session.archived`, не-`RUNNING` —
 `opencode.workspace.not_running`.
 
+Ход всегда списывает реквизиты своего автора: `credentialId` из запроса →
+`default_credential_id` участника → реквизиты сессии только владельцу → первые
+реквизиты автора. Перед стартом проверяется владение ключом и доступ автора ко
+всем проектам (`opencode.workspace.project_access_revoked`). Сессия
+резервируется на время хода (`opencode_session_running_turn`, TTL 900 секунд):
+второй промпт получает `opencode.session.busy`, резервация снимается на
+терминальном статусе, включая `AWAITING_INPUT`.
+
 Уведомления переиспользуют `opencode_notification` с `session_type =
-workspace`; payload:
+workspace` и рассылаются всем участникам, кроме автора хода (строки уникальны
+по `(turn_id, account_id)`); payload:
 
 ```json
 {
@@ -402,7 +478,21 @@ projects_required, too_many_projects, project_not_found, project_conflict,
 prompt_required, not_found, not_running, archived,
 uncommitted_changes, confirmation_required,
 delete_in_progress, operation_failed, initial_prompt_failed,
-project_branch_not_found, project_clone_failed, read_only_push_forbidden
+project_branch_not_found, project_clone_failed, read_only_push_forbidden,
+project_access_revoked
+```
+
+Участники и доступ к сессии (`opencode.participant.*`, `opencode.session.*`):
+
+```text
+participant.account_required, participant.account_too_long,
+participant.already_exists, participant.already_owner,
+participant.credential_too_long, participant.invalid_role,
+participant.limit_exceeded, participant.model_too_long,
+participant.not_found, participant.owner_cannot_be_removed,
+participant.owner_conflict, participant.owner_role_immutable,
+participant.project_access_denied, participant.session_required,
+session.busy, session.forbidden
 ```
 
 ## 12. Проверки
@@ -632,6 +722,39 @@ create unique index if not exists mediateka_file_turn_name_uniq
 | `opencode.artifact.name_is_invalid` | 422 |
 | `opencode.artifact.file_type_forbidden` | 422 |
 | `opencode.artifact.content_invalid` | 422 |
+
+## 16. Миграция на агрегат `opencode_workspace_session`
+
+Фазы 0–3 переезда (expand, backfill, зеркало, гейт) реализованы; легаси
+остаётся источником истины, API не меняется. Полный план и карта полей —
+[`plans/workspace-aggregate-migration.md`](plans/workspace-aggregate-migration.md:1).
+
+Новые таблицы (expand-миграции `Version20261127150000`,
+`Version20261127151000`):
+
+- `opencode_workspace_participant` — участники нового агрегата, FK на
+  `opencode_workspace_session`, роли `owner/writer/viewer`, частичный
+  уникальный индекс «ровно один owner»;
+- `opencode_workspace_pending_update` — pending-обновление проектов/файлов,
+  FK на сессию, payload `jsonb` 1:1 с `opencode_workspace_update`;
+- `opencode_workspace_migration_journal` — журнал перенумерации `seq` (только
+  целевая таблица; легаси не меняется);
+- `opencode_workspace_turn` получил `author_account_id`, `credential_id`,
+  `author_display_name`; уникальность `opencode_workspace_notification`
+  заменена на `(turn_id, account_id)`.
+
+Команды (все идемпотентны, легаси не пишут):
+
+```bash
+php bin/console app:opencode:workspace-migration:audit      # read-only отчёт
+php bin/console app:opencode:workspace-migration:backfill   # перенос в новый агрегат
+php bin/console app:opencode:workspace-migration:check      # гейт сверки, exit != 0 при расхождениях
+```
+
+Зеркало новых легаси-записей включается флагом
+`OPENCODE_WORKSPACE_MIRROR_WRITE=1` (по умолчанию `0`). Оно встроено в
+легаси-репозитории сессий, ходов, участников и уведомлений; ошибка зеркала
+логируется и не ломает легаси-операцию.
 | `opencode.artifact.too_many_files` | 422 |
 | `opencode.artifact.total_is_too_large` | 422 |
 
@@ -645,3 +768,51 @@ create unique index if not exists mediateka_file_turn_name_uniq
 | `opencode.artifact.preview_unsupported` | 422 |
 | `opencode.artifact.preview_too_large` | 422 |
 | `opencode.artifact.content_invalid` | 422 |
+
+### 16.1 Фаза 8: cutover, contract и откат
+
+Новые установки по умолчанию работают на самостоятельном агрегате:
+`OPENCODE_WORKSPACE_READ=1`, `OPENCODE_WORKSPACE_WRITE=1` в
+[`unitman/.env.dist`](.env.dist:1) и
+[`unitman-release/.env.example`](../unitman-release/.env.example:1). В
+`.env.test` флаги остаются `0`, чтобы легаси-тесты проверяли старый путь;
+новые тесты включают флаги явно.
+
+При включённых флагах:
+
+- чат, состояние, история, результат и прогресс обслуживаются маршрутами
+  `/api/opencode/workspace-session/*`;
+- жизненный цикл и участники остаются на `/api/opencode/workspace/*`:
+  бэкенд внутри роутит их по флагам, HTTP-контракты не меняются;
+- фоновая сверка при `WRITE=1` без зеркала доводит транзитные статусы
+  (`CREATING/STARTING/ARCHIVING/DELETING`) по
+  `WorkspaceSessionRepository::findAktivnieVTranzite`;
+- union уведомлений и участники продолжают работать при пустых легаси-таблицах.
+
+**Contract.** Команда удаляет только workspace-строки легаси и никогда не
+трогает unit-сессии, `opencode_session` unit-строки и `opencode_unit_session*`:
+
+```bash
+php bin/console app:opencode:workspace-migration:contract          # dry-run
+php bin/console app:opencode:workspace-migration:contract --force  # удаление
+```
+
+Перед удалением команда обязательно прогоняет гейт
+`app:opencode:workspace-migration:check` и проверку совместимости с
+`rollback-sync` (каждая строка нового агрегата имеет пару в легаси). При
+расхождении — exit `1` и никаких изменений. Легаси-таблицы не удаляются:
+contract очищает только строки.
+
+**Runbook отката** (до contract):
+
+1. Выставить `OPENCODE_WORKSPACE_WRITE=0` (и при необходимости
+   `OPENCODE_WORKSPACE_READ=0`), перезапустить воркеры.
+2. Выполнить
+   `php bin/console app:opencode:workspace-migration:rollback-sync --since=<cutover_ts>`
+   — новый агрегат переносится обратно в легаси, ничего не удаляя.
+3. Проверить `app:opencode:workspace-migration:check` — exit `0`.
+
+**Runbook contract** (после bake-периода и бэкапа): сначала dry-run, затем
+`--force` на копии/боевой БД. Не запускайте `--force` на dev-БД: команда
+удалит workspace-строки (unit-сессии сохранятся, но рабочее состояние
+workspace будет потеряно).

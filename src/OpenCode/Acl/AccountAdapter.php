@@ -32,6 +32,11 @@ final class AccountAdapter implements UmeetProveryatRekvizityOpenCode
         $this->accountApi->trebovatRekvizityOpenCodeVladelca($accountId, $credentialId);
     }
 
+    public function poluchitPervieRekvizityAvtora(string $accountId): ?string
+    {
+        return $this->accountApi->poluchitPervieRekvizityOpenCodeDlyaVladelca($accountId);
+    }
+
     public function poluchitModeli(string $accountId, string $credentialId): RekvizityOpenCodeModeliReadModel
     {
         $models = $this->accountApi->poluchitModeliRekvizitovOpenCodeDlyVladelca($accountId, $credentialId);

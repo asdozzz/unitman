@@ -15,6 +15,8 @@ use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatUnitami;
 use App\OpenCode\Business\ReadModel\WorkspaceUnitReadModel;
 use App\OpenCode\Business\Utils\SlugWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\SozdatUnitiWorkspaceSessiiUseCase;
 
 /**
  * Создаёт по одному юниту на каждый проект workspace.
@@ -29,6 +31,8 @@ final class SozdatUnitiWorkspaceUseCase
         private SessiyaOpenCodeRepository $sessionRepository,
         private UmeetProveryatRekvizityOpenCode $credentials,
         private UmeetUpravlyatUnitami $unitami,
+        private ?WorkspaceFeatureFlags $flags = null,
+        private ?SozdatUnitiWorkspaceSessiiUseCase $workspaceUseCase = null,
     ) {
     }
 
@@ -39,6 +43,10 @@ final class SozdatUnitiWorkspaceUseCase
      */
     public function handle(SozdatUnitiWorkspace $command): array
     {
+        if ($this->flags?->pisatVNoviyAgregat() === true && $this->workspaceUseCase !== null) {
+            return $this->workspaceUseCase->handle($command);
+        }
+
         $accountId = $this->credentials->tekuschiiAccountId();
         $workspaceId = trim($command->workspaceId);
 

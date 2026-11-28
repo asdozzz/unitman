@@ -36,6 +36,10 @@ final class VipolnitHodOpenCode
         public readonly array $WorkspaceProjects = [],
         public readonly bool $ReadOnly = false,
         public readonly ?string $Token = null,
+        public readonly ?string $AgentModeId = null,
+        public readonly ?string $AgentName = null,
+        public readonly ?string $AgentPrompt = null,
+        public readonly bool $AgentDenyEdits = false,
         public readonly ?string $RunnerId = null,
         public readonly ?string $TaskQueue = null,
     )

@@ -118,6 +118,23 @@ nelmio_api_doc:
                             type: string
                             enum: [DEFAULT, LOCK]
                             example: DEFAULT
+                OpenCodeErrorCode:
+                    type: string
+                    description: 'Коды ошибок OpenCode, доступные фронтенду. Доменные ошибки приходят в FailEnvelope.data.message без префикса перевода'
+                    enum:
+                        - opencode.session.busy
+                        - opencode.session.forbidden
+                        - opencode.session.credential_required
+                        - opencode.workspace.project_access_revoked
+                        - opencode.participant.already_owner
+                        - opencode.participant.already_exists
+                        - opencode.participant.limit_exceeded
+                        - opencode.participant.project_access_denied
+                        - opencode.participant.not_found
+                        - opencode.participant.owner_role_immutable
+                        - opencode.participant.owner_cannot_be_removed
+                        - opencode.participant.invalid_role
+                    example: opencode.participant.not_found
                 # Тела запросов, привязываемые через JsonBodySerializableInterface.
                 # Nelmio читает атрибуты только с контроллера, поэтому DTO-схемы описаны здесь.
                 RegisterAccount:
@@ -530,6 +547,11 @@ nelmio_api_doc:
                             nullable: true
                             description: 'Переопределение модели перед ходом; приоритет: запрос → модель сессии → дефолт реквизитов'
                             example: gpt-4o-mini
+                        credentialId:
+                            type: string
+                            nullable: true
+                            description: 'Реквизиты OpenCode для хода; при отсутствии берутся личные реквизиты участника (иначе — `opencode.session.credential_required`)'
+                            example: 7d4b1c2a-3f5e-4a6b-8c9d-0e1f2a3b4c5d
                 OtvetitNaVopros:
                     type: object
                     description: 'Ответ на вопросы предыдущего хода; запускает новый ход'
@@ -551,6 +573,11 @@ nelmio_api_doc:
                             nullable: true
                             description: 'Переопределение модели для нового хода; приоритет: запрос → модель сессии → дефолт реквизитов'
                             example: gpt-4o-mini
+                        credentialId:
+                            type: string
+                            nullable: true
+                            description: 'Реквизиты OpenCode для нового хода; при отсутствии берутся личные реквизиты участника (иначе — `opencode.session.credential_required`)'
+                            example: 7d4b1c2a-3f5e-4a6b-8c9d-0e1f2a3b4c5d
                 OpenCodeAnswer:
                     type: object
                     description: 'Ответ на один вопрос: выбранный вариант и/или свободный текст'
@@ -977,6 +1004,21 @@ nelmio_api_doc:
                         updatedAt:
                             type: integer
                             example: 1762000000
+                        myRole:
+                            type: string
+                            enum: [owner, writer, viewer]
+                            description: 'Роль текущего пользователя в workspace'
+                            example: writer
+                        ownerAccountId:
+                            type: string
+                            description: 'Идентификатор аккаунта владельца workspace'
+                        participantsCount:
+                            type: integer
+                            description: 'Количество участников workspace, включая владельца'
+                            example: 3
+                        shared:
+                            type: boolean
+                            description: 'true — workspace доступен более чем одному участнику'
                 SostoyanieWorkspace:
                     type: object
                     description: 'Состояние workspace (SostoyanieWorkspaceReadModel)'
@@ -1015,7 +1057,7 @@ nelmio_api_doc:
                             nullable: true
                         canAcceptMessages:
                             type: boolean
-                            description: 'status = RUNNING И сессия не в архиве И последний ход не RUNNING'
+                            description: 'status = RUNNING И сессия не в архиве И последний ход не RUNNING И роль позволяет писать (owner или writer)'
                         lastTurnId:
                             type: string
                             nullable: true
@@ -1023,6 +1065,59 @@ nelmio_api_doc:
                             type: string
                             nullable: true
                             enum: [RUNNING, AWAITING_INPUT, ANSWERED, FAILED]
+                        myRole:
+                            type: string
+                            enum: [owner, writer, viewer]
+                            description: 'Роль текущего пользователя в workspace'
+                            example: writer
+                        canManage:
+                            type: boolean
+                            description: 'true — текущий пользователь может управлять участниками (владелец)'
+                        participants:
+                            type: array
+                            description: 'Участники workspace с ролями и личными реквизитами'
+                            items:
+                                $ref: '#/components/schemas/UchastnikSessii'
+                        myDefaultCredentialId:
+                            type: string
+                            nullable: true
+                            description: 'Личные реквизиты текущего участника по умолчанию; null — не заданы'
+                        myDefaultModel:
+                            type: string
+                            nullable: true
+                            description: 'Модель текущего участника по умолчанию; null — не задана'
+                            example: gpt-4o-mini
+                UchastnikSessii:
+                    type: object
+                    description: 'Участник workspace (UchastnikSessiiReadModel): роль и личные реквизиты ходов; секрет реквизитов не отдаётся'
+                    required: [accountId, role, owner, createdAt, updatedAt]
+                    properties:
+                        accountId:
+                            type: string
+                            description: 'Идентификатор аккаунта участника'
+                        role:
+                            type: string
+                            enum: [owner, writer, viewer]
+                            description: 'Роль участника; owner — единственный и неизменяемый'
+                            example: writer
+                        owner:
+                            type: boolean
+                            description: 'true — участник является владельцем workspace'
+                        defaultCredentialId:
+                            type: string
+                            nullable: true
+                            description: 'Личные реквизиты участника по умолчанию; null — не заданы'
+                        defaultModel:
+                            type: string
+                            nullable: true
+                            description: 'Модель участника по умолчанию; null — не задана'
+                            example: gpt-4o-mini
+                        createdAt:
+                            type: integer
+                            example: 1762000000
+                        updatedAt:
+                            type: integer
+                            example: 1762000000
                 ArhivirovatWorkspace:
                     type: object
                     required: [workspaceId]
@@ -1182,6 +1277,15 @@ nelmio_api_doc:
                             type: string
                             description: 'Имя Centrifugo-канала прогресса этого хода. Для завершённых ходов остаётся прежним и может использоваться для дозагрузки снапшота через /poluchitProgressHoda.'
                             example: 'unit_progress#6f1c5e0a-7d1f-4d59-9a54-0c2f8a2e6f11'
+                        authorAccountId:
+                            type: string
+                            nullable: true
+                            description: 'Аккаунт автора хода; null у легаси-ходов без автора'
+                        authorDisplayName:
+                            type: string
+                            nullable: true
+                            description: 'Отображаемое имя автора хода; null у легаси-ходов без автора'
+                            example: Иван Петров
                 OpenCodeTurnResult:
                     type: object
                     nullable: true

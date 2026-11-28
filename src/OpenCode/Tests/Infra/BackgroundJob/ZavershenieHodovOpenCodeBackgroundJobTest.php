@@ -106,6 +106,7 @@ final class ZavershenieHodovOpenCodeBackgroundJobTest extends TestCase
             $publisher,
             $uuid,
             $this->createMock(LoggerInterface::class),
+            $this->createMock(\App\OpenCode\Business\Port\UchastnikiSessiiRepository::class),
         );
 
         self::assertTrue($this->job($turnRepository, $zavershenie, $logger)->run());
@@ -152,6 +153,7 @@ final class ZavershenieHodovOpenCodeBackgroundJobTest extends TestCase
             $this->createMock(UmeetPeredavatUvedomleniyaOpenCode::class),
             $this->createMock(UuidGenerator::class),
             $this->createMock(LoggerInterface::class),
+            $this->createMock(\App\OpenCode\Business\Port\UchastnikiSessiiRepository::class),
         );
     }
 

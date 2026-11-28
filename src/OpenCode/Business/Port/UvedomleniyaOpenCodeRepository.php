@@ -9,8 +9,9 @@ use App\OpenCode\Business\ReadModel\UvedomlenieONovomSoobsheniiOpenCode;
 interface UvedomleniyaOpenCodeRepository
 {
     /**
-     * Идемпотентно сохраняет уведомление: повторная вставка того же `turn_id`
-     * не создаёт дубль.
+     * Идемпотентно сохраняет уведомление: уникальна пара
+     * `(turn_id, account_id)` — один ход рассылается нескольким получателям,
+     * но повторное завершение не дублирует строку конкретному получателю.
      *
      * @return bool true только если строка была вставлена
      */

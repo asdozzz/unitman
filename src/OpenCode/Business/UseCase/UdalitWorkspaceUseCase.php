@@ -9,6 +9,8 @@ use App\OpenCode\Business\Model\StatusWorkspace;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
 use App\OpenCode\Business\Port\UmeetProveryatRekvizityOpenCode;
 use App\OpenCode\Business\Port\UmeetUpravlyatWorkspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceFeatureFlags;
+use App\OpenCode\Business\Workspace\UseCase\UdalitWorkspaceSessiiUseCase;
 
 /**
  * Удаление workspace.
@@ -29,6 +31,8 @@ final class UdalitWorkspaceUseCase
         private SessiyaOpenCodeRepository $sessionRepository,
         private UmeetProveryatRekvizityOpenCode $credentials,
         private UmeetUpravlyatWorkspace $workspaceManager,
+        private ?WorkspaceFeatureFlags $flags = null,
+        private ?UdalitWorkspaceSessiiUseCase $workspaceUseCase = null,
     ) {
     }
 
@@ -37,6 +41,12 @@ final class UdalitWorkspaceUseCase
      */
     public function handle(UdalitWorkspace $command): void
     {
+        if ($this->flags?->pisatVNoviyAgregat() === true && $this->workspaceUseCase !== null) {
+            $this->workspaceUseCase->handle($command);
+
+            return;
+        }
+
         $accountId = $this->credentials->tekuschiiAccountId();
         $workspaceId = trim($command->workspaceId);
 

@@ -321,7 +321,11 @@ final class PoluchitResultatHodaQueryTest extends TestCase
             $publisher,
             $uuid,
             $this->createMock(LoggerInterface::class),
+            $this->createMock(\App\OpenCode\Business\Port\UchastnikiSessiiRepository::class),
         );
+
+        $uchastniki = $this->createMock(\App\OpenCode\Business\Port\UchastnikiSessiiRepository::class);
+        $uchastniki->method('find')->willReturn(null);
 
         return new PoluchitResultatHodaQuery(
             $sessionRepository,
@@ -329,6 +333,7 @@ final class PoluchitResultatHodaQueryTest extends TestCase
             $credentials,
             $runner,
             $zavershenie,
+            new \App\OpenCode\Business\Utils\ProverkaDostupaKSessii($uchastniki),
         );
     }
 

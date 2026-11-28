@@ -11,4 +11,5 @@ doctrine_migrations:
         'App\OpenCode\Migrations': '%kernel.project_dir%/src/OpenCode/Migrations'
         'App\AiChat\Migrations': '%kernel.project_dir%/src/AiChat/Migrations'
         'App\Notification\Migrations': '%kernel.project_dir%/src/Notification/Migrations'
+        'App\Skill\Migrations': '%kernel.project_dir%/src/Skill/Migrations'
     enable_profiler: false

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\OpenCode\Acl;
 
+use App\OpenCode\Business\AgentMode\ReadModel\RezhimAgentaHoda;
 use App\OpenCode\Business\Model\PrivyazkaKUnitu;
 use App\OpenCode\Business\Model\ProektWorkspace;
 use App\OpenCode\Business\Model\ProgressHodaOpenCode;
 use App\OpenCode\Business\Model\RezultatHodaOpenCode;
 use App\OpenCode\Business\Model\SessiyaOpenCode;
 use App\OpenCode\Business\Model\Workspace;
+use App\OpenCode\Business\Workspace\Model\WorkspaceSession;
 use App\OpenCode\Business\Model\WorkspaceKontekst;
 use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\Port\UmeetUpravlyatFaylamiWorkspace;
@@ -115,6 +117,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         bool $readOnly = false,
         ?string $token = null,
         ?string $model = null,
+        ?RezhimAgentaHoda $rezhimAgenta = null,
     ): string {
         $unitsPayload = [];
         $workspaceProjects = [];
@@ -166,6 +169,10 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
                 $readOnly,
                 $token,
                 Model: $model,
+                AgentModeId: $rezhimAgenta?->modeId,
+                AgentName: $rezhimAgenta?->agentName,
+                AgentPrompt: $rezhimAgenta?->prompt,
+                AgentDenyEdits: $rezhimAgenta?->denyEdits ?? false,
                 RunnerId: $workspaceRunner?->getId(),
                 TaskQueue: $workspaceRunner?->getTaskQueue(),
             ),
@@ -200,19 +207,20 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         );
     }
 
-    public function zapustit(SessiyaOpenCode $session): void
+    public function zapustit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $workspace = $this->trebovatWorkspace($session);
+        $workspaceId = $session->getId();
         $workflowId = $this->uuidGenerator->makeGuid();
 
         // Первый запуск фиксирует привязку workspace к раннеру. Именно этот
         // раннер обязан попасть в запрос: иначе workflow выберет свободный
         // раннер, а `workspace_runner` сохранит другой.
-        $runner = $this->runnerDlyaWorkspace($session->getId());
+        $runner = $this->runnerDlyaWorkspace($workspaceId);
 
         $registered = $this->runnerApi->zapustitWorkspace(
             $workflowId,
-            $this->sobratZapros($session, $workspace, $runner),
+            $this->sobratZapros($workspaceId, $this->imya($session), $workspace, $runner),
         );
 
         $workspace->zapomnitOperaciyu(
@@ -222,7 +230,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         );
     }
 
-    public function ostanovit(SessiyaOpenCode $session): void
+    public function ostanovit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $workspace = $this->trebovatWorkspace($session);
         $workflowId = $this->uuidGenerator->makeGuid();
@@ -244,18 +252,19 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         );
     }
 
-    public function vosstanovit(SessiyaOpenCode $session): void
+    public function vosstanovit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $workspace = $this->trebovatWorkspace($session);
+        $workspaceId = $session->getId();
         $workflowId = $this->uuidGenerator->makeGuid();
 
         // Восстановление поднимает стенд заново на том же раннере, который
         // хранится в `workspace_runner`; запрос получает ровно его.
-        $runner = $this->runnerDlyaWorkspace($session->getId());
+        $runner = $this->runnerDlyaWorkspace($workspaceId);
 
         $registered = $this->runnerApi->zapustitWorkspace(
             $workflowId,
-            $this->sobratZapros($session, $workspace, $runner),
+            $this->sobratZapros($workspaceId, $this->imya($session), $workspace, $runner),
         );
 
         $workspace->zapomnitOperaciyu(
@@ -265,7 +274,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         );
     }
 
-    public function udalit(SessiyaOpenCode $session): void
+    public function udalit(SessiyaOpenCode|WorkspaceSession $session): void
     {
         $workspace = $this->trebovatWorkspace($session);
         $workflowId = $this->uuidGenerator->makeGuid();
@@ -287,11 +296,12 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         );
     }
 
-    public function obnovit(SessiyaOpenCode $session, WorkspacePendingUpdate $update): string
+    public function obnovit(SessiyaOpenCode|WorkspaceSession $session, WorkspacePendingUpdate $update): string
     {
         $workspace = $this->trebovatWorkspace($session);
+        $workspaceId = $session->getId();
         $workflowId = $this->uuidGenerator->makeGuid();
-        $runner = $this->runnerDlyaWorkspace($session->getId());
+        $runner = $this->runnerDlyaWorkspace($workspaceId);
 
         $newProjects = [];
         foreach ($update->projects as $project) {
@@ -346,8 +356,8 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         $registered = $this->runnerApi->obnovitWorkspace(
             $workflowId,
             new ObnovitWorkspaceZapros(
-                $session->getId(),
-                SlugWorkspace::dlya($session->getTitle(), $session->getId()),
+                $workspaceId,
+                SlugWorkspace::dlya($this->imya($session), $workspaceId),
                 $workspace->getBranch(),
                 $update->readOnly,
                 $newProjects,
@@ -362,7 +372,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         return $registered !== '' ? $registered : $workflowId;
     }
 
-    public function poluchitIzmeneniya(SessiyaOpenCode $session): RezultatProverkiIzmeneniyWorkspace
+    public function poluchitIzmeneniya(SessiyaOpenCode|WorkspaceSession $session): RezultatProverkiIzmeneniyWorkspace
     {
         $workspace = $this->trebovatWorkspace($session);
         $runner = $this->runnerDlyaWorkspace($session->getId());
@@ -399,7 +409,7 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         return new RezultatProverkiIzmeneniyWorkspace($result->Success, $mapped);
     }
 
-    public function poluchitRezultatOperacii(SessiyaOpenCode $session): ?string
+    public function poluchitRezultatOperacii(SessiyaOpenCode|WorkspaceSession $session): ?string
     {
         $workspace = $this->trebovatWorkspace($session);
         $workflowId = $workspace->getOperationWorkflowId();
@@ -438,7 +448,8 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
     }
 
     private function sobratZapros(
-        SessiyaOpenCode $session,
+        string $workspaceId,
+        string $name,
         Workspace $workspace,
         ?RunnerState $runner = null,
     ): ZapustitWorkspaceZapros
@@ -456,29 +467,29 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         }
 
         return new ZapustitWorkspaceZapros(
-            $session->getId(),
-            $session->getTitle(),
-            SlugWorkspace::dlya($session->getTitle(), $session->getId()),
+            $workspaceId,
+            $name,
+            SlugWorkspace::dlya($name, $workspaceId),
             $workspace->getBranch(),
             $workspace->isReadOnly(),
             self::DEFAULT_MEMORY_LIMIT,
             $projects,
             RunnerId: $runner?->getId(),
             TaskQueue: $runner?->getTaskQueue(),
-            Files: $this->sobratFayly($session),
+            Files: $this->sobratFayly($workspaceId),
         );
     }
 
     /**
      * @return list<WorkspaceFileCommand>
      */
-    private function sobratFayly(SessiyaOpenCode $session): array
+    private function sobratFayly(string $workspaceId): array
     {
         if ($this->fayly === null) {
             return [];
         }
 
-        $models = $this->fayly->poluchitFayly($session->getId());
+        $models = $this->fayly->poluchitFayly($workspaceId);
         $fileIds = array_map(static fn ($file): string => $file->fileId, $models);
         $links = $this->fayly->poluchitSsylkiDlyaFaylov($fileIds);
 
@@ -495,11 +506,22 @@ final class RunnerAdapter implements UmeetVypolnyatHodOpenCode, UmeetUpravlyatWo
         return $result;
     }
 
-    private function trebovatWorkspace(SessiyaOpenCode $session): Workspace
+    /**
+     * Имя workspace-сессии: `title` легаси и `name` нового агрегата совпадают
+     * байт-в-байт, поэтому payload раннера идентичен на обоих путях.
+     */
+    private function imya(SessiyaOpenCode|WorkspaceSession $session): string
+    {
+        return $session instanceof WorkspaceSession
+            ? $session->getName()
+            : $session->getTitle();
+    }
+
+    private function trebovatWorkspace(SessiyaOpenCode|WorkspaceSession $session): Workspace
     {
         $workspace = $session->getWorkspace();
 
-        if (!$session->estWorkspace() || $workspace === null) {
+        if ($workspace === null || ($session instanceof SessiyaOpenCode && !$session->estWorkspace())) {
             throw new \DomainException('opencode.workspace.not_found');
         }
 

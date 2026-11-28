@@ -14,9 +14,11 @@ use App\OpenCode\Business\Model\Workspace;
 use App\OpenCode\Business\Model\WorkspacePendingUpdate;
 use App\OpenCode\Business\Model\WorkspaceUnit;
 use App\OpenCode\Business\Port\SessiyaOpenCodeRepository;
+use App\OpenCode\Business\Workspace\Port\WorkspaceMirror;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Psr\Log\LoggerInterface;
 
 final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
 {
@@ -38,8 +40,11 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
 
     private const LIKE_ESCAPE_CHAR = '\\';
 
-    public function __construct(private Connection $connection)
-    {
+    public function __construct(
+        private Connection $connection,
+        private ?WorkspaceMirror $mirror = null,
+        private ?LoggerInterface $logger = null,
+    ) {
     }
 
     public function save(SessiyaOpenCode $session): void
@@ -54,6 +59,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             $this->synchronizirovatPrivyazki($session);
             $this->sohranitWorkspace($session);
         });
+
+        $this->zerkalit(static fn (WorkspaceMirror $mirror) => $mirror->zerkalitSessiyu($session->getId()));
     }
 
     public function update(SessiyaOpenCode $session): void
@@ -92,6 +99,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             $this->synchronizirovatPrivyazki($session);
             $this->sohranitWorkspace($session);
         });
+
+        $this->zerkalit(static fn (WorkspaceMirror $mirror) => $mirror->zerkalitSessiyu($session->getId()));
     }
 
     public function getById(string $id): SessiyaOpenCode
@@ -261,6 +270,10 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             ]
         );
 
+        if ($updated > 0) {
+            $this->zerkalit(static fn (WorkspaceMirror $mirror) => $mirror->zerkalitSessiyu($sessionId));
+        }
+
         return $updated > 0;
     }
 
@@ -291,6 +304,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                 'created_at' => ParameterType::INTEGER,
             ]
         );
+
+        $this->zerkalit(static fn (WorkspaceMirror $mirror) => $mirror->zerkalitPendingUpdate($sessionId));
     }
 
     /**
@@ -328,6 +343,8 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
             ['session_id' => $sessionId],
             ['session_id' => ParameterType::STRING]
         );
+
+        $this->zerkalit(static fn (WorkspaceMirror $mirror) => $mirror->udalitPendingUpdate($sessionId));
     }
 
     public function deleteWorkspace(string $sessionId): void
@@ -354,6 +371,26 @@ final class SqlSessiyaOpenCodeRepository implements SessiyaOpenCodeRepository
                 ['id' => ParameterType::STRING]
             );
         });
+
+        $this->zerkalit(static fn (WorkspaceMirror $mirror) => $mirror->udalitWorkspace($sessionId));
+    }
+
+    /**
+     * Best-effort зеркало: ошибка не должна ломать легаси-операцию.
+     */
+    private function zerkalit(callable $deistvie): void
+    {
+        if ($this->mirror === null || !$this->mirror->isEnabled()) {
+            return;
+        }
+
+        try {
+            $deistvie($this->mirror);
+        } catch (\Throwable $exception) {
+            $this->logger?->error('opencode.workspace.mirror_failed', [
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     /**

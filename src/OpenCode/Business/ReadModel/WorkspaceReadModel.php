@@ -40,6 +40,10 @@ final class WorkspaceReadModel
         public readonly ?string $model = null,
         public readonly array $files = [],
         public readonly bool $updating = false,
+        public readonly string $myRole = 'owner',
+        public readonly string $ownerAccountId = '',
+        public readonly int $participantsCount = 1,
+        public readonly bool $shared = false,
     ) {
     }
 
@@ -51,6 +55,9 @@ final class WorkspaceReadModel
         ?string $ideLink = null,
         array $files = [],
         bool $updating = false,
+        string $myRole = 'owner',
+        int $participantsCount = 1,
+        bool $shared = false,
     ): self {
         $workspace = $session->getWorkspace();
 
@@ -77,6 +84,10 @@ final class WorkspaceReadModel
             $session->getModel(),
             $files,
             $updating,
+            $myRole,
+            $session->getAccountId(),
+            $participantsCount,
+            $shared,
         );
     }
 
@@ -95,7 +106,13 @@ final class WorkspaceReadModel
      *     createdAt: int,
      *     updatedAt: int,
      *     units: list<array<string, mixed>>,
-     *     model: string|null
+     *     model: string|null,
+     *     files: list<array<string, mixed>>,
+     *     updating: bool,
+     *     myRole: string,
+     *     ownerAccountId: string,
+     *     participantsCount: int,
+     *     shared: bool
      * }
      */
     public function toArray(): array
@@ -126,6 +143,10 @@ final class WorkspaceReadModel
                 $this->files,
             ),
             'updating' => $this->updating,
+            'myRole' => $this->myRole,
+            'ownerAccountId' => $this->ownerAccountId,
+            'participantsCount' => $this->participantsCount,
+            'shared' => $this->shared,
         ];
     }
 }

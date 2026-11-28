@@ -9,6 +9,8 @@ use App\BackgroundJob\Infra\Service\BackgroundJobGroup;
 use App\OpenCode\Business\Model\HodOpenCode;
 use App\OpenCode\Business\Port\HodOpenCodeRepository;
 use App\OpenCode\Business\Utils\ZavershenieHodaOpenCode;
+use App\OpenCode\Business\Workspace\Port\WorkspaceTurnRepository;
+use App\OpenCode\Business\Workspace\Utils\ZavershenieHodaWorkspace;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -27,6 +29,8 @@ final class ZavershenieHodovOpenCodeBackgroundJob extends AbstractBackgroundJob
         private HodOpenCodeRepository $turnRepository,
         private ZavershenieHodaOpenCode $zavershenie,
         private LoggerInterface $logger,
+        private ?WorkspaceTurnRepository $workspaceTurns = null,
+        private ?ZavershenieHodaWorkspace $workspaceZavershenie = null,
     ) {
     }
 
@@ -52,6 +56,8 @@ final class ZavershenieHodovOpenCodeBackgroundJob extends AbstractBackgroundJob
 
     public function run(): bool
     {
+        $legacyIds = [];
+
         try {
             $turns = $this->turnRepository->findVProzesse(self::BATCH_LIMIT);
         } catch (\Throwable $error) {
@@ -59,11 +65,37 @@ final class ZavershenieHodovOpenCodeBackgroundJob extends AbstractBackgroundJob
                 'exception' => $error,
             ]);
 
-            return true;
+            $turns = [];
         }
 
         foreach ($turns as $turn) {
+            $legacyIds[$turn->getId()] = true;
             $this->zavershit($turn);
+        }
+
+        // In-flight ходы, созданные уже на новом агрегате, завершаются его
+        // репозиторием. Дедупликация по id: зеркало держит один и тот же ход в
+        // двух таблицах, повторное завершение недопустимо.
+        if ($this->workspaceTurns === null || $this->workspaceZavershenie === null) {
+            return true;
+        }
+
+        try {
+            $workspaceTurns = $this->workspaceTurns->findVProzesse(self::BATCH_LIMIT);
+        } catch (\Throwable $error) {
+            $this->logger->error('opencode.turn_watchdog.workspace_batch_load_failed', [
+                'exception' => $error,
+            ]);
+
+            return true;
+        }
+
+        foreach ($workspaceTurns as $turn) {
+            if (isset($legacyIds[$turn->getId()])) {
+                continue;
+            }
+
+            $this->zavershitVWorkspace($turn);
         }
 
         return true;
@@ -77,6 +109,18 @@ final class ZavershenieHodovOpenCodeBackgroundJob extends AbstractBackgroundJob
             // Один проблемный ход не должен блокировать остальные: следующий
             // тик снова попробует его завершить.
             $this->logger->error('opencode.turn_watchdog.turn_failed', [
+                'turnId' => $turn->getId(),
+                'exception' => $error,
+            ]);
+        }
+    }
+
+    private function zavershitVWorkspace(HodOpenCode $turn): void
+    {
+        try {
+            $this->workspaceZavershenie?->zavershit($turn);
+        } catch (\Throwable $error) {
+            $this->logger->error('opencode.turn_watchdog.workspace_turn_failed', [
                 'turnId' => $turn->getId(),
                 'exception' => $error,
             ]);
